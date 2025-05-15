@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, FileText, Award, Layers } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { usePublicationCount } from "@/hooks/use-publication-count";
 
 export default function PatentDetail() {
   const params = useParams<{ id: string }>();

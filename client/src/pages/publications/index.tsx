@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,14 +10,33 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedPublication } from "@/lib/types";
-import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark } from "lucide-react";
+import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PublicationsList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [location] = useLocation();
+  const [filterResearchActivityId, setFilterResearchActivityId] = useState<number | null>(null);
+  const { toast } = useToast();
+  
+  // Parse query params to check for research activity filter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const researchActivityId = params.get('researchActivityId');
+    if (researchActivityId) {
+      setFilterResearchActivityId(parseInt(researchActivityId, 10));
+    }
+  }, [location]);
 
   const { data: publications, isLoading } = useQuery<EnhancedPublication[]>({
     queryKey: ['/api/publications'],
+  });
+  
+  // Get research activity details if we're filtering by one
+  const { data: researchActivity } = useQuery({
+    queryKey: ['/api/research-activities', filterResearchActivityId],
+    enabled: !!filterResearchActivityId,
   });
 
   const formatDate = (date: string | Date | undefined) => {
@@ -37,18 +56,48 @@ export default function PublicationsList() {
   };
 
   const filteredPublications = publications?.filter(publication => {
-    return (
-      publication.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      publication.authors.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (publication.journal && publication.journal.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (publication.abstract && publication.abstract.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    // First apply research activity filter
+    if (filterResearchActivityId && publication.researchActivityId !== filterResearchActivityId) {
+      return false;
+    }
+    
+    // Then apply search query filter
+    if (searchQuery) {
+      return (
+        publication.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        publication.authors.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (publication.journal && publication.journal.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (publication.abstract && publication.abstract.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    return true;
   });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Publications</h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-neutral-400">Publications</h1>
+          {filterResearchActivityId && researchActivity && (
+            <div className="mt-1 flex items-center">
+              <Badge variant="outline" className="mr-2 bg-blue-50 text-blue-700 border-blue-200">
+                Filtered by SDR: {researchActivity.sdrNumber}
+              </Badge>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 px-2 text-sm text-blue-600" 
+                onClick={() => {
+                  setFilterResearchActivityId(null);
+                  window.history.pushState({}, '', '/publications');
+                }}
+              >
+                Clear Filter
+              </Button>
+            </div>
+          )}
+        </div>
         <Link href="/publications/create">
           <Button className="bg-primary-500 text-white">
             <Plus className="h-4 w-4 mr-1" /> Add Publication
