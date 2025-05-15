@@ -263,8 +263,13 @@ export default function PublicationDetail() {
                     variant="outline" 
                     className="w-full justify-start" 
                     onClick={() => {
-                      if (relatedPatents[0] && relatedPatents[0].id) {
-                        navigate(`/patents/${relatedPatents[0].id}`);
+                      // Use a different approach - open in new tab first while we debug
+                      const patentId = relatedPatents[0]?.id;
+                      if (patentId) {
+                        // Navigate directly to the patent detail page with a delay
+                        setTimeout(() => {
+                          window.location.href = `/patents/${patentId}`;
+                        }, 100);
                       }
                     }}
                   >

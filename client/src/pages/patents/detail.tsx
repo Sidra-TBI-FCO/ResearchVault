@@ -8,24 +8,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { usePublicationCount } from "@/hooks/use-publication-count";
+import { useEffect } from "react";
 
 export default function PatentDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
 
+  // Check if we're coming from another page that might have lost our context
+  useEffect(() => {
+    // Force a refresh if we're here with ID but no data after 1 second
+    const timer = setTimeout(() => {
+      if (id && !patent && !patentLoading) {
+        window.location.reload();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [id, patent, patentLoading]);
+
   const { data: patent, isLoading: patentLoading } = useQuery<Patent>({
     queryKey: ['/api/patents', id],
     queryFn: async () => {
+      console.log("Fetching patent with ID:", id);
       const response = await fetch(`/api/patents/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch patent');
       }
       const data = await response.json();
+      console.log("Patent data received:", data);
       return data;
     },
-    retry: 2,
+    retry: 3,
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    staleTime: 0, // Always refetch
   });
 
   const { data: researchActivity, isLoading: researchActivityLoading } = useQuery<ResearchActivity>({
