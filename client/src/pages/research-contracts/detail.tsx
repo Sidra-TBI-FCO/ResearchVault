@@ -316,7 +316,7 @@ export default function ResearchContractDetail() {
                   <Button 
                     variant="outline" 
                     className="w-full justify-start" 
-                    onClick={() => navigate(`/irb-applications`)}
+                    onClick={() => navigate(`/irb?search=${contract.irbProtocol}`)}
                   >
                     <FileText className="h-4 w-4 mr-2" /> 
                     <span className="flex-1 text-left">IRB Protocol</span>
