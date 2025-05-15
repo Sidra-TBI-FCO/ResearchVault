@@ -269,7 +269,13 @@ export default function IbcApplicationDetail() {
                   onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <Beaker className="h-4 w-4 mr-2" /> Research Activity
+                  <Beaker className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Research Activity</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      {researchActivity.sdrNumber}
+                    </Badge>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -277,7 +283,13 @@ export default function IbcApplicationDetail() {
                   onClick={() => principalInvestigator && navigate(`/scientists/${principalInvestigator.id}`)}
                   disabled={!principalInvestigator}
                 >
-                  <User className="h-4 w-4 mr-2" /> Principal Investigator
+                  <User className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Principal Investigator</span>
+                  {principalInvestigator && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                      ID: {principalInvestigator.id}
+                    </Badge>
+                  )}
                 </Button>
               </div>
             </CardContent>

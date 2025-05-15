@@ -181,7 +181,13 @@ export default function DataManagementPlanDetail() {
                   onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <Layers className="h-4 w-4 mr-2" /> Research Activity
+                  <Layers className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Research Activity</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      {researchActivity.sdrNumber}
+                    </Badge>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -189,7 +195,13 @@ export default function DataManagementPlanDetail() {
                   onClick={() => researchActivity && navigate(`/publications?researchActivityId=${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <FileText className="h-4 w-4 mr-2" /> Publications
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Publications</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
+                      SDR: {researchActivity.id}
+                    </Badge>
+                  )}
                 </Button>
               </div>
             </CardContent>

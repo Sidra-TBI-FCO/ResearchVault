@@ -272,7 +272,27 @@ export default function ResearchContractDetail() {
                   onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <Layers className="h-4 w-4 mr-2" /> Research Activity
+                  <Layers className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Research Activity</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      {researchActivity.sdrNumber}
+                    </Badge>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={() => leadPI && navigate(`/scientists/${leadPI.id}`)}
+                  disabled={!leadPI}
+                >
+                  <Users className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Principal Investigator</span>
+                  {leadPI && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                      ID: {leadPI.id}
+                    </Badge>
+                  )}
                 </Button>
                 {contract.irbProtocol && (
                   <Button 
@@ -280,7 +300,11 @@ export default function ResearchContractDetail() {
                     className="w-full justify-start" 
                     onClick={() => navigate(`/irb-applications`)}
                   >
-                    <FileText className="h-4 w-4 mr-2" /> IRB Protocol
+                    <FileText className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">IRB Protocol</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
+                      {contract.irbProtocol}
+                    </Badge>
                   </Button>
                 )}
               </div>

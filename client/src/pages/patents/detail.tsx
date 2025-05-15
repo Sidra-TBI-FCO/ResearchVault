@@ -211,15 +211,27 @@ export default function PatentDetail() {
                   onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <Layers className="h-4 w-4 mr-2" /> Research Activity
+                  <Layers className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Research Activity</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      {researchActivity.sdrNumber}
+                    </Badge>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}/publications`)}
+                  onClick={() => researchActivity && navigate(`/publications?researchActivityId=${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <FileText className="h-4 w-4 mr-2" /> Publications
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Publications</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-gray-50 text-gray-700 border-gray-200">
+                      {researchActivity.id}
+                    </Badge>
+                  )}
                 </Button>
               </div>
             </CardContent>
