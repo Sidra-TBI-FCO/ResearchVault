@@ -91,7 +91,7 @@ export default function ResearchActivitiesList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
-        <Link href="/projects/create">
+        <Link href="/research-activities/create">
           <Button className="bg-primary-500 text-white">
             <FileText className="h-4 w-4 mr-1" /> New Research Activity
           </Button>
@@ -171,7 +171,7 @@ export default function ResearchActivitiesList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/projects/${activity.id}`}>
+                      <Link href={`/research-activities/${activity.id}`}>
                         <a className="hover:text-primary-500 transition-colors">{activity.title}</a>
                       </Link>
                       {activity.shortTitle && (
@@ -182,7 +182,7 @@ export default function ResearchActivitiesList() {
                     </TableCell>
                     <TableCell>
                       {activity.projectGroup ? (
-                        <Link href={`/project-groups/${activity.projectGroup.id}`}>
+                        <Link href={`/projects/${activity.projectGroup.id}`}>
                           <a className="text-sm hover:text-primary-500 transition-colors">
                             {activity.projectGroup.name}
                           </a>

@@ -16,7 +16,7 @@ import CreateScientist from "@/pages/scientists/create";
 // Programs (PRM)
 import ProgramsList from "@/pages/programs";
 
-// Project Groups (PRJ)
+// Projects (PRJ)
 import ProjectGroupsList from "@/pages/project-groups";
 
 // Projects
@@ -63,10 +63,13 @@ function Router() {
         
         {/* Projects (PRJ) */}
         <Route path="/projects" component={ProjectGroupsList} />
+        <Route path="/projects/create" component={CreateProject} />
+        <Route path="/projects/:id" component={ProjectGroupsList} />
         
         {/* Research Activities (SDR) */}
         <Route path="/research-activities" component={ProjectsList} />
         <Route path="/research-activities/create" component={CreateProject} />
+        <Route path="/research-activities/:id" component={CreateProject} />
         
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />
