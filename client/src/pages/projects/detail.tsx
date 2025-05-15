@@ -39,14 +39,15 @@ export default function ProjectDetail() {
   });
 
   const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/research-activities', { projectId: id }],
+    queryKey: ['/api/projects', id, 'research-activities'],
     queryFn: async () => {
-      const response = await fetch(`/api/research-activities?projectId=${id}`);
+      const response = await fetch(`/api/projects/${id}/research-activities`);
       if (!response.ok) {
         throw new Error('Failed to fetch research activities');
       }
       return response.json();
     },
+    enabled: !!id
   });
 
   if (projectLoading) {

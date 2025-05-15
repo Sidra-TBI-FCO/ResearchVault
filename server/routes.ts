@@ -357,6 +357,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch principal investigators" });
     }
   });
+  
+  // Research Activities
+  app.get('/api/research-activities', async (req: Request, res: Response) => {
+    try {
+      const activities = await storage.getResearchActivities();
+      
+      // Enhance with project and lead PI details
+      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
+        let project = null;
+        if (activity.projectId) {
+          project = await storage.getProject(activity.projectId);
+        }
+        
+        let leadPI = null;
+        if (activity.leadPIId) {
+          leadPI = await storage.getScientist(activity.leadPIId);
+        }
+        
+        return {
+          ...activity,
+          project: project ? {
+            id: project.id,
+            name: project.name,
+            projectId: project.projectId
+          } : null,
+          leadPI: leadPI ? {
+            id: leadPI.id,
+            name: leadPI.name,
+            profileImageInitials: leadPI.profileImageInitials
+          } : null
+        };
+      }));
+      
+      res.json(enhancedActivities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch research activities" });
+    }
+  });
+  
+  app.get('/api/research-activities/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const activity = await storage.getResearchActivity(id);
+      if (!activity) {
+        return res.status(404).json({ message: "Research activity not found" });
+      }
+      
+      // Get project details if projectId exists
+      let project = null;
+      if (activity.projectId) {
+        project = await storage.getProject(activity.projectId);
+      }
+      
+      // Get lead PI details if leadPIId exists
+      let leadPI = null;
+      if (activity.leadPIId) {
+        leadPI = await storage.getScientist(activity.leadPIId);
+      }
+      
+      const enhancedActivity = {
+        ...activity,
+        project: project ? {
+          id: project.id,
+          name: project.name,
+          projectId: project.projectId
+        } : null,
+        leadPI: leadPI ? {
+          id: leadPI.id,
+          name: leadPI.name,
+          profileImageInitials: leadPI.profileImageInitials
+        } : null
+      };
+      
+      res.json(enhancedActivity);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch research activity" });
+    }
+  });
 
   // Projects
   app.get('/api/projects', async (req: Request, res: Response) => {
@@ -496,6 +578,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete project" });
+    }
+  });
+
+  // Project Research Activities
+  app.get('/api/projects/:id/research-activities', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      const activities = await storage.getResearchActivitiesForProject(id);
+      
+      // Enhance activities with lead PI details
+      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
+        let leadPI = null;
+        if (activity.leadPIId) {
+          leadPI = await storage.getScientist(activity.leadPIId);
+        }
+        
+        return {
+          ...activity,
+          leadPI: leadPI ? {
+            id: leadPI.id,
+            name: leadPI.name,
+            profileImageInitials: leadPI.profileImageInitials
+          } : null
+        };
+      }));
+      
+      res.json(enhancedActivities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch research activities for project" });
     }
   });
 
