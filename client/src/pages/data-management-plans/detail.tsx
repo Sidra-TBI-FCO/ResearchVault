@@ -6,6 +6,7 @@ import { ResearchActivity, DataManagementPlan } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Database, Layers } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { usePublicationCount } from "@/hooks/use-publication-count";
 
 export default function DataManagementPlanDetail() {
   const params = useParams<{ id: string }>();
