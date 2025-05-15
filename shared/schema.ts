@@ -54,6 +54,10 @@ export const programs = pgTable("programs", {
   programId: text("program_id").notNull().unique(), // PRM number
   name: text("name").notNull(),
   description: text("description"),
+  programDirectorId: integer("program_director_id"), // Program Director (references scientists.id)
+  researchCoLeadId: integer("research_co_lead_id"), // Research Co-Lead (references scientists.id)
+  clinicalCoLead1Id: integer("clinical_co_lead_1_id"), // Clinical Co-Lead 1 (references scientists.id)
+  clinicalCoLead2Id: integer("clinical_co_lead_2_id"), // Clinical Co-Lead 2 (references scientists.id)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -71,7 +75,7 @@ export const projects = pgTable("projects", {
   programId: integer("program_id"), // references programs.id
   name: text("name").notNull(),
   description: text("description"),
-  leadScientistId: integer("lead_scientist_id"), // references scientists.id
+  principalInvestigatorId: integer("principal_investigator_id"), // Principal Investigator (references scientists.id)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -93,7 +97,8 @@ export const researchActivities = pgTable("research_activities", {
   status: text("status").notNull().default("planning"), // planning, active, completed, on_hold
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
-  leadPIId: integer("lead_pi_id"), // references scientists.id
+  principalInvestigatorId: integer("principal_investigator_id"), // Principal Investigator (references scientists.id)
+  staffScientistId: integer("staff_scientist_id"), // Staff Scientist (references scientists.id)
   budgetHolderId: integer("budget_holder_id"), // references scientists.id
   lineManagerId: integer("line_manager_id"), // references scientists.id
   additionalNotificationEmail: text("additional_notification_email"),
