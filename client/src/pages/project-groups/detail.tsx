@@ -191,7 +191,7 @@ export default function ProjectGroupDetail() {
                     <div 
                       key={activity.id} 
                       className="flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                      onClick={() => navigate(`/research-activities/${activity.id}`)}
+                      onClick={() => navigate(`/projects/${activity.id}`)}
                     >
                       <div>
                         <p className="font-medium">{activity.title}</p>
