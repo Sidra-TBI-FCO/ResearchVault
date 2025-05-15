@@ -36,6 +36,9 @@ export default function DataManagementPlanDetail() {
     },
     enabled: !!dataManagementPlan?.researchActivityId,
   });
+  
+  // Get the count of publications for this research activity
+  const { count: publicationCount } = usePublicationCount(researchActivity?.id);
 
   if (dataManagementPlanLoading) {
     return (
@@ -203,7 +206,7 @@ export default function DataManagementPlanDetail() {
                   <span className="flex-1 text-left">Publications</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                      {usePublicationCount(researchActivity.id)}
+                      {publicationCount}
                     </Badge>
                   )}
                 </Button>
