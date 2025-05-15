@@ -1,5 +1,5 @@
 import { db } from "../server/db";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import {
   users, insertUserSchema,
   scientists, insertScientistSchema,
@@ -19,12 +19,21 @@ async function seedDatabase() {
   console.log("Seeding database with sample data...");
 
   try {
-    // Create admin user
-    const [adminUser] = await db.insert(users).values({
-      username: "admin",
-      password: "password123" // In a real app, this would be hashed
-    }).returning();
-    console.log("Created admin user with ID:", adminUser.id);
+    // Check if admin user already exists
+    const existingAdmin = await db.select().from(users).where(eq(users.username, "admin"));
+    
+    let adminUser;
+    if (existingAdmin.length === 0) {
+      // Create admin user if it doesn't exist
+      [adminUser] = await db.insert(users).values({
+        username: "admin",
+        password: "password123" // In a real app, this would be hashed
+      }).returning();
+      console.log("Created admin user with ID:", adminUser.id);
+    } else {
+      adminUser = existingAdmin[0];
+      console.log("Admin user already exists with ID:", adminUser.id);
+    }
 
     // Create scientists
     const scientistsData = [
@@ -80,17 +89,17 @@ async function seedDatabase() {
       }
     ];
 
-    const scientists = [];
+    const scientistsArray = [];
     for (const scientistData of scientistsData) {
       const [scientist] = await db.insert(scientists).values(scientistData).returning();
-      scientists.push(scientist);
+      scientistsArray.push(scientist);
       console.log(`Created scientist "${scientist.name}" with ID: ${scientist.id}`);
     }
 
     // Update supervisor IDs
     await db.update(scientists)
-      .set({ supervisorId: scientists[0].id })
-      .where(sql`id = ${scientists[2].id} OR id = ${scientists[3].id}`);
+      .set({ supervisorId: scientistsArray[0].id })
+      .where(sql`id = ${scientistsArray[2].id} OR id = ${scientistsArray[3].id}`);
 
     // Create programs (PRM)
     const programsData = [

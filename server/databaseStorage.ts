@@ -17,6 +17,27 @@ import {
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
+  // Backward compatibility methods
+  async getProjects(): Promise<ResearchActivity[]> {
+    return this.getResearchActivities();
+  }
+
+  async getProject(id: number): Promise<ResearchActivity | undefined> {
+    return this.getResearchActivity(id);
+  }
+
+  async createProject(project: InsertResearchActivity): Promise<ResearchActivity> {
+    return this.createResearchActivity(project);
+  }
+
+  async updateProject(id: number, project: Partial<InsertResearchActivity>): Promise<ResearchActivity | undefined> {
+    return this.updateResearchActivity(id, project);
+  }
+
+  async deleteProject(id: number): Promise<boolean> {
+    return this.deleteResearchActivity(id);
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

@@ -46,6 +46,13 @@ export interface IStorage {
   getStaff(): Promise<Scientist[]>;
   getPrincipalInvestigators(): Promise<Scientist[]>;
 
+  // Backward compatibility (Projects = Research Activities)
+  getProjects(): Promise<ResearchActivity[]>;
+  getProject(id: number): Promise<ResearchActivity | undefined>;
+  createProject(project: InsertResearchActivity): Promise<ResearchActivity>;
+  updateProject(id: number, project: Partial<InsertResearchActivity>): Promise<ResearchActivity | undefined>;
+  deleteProject(id: number): Promise<boolean>;
+
   // Research Activity operations
   getResearchActivities(): Promise<ResearchActivity[]>;
   getResearchActivity(id: number): Promise<ResearchActivity | undefined>;
