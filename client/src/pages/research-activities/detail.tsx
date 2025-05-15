@@ -2,58 +2,66 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProjectGroup, Program, ResearchActivity } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users } from "lucide-react";
+import { Project, Scientist, ResearchActivity } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export default function ProjectGroupDetail() {
+// Define interface for detail data
+interface ResearchActivityDetail extends ResearchActivity {
+  project?: Project;
+  leadPI?: Scientist;
+}
+
+export default function ResearchActivityDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
 
-  const { data: projectGroup, isLoading: projectLoading } = useQuery<ProjectGroup>({
-    queryKey: ['/api/project-groups', id],
+  const { data: activity, isLoading: activityLoading } = useQuery<ResearchActivityDetail>({
+    queryKey: ['/api/research-activities', id],
     queryFn: async () => {
-      const response = await fetch(`/api/project-groups/${id}`);
+      const response = await fetch(`/api/research-activities/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch research activity');
+      }
+      return response.json();
+    },
+  });
+
+  const { data: project, isLoading: projectLoading } = useQuery<Project>({
+    queryKey: ['/api/projects', activity?.projectId],
+    queryFn: async () => {
+      if (!activity?.projectId) return null;
+      const response = await fetch(`/api/projects/${activity.projectId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch project');
       }
       return response.json();
     },
+    enabled: !!activity?.projectId,
   });
 
-  const { data: program, isLoading: programLoading } = useQuery<Program>({
-    queryKey: ['/api/programs', projectGroup?.programId],
+  const { data: leadPI, isLoading: leadPILoading } = useQuery<Scientist>({
+    queryKey: ['/api/scientists', activity?.leadPIId],
     queryFn: async () => {
-      if (!projectGroup?.programId) return null;
-      const response = await fetch(`/api/programs/${projectGroup.programId}`);
+      if (!activity?.leadPIId) return null;
+      const response = await fetch(`/api/scientists/${activity.leadPIId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch program');
+        throw new Error('Failed to fetch lead PI');
       }
       return response.json();
     },
-    enabled: !!projectGroup?.programId,
+    enabled: !!activity?.leadPIId,
   });
 
-  const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/projects', { projectGroupId: id }],
-    queryFn: async () => {
-      const response = await fetch(`/api/projects?projectGroupId=${id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch research activities');
-      }
-      return response.json();
-    },
-  });
-
-  if (projectLoading) {
+  if (activityLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -77,22 +85,22 @@ export default function ProjectGroupDetail() {
     );
   }
 
-  if (!projectGroup) {
+  if (!activity) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Project Not Found</h1>
+          <h1 className="text-2xl font-semibold text-neutral-400">Research Activity Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The project you're looking for could not be found.</p>
-              <Button className="mt-4" onClick={() => navigate("/projects")}>
-                Return to Projects List
+              <p className="text-lg text-neutral-400">The research activity you're looking for could not be found.</p>
+              <Button className="mt-4" onClick={() => navigate("/research-activities")}>
+                Return to Research Activities List
               </Button>
             </div>
           </CardContent>
@@ -104,42 +112,50 @@ export default function ProjectGroupDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{projectGroup.name}</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">{activity.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Project Details</CardTitle>
+            <CardTitle>Research Activity Details</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-semibold">{projectGroup.name}</h2>
-                <div className="text-neutral-400 flex items-center gap-1 mt-1">
-                  <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">{projectGroup.projectGroupId}</Badge>
+                <h2 className="text-xl font-semibold">{activity.title}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">{activity.sdrNumber}</Badge>
+                  <Badge className={
+                    activity.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
+                    activity.status === 'planning' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                    activity.status === 'completed' ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                    'bg-yellow-100 text-yellow-800 border-yellow-200'
+                  }>
+                    {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                  </Badge>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Program</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Project</h3>
                   <div className="flex items-center gap-1">
                     <Layers className="h-3 w-3" />
                     <span>
-                      {programLoading ? (
+                      {projectLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
-                      ) : program ? (
+                      ) : project ? (
                         <Button 
                           variant="link" 
                           className="p-0 h-auto text-primary-600"
-                          onClick={() => navigate(`/programs/${program.id}`)}
+                          onClick={() => navigate(`/projects/${project.id}`)}
                         >
-                          {program.name}
+                          {project.name}
                         </Button>
                       ) : 'Not assigned'}
                     </span>
@@ -147,26 +163,63 @@ export default function ProjectGroupDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Added Date</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Lead PI</h3>
+                  <div className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    <span>
+                      {leadPILoading ? (
+                        <Skeleton className="h-4 w-24 inline-block" />
+                      ) : leadPI ? (
+                        leadPI.name
+                      ) : 'Not assigned'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Start Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{projectGroup.createdAt ? format(new Date(projectGroup.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
+                    <span>{activity.startDate ? format(new Date(activity.startDate), 'MMM d, yyyy') : 'Not specified'}</span>
                   </div>
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Last Updated</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">End Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{projectGroup.updatedAt ? format(new Date(projectGroup.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
+                    <span>{activity.endDate ? format(new Date(activity.endDate), 'MMM d, yyyy') : 'Ongoing'}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Branch</h3>
+                  <div className="flex items-center gap-1">
+                    <Building className="h-3 w-3" />
+                    <span>{activity.sidraBranch || 'Not specified'}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Budget Source</h3>
+                  <div className="flex items-center gap-1">
+                    <Beaker className="h-3 w-3" />
+                    <span>{activity.budgetSource || 'Not specified'}</span>
                   </div>
                 </div>
               </div>
 
-              {projectGroup.description && (
+              {activity.description && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-neutral-400">Description</h3>
-                  <p className="mt-1">{projectGroup.description}</p>
+                  <p className="mt-1">{activity.description}</p>
+                </div>
+              )}
+
+              {activity.objectives && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-neutral-400">Objectives</h3>
+                  <p className="mt-1">{activity.objectives}</p>
                 </div>
               )}
             </div>
@@ -176,41 +229,32 @@ export default function ProjectGroupDetail() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Research Activities</CardTitle>
+              <CardTitle>Related Resources</CardTitle>
             </CardHeader>
             <CardContent>
-              {researchActivitiesLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-full" />
-                  <Skeleton className="h-5 w-full" />
-                  <Skeleton className="h-5 w-full" />
-                </div>
-              ) : researchActivities && researchActivities.length > 0 ? (
-                <div className="space-y-2">
-                  {researchActivities.map((activity) => (
-                    <div 
-                      key={activity.id} 
-                      className="flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                      onClick={() => navigate(`/projects/${activity.id}`)}
-                    >
-                      <div>
-                        <p className="font-medium">{activity.title}</p>
-                        <p className="text-sm text-gray-500">{activity.sdrNumber}</p>
-                      </div>
-                      <Badge>{activity.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-neutral-400">No research activities found for this project.</p>
-              )}
-              <Button 
-                variant="outline" 
-                className="w-full mt-4" 
-                onClick={() => navigate("/research-activities/create")}
-              >
-                <Layers className="h-4 w-4 mr-2" /> Add Research Activity
-              </Button>
+              <div className="space-y-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={() => navigate(`/research-activities/${activity.id}/data-management-plan`)}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> Data Management Plan
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={() => navigate(`/research-activities/${activity.id}/team`)}
+                >
+                  <Users className="h-4 w-4 mr-2" /> Project Team
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={() => navigate(`/research-activities/${activity.id}/publications`)}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> Publications
+                </Button>
+              </div>
             </CardContent>
           </Card>
           

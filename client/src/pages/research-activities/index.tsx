@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -188,9 +188,12 @@ export default function ResearchActivitiesList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/research-activities/${activity.id}`}>
-                        <a className="hover:text-primary-500 transition-colors">{activity.title}</a>
-                      </Link>
+                      <div
+                        className="cursor-pointer hover:text-primary-500 transition-colors"
+                        onClick={() => navigate(`/research-activities/${activity.id}`)}
+                      >
+                        {activity.title}
+                      </div>
                       {activity.description && (
                         <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
                           {activity.description}
@@ -199,11 +202,12 @@ export default function ResearchActivitiesList() {
                     </TableCell>
                     <TableCell>
                       {activity.project ? (
-                        <Link href={`/projects/${activity.project.id}`}>
-                          <a className="text-sm hover:text-primary-500 transition-colors">
-                            {activity.project.name}
-                          </a>
-                        </Link>
+                        <div 
+                          className="text-sm hover:text-primary-500 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/projects/${activity.project.id}`)}
+                        >
+                          {activity.project.name}
+                        </div>
                       ) : (
                         <span className="text-sm text-neutral-200">Not assigned</span>
                       )}
