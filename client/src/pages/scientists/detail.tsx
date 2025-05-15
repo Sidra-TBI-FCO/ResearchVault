@@ -104,7 +104,14 @@ export default function ScientistDetail() {
               </Avatar>
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-semibold">{scientist.name}</h2>
+                  <h2 className="text-xl font-semibold">
+                    {scientist.name}
+                    {scientist.staffId && (
+                      <Badge variant="outline" className="ml-3 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                        ID: {scientist.staffId}
+                      </Badge>
+                    )}
+                  </h2>
                   <p className="text-neutral-400">
                     {scientist.title || (scientist.isStaff ? "Research Staff" : "Principal Investigator")}
                   </p>
@@ -164,6 +171,16 @@ export default function ScientistDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {scientist.staffId && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Staff ID</h3>
+                    <p className="flex items-center">
+                      <User className="h-3 w-3 mr-1" />
+                      <span>{scientist.staffId}</span>
+                    </p>
+                  </div>
+                )}
+              
                 {scientist.expertise && (
                   <div>
                     <h3 className="text-sm font-medium text-neutral-400">Areas of Expertise</h3>

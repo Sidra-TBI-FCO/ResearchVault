@@ -104,6 +104,13 @@ export default function ScientistsList() {
                               <Link href={`/scientists/${scientist.id}`}>
                                 <span className="hover:text-primary-500 transition-colors cursor-pointer">{scientist.name}</span>
                               </Link>
+                              {scientist.staffId && (
+                                <span className="ml-2">
+                                  <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                                    ID: {scientist.staffId}
+                                  </Badge>
+                                </span>
+                              )}
                             </div>
                           </div>
                         </TableCell>
