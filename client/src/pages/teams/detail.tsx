@@ -300,6 +300,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                   <SelectContent>
                     {/* Only SDR Team Roles */}
                     <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
+                    <SelectItem value="Lead Scientist">Lead Scientist</SelectItem>
                     <SelectItem value="Team Member">Team Member</SelectItem>
                   </SelectContent>
                 </Select>
@@ -383,7 +384,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                         <TableCell>
                           <Badge className={
                             member.role === 'Principal Investigator' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                            member.role === 'Staff Scientist' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                            member.role === 'Lead Scientist' ? 'bg-purple-100 text-purple-800 border-purple-200' :
                             'bg-green-100 text-green-800 border-green-200'
                           }>
                             {member.role}

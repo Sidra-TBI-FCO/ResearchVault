@@ -2,9 +2,9 @@
 ALTER TABLE research_activities
 RENAME COLUMN lead_pi_id TO principal_investigator_id;
 
--- Add staffScientistId column to research_activities table
+-- Add leadScientistId column to research_activities table
 ALTER TABLE research_activities
-ADD COLUMN staff_scientist_id INTEGER;
+ADD COLUMN lead_scientist_id INTEGER;
 
 -- Add program role fields to programs table
 ALTER TABLE programs
