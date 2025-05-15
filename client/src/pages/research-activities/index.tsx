@@ -61,19 +61,19 @@ export default function ProjectGroupsList() {
     queryKey: ['/api/scientists'],
   });
 
-  // Enhance project groups with related data
-  const enhancedProjectGroups = projectGroups?.map(group => {
-    const program = programs?.find(p => p.id === group.programId);
-    const leadScientist = group.leadScientistId ? 
-      scientists?.find(s => s.id === group.leadScientistId) : undefined;
+  // Enhance projects with related data
+  const enhancedProjects = projects?.map(project => {
+    const program = programs?.find(p => p.id === project.programId);
+    const leadScientist = project.leadScientistId ? 
+      scientists?.find(s => s.id === project.leadScientistId) : undefined;
     return {
-      ...group,
+      ...project,
       program,
       leadScientist
     };
   });
 
-  const filteredProjectGroups = enhancedProjectGroups?.filter(group => {
+  const filteredProjects = enhancedProjects?.filter(project => {
     const matchesSearch = 
       group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (group.description?.toLowerCase().includes(searchQuery.toLowerCase())) ||

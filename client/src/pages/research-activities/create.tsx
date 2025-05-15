@@ -63,9 +63,9 @@ export default function CreateProject() {
     queryKey: ['/api/principal-investigators'],
   });
 
-  // Get all project groups
-  const { data: projectGroups, isLoading: projectGroupsLoading } = useQuery<ProjectGroup[]>({
-    queryKey: ['/api/project-groups'],
+  // Get all projects
+  const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
+    queryKey: ['/api/projects'],
   });
 
   // Get all scientists
