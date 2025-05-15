@@ -1,0 +1,556 @@
+import { eq, and, desc, or, sql } from "drizzle-orm";
+import { db } from "./db";
+import { IStorage } from "./storage";
+import {
+  users, User, InsertUser,
+  scientists, Scientist, InsertScientist,
+  programs, Program, InsertProgram,
+  projectGroups, ProjectGroup, InsertProjectGroup,
+  researchActivities, ResearchActivity, InsertResearchActivity,
+  projectMembers, ProjectMember, InsertProjectMember,
+  dataManagementPlans, DataManagementPlan, InsertDataManagementPlan,
+  publications, Publication, InsertPublication,
+  patents, Patent, InsertPatent,
+  irbApplications, IrbApplication, InsertIrbApplication,
+  ibcApplications, IbcApplication, InsertIbcApplication,
+  researchContracts, ResearchContract, InsertResearchContract
+} from "@shared/schema";
+
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  // Program operations
+  async getPrograms(): Promise<Program[]> {
+    return await db.select().from(programs);
+  }
+
+  async getProgram(id: number): Promise<Program | undefined> {
+    const [program] = await db.select().from(programs).where(eq(programs.id, id));
+    return program;
+  }
+
+  async getProgramByProgramId(programId: string): Promise<Program | undefined> {
+    const [program] = await db.select().from(programs).where(eq(programs.programId, programId));
+    return program;
+  }
+
+  async createProgram(program: InsertProgram): Promise<Program> {
+    const [newProgram] = await db.insert(programs).values(program).returning();
+    return newProgram;
+  }
+
+  async updateProgram(id: number, program: Partial<InsertProgram>): Promise<Program | undefined> {
+    const [updatedProgram] = await db
+      .update(programs)
+      .set(program)
+      .where(eq(programs.id, id))
+      .returning();
+    return updatedProgram;
+  }
+
+  async deleteProgram(id: number): Promise<boolean> {
+    const result = await db.delete(programs).where(eq(programs.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Project Group operations
+  async getProjectGroups(): Promise<ProjectGroup[]> {
+    return await db.select().from(projectGroups);
+  }
+
+  async getProjectGroup(id: number): Promise<ProjectGroup | undefined> {
+    const [projectGroup] = await db.select().from(projectGroups).where(eq(projectGroups.id, id));
+    return projectGroup;
+  }
+
+  async getProjectGroupByGroupId(groupId: string): Promise<ProjectGroup | undefined> {
+    const [projectGroup] = await db.select().from(projectGroups).where(eq(projectGroups.projectGroupId, groupId));
+    return projectGroup;
+  }
+
+  async getProjectGroupsForProgram(programId: number): Promise<ProjectGroup[]> {
+    return await db.select().from(projectGroups).where(eq(projectGroups.programId, programId));
+  }
+
+  async createProjectGroup(projectGroup: InsertProjectGroup): Promise<ProjectGroup> {
+    const [newProjectGroup] = await db.insert(projectGroups).values(projectGroup).returning();
+    return newProjectGroup;
+  }
+
+  async updateProjectGroup(id: number, projectGroup: Partial<InsertProjectGroup>): Promise<ProjectGroup | undefined> {
+    const [updatedProjectGroup] = await db
+      .update(projectGroups)
+      .set(projectGroup)
+      .where(eq(projectGroups.id, id))
+      .returning();
+    return updatedProjectGroup;
+  }
+
+  async deleteProjectGroup(id: number): Promise<boolean> {
+    const result = await db.delete(projectGroups).where(eq(projectGroups.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Scientist operations
+  async getScientists(): Promise<Scientist[]> {
+    return await db.select().from(scientists);
+  }
+
+  async getScientist(id: number): Promise<Scientist | undefined> {
+    const [scientist] = await db.select().from(scientists).where(eq(scientists.id, id));
+    return scientist;
+  }
+
+  async createScientist(scientist: InsertScientist): Promise<Scientist> {
+    const [newScientist] = await db.insert(scientists).values(scientist).returning();
+    return newScientist;
+  }
+
+  async updateScientist(id: number, scientist: Partial<InsertScientist>): Promise<Scientist | undefined> {
+    const [updatedScientist] = await db
+      .update(scientists)
+      .set(scientist)
+      .where(eq(scientists.id, id))
+      .returning();
+    return updatedScientist;
+  }
+
+  async deleteScientist(id: number): Promise<boolean> {
+    const result = await db.delete(scientists).where(eq(scientists.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getStaff(): Promise<Scientist[]> {
+    return await db.select().from(scientists).where(eq(scientists.isStaff, true));
+  }
+
+  async getPrincipalInvestigators(): Promise<Scientist[]> {
+    return await db.select().from(scientists).where(eq(scientists.isStaff, false));
+  }
+
+  // Research Activity operations
+  async getResearchActivities(): Promise<ResearchActivity[]> {
+    return await db.select().from(researchActivities);
+  }
+
+  async getResearchActivity(id: number): Promise<ResearchActivity | undefined> {
+    const [activity] = await db.select().from(researchActivities).where(eq(researchActivities.id, id));
+    return activity;
+  }
+
+  async getResearchActivityBySdr(sdrNumber: string): Promise<ResearchActivity | undefined> {
+    const [activity] = await db.select().from(researchActivities).where(eq(researchActivities.sdrNumber, sdrNumber));
+    return activity;
+  }
+
+  async getResearchActivitiesForProjectGroup(projectGroupId: number): Promise<ResearchActivity[]> {
+    return await db.select().from(researchActivities).where(eq(researchActivities.projectGroupId, projectGroupId));
+  }
+
+  async getResearchActivitiesForScientist(scientistId: number): Promise<ResearchActivity[]> {
+    // Get activities where scientist is lead PI
+    const asLeadPI = await db.select().from(researchActivities).where(eq(researchActivities.leadPIId, scientistId));
+    
+    // Get activities where scientist is a team member
+    const teamMemberActivities = await db
+      .select({ activityId: projectMembers.researchActivityId })
+      .from(projectMembers)
+      .where(eq(projectMembers.scientistId, scientistId));
+    
+    const activityIds = teamMemberActivities.map(a => a.activityId);
+    
+    // If not a team member of any activities, just return the lead PI activities
+    if (activityIds.length === 0) {
+      return asLeadPI;
+    }
+    
+    // Otherwise, get activities where scientist is either lead PI or team member
+    return await db
+      .select()
+      .from(researchActivities)
+      .where(
+        or(
+          eq(researchActivities.leadPIId, scientistId),
+          sql`${researchActivities.id} IN (${activityIds.join(',')})`
+        )
+      );
+  }
+
+  async createResearchActivity(activity: InsertResearchActivity): Promise<ResearchActivity> {
+    const [newActivity] = await db.insert(researchActivities).values(activity).returning();
+    return newActivity;
+  }
+
+  async updateResearchActivity(id: number, activity: Partial<InsertResearchActivity>): Promise<ResearchActivity | undefined> {
+    const [updatedActivity] = await db
+      .update(researchActivities)
+      .set(activity)
+      .where(eq(researchActivities.id, id))
+      .returning();
+    return updatedActivity;
+  }
+
+  async deleteResearchActivity(id: number): Promise<boolean> {
+    const result = await db.delete(researchActivities).where(eq(researchActivities.id, id));
+    return result.rowCount > 0;
+  }
+  
+  // Project Members operations
+  async getProjectMembers(researchActivityId: number): Promise<ProjectMember[]> {
+    return await db.select().from(projectMembers).where(eq(projectMembers.researchActivityId, researchActivityId));
+  }
+
+  async addProjectMember(member: InsertProjectMember): Promise<ProjectMember> {
+    const [newMember] = await db.insert(projectMembers).values(member).returning();
+    return newMember;
+  }
+
+  async removeProjectMember(researchActivityId: number, scientistId: number): Promise<boolean> {
+    const result = await db
+      .delete(projectMembers)
+      .where(
+        and(
+          eq(projectMembers.researchActivityId, researchActivityId),
+          eq(projectMembers.scientistId, scientistId)
+        )
+      );
+    return result.rowCount > 0;
+  }
+
+  // Data Management Plan operations
+  async getDataManagementPlans(): Promise<DataManagementPlan[]> {
+    return await db.select().from(dataManagementPlans);
+  }
+
+  async getDataManagementPlan(id: number): Promise<DataManagementPlan | undefined> {
+    const [plan] = await db.select().from(dataManagementPlans).where(eq(dataManagementPlans.id, id));
+    return plan;
+  }
+
+  async getDataManagementPlanForResearchActivity(researchActivityId: number): Promise<DataManagementPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(dataManagementPlans)
+      .where(eq(dataManagementPlans.researchActivityId, researchActivityId));
+    return plan;
+  }
+
+  async createDataManagementPlan(plan: InsertDataManagementPlan): Promise<DataManagementPlan> {
+    const [newPlan] = await db.insert(dataManagementPlans).values(plan).returning();
+    return newPlan;
+  }
+
+  async updateDataManagementPlan(id: number, plan: Partial<InsertDataManagementPlan>): Promise<DataManagementPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(dataManagementPlans)
+      .set(plan)
+      .where(eq(dataManagementPlans.id, id))
+      .returning();
+    return updatedPlan;
+  }
+
+  async deleteDataManagementPlan(id: number): Promise<boolean> {
+    const result = await db.delete(dataManagementPlans).where(eq(dataManagementPlans.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Publication operations
+  async getPublications(): Promise<Publication[]> {
+    return await db.select().from(publications);
+  }
+
+  async getPublication(id: number): Promise<Publication | undefined> {
+    const [publication] = await db.select().from(publications).where(eq(publications.id, id));
+    return publication;
+  }
+
+  async getPublicationsForResearchActivity(researchActivityId: number): Promise<Publication[]> {
+    return await db.select().from(publications).where(eq(publications.researchActivityId, researchActivityId));
+  }
+
+  async createPublication(publication: InsertPublication): Promise<Publication> {
+    const [newPublication] = await db.insert(publications).values(publication).returning();
+    return newPublication;
+  }
+
+  async updatePublication(id: number, publication: Partial<InsertPublication>): Promise<Publication | undefined> {
+    const [updatedPublication] = await db
+      .update(publications)
+      .set(publication)
+      .where(eq(publications.id, id))
+      .returning();
+    return updatedPublication;
+  }
+
+  async deletePublication(id: number): Promise<boolean> {
+    const result = await db.delete(publications).where(eq(publications.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Patent operations
+  async getPatents(): Promise<Patent[]> {
+    return await db.select().from(patents);
+  }
+
+  async getPatent(id: number): Promise<Patent | undefined> {
+    const [patent] = await db.select().from(patents).where(eq(patents.id, id));
+    return patent;
+  }
+
+  async getPatentsForResearchActivity(researchActivityId: number): Promise<Patent[]> {
+    return await db.select().from(patents).where(eq(patents.researchActivityId, researchActivityId));
+  }
+
+  async createPatent(patent: InsertPatent): Promise<Patent> {
+    const [newPatent] = await db.insert(patents).values(patent).returning();
+    return newPatent;
+  }
+
+  async updatePatent(id: number, patent: Partial<InsertPatent>): Promise<Patent | undefined> {
+    const [updatedPatent] = await db
+      .update(patents)
+      .set(patent)
+      .where(eq(patents.id, id))
+      .returning();
+    return updatedPatent;
+  }
+
+  async deletePatent(id: number): Promise<boolean> {
+    const result = await db.delete(patents).where(eq(patents.id, id));
+    return result.rowCount > 0;
+  }
+
+  // IRB Application operations
+  async getIrbApplications(): Promise<IrbApplication[]> {
+    return await db.select().from(irbApplications);
+  }
+
+  async getIrbApplication(id: number): Promise<IrbApplication | undefined> {
+    const [application] = await db.select().from(irbApplications).where(eq(irbApplications.id, id));
+    return application;
+  }
+
+  async getIrbApplicationByIrbNumber(irbNumber: string): Promise<IrbApplication | undefined> {
+    const [application] = await db.select().from(irbApplications).where(eq(irbApplications.irbNumber, irbNumber));
+    return application;
+  }
+
+  async getIrbApplicationsForResearchActivity(researchActivityId: number): Promise<IrbApplication[]> {
+    return await db.select().from(irbApplications).where(eq(irbApplications.researchActivityId, researchActivityId));
+  }
+
+  async createIrbApplication(application: InsertIrbApplication): Promise<IrbApplication> {
+    const [newApplication] = await db.insert(irbApplications).values(application).returning();
+    return newApplication;
+  }
+
+  async updateIrbApplication(id: number, application: Partial<InsertIrbApplication>): Promise<IrbApplication | undefined> {
+    const [updatedApplication] = await db
+      .update(irbApplications)
+      .set(application)
+      .where(eq(irbApplications.id, id))
+      .returning();
+    return updatedApplication;
+  }
+
+  async deleteIrbApplication(id: number): Promise<boolean> {
+    const result = await db.delete(irbApplications).where(eq(irbApplications.id, id));
+    return result.rowCount > 0;
+  }
+
+  // IBC Application operations
+  async getIbcApplications(): Promise<IbcApplication[]> {
+    return await db.select().from(ibcApplications);
+  }
+
+  async getIbcApplication(id: number): Promise<IbcApplication | undefined> {
+    const [application] = await db.select().from(ibcApplications).where(eq(ibcApplications.id, id));
+    return application;
+  }
+
+  async getIbcApplicationByIbcNumber(ibcNumber: string): Promise<IbcApplication | undefined> {
+    const [application] = await db.select().from(ibcApplications).where(eq(ibcApplications.ibcNumber, ibcNumber));
+    return application;
+  }
+
+  async getIbcApplicationsForResearchActivity(researchActivityId: number): Promise<IbcApplication[]> {
+    return await db.select().from(ibcApplications).where(eq(ibcApplications.researchActivityId, researchActivityId));
+  }
+
+  async createIbcApplication(application: InsertIbcApplication): Promise<IbcApplication> {
+    const [newApplication] = await db.insert(ibcApplications).values(application).returning();
+    return newApplication;
+  }
+
+  async updateIbcApplication(id: number, application: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined> {
+    const [updatedApplication] = await db
+      .update(ibcApplications)
+      .set(application)
+      .where(eq(ibcApplications.id, id))
+      .returning();
+    return updatedApplication;
+  }
+
+  async deleteIbcApplication(id: number): Promise<boolean> {
+    const result = await db.delete(ibcApplications).where(eq(ibcApplications.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Research Contract operations
+  async getResearchContracts(): Promise<ResearchContract[]> {
+    return await db.select().from(researchContracts);
+  }
+
+  async getResearchContract(id: number): Promise<ResearchContract | undefined> {
+    const [contract] = await db.select().from(researchContracts).where(eq(researchContracts.id, id));
+    return contract;
+  }
+
+  async getResearchContractByContractNumber(contractNumber: string): Promise<ResearchContract | undefined> {
+    const [contract] = await db.select().from(researchContracts).where(eq(researchContracts.contractNumber, contractNumber));
+    return contract;
+  }
+
+  async getResearchContractsForResearchActivity(researchActivityId: number): Promise<ResearchContract[]> {
+    return await db.select().from(researchContracts).where(eq(researchContracts.researchActivityId, researchActivityId));
+  }
+
+  async createResearchContract(contract: InsertResearchContract): Promise<ResearchContract> {
+    const [newContract] = await db.insert(researchContracts).values(contract).returning();
+    return newContract;
+  }
+
+  async updateResearchContract(id: number, contract: Partial<InsertResearchContract>): Promise<ResearchContract | undefined> {
+    const [updatedContract] = await db
+      .update(researchContracts)
+      .set(contract)
+      .where(eq(researchContracts.id, id))
+      .returning();
+    return updatedContract;
+  }
+
+  async deleteResearchContract(id: number): Promise<boolean> {
+    const result = await db.delete(researchContracts).where(eq(researchContracts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Dashboard operations
+  async getDashboardStats(): Promise<{
+    activeResearchActivities: number;
+    publications: number;
+    patents: number;
+    pendingApplications: number;
+  }> {
+    const activeActivities = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(researchActivities)
+      .where(eq(researchActivities.status, "active"));
+    
+    const publicationCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(publications);
+    
+    const patentCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(patents);
+    
+    const pendingIrbCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(irbApplications)
+      .where(eq(irbApplications.status, "Submitted"));
+    
+    const pendingIbcCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(ibcApplications)
+      .where(eq(ibcApplications.status, "Submitted"));
+    
+    return {
+      activeResearchActivities: activeActivities[0].count,
+      publications: publicationCount[0].count,
+      patents: patentCount[0].count,
+      pendingApplications: pendingIrbCount[0].count + pendingIbcCount[0].count,
+    };
+  }
+
+  async getRecentResearchActivities(limit: number = 5): Promise<ResearchActivity[]> {
+    return await db
+      .select()
+      .from(researchActivities)
+      .orderBy(desc(researchActivities.createdAt))
+      .limit(limit);
+  }
+
+  async getUpcomingDeadlines(): Promise<any[]> {
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    
+    // Get IRB applications expiring in the next 30 days
+    const irbDeadlines = await db
+      .select({
+        id: irbApplications.id,
+        type: sql<string>`'IRB'`,
+        title: irbApplications.title,
+        expirationDate: irbApplications.expirationDate,
+        researchActivityId: irbApplications.researchActivityId
+      })
+      .from(irbApplications)
+      .where(
+        and(
+          sql`${irbApplications.expirationDate} >= ${now.toISOString()}`,
+          sql`${irbApplications.expirationDate} <= ${thirtyDaysFromNow.toISOString()}`
+        )
+      );
+    
+    // Get IBC applications expiring in the next 30 days
+    const ibcDeadlines = await db
+      .select({
+        id: ibcApplications.id,
+        type: sql<string>`'IBC'`,
+        title: ibcApplications.title,
+        expirationDate: ibcApplications.expirationDate,
+        researchActivityId: ibcApplications.researchActivityId
+      })
+      .from(ibcApplications)
+      .where(
+        and(
+          sql`${ibcApplications.expirationDate} >= ${now.toISOString()}`,
+          sql`${ibcApplications.expirationDate} <= ${thirtyDaysFromNow.toISOString()}`
+        )
+      );
+    
+    // Get research contracts ending in the next 30 days
+    const contractDeadlines = await db
+      .select({
+        id: researchContracts.id,
+        type: sql<string>`'Contract'`,
+        title: researchContracts.title,
+        expirationDate: researchContracts.endDate,
+        researchActivityId: researchContracts.researchActivityId
+      })
+      .from(researchContracts)
+      .where(
+        and(
+          sql`${researchContracts.endDate} >= ${now.toISOString()}`,
+          sql`${researchContracts.endDate} <= ${thirtyDaysFromNow.toISOString()}`
+        )
+      );
+    
+    return [...irbDeadlines, ...ibcDeadlines, ...contractDeadlines]
+      .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
+  }
+}

@@ -1,11 +1,28 @@
-import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// User schema (for authentication)
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 
 // Scientists schema
 export const scientists = pgTable("scientists", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   title: text("title"),
   email: text("email").notNull().unique(),
   department: text("department"),
@@ -13,30 +30,74 @@ export const scientists = pgTable("scientists", {
   bio: text("bio"),
   profileImageInitials: text("profile_image_initials"), // Storing initials for avatar
   isStaff: boolean("is_staff").default(false), // True for staff, false for principal investigators
-  supervisorId: integer("supervisor_id").references(() => scientists.id), // For staff members
+  supervisorId: integer("supervisor_id"), // For staff members, references scientists.id
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertScientistSchema = createInsertSchema(scientists).omit({
-  id: true
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
-// Projects schema
-export const projects = pgTable("projects", {
+// Programs (PRM) - The highest level of research organization
+export const programs = pgTable("programs", {
   id: serial("id").primaryKey(),
+  programId: text("program_id").notNull().unique(), // PRM number
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertProgramSchema = createInsertSchema(programs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Project Groups (PRJ) - Collections of related research activities
+export const projectGroups = pgTable("project_groups", {
+  id: serial("id").primaryKey(),
+  projectGroupId: text("project_group_id").notNull().unique(), // PRJ number
+  programId: integer("program_id"), // references programs.id
+  name: text("name").notNull(),
+  description: text("description"),
+  leadScientistId: integer("lead_scientist_id"), // references scientists.id
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertProjectGroupSchema = createInsertSchema(projectGroups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Research Activities (SDR) - Individual research projects
+export const researchActivities = pgTable("research_activities", {
+  id: serial("id").primaryKey(),
+  sdrNumber: text("sdr_number").notNull().unique(), // SDR number
+  projectGroupId: integer("project_group_id"), // references projectGroups.id
   title: text("title").notNull(),
+  shortTitle: text("short_title"), // Short, catchy title for better recognition
   description: text("description"),
   status: text("status").notNull().default("planning"), // planning, active, completed, on_hold
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
-  leadScientistId: integer("lead_scientist_id").notNull().references(() => scientists.id),
-  funding: text("funding"),
-  budget: text("budget"),
+  leadPIId: integer("lead_pi_id"), // references scientists.id
+  budgetHolderId: integer("budget_holder_id"), // references scientists.id
+  lineManagerId: integer("line_manager_id"), // references scientists.id
+  additionalNotificationEmail: text("additional_notification_email"),
+  sidraBranch: text("sidra_branch"), // Research, Clinical, External
+  budgetSource: text("budget_source"), // IRF, PI Budget, QNRF, etc.
   objectives: text("objectives"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertProjectSchema = createInsertSchema(projects).omit({
+export const insertResearchActivitySchema = createInsertSchema(researchActivities).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -45,12 +106,12 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 // Project Team Members (Many-to-Many relationship)
 export const projectMembers = pgTable("project_members", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").notNull().references(() => projects.id),
-  scientistId: integer("scientist_id").notNull().references(() => scientists.id),
+  researchActivityId: integer("research_activity_id").notNull(), // references researchActivities.id
+  scientistId: integer("scientist_id").notNull(), // references scientists.id
   role: text("role"), // PI, Co-PI, Researcher, Lab Technician, etc.
 }, (table) => {
   return {
-    projectScientistIdx: uniqueIndex("project_scientist_idx").on(table.projectId, table.scientistId),
+    projectScientistIdx: uniqueIndex("project_scientist_idx").on(table.researchActivityId, table.scientistId),
   };
 });
 
@@ -61,7 +122,7 @@ export const insertProjectMemberSchema = createInsertSchema(projectMembers).omit
 // Data Management Plans
 export const dataManagementPlans = pgTable("data_management_plans", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").notNull().references(() => projects.id),
+  researchActivityId: integer("research_activity_id").notNull(), // references researchActivities.id
   title: text("title").notNull(),
   description: text("description"),
   dataCollectionMethods: text("data_collection_methods"),
@@ -81,6 +142,7 @@ export const insertDataManagementPlanSchema = createInsertSchema(dataManagementP
 // Publications
 export const publications = pgTable("publications", {
   id: serial("id").primaryKey(),
+  researchActivityId: integer("research_activity_id"), // references researchActivities.id
   title: text("title").notNull(),
   abstract: text("abstract"),
   authors: text("authors").notNull(),
@@ -91,7 +153,6 @@ export const publications = pgTable("publications", {
   doi: text("doi"), // Digital Object Identifier
   publicationDate: timestamp("publication_date"),
   publicationType: text("publication_type"), // Journal Article, Conference Paper, Book, etc.
-  projectId: integer("project_id").references(() => projects.id),
   status: text("status"), // Published, Submitted, In Preparation, etc.
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -106,6 +167,7 @@ export const insertPublicationSchema = createInsertSchema(publications).omit({
 // Patents
 export const patents = pgTable("patents", {
   id: serial("id").primaryKey(),
+  researchActivityId: integer("research_activity_id"), // references researchActivities.id
   title: text("title").notNull(),
   inventors: text("inventors").notNull(),
   filingDate: timestamp("filing_date"),
@@ -113,7 +175,6 @@ export const patents = pgTable("patents", {
   patentNumber: text("patent_number"),
   status: text("status").notNull(), // Filed, Granted, Rejected, etc.
   description: text("description"),
-  projectId: integer("project_id").references(() => projects.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -127,16 +188,23 @@ export const insertPatentSchema = createInsertSchema(patents).omit({
 // IRB Applications (Institutional Review Board)
 export const irbApplications = pgTable("irb_applications", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").notNull().references(() => projects.id),
+  researchActivityId: integer("research_activity_id"), // references researchActivities.id
+  irbNumber: text("irb_number").notNull().unique(), // Sidra IRB number
+  irbNetNumber: text("irb_net_number"), // IRBNet allocated number
+  oldNumber: text("old_number"), // Old allocated number
   title: text("title").notNull(),
-  principalInvestigatorId: integer("principal_investigator_id").notNull().references(() => scientists.id),
+  shortTitle: text("short_title"), // Short title for better recognition
+  principalInvestigatorId: integer("principal_investigator_id").notNull(), // references scientists.id
+  additionalNotificationEmail: text("additional_notification_email"),
+  protocolType: text("protocol_type"), // Exempt, Expedited, Full Board, etc.
+  isInterventional: boolean("is_interventional").default(false), // Is interventional clinical study
   submissionDate: timestamp("submission_date"),
-  approvalDate: timestamp("approval_date"),
-  expirationDate: timestamp("expiration_date"),
-  status: text("status").notNull(), // Submitted, Approved, Rejected, Expired, etc.
-  protocolNumber: text("protocol_number"),
-  riskLevel: text("risk_level"), // Minimal, Greater Than Minimal, etc.
+  initialApprovalDate: date("initial_approval_date"),
+  expirationDate: date("expiration_date"),
+  status: text("status").notNull(), // Active, Inactive, etc.
+  subjectEnrollmentReasons: text("subject_enrollment_reasons").array(), // Sample Collection, Data Collection, etc.
   description: text("description"),
+  documents: json("documents"), // Store metadata for related documents
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -150,17 +218,17 @@ export const insertIrbApplicationSchema = createInsertSchema(irbApplications).om
 // IBC Applications (Institutional Biosafety Committee)
 export const ibcApplications = pgTable("ibc_applications", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").notNull().references(() => projects.id),
+  researchActivityId: integer("research_activity_id"), // references researchActivities.id
+  ibcNumber: text("ibc_number").notNull().unique(), // IBC Project Number
+  cayuseProtocolNumber: text("cayuse_protocol_number"), // Cayuse Protocol Number
   title: text("title").notNull(),
-  principalInvestigatorId: integer("principal_investigator_id").notNull().references(() => scientists.id),
+  principalInvestigatorId: integer("principal_investigator_id").notNull(), // references scientists.id
   submissionDate: timestamp("submission_date"),
-  approvalDate: timestamp("approval_date"),
-  expirationDate: timestamp("expiration_date"),
-  status: text("status").notNull(), // Submitted, Approved, Rejected, Expired, etc.
-  protocolNumber: text("protocol_number"),
-  biosafetyLevel: text("biosafety_level"), // BSL-1, BSL-2, BSL-3, BSL-4
-  description: text("description"),
-  agents: text("agents"), // Biological agents used
+  approvalDate: date("approval_date"),
+  expirationDate: date("expiration_date"),
+  status: text("status").notNull(), // Active, Inactive
+  documents: json("documents"), // Store metadata for approval letters, applications, etc.
+  peopleInvolved: integer("people_involved").array(), // Scientists involved in IBC
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -174,16 +242,26 @@ export const insertIbcApplicationSchema = createInsertSchema(ibcApplications).om
 // Research Contracts
 export const researchContracts = pgTable("research_contracts", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").notNull().references(() => projects.id),
+  researchActivityId: integer("research_activity_id"), // references researchActivities.id
+  contractNumber: text("contract_number").notNull().unique(), // Contract Number
   title: text("title").notNull(),
-  contractorName: text("contractor_name").notNull(),
+  leadPIId: integer("lead_pi_id"), // references scientists.id
+  irbProtocol: text("irb_protocol"), // Related IRB Protocol
+  qnrfNumber: text("qnrf_number"), // QNRF Number if applicable
+  requestState: text("request_state"), // State of the request
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  remarks: text("remarks"),
+  fundingSourceCategory: text("funding_source_category"), // QNRF, PI Fund, IRF Fund, etc.
+  contractorName: text("contractor_name"),
+  internalCostSidra: integer("internal_cost_sidra"), // Internal Costs by Sidra in QAR
+  internalCostCounterparty: integer("internal_cost_counterparty"), // Internal Costs for Counterparty in QAR
+  moneyOut: integer("money_out"), // Amount of money transferred from Sidra to counterparty
+  isPORelevant: boolean("is_po_relevant").default(false), // PO relevant flag
   contractType: text("contract_type"), // Collaboration, Service, Material Transfer, etc.
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
-  value: text("value"), // Financial value
   status: text("status").notNull(), // Draft, Active, Completed, Terminated, etc.
   description: text("description"),
-  principalInvestigatorId: integer("principal_investigator_id").references(() => scientists.id),
+  documents: json("documents"), // Store metadata for contract documents
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -195,11 +273,17 @@ export const insertResearchContractSchema = createInsertSchema(researchContracts
 });
 
 // Export types for all schemas
+export type Program = typeof programs.$inferSelect;
+export type InsertProgram = z.infer<typeof insertProgramSchema>;
+
+export type ProjectGroup = typeof projectGroups.$inferSelect;
+export type InsertProjectGroup = z.infer<typeof insertProjectGroupSchema>;
+
 export type Scientist = typeof scientists.$inferSelect;
 export type InsertScientist = z.infer<typeof insertScientistSchema>;
 
-export type Project = typeof projects.$inferSelect;
-export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type ResearchActivity = typeof researchActivities.$inferSelect;
+export type InsertResearchActivity = z.infer<typeof insertResearchActivitySchema>;
 
 export type ProjectMember = typeof projectMembers.$inferSelect;
 export type InsertProjectMember = z.infer<typeof insertProjectMemberSchema>;
@@ -221,18 +305,3 @@ export type InsertIbcApplication = z.infer<typeof insertIbcApplicationSchema>;
 
 export type ResearchContract = typeof researchContracts.$inferSelect;
 export type InsertResearchContract = z.infer<typeof insertResearchContractSchema>;
-
-// User schema (keeping the original user schema as it might be used for authentication)
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;

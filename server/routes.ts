@@ -1,18 +1,20 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import {
   insertScientistSchema,
-  insertProjectSchema,
+  insertResearchActivitySchema,
   insertProjectMemberSchema,
   insertDataManagementPlanSchema,
   insertPublicationSchema,
   insertPatentSchema,
   insertIrbApplicationSchema,
   insertIbcApplicationSchema,
-  insertResearchContractSchema
+  insertResearchContractSchema,
+  insertProgramSchema,
+  insertProjectGroupSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {

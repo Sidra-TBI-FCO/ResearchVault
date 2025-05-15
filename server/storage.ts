@@ -1,7 +1,9 @@
 import {
   users, User, InsertUser,
   scientists, Scientist, InsertScientist,
-  projects, Project, InsertProject,
+  programs, Program, InsertProgram,
+  projectGroups, ProjectGroup, InsertProjectGroup,
+  researchActivities, ResearchActivity, InsertResearchActivity,
   projectMembers, ProjectMember, InsertProjectMember,
   dataManagementPlans, DataManagementPlan, InsertDataManagementPlan,
   publications, Publication, InsertPublication,
@@ -18,6 +20,23 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
+  // Program operations
+  getPrograms(): Promise<Program[]>;
+  getProgram(id: number): Promise<Program | undefined>;
+  getProgramByProgramId(programId: string): Promise<Program | undefined>;
+  createProgram(program: InsertProgram): Promise<Program>;
+  updateProgram(id: number, program: Partial<InsertProgram>): Promise<Program | undefined>;
+  deleteProgram(id: number): Promise<boolean>;
+
+  // Project Group operations
+  getProjectGroups(): Promise<ProjectGroup[]>;
+  getProjectGroup(id: number): Promise<ProjectGroup | undefined>;
+  getProjectGroupByGroupId(groupId: string): Promise<ProjectGroup | undefined>;
+  getProjectGroupsForProgram(programId: number): Promise<ProjectGroup[]>;
+  createProjectGroup(projectGroup: InsertProjectGroup): Promise<ProjectGroup>;
+  updateProjectGroup(id: number, projectGroup: Partial<InsertProjectGroup>): Promise<ProjectGroup | undefined>;
+  deleteProjectGroup(id: number): Promise<boolean>;
+
   // Scientist operations
   getScientists(): Promise<Scientist[]>;
   getScientist(id: number): Promise<Scientist | undefined>;
@@ -27,23 +46,25 @@ export interface IStorage {
   getStaff(): Promise<Scientist[]>;
   getPrincipalInvestigators(): Promise<Scientist[]>;
 
-  // Project operations
-  getProjects(): Promise<Project[]>;
-  getProject(id: number): Promise<Project | undefined>;
-  createProject(project: InsertProject): Promise<Project>;
-  updateProject(id: number, project: Partial<InsertProject>): Promise<Project | undefined>;
-  deleteProject(id: number): Promise<boolean>;
-  getProjectsForScientist(scientistId: number): Promise<Project[]>;
+  // Research Activity operations
+  getResearchActivities(): Promise<ResearchActivity[]>;
+  getResearchActivity(id: number): Promise<ResearchActivity | undefined>;
+  getResearchActivityBySdr(sdrNumber: string): Promise<ResearchActivity | undefined>;
+  getResearchActivitiesForProjectGroup(projectGroupId: number): Promise<ResearchActivity[]>;
+  getResearchActivitiesForScientist(scientistId: number): Promise<ResearchActivity[]>;
+  createResearchActivity(activity: InsertResearchActivity): Promise<ResearchActivity>;
+  updateResearchActivity(id: number, activity: Partial<InsertResearchActivity>): Promise<ResearchActivity | undefined>;
+  deleteResearchActivity(id: number): Promise<boolean>;
   
   // Project Members operations
-  getProjectMembers(projectId: number): Promise<ProjectMember[]>;
+  getProjectMembers(researchActivityId: number): Promise<ProjectMember[]>;
   addProjectMember(member: InsertProjectMember): Promise<ProjectMember>;
-  removeProjectMember(projectId: number, scientistId: number): Promise<boolean>;
+  removeProjectMember(researchActivityId: number, scientistId: number): Promise<boolean>;
 
   // Data Management Plan operations
   getDataManagementPlans(): Promise<DataManagementPlan[]>;
   getDataManagementPlan(id: number): Promise<DataManagementPlan | undefined>;
-  getDataManagementPlanForProject(projectId: number): Promise<DataManagementPlan | undefined>;
+  getDataManagementPlanForResearchActivity(researchActivityId: number): Promise<DataManagementPlan | undefined>;
   createDataManagementPlan(plan: InsertDataManagementPlan): Promise<DataManagementPlan>;
   updateDataManagementPlan(id: number, plan: Partial<InsertDataManagementPlan>): Promise<DataManagementPlan | undefined>;
   deleteDataManagementPlan(id: number): Promise<boolean>;
@@ -51,7 +72,7 @@ export interface IStorage {
   // Publication operations
   getPublications(): Promise<Publication[]>;
   getPublication(id: number): Promise<Publication | undefined>;
-  getPublicationsForProject(projectId: number): Promise<Publication[]>;
+  getPublicationsForResearchActivity(researchActivityId: number): Promise<Publication[]>;
   createPublication(publication: InsertPublication): Promise<Publication>;
   updatePublication(id: number, publication: Partial<InsertPublication>): Promise<Publication | undefined>;
   deletePublication(id: number): Promise<boolean>;
@@ -59,7 +80,7 @@ export interface IStorage {
   // Patent operations
   getPatents(): Promise<Patent[]>;
   getPatent(id: number): Promise<Patent | undefined>;
-  getPatentsForProject(projectId: number): Promise<Patent[]>;
+  getPatentsForResearchActivity(researchActivityId: number): Promise<Patent[]>;
   createPatent(patent: InsertPatent): Promise<Patent>;
   updatePatent(id: number, patent: Partial<InsertPatent>): Promise<Patent | undefined>;
   deletePatent(id: number): Promise<boolean>;
@@ -67,7 +88,8 @@ export interface IStorage {
   // IRB Application operations
   getIrbApplications(): Promise<IrbApplication[]>;
   getIrbApplication(id: number): Promise<IrbApplication | undefined>;
-  getIrbApplicationsForProject(projectId: number): Promise<IrbApplication[]>;
+  getIrbApplicationByIrbNumber(irbNumber: string): Promise<IrbApplication | undefined>;
+  getIrbApplicationsForResearchActivity(researchActivityId: number): Promise<IrbApplication[]>;
   createIrbApplication(application: InsertIrbApplication): Promise<IrbApplication>;
   updateIrbApplication(id: number, application: Partial<InsertIrbApplication>): Promise<IrbApplication | undefined>;
   deleteIrbApplication(id: number): Promise<boolean>;
@@ -75,7 +97,8 @@ export interface IStorage {
   // IBC Application operations
   getIbcApplications(): Promise<IbcApplication[]>;
   getIbcApplication(id: number): Promise<IbcApplication | undefined>;
-  getIbcApplicationsForProject(projectId: number): Promise<IbcApplication[]>;
+  getIbcApplicationByIbcNumber(ibcNumber: string): Promise<IbcApplication | undefined>;
+  getIbcApplicationsForResearchActivity(researchActivityId: number): Promise<IbcApplication[]>;
   createIbcApplication(application: InsertIbcApplication): Promise<IbcApplication>;
   updateIbcApplication(id: number, application: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined>;
   deleteIbcApplication(id: number): Promise<boolean>;
@@ -83,19 +106,20 @@ export interface IStorage {
   // Research Contract operations
   getResearchContracts(): Promise<ResearchContract[]>;
   getResearchContract(id: number): Promise<ResearchContract | undefined>;
-  getResearchContractsForProject(projectId: number): Promise<ResearchContract[]>;
+  getResearchContractByContractNumber(contractNumber: string): Promise<ResearchContract | undefined>;
+  getResearchContractsForResearchActivity(researchActivityId: number): Promise<ResearchContract[]>;
   createResearchContract(contract: InsertResearchContract): Promise<ResearchContract>;
   updateResearchContract(id: number, contract: Partial<InsertResearchContract>): Promise<ResearchContract | undefined>;
   deleteResearchContract(id: number): Promise<boolean>;
 
   // Dashboard operations
   getDashboardStats(): Promise<{
-    activeProjects: number;
+    activeResearchActivities: number;
     publications: number;
     patents: number;
     pendingApplications: number;
   }>;
-  getRecentProjects(limit?: number): Promise<Project[]>;
+  getRecentResearchActivities(limit?: number): Promise<ResearchActivity[]>;
   getUpcomingDeadlines(): Promise<any[]>; // More specific type would be created based on deadline structure
 }
 
@@ -877,4 +901,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./databaseStorage";
+
+// Use DatabaseStorage for database operations
+export const storage = new DatabaseStorage();
