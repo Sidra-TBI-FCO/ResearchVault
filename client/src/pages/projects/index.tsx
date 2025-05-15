@@ -61,26 +61,26 @@ export default function ProjectsList() {
     queryKey: ['/api/scientists'],
   });
 
-  // Enhance project groups with related data
-  const enhancedProjectGroups = projectGroups?.map(group => {
-    const program = programs?.find(p => p.id === group.programId);
-    const leadScientist = group.leadScientistId ? 
-      scientists?.find(s => s.id === group.leadScientistId) : undefined;
+  // Enhance projects with related data
+  const enhancedProjects = projects?.map(project => {
+    const program = programs?.find(p => p.id === project.programId);
+    const leadScientist = project.leadScientistId ? 
+      scientists?.find(s => s.id === project.leadScientistId) : undefined;
     return {
-      ...group,
+      ...project,
       program,
       leadScientist
     };
   });
 
-  const filteredProjectGroups = enhancedProjectGroups?.filter(group => {
+  const filteredProjects = enhancedProjects?.filter(project => {
     const matchesSearch = 
-      group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (group.description?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      group.projectGroupId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (group.program?.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.description?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      project.projectId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.program?.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesProgram = programFilter === "all" || group.programId === parseInt(programFilter);
+    const matchesProgram = programFilter === "all" || project.programId === parseInt(programFilter);
     
     return matchesSearch && matchesProgram;
   });
@@ -132,7 +132,7 @@ export default function ProjectsList() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoadingProjectGroups ? (
+          {isLoadingProjects ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 py-3">
@@ -159,29 +159,29 @@ export default function ProjectsList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjectGroups?.map((group) => (
-                  <TableRow key={group.id}>
+                {filteredProjects?.map((project) => (
+                  <TableRow key={project.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <TableIcon className="h-4 w-4 text-primary-500" />
-                        <span>{group.projectGroupId}</span>
+                        <span>{project.projectId}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/project-groups/${group.id}`}>
-                        <a className="hover:text-primary-500 transition-colors">{group.name}</a>
+                      <Link href={`/projects/${project.id}`}>
+                        <a className="hover:text-primary-500 transition-colors">{project.name}</a>
                       </Link>
-                      {group.description && (
+                      {project.description && (
                         <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
-                          {group.description}
+                          {project.description}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
-                      {group.program ? (
-                        <Link href={`/programs/${group.program.id}`}>
+                      {project.program ? (
+                        <Link href={`/programs/${project.program.id}`}>
                           <a className="text-sm hover:text-primary-500 transition-colors">
-                            {group.program.name}
+                            {project.program.name}
                           </a>
                         </Link>
                       ) : (
@@ -189,12 +189,12 @@ export default function ProjectsList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {group.leadScientist ? (
+                      {project.leadScientist ? (
                         <div className="flex items-center">
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
-                            {group.leadScientist.profileImageInitials || group.leadScientist.name.substring(0, 2)}
+                            {project.leadScientist.profileImageInitials || project.leadScientist.name.substring(0, 2)}
                           </div>
-                          <span>{group.leadScientist.name}</span>
+                          <span>{project.leadScientist.name}</span>
                         </div>
                       ) : (
                         <span className="text-neutral-200">Unassigned</span>
@@ -207,10 +207,10 @@ export default function ProjectsList() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {!isLoadingProjectGroups && (!filteredProjectGroups || filteredProjectGroups.length === 0) && (
+                {!isLoadingProjects && (!filteredProjects || filteredProjects.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-neutral-200">
-                      {projectGroups && projectGroups.length > 0 
+                      {projects && projects.length > 0 
                         ? "No projects matching your search criteria."
                         : "No projects yet. Create your first project!"}
                     </TableCell>

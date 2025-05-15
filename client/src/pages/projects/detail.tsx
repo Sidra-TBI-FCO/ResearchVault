@@ -2,22 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProjectGroup, Program, ResearchActivity } from "@shared/schema";
+import { Project, Program, ResearchActivity } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Layers, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export default function ProjectGroupDetail() {
+export default function ProjectDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
 
-  const { data: projectGroup, isLoading: projectLoading } = useQuery<ProjectGroup>({
-    queryKey: ['/api/project-groups', id],
+  const { data: project, isLoading: projectLoading } = useQuery<Project>({
+    queryKey: ['/api/projects', id],
     queryFn: async () => {
-      const response = await fetch(`/api/project-groups/${id}`);
+      const response = await fetch(`/api/projects/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch project');
       }
@@ -26,22 +26,22 @@ export default function ProjectGroupDetail() {
   });
 
   const { data: program, isLoading: programLoading } = useQuery<Program>({
-    queryKey: ['/api/programs', projectGroup?.programId],
+    queryKey: ['/api/programs', project?.programId],
     queryFn: async () => {
-      if (!projectGroup?.programId) return null;
-      const response = await fetch(`/api/programs/${projectGroup.programId}`);
+      if (!project?.programId) return null;
+      const response = await fetch(`/api/programs/${project.programId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch program');
       }
       return response.json();
     },
-    enabled: !!projectGroup?.programId,
+    enabled: !!project?.programId,
   });
 
   const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/projects', { projectGroupId: id }],
+    queryKey: ['/api/research-activities', { projectId: id }],
     queryFn: async () => {
-      const response = await fetch(`/api/projects?projectGroupId=${id}`);
+      const response = await fetch(`/api/research-activities?projectId=${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch research activities');
       }
@@ -77,7 +77,7 @@ export default function ProjectGroupDetail() {
     );
   }
 
-  if (!projectGroup) {
+  if (!project) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function ProjectGroupDetail() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{projectGroup.name}</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">{project.name}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -119,9 +119,9 @@ export default function ProjectGroupDetail() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-semibold">{projectGroup.name}</h2>
+                <h2 className="text-xl font-semibold">{project.name}</h2>
                 <div className="text-neutral-400 flex items-center gap-1 mt-1">
-                  <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">{projectGroup.projectGroupId}</Badge>
+                  <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">{project.projectId}</Badge>
                 </div>
               </div>
 
@@ -150,7 +150,7 @@ export default function ProjectGroupDetail() {
                   <h3 className="text-sm font-medium text-neutral-400">Added Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{projectGroup.createdAt ? format(new Date(projectGroup.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
+                    <span>{project.createdAt ? format(new Date(project.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
                   </div>
                 </div>
                 
@@ -158,15 +158,15 @@ export default function ProjectGroupDetail() {
                   <h3 className="text-sm font-medium text-neutral-400">Last Updated</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{projectGroup.updatedAt ? format(new Date(projectGroup.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
+                    <span>{project.updatedAt ? format(new Date(project.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
                   </div>
                 </div>
               </div>
 
-              {projectGroup.description && (
+              {project.description && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-neutral-400">Description</h3>
-                  <p className="mt-1">{projectGroup.description}</p>
+                  <p className="mt-1">{project.description}</p>
                 </div>
               )}
             </div>
@@ -191,7 +191,7 @@ export default function ProjectGroupDetail() {
                     <div 
                       key={activity.id} 
                       className="flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                      onClick={() => navigate(`/projects/${activity.id}`)}
+                      onClick={() => navigate(`/research-activities/${activity.id}`)}
                     >
                       <div>
                         <p className="font-medium">{activity.title}</p>
