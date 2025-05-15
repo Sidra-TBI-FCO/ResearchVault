@@ -68,6 +68,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Programs (PRM)
+  app.get('/api/programs', async (req: Request, res: Response) => {
+    try {
+      const programs = await storage.getPrograms();
+      res.json(programs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch programs" });
+    }
+  });
+
+  app.get('/api/programs/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid program ID" });
+      }
+
+      const program = await storage.getProgram(id);
+      if (!program) {
+        return res.status(404).json({ message: "Program not found" });
+      }
+      
+      res.json(program);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch program" });
+    }
+  });
+
+  app.post('/api/programs', async (req: Request, res: Response) => {
+    try {
+      const validateData = insertProgramSchema.parse(req.body);
+      const program = await storage.createProgram(validateData);
+      res.status(201).json(program);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to create program" });
+    }
+  });
+
+  app.patch('/api/programs/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid program ID" });
+      }
+
+      const validateData = insertProgramSchema.partial().parse(req.body);
+      const program = await storage.updateProgram(id, validateData);
+      
+      if (!program) {
+        return res.status(404).json({ message: "Program not found" });
+      }
+      
+      res.json(program);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to update program" });
+    }
+  });
+
+  app.delete('/api/programs/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid program ID" });
+      }
+
+      const success = await storage.deleteProgram(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Program not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete program" });
+    }
+  });
+
+  // Project Groups (PRJ)
+  app.get('/api/project-groups', async (req: Request, res: Response) => {
+    try {
+      const programId = req.query.programId ? parseInt(req.query.programId as string) : undefined;
+      
+      let projectGroups;
+      if (programId && !isNaN(programId)) {
+        projectGroups = await storage.getProjectGroupsForProgram(programId);
+      } else {
+        projectGroups = await storage.getProjectGroups();
+      }
+      
+      res.json(projectGroups);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch project groups" });
+    }
+  });
+
+  app.get('/api/project-groups/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project group ID" });
+      }
+
+      const projectGroup = await storage.getProjectGroup(id);
+      if (!projectGroup) {
+        return res.status(404).json({ message: "Project group not found" });
+      }
+      
+      res.json(projectGroup);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch project group" });
+    }
+  });
+
+  app.post('/api/project-groups', async (req: Request, res: Response) => {
+    try {
+      const validateData = insertProjectGroupSchema.parse(req.body);
+      const projectGroup = await storage.createProjectGroup(validateData);
+      res.status(201).json(projectGroup);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to create project group" });
+    }
+  });
+
+  app.patch('/api/project-groups/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project group ID" });
+      }
+
+      const validateData = insertProjectGroupSchema.partial().parse(req.body);
+      const projectGroup = await storage.updateProjectGroup(id, validateData);
+      
+      if (!projectGroup) {
+        return res.status(404).json({ message: "Project group not found" });
+      }
+      
+      res.json(projectGroup);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to update project group" });
+    }
+  });
+
+  app.delete('/api/project-groups/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project group ID" });
+      }
+
+      const success = await storage.deleteProjectGroup(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Project group not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete project group" });
+    }
+  });
+
   // Scientists
   app.get('/api/scientists', async (req: Request, res: Response) => {
     try {
