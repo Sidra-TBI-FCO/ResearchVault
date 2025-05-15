@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResearchActivity, IrbApplication, Scientist } from "@shared/schema";
+import { ResearchActivity, IrbApplication, Scientist, DataManagementPlan } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Layers, Users, ClipboardCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,21 @@ export default function IrbApplicationDetail() {
   
   // Get the number of publications linked to this research activity
   const { count: publicationCount } = usePublicationCount(irbApplication?.researchActivityId);
+  
+  // Get the data management plan for this research activity
+  const { data: dataManagementPlan, isLoading: dmpLoading } = useQuery<DataManagementPlan>({
+    queryKey: ['/api/data-management-plans', irbApplication?.researchActivityId],
+    queryFn: async () => {
+      if (!irbApplication?.researchActivityId) return null;
+      const response = await fetch(`/api/data-management-plans?researchActivityId=${irbApplication.researchActivityId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch data management plan');
+      }
+      const plans = await response.json();
+      return plans.length > 0 ? plans[0] : null;
+    },
+    enabled: !!irbApplication?.researchActivityId,
+  });
 
   if (irbApplicationLoading) {
     return (
@@ -287,16 +302,26 @@ export default function IrbApplicationDetail() {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/data-management-plans?researchActivityId=${researchActivity.id}`)}
+                  onClick={() => {
+                    if (dataManagementPlan) {
+                      navigate(`/data-management-plans/${dataManagementPlan.id}`);
+                    } else if (researchActivity) {
+                      navigate(`/data-management-plans?researchActivityId=${researchActivity.id}`);
+                    }
+                  }}
                   disabled={!researchActivity}
                 >
                   <FileText className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Data Management Plans</span>
-                  {researchActivity && (
+                  <span className="flex-1 text-left">Data Management Plan</span>
+                  {dataManagementPlan ? (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-teal-50 text-teal-700 border-teal-200">
-                      DMP
+                      {dataManagementPlan.dmpNumber}
                     </Badge>
-                  )}
+                  ) : researchActivity ? (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-gray-50 text-gray-700 border-gray-200">
+                      None
+                    </Badge>
+                  ) : null}
                 </Button>
                 <Button 
                   variant="outline" 
