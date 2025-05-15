@@ -64,9 +64,9 @@ export const insertProgramSchema = createInsertSchema(programs).omit({
 });
 
 // Projects (PRJ) - Collections of related research activities
-export const projects = pgTable("project_groups", {
+export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
-  projectId: text("project_group_id").notNull().unique(), // PRJ number (using existing column)
+  projectId: text("project_id").notNull().unique(), // PRJ number
   programId: integer("program_id"), // references programs.id
   name: text("name").notNull(),
   description: text("description"),
@@ -85,7 +85,7 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 export const researchActivities = pgTable("research_activities", {
   id: serial("id").primaryKey(),
   sdrNumber: text("sdr_number").notNull().unique(), // SDR number
-  projectId: integer("project_group_id"), // references projects.id (using existing column)
+  projectId: integer("project_id"), // references projects.id
   title: text("title").notNull(),
   shortTitle: text("short_title"), // Short, catchy title for better recognition
   description: text("description"),

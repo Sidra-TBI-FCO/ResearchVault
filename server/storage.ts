@@ -2,7 +2,7 @@ import {
   users, User, InsertUser,
   scientists, Scientist, InsertScientist,
   programs, Program, InsertProgram,
-  projectGroups, ProjectGroup, InsertProjectGroup,
+  projects, Project, InsertProject,
   researchActivities, ResearchActivity, InsertResearchActivity,
   projectMembers, ProjectMember, InsertProjectMember,
   dataManagementPlans, DataManagementPlan, InsertDataManagementPlan,
@@ -28,14 +28,14 @@ export interface IStorage {
   updateProgram(id: number, program: Partial<InsertProgram>): Promise<Program | undefined>;
   deleteProgram(id: number): Promise<boolean>;
 
-  // Project Group operations
-  getProjectGroups(): Promise<ProjectGroup[]>;
-  getProjectGroup(id: number): Promise<ProjectGroup | undefined>;
-  getProjectGroupByGroupId(groupId: string): Promise<ProjectGroup | undefined>;
-  getProjectGroupsForProgram(programId: number): Promise<ProjectGroup[]>;
-  createProjectGroup(projectGroup: InsertProjectGroup): Promise<ProjectGroup>;
-  updateProjectGroup(id: number, projectGroup: Partial<InsertProjectGroup>): Promise<ProjectGroup | undefined>;
-  deleteProjectGroup(id: number): Promise<boolean>;
+  // Project operations
+  getProjects(): Promise<Project[]>;
+  getProject(id: number): Promise<Project | undefined>;
+  getProjectByProjectId(projectId: string): Promise<Project | undefined>;
+  getProjectsForProgram(programId: number): Promise<Project[]>;
+  createProject(project: InsertProject): Promise<Project>;
+  updateProject(id: number, project: Partial<InsertProject>): Promise<Project | undefined>;
+  deleteProject(id: number): Promise<boolean>;
 
   // Scientist operations
   getScientists(): Promise<Scientist[]>;
@@ -57,7 +57,7 @@ export interface IStorage {
   getResearchActivities(): Promise<ResearchActivity[]>;
   getResearchActivity(id: number): Promise<ResearchActivity | undefined>;
   getResearchActivityBySdr(sdrNumber: string): Promise<ResearchActivity | undefined>;
-  getResearchActivitiesForProjectGroup(projectGroupId: number): Promise<ResearchActivity[]>;
+  getResearchActivitiesForProject(projectId: number): Promise<ResearchActivity[]>;
   getResearchActivitiesForScientist(scientistId: number): Promise<ResearchActivity[]>;
   createResearchActivity(activity: InsertResearchActivity): Promise<ResearchActivity>;
   updateResearchActivity(id: number, activity: Partial<InsertResearchActivity>): Promise<ResearchActivity | undefined>;

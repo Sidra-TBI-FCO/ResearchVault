@@ -89,8 +89,8 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
                 {projects?.map((project) => (
                   <tr key={project.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Link href={`/projects/${project.id}`}>
-                        <a className="font-medium text-gray-900 hover:text-primary-600">{project.title}</a>
+                      <Link href={`/projects/${project.id}`} className="font-medium text-gray-900 hover:text-primary-600">
+                        {project.title}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
