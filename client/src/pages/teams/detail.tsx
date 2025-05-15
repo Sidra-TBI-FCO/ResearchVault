@@ -298,24 +298,9 @@ export default function TeamDetail(props: TeamDetailProps) {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Leadership Roles */}
-                    <SelectItem value="Program Director">Program Director</SelectItem>
-                    <SelectItem value="Research Co-Lead">Research Co-Lead</SelectItem>
-                    <SelectItem value="Clinical Co-Lead">Clinical Co-Lead (Physician)</SelectItem>
+                    {/* Only SDR Team Roles */}
                     <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
-                    <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
-
-                    {/* Additional Roles */}
-                    <SelectItem value="Co-Investigator">Co-Investigator</SelectItem>
-                    <SelectItem value="Research Specialist">Research Specialist</SelectItem>
-                    <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
-                    <SelectItem value="PhD Student">PhD Student</SelectItem>
-                    <SelectItem value="Research Assistant">Research Assistant</SelectItem>
-                    <SelectItem value="Lab Technician">Lab Technician</SelectItem>
-                    <SelectItem value="Project Coordinator">Project Coordinator</SelectItem>
-                    <SelectItem value="Data Analyst">Data Analyst</SelectItem>
-                    <SelectItem value="Biostatistician">Biostatistician</SelectItem>
-                    <SelectItem value="Consultant">Consultant</SelectItem>
+                    <SelectItem value="Team Member">Team Member</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -397,12 +382,8 @@ export default function TeamDetail(props: TeamDetailProps) {
                         </TableCell>
                         <TableCell>
                           <Badge className={
-                            member.role === 'Program Director' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                            member.role === 'Research Co-Lead' ? 'bg-orange-100 text-orange-800 border-orange-200' :
-                            member.role === 'Clinical Co-Lead' ? 'bg-red-100 text-red-800 border-red-200' :
                             member.role === 'Principal Investigator' ? 'bg-blue-100 text-blue-800 border-blue-200' :
                             member.role === 'Staff Scientist' ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                            member.role === 'Co-Investigator' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
                             'bg-green-100 text-green-800 border-green-200'
                           }>
                             {member.role}
