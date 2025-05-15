@@ -30,9 +30,9 @@ interface Scientist {
   profileImageInitials?: string;
 }
 
-interface Project {
+interface ProjectGroup {
   id: number;
-  projectId: string;
+  projectGroupId: string;
   programId: number;
   name: string;
   description: string | null;
@@ -45,12 +45,12 @@ interface Project {
   leadScientist?: Scientist;
 }
 
-export default function ProjectsList() {
+export default function ProjectGroupsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [programFilter, setProgramFilter] = useState<string>("all");
 
-  const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
+  const { data: projectGroups, isLoading: isLoadingProjectGroups } = useQuery<ProjectGroup[]>({
+    queryKey: ['/api/project-groups'],
   });
 
   const { data: programs } = useQuery<Program[]>({

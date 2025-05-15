@@ -19,13 +19,13 @@ import ProgramsList from "@/pages/programs";
 import ProgramDetail from "@/pages/programs/detail";
 
 // Projects (PRJ)
-import ProjectGroupsList from "@/pages/project-groups";
-import ProjectGroupDetail from "@/pages/project-groups/detail";
+import ProjectList from "@/pages/projects";
+import ProjectDetail from "@/pages/projects/detail";
 
 // Research Activities (SDR)
-import ProjectsList from "@/pages/projects";
-import CreateProject from "@/pages/projects/create";
-import ResearchActivityDetail from "@/pages/projects/detail";
+import ResearchActivitiesList from "@/pages/research-activities";
+import CreateResearchActivity from "@/pages/research-activities/create";
+import ResearchActivityDetail from "@/pages/research-activities/detail";
 
 // Data Management Plans
 import DataManagementList from "@/pages/data-management";
@@ -67,14 +67,14 @@ function Router() {
         <Route path="/programs" component={ProgramsList} />
         <Route path="/programs/:id" component={ProgramDetail} />
         
-        {/* Project Groups (PRJ) */}
-        <Route path="/project-groups" component={ProjectGroupsList} />
-        <Route path="/project-groups/:id" component={ProjectGroupDetail} />
+        {/* Projects (PRJ) */}
+        <Route path="/projects" component={ProjectList} />
+        <Route path="/projects/:id" component={ProjectDetail} />
         
         {/* Research Activities (SDR) */}
-        <Route path="/projects" component={ProjectsList} />
-        <Route path="/projects/create" component={CreateProject} />
-        <Route path="/projects/:id" component={ResearchActivityDetail} />
+        <Route path="/research-activities" component={ResearchActivitiesList} />
+        <Route path="/research-activities/create" component={CreateResearchActivity} />
+        <Route path="/research-activities/:id" component={ResearchActivityDetail} />
         
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />
