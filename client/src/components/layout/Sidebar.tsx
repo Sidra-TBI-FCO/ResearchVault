@@ -36,7 +36,7 @@ export default function Sidebar({ user }: SidebarProps) {
 
     { 
       href: "/projects",
-      label: "Research Activities (SDR)",
+      label: "Projects",
       icon: <FlaskConical className="w-4 h-4 mr-3" />
     },
     { 
