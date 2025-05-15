@@ -95,7 +95,10 @@ export default function TeamDetail(props: TeamDetailProps) {
     mutationFn: async (data: { scientistId: number; role: string }) => {
       return apiRequest(`/api/projects/${id}/members`, {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          researchActivityId: id, // Include the research activity ID
+        }),
       });
     },
     onSuccess: () => {

@@ -236,7 +236,7 @@ export default function CreateProject() {
                   name="leadPIId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lead Principal Investigator</FormLabel>
+                      <FormLabel>Lead Investigator</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}

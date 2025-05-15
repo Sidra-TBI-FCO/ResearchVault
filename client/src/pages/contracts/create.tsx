@@ -187,7 +187,7 @@ export default function CreateContract() {
                   name="principalInvestigatorId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Principal Investigator</FormLabel>
+                      <FormLabel>Investigator</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
                         defaultValue={field.value?.toString() || undefined}

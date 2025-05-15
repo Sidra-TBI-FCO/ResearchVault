@@ -173,7 +173,7 @@ export default function IbcApplicationDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Principal Investigator</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Investigator</h3>
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>
