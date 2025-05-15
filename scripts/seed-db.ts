@@ -249,12 +249,12 @@ async function seedDatabase() {
       },
       {
         researchActivityId: researchActivityEntities[2].id,
-        scientistId: scientists[1].id,
+        scientistId: scientistsArray[1].id,
         role: "Principal Investigator"
       },
       {
         researchActivityId: researchActivityEntities[2].id,
-        scientistId: scientists[2].id,
+        scientistId: scientistsArray[2].id,
         role: "Data Analyst"
       }
     ];
@@ -376,7 +376,7 @@ async function seedDatabase() {
         irbNetNumber: "IRB00067890",
         title: "Phase I Clinical Trial of Novel Immunotherapy for Treatment-Resistant Lupus",
         shortTitle: "Immunotherapy for Lupus",
-        principalInvestigatorId: scientists[1].id,
+        principalInvestigatorId: scientistsArray[1].id,
         protocolType: "Full Board",
         isInterventional: true,
         submissionDate: new Date("2023-09-10"),
@@ -429,7 +429,7 @@ async function seedDatabase() {
         researchActivityId: researchActivityEntities[2].id,
         contractNumber: "CONT-2023-078",
         title: "Collaborative Research Agreement for Immunotherapy Development",
-        leadPIId: scientists[1].id,
+        leadPIId: scientistsArray[1].id,
         irbProtocol: "IRB-2023-102",
         fundingSourceCategory: "Industry Collaboration",
         contractorName: "ImmuneTech Pharmaceuticals",
