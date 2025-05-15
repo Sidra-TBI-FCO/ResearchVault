@@ -285,6 +285,15 @@ async function seedDatabase() {
         dataStoragePlan: "Raw imaging data stored on dedicated high-capacity servers with off-site backup",
         dataSharingPlan: "Processed data to be shared via neuroscience data repositories after publication",
         retentionPeriod: "5 years post-publication"
+      },
+      {
+        researchActivityId: researchActivityEntities[2].id,
+        title: "Immunotherapy Clinical Data Management Plan",
+        description: "Plan for managing clinical and laboratory data from immunotherapy trials",
+        dataCollectionMethods: "Clinical assessments, immunological assays, and patient-reported outcomes",
+        dataStoragePlan: "Data stored in HIPAA-compliant secure database with encrypted backups",
+        dataSharingPlan: "Anonymized data to be shared with collaborators and in immunology data repositories after trial completion",
+        retentionPeriod: "15 years post-publication"
       }
     ];
 
@@ -339,6 +348,14 @@ async function seedDatabase() {
         filingDate: new Date("2023-04-20"),
         status: "Filed",
         description: "A novel method combining genomic, transcriptomic, and proteomic data to identify cancer biomarkers with high specificity and sensitivity."
+      },
+      {
+        researchActivityId: researchActivityEntities[1].id,
+        title: "Neural Circuit Imaging and Analysis System for Neurodegenerative Disorders",
+        inventors: "Sarah Ahmed, James Wilson",
+        filingDate: new Date("2023-08-15"),
+        status: "Filed",
+        description: "A novel system for imaging and analyzing neural circuits in patients with neurodegenerative disorders, using advanced machine learning algorithms."
       }
     ];
 
@@ -447,6 +464,28 @@ async function seedDatabase() {
         documents: {
           agreement: "contract_agreement_2023_078.pdf",
           budget: "contract_budget_2023_078.pdf"
+        }
+      },
+      {
+        researchActivityId: researchActivityEntities[1].id,
+        contractNumber: "CONT-2023-045",
+        title: "Data Analysis Services for Neural Circuit Mapping",
+        leadPIId: scientistsArray[2].id,
+        irbProtocol: "N/A",
+        fundingSourceCategory: "Academic Collaboration",
+        contractorName: "Neural Computing Center",
+        internalCostSidra: 120000,
+        internalCostCounterparty: 0,
+        moneyOut: 120000,
+        isPORelevant: true,
+        contractType: "Service",
+        status: "Active",
+        description: "Contract for specialized neural data analysis services to support the Alzheimer's neural circuit mapping project.",
+        startDate: new Date("2023-07-01"),
+        endDate: new Date("2024-06-30"),
+        documents: {
+          agreement: "contract_agreement_2023_045.pdf",
+          budget: "contract_budget_2023_045.pdf"
         }
       }
     ];
