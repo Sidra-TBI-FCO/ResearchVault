@@ -302,9 +302,13 @@ export default function ResearchContractDetail() {
                 >
                   <Users className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Principal Investigator</span>
-                  {leadPI && (
+                  {leadPI && leadPI.staffId ? (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      ID: {leadPI.staffId}
+                    </Badge>
+                  ) : leadPI && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
-                      ID: {leadPI.id}
+                      PI
                     </Badge>
                   )}
                 </Button>
