@@ -109,6 +109,9 @@ export default function DataManagementPlanDetail() {
               <div>
                 <h2 className="text-xl font-semibold">{dataManagementPlan.title}</h2>
                 <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                    {dataManagementPlan.dmpNumber}
+                  </Badge>
                   {researchActivity && (
                     <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
                       {researchActivity.sdrNumber}
@@ -200,7 +203,7 @@ export default function DataManagementPlanDetail() {
                   <span className="flex-1 text-left">Publications</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                      SDR: {researchActivity.sdrNumber}
+                      {usePublicationCount(researchActivity.id)}
                     </Badge>
                   )}
                 </Button>
