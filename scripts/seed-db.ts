@@ -27,7 +27,9 @@ async function seedDatabase() {
       // Create admin user if it doesn't exist
       [adminUser] = await db.insert(users).values({
         username: "admin",
-        password: "password123" // In a real app, this would be hashed
+        password: "password123", // In a real app, this would be hashed
+        name: "Administrator",
+        email: "admin@example.com"
       }).returning();
       console.log("Created admin user with ID:", adminUser.id);
     } else {
@@ -356,7 +358,7 @@ async function seedDatabase() {
         irbNetNumber: "IRB00012345",
         title: "Genomic Profiling of Rare Pediatric Cancers for Therapeutic Target Identification",
         shortTitle: "Rare Pediatric Cancer Genomics",
-        principalInvestigatorId: scientists[0].id,
+        principalInvestigatorId: scientistsArray[0].id,
         protocolType: "Full Board",
         isInterventional: false,
         submissionDate: sixMonthsAgo,
@@ -405,7 +407,7 @@ async function seedDatabase() {
         ibcNumber: "IBC-2023-025",
         cayuseProtocolNumber: "CAYUSE-78901",
         title: "Use of Recombinant DNA in Cancer Genomics Research",
-        principalInvestigatorId: scientists[0].id,
+        principalInvestigatorId: scientistsArray[0].id,
         submissionDate: new Date("2023-02-10"),
         approvalDate: new Date("2023-03-05"),
         expirationDate: new Date("2024-03-04"),
@@ -414,7 +416,7 @@ async function seedDatabase() {
           approvalLetter: "ibc_approval_2023_025.pdf",
           protocol: "ibc_protocol_2023_025.pdf"
         },
-        peopleInvolved: [scientists[0].id, scientists[3].id]
+        peopleInvolved: [scientistsArray[0].id, scientistsArray[3].id]
       }
     ];
 
