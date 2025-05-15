@@ -229,6 +229,16 @@ export default function ResearchContractDetail() {
                     </div>
                   </div>
                 )}
+                
+                {contract.ibcProtocol && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">IBC Protocol</h3>
+                    <div className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      <span>{contract.ibcProtocol}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {contract.description && (
@@ -323,18 +333,45 @@ export default function ResearchContractDetail() {
                         .then(data => {
                           const irbApp = data.find(app => app.irbNumber === contract.irbProtocol);
                           if (irbApp) {
-                            navigate(`/irb/${irbApp.id}`);
+                            navigate(`/irb-applications/${irbApp.id}`);
                           } else {
-                            navigate(`/irb?search=${contract.irbProtocol}`);
+                            navigate(`/irb-applications?search=${contract.irbProtocol}`);
                           }
                         })
-                        .catch(() => navigate(`/irb?search=${contract.irbProtocol}`));
+                        .catch(() => navigate(`/irb-applications?search=${contract.irbProtocol}`));
                     }}
                   >
                     <FileText className="h-4 w-4 mr-2" /> 
                     <span className="flex-1 text-left">IRB Protocol</span>
                     <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
                       {contract.irbProtocol}
+                    </Badge>
+                  </Button>
+                )}
+                
+                {contract.ibcProtocol && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => {
+                      // Find the IBC application ID from the protocol number and navigate to its details
+                      fetch(`/api/ibc-applications`)
+                        .then(res => res.json())
+                        .then(data => {
+                          const ibcApp = data.find(app => app.ibcNumber === contract.ibcProtocol);
+                          if (ibcApp) {
+                            navigate(`/ibc-applications/${ibcApp.id}`);
+                          } else {
+                            navigate(`/ibc-applications?search=${contract.ibcProtocol}`);
+                          }
+                        })
+                        .catch(() => navigate(`/ibc-applications?search=${contract.ibcProtocol}`));
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">IBC Protocol</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                      {contract.ibcProtocol}
                     </Badge>
                   </Button>
                 )}

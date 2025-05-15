@@ -257,6 +257,7 @@ export const researchContracts = pgTable("research_contracts", {
   title: text("title").notNull(),
   leadPIId: integer("lead_pi_id"), // references scientists.id
   irbProtocol: text("irb_protocol"), // Related IRB Protocol
+  ibcProtocol: text("ibc_protocol"), // Related IBC Protocol
   qnrfNumber: text("qnrf_number"), // QNRF Number if applicable
   requestState: text("request_state"), // State of the request
   startDate: date("start_date"),
