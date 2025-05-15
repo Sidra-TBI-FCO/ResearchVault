@@ -289,13 +289,13 @@ export default function TeamDetail(props: TeamDetailProps) {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="role">Role on Project</Label>
+                <Label htmlFor="role">Team Role Assignment</Label>
                 <Select
                   value={selectedRole}
                   onValueChange={setSelectedRole}
                 >
                   <SelectTrigger id="role">
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder="Select team role" />
                   </SelectTrigger>
                   <SelectContent>
                     {/* Only SDR Team Roles */}
