@@ -13,6 +13,12 @@ import Dashboard from "@/pages/dashboard";
 import ScientistsList from "@/pages/scientists";
 import CreateScientist from "@/pages/scientists/create";
 
+// Programs (PRM)
+import ProgramsList from "@/pages/programs";
+
+// Project Groups (PRJ)
+import ProjectGroupsList from "@/pages/project-groups";
+
 // Projects
 import ProjectsList from "@/pages/projects";
 import CreateProject from "@/pages/projects/create";
@@ -51,8 +57,14 @@ function Router() {
         {/* Scientists & Staff */}
         <Route path="/scientists" component={ScientistsList} />
         <Route path="/scientists/create" component={CreateScientist} />
+
+        {/* Programs */}
+        <Route path="/programs" component={ProgramsList} />
         
-        {/* Projects */}
+        {/* Project Groups */}
+        <Route path="/project-groups" component={ProjectGroupsList} />
+        
+        {/* Research Activities */}
         <Route path="/projects" component={ProjectsList} />
         <Route path="/projects/create" component={CreateProject} />
         
