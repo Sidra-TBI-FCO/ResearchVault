@@ -1,7 +1,11 @@
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import ws from 'ws';
+
+// Configure neon to use ws
+neonConfig.webSocketConstructor = ws;
 
 // Get the directory name using ESM
 const __filename = fileURLToPath(import.meta.url);
