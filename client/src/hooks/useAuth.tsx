@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
-      await apiRequest('/api/auth/logout', {
+      await fetch('/api/auth/logout', {
         method: 'POST',
       });
       setUser(null);
@@ -141,7 +141,7 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
   adminOnly = false 
 }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   
   useEffect(() => {
     if (!loading) {
