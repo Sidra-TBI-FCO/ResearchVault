@@ -102,7 +102,7 @@ export default function ScientistsList() {
                             </div>
                             <div>
                               <Link href={`/scientists/${scientist.id}`}>
-                                <a className="hover:text-primary-500 transition-colors">{scientist.name}</a>
+                                <span className="hover:text-primary-500 transition-colors cursor-pointer">{scientist.name}</span>
                               </Link>
                             </div>
                           </div>

@@ -12,9 +12,11 @@ import Dashboard from "@/pages/dashboard";
 // Scientists
 import ScientistsList from "@/pages/scientists";
 import CreateScientist from "@/pages/scientists/create";
+import ScientistDetail from "@/pages/scientists/detail";
 
 // Programs (PRM)
 import ProgramsList from "@/pages/programs";
+import ProgramDetail from "@/pages/programs/detail";
 
 // Projects (PRJ)
 import ProjectGroupsList from "@/pages/project-groups";
@@ -57,9 +59,11 @@ function Router() {
         {/* Scientists & Staff */}
         <Route path="/scientists" component={ScientistsList} />
         <Route path="/scientists/create" component={CreateScientist} />
+        <Route path="/scientists/:id" component={ScientistDetail} />
 
         {/* Programs */}
         <Route path="/programs" component={ProgramsList} />
+        <Route path="/programs/:id" component={ProgramsList} />
         
         {/* Projects (PRJ) */}
         <Route path="/projects" component={ProjectGroupsList} />
@@ -69,31 +73,37 @@ function Router() {
         {/* Research Activities (SDR) */}
         <Route path="/research-activities" component={ProjectsList} />
         <Route path="/research-activities/create" component={CreateProject} />
-        <Route path="/research-activities/:id" component={CreateProject} />
+        <Route path="/research-activities/:id" component={ProjectsList} />
         
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />
         <Route path="/data-management/create" component={CreateDataManagement} />
+        <Route path="/data-management/:id" component={DataManagementList} />
         
         {/* Publications */}
         <Route path="/publications" component={PublicationsList} />
         <Route path="/publications/create" component={CreatePublication} />
+        <Route path="/publications/:id" component={PublicationsList} />
         
         {/* Patents */}
         <Route path="/patents" component={PatentsList} />
         <Route path="/patents/create" component={CreatePatent} />
+        <Route path="/patents/:id" component={PatentsList} />
         
         {/* IRB Applications */}
         <Route path="/irb" component={IrbList} />
         <Route path="/irb/create" component={CreateIrb} />
+        <Route path="/irb/:id" component={IrbList} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />
         <Route path="/ibc/create" component={CreateIbc} />
+        <Route path="/ibc/:id" component={IbcList} />
         
         {/* Research Contracts */}
         <Route path="/contracts" component={ContractsList} />
         <Route path="/contracts/create" component={CreateContract} />
+        <Route path="/contracts/:id" component={ContractsList} />
         
         {/* Fallback to 404 */}
         <Route component={NotFound} />
