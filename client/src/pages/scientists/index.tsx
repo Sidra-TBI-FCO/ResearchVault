@@ -9,6 +9,12 @@ import {
   Table, TableBody, TableCell, TableHead, 
   TableHeader, TableRow 
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Scientist } from "@shared/schema";
 import { Plus, Search, MoreHorizontal, Mail, Phone, ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,8 +36,6 @@ export default function ScientistsList() {
                          (scientist.department?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "pis") return matchesSearch && !scientist.isStaff;
-    if (activeTab === "staff") return matchesSearch && scientist.isStaff;
     
     // Filter by job title
     if (activeTab === "staff-scientist") return matchesSearch && scientist.title === "Staff Scientist";
@@ -71,17 +75,50 @@ export default function ScientistsList() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle>Research Team</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="Search team members..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="flex items-center gap-2">
+              {/* Sort Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <ArrowUpDown className="h-4 w-4" />
+                    Sort by: {sortField === 'name' ? 'Name' : sortField === 'department' ? 'Department' : 'Job Title'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortField('name')}>
+                    Name
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortField('department')}>
+                    Department
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortField('title')}>
+                    Job Title
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Direction Toggle */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              >
+                {sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            
+              {/* Search Box */}
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search team members..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -89,8 +126,6 @@ export default function ScientistsList() {
           <Tabs defaultValue="all" onValueChange={setActiveTab}>
             <TabsList className="mb-4 flex flex-wrap gap-1">
               <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="pis">Principal Investigators</TabsTrigger>
-              <TabsTrigger value="staff">Staff</TabsTrigger>
               <TabsTrigger value="staff-scientist">Staff Scientist</TabsTrigger>
               <TabsTrigger value="investigator">Investigator</TabsTrigger>
               <TabsTrigger value="research-specialist">Research Specialist</TabsTrigger>
