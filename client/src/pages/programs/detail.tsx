@@ -102,30 +102,18 @@ export default function ProgramDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Category</h3>
-                  <p>{program.category}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Status</h3>
-                  <Badge variant={program.status === 'active' ? 'success' : program.status === 'completed' ? 'default' : 'secondary'}>
-                    {program.status}
-                  </Badge>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Start Date</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Added Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{program.startDate ? format(new Date(program.startDate), 'MMM d, yyyy') : 'Not specified'}</span>
+                    <span>{program.createdAt ? format(new Date(program.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
                   </div>
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">End Date</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Last Updated</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{program.endDate ? format(new Date(program.endDate), 'MMM d, yyyy') : 'Not specified'}</span>
+                    <span>{program.updatedAt ? format(new Date(program.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
                   </div>
                 </div>
               </div>
