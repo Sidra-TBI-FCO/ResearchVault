@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(projects);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch project groups" });
+      res.status(500).json({ message: "Failed to fetch projects" });
     }
   });
 
@@ -198,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(project);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch project group" });
+      res.status(500).json({ message: "Failed to fetch project" });
     }
   });
 
@@ -211,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to create project group" });
+      res.status(500).json({ message: "Failed to create project" });
     }
   });
 
@@ -219,22 +219,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid project group ID" });
+        return res.status(400).json({ message: "Invalid project ID" });
       }
 
-      const validateData = insertProjectGroupSchema.partial().parse(req.body);
-      const projectGroup = await storage.updateProjectGroup(id, validateData);
+      const validateData = insertProjectSchema.partial().parse(req.body);
+      const project = await storage.updateProject(id, validateData);
       
-      if (!projectGroup) {
-        return res.status(404).json({ message: "Project group not found" });
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
       }
       
-      res.json(projectGroup);
+      res.json(project);
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to update project group" });
+      res.status(500).json({ message: "Failed to update project" });
     }
   });
 
@@ -242,18 +242,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid project group ID" });
+        return res.status(400).json({ message: "Invalid project ID" });
       }
 
-      const success = await storage.deleteProjectGroup(id);
+      const success = await storage.deleteProject(id);
       
       if (!success) {
-        return res.status(404).json({ message: "Project group not found" });
+        return res.status(404).json({ message: "Project not found" });
       }
       
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete project group" });
+      res.status(500).json({ message: "Failed to delete project" });
     }
   });
 
