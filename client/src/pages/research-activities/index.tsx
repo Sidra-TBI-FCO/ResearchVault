@@ -45,53 +45,72 @@ interface Project {
   leadScientist?: Scientist;
 }
 
-export default function ProjectsList() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [programFilter, setProgramFilter] = useState<string>("all");
+interface ResearchActivity {
+  id: number;
+  sdrNumber: string;
+  projectId: number | null;
+  title: string;
+  shortTitle: string | null;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  leadPIId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Related entities
+  project?: Project;
+  leadPI?: Scientist;
+}
 
-  const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
+export default function ResearchActivitiesList() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+
+  const { data: researchActivities, isLoading: isLoadingActivities } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/research-activities'],
   });
 
-  const { data: programs } = useQuery<Program[]>({
-    queryKey: ['/api/programs'],
+  const { data: projects } = useQuery<Project[]>({
+    queryKey: ['/api/projects'],
   });
 
   const { data: scientists } = useQuery<Scientist[]>({
     queryKey: ['/api/scientists'],
   });
 
-  // Enhance projects with related data
-  const enhancedProjects = projects?.map(project => {
-    const program = programs?.find(p => p.id === project.programId);
-    const leadScientist = project.leadScientistId ? 
-      scientists?.find(s => s.id === project.leadScientistId) : undefined;
+  // Enhance research activities with related data
+  const enhancedActivities = researchActivities?.map(activity => {
+    const project = projects?.find(p => p.id === activity.projectId);
+    const leadPI = activity.leadPIId ? 
+      scientists?.find(s => s.id === activity.leadPIId) : undefined;
     return {
-      ...project,
-      program,
-      leadScientist
+      ...activity,
+      project,
+      leadPI
     };
   });
 
-  const filteredProjects = enhancedProjects?.filter(project => {
+  const filteredActivities = enhancedActivities?.filter(activity => {
     const matchesSearch = 
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.description?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      project.projectId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.program?.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (activity.description?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      activity.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (activity.project?.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesProgram = programFilter === "all" || project.programId === parseInt(programFilter);
+    const matchesProject = projectFilter === "all" || (activity.projectId && activity.projectId === parseInt(projectFilter));
     
-    return matchesSearch && matchesProgram;
+    return matchesSearch && matchesProject;
   });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Projects (PRJ)</h1>
-        <Link href="/projects/create">
+        <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
+        <Link href="/research-activities/create">
           <Button className="bg-primary-500 text-white">
-            <FilePlus className="h-4 w-4 mr-1" /> New Project
+            <FilePlus className="h-4 w-4 mr-1" /> New Research Activity
           </Button>
         </Link>
       </div>
@@ -99,13 +118,13 @@ export default function ProjectsList() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <CardTitle>All Projects</CardTitle>
+            <CardTitle>All Research Activities</CardTitle>
             <div className="flex items-center space-x-2">
               <div className="relative w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
-                  placeholder="Search projects..."
+                  placeholder="Search research activities..."
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -113,17 +132,17 @@ export default function ProjectsList() {
               </div>
               
               <Select 
-                value={programFilter}
-                onValueChange={setProgramFilter}
+                value={projectFilter}
+                onValueChange={setProjectFilter}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Program" />
+                  <SelectValue placeholder="Filter by Project" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Programs</SelectItem>
-                  {programs?.map(program => (
-                    <SelectItem key={program.id} value={program.id.toString()}>
-                      {program.name}
+                  <SelectItem value="all">All Projects</SelectItem>
+                  {projects?.map(project => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -132,7 +151,7 @@ export default function ProjectsList() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoadingProjects ? (
+          {isLoadingActivities ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 py-3">
@@ -151,37 +170,38 @@ export default function ProjectsList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>PRJ ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Program</TableHead>
-                  <TableHead>Lead Scientist</TableHead>
+                  <TableHead>SDR Number</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Lead PI</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjects?.map((project) => (
-                  <TableRow key={project.id}>
+                {filteredActivities?.map((activity) => (
+                  <TableRow key={activity.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <TableIcon className="h-4 w-4 text-primary-500" />
-                        <span>{project.projectId}</span>
+                        <span>{activity.sdrNumber}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/projects/${project.id}`}>
-                        <a className="hover:text-primary-500 transition-colors">{project.name}</a>
+                      <Link href={`/research-activities/${activity.id}`}>
+                        <a className="hover:text-primary-500 transition-colors">{activity.title}</a>
                       </Link>
-                      {project.description && (
+                      {activity.description && (
                         <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
-                          {project.description}
+                          {activity.description}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
-                      {project.program ? (
-                        <Link href={`/programs/${project.program.id}`}>
+                      {activity.project ? (
+                        <Link href={`/projects/${activity.project.id}`}>
                           <a className="text-sm hover:text-primary-500 transition-colors">
-                            {project.program.name}
+                            {activity.project.name}
                           </a>
                         </Link>
                       ) : (
@@ -189,16 +209,26 @@ export default function ProjectsList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {project.leadScientist ? (
+                      {activity.leadPI ? (
                         <div className="flex items-center">
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
-                            {project.leadScientist.profileImageInitials || project.leadScientist.name.substring(0, 2)}
+                            {activity.leadPI.profileImageInitials || activity.leadPI.name.substring(0, 2)}
                           </div>
-                          <span>{project.leadScientist.name}</span>
+                          <span>{activity.leadPI.name}</span>
                         </div>
                       ) : (
                         <span className="text-neutral-200">Unassigned</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                        ${activity.status === 'active' ? 'bg-green-100 text-green-800' : 
+                          activity.status === 'planning' ? 'bg-blue-100 text-blue-800' : 
+                          activity.status === 'completed' ? 'bg-gray-100 text-gray-800' : 
+                          'bg-yellow-100 text-yellow-800'}`
+                      }>
+                        {activity.status.charAt(0).toUpperCase() + activity.status.slice(1).replace('_', ' ')}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm">
@@ -207,12 +237,12 @@ export default function ProjectsList() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {!isLoadingProjects && (!filteredProjects || filteredProjects.length === 0) && (
+                {!isLoadingActivities && (!filteredActivities || filteredActivities.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-neutral-200">
-                      {projects && projects.length > 0 
-                        ? "No projects matching your search criteria."
-                        : "No projects yet. Create your first project!"}
+                    <TableCell colSpan={6} className="text-center py-8 text-neutral-200">
+                      {researchActivities && researchActivities.length > 0 
+                        ? "No research activities matching your search criteria."
+                        : "No research activities yet. Create your first research activity!"}
                     </TableCell>
                   </TableRow>
                 )}
