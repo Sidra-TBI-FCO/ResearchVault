@@ -12,6 +12,7 @@ import {
 import { Scientist } from "@shared/schema";
 import { Plus, Search, MoreHorizontal, Mail, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 export default function ScientistsList() {
   const [searchQuery, setSearchQuery] = useState("");
