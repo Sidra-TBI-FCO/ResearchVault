@@ -63,10 +63,10 @@ export const insertProgramSchema = createInsertSchema(programs).omit({
   updatedAt: true,
 });
 
-// Project Groups (PRJ) - Collections of related research activities
-export const projectGroups = pgTable("project_groups", {
+// Projects (PRJ) - Collections of related research activities
+export const projects = pgTable("project_groups", {
   id: serial("id").primaryKey(),
-  projectGroupId: text("project_group_id").notNull().unique(), // PRJ number
+  projectId: text("project_group_id").notNull().unique(), // PRJ number (using existing column)
   programId: integer("program_id"), // references programs.id
   name: text("name").notNull(),
   description: text("description"),
@@ -75,7 +75,7 @@ export const projectGroups = pgTable("project_groups", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertProjectGroupSchema = createInsertSchema(projectGroups).omit({
+export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -85,7 +85,7 @@ export const insertProjectGroupSchema = createInsertSchema(projectGroups).omit({
 export const researchActivities = pgTable("research_activities", {
   id: serial("id").primaryKey(),
   sdrNumber: text("sdr_number").notNull().unique(), // SDR number
-  projectGroupId: integer("project_group_id"), // references projectGroups.id
+  projectId: integer("project_group_id"), // references projects.id (using existing column)
   title: text("title").notNull(),
   shortTitle: text("short_title"), // Short, catchy title for better recognition
   description: text("description"),
@@ -109,8 +109,8 @@ export const insertResearchActivitySchema = createInsertSchema(researchActivitie
   updatedAt: true,
 });
 
-// For backward compatibility with existing code
-export const insertProjectSchema = insertResearchActivitySchema;
+// This is no longer needed as we have a proper Projects schema now
+// export const insertProjectSchema = insertResearchActivitySchema;
 
 // Project Team Members (Many-to-Many relationship)
 export const projectMembers = pgTable("project_members", {
@@ -285,8 +285,8 @@ export const insertResearchContractSchema = createInsertSchema(researchContracts
 export type Program = typeof programs.$inferSelect;
 export type InsertProgram = z.infer<typeof insertProgramSchema>;
 
-export type ProjectGroup = typeof projectGroups.$inferSelect;
-export type InsertProjectGroup = z.infer<typeof insertProjectGroupSchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
 
 export type Scientist = typeof scientists.$inferSelect;
 export type InsertScientist = z.infer<typeof insertScientistSchema>;
@@ -294,9 +294,9 @@ export type InsertScientist = z.infer<typeof insertScientistSchema>;
 export type ResearchActivity = typeof researchActivities.$inferSelect;
 export type InsertResearchActivity = z.infer<typeof insertResearchActivitySchema>;
 
-// For backward compatibility with existing code
-export type Project = ResearchActivity;
-export type InsertProject = InsertResearchActivity;
+// These types are now defined above, no need for compatibility aliases
+// export type Project = ResearchActivity;
+// export type InsertProject = InsertResearchActivity;
 
 export type ProjectMember = typeof projectMembers.$inferSelect;
 export type InsertProjectMember = z.infer<typeof insertProjectMemberSchema>;

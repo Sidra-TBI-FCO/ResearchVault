@@ -14,7 +14,7 @@ import {
   insertIbcApplicationSchema,
   insertResearchContractSchema,
   insertProgramSchema,
-  insertProjectGroupSchema
+  insertProjectSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -103,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid program ID" });
       }
 
-      const projects = await storage.getProjectGroupsForProgram(id);
+      const projects = await storage.getProjectsForProgram(id);
       res.json(projects);
     } catch (error) {
       console.error("Error fetching projects for program:", error);
@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Project Groups (PRJ)
-  app.get('/api/project-groups', async (req: Request, res: Response) => {
+  app.get('/api/projects', async (req: Request, res: Response) => {
     try {
       const programId = req.query.programId ? parseInt(req.query.programId as string) : undefined;
       
@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/project-groups/:id', async (req: Request, res: Response) => {
+  app.get('/api/projects/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/project-groups', async (req: Request, res: Response) => {
+  app.post('/api/projects', async (req: Request, res: Response) => {
     try {
       const validateData = insertProjectGroupSchema.parse(req.body);
       const projectGroup = await storage.createProjectGroup(validateData);
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/project-groups/:id', async (req: Request, res: Response) => {
+  app.patch('/api/projects/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {

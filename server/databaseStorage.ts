@@ -5,7 +5,7 @@ import {
   users, User, InsertUser,
   scientists, Scientist, InsertScientist,
   programs, Program, InsertProgram,
-  projectGroups, ProjectGroup, InsertProjectGroup,
+  projects, Project, InsertProject,
   researchActivities, ResearchActivity, InsertResearchActivity,
   projectMembers, ProjectMember, InsertProjectMember,
   dataManagementPlans, DataManagementPlan, InsertDataManagementPlan,
@@ -88,41 +88,41 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  // Project Group operations
-  async getProjectGroups(): Promise<ProjectGroup[]> {
-    return await db.select().from(projectGroups);
+  // Projects operations
+  async getProjects(): Promise<Project[]> {
+    return await db.select().from(projects);
   }
 
-  async getProjectGroup(id: number): Promise<ProjectGroup | undefined> {
-    const [projectGroup] = await db.select().from(projectGroups).where(eq(projectGroups.id, id));
-    return projectGroup;
+  async getProject(id: number): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project;
   }
 
-  async getProjectGroupByGroupId(groupId: string): Promise<ProjectGroup | undefined> {
-    const [projectGroup] = await db.select().from(projectGroups).where(eq(projectGroups.projectGroupId, groupId));
-    return projectGroup;
+  async getProjectByProjectId(projectId: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.projectId, projectId));
+    return project;
   }
 
-  async getProjectGroupsForProgram(programId: number): Promise<ProjectGroup[]> {
-    return await db.select().from(projectGroups).where(eq(projectGroups.programId, programId));
+  async getProjectsForProgram(programId: number): Promise<Project[]> {
+    return await db.select().from(projects).where(eq(projects.programId, programId));
   }
 
-  async createProjectGroup(projectGroup: InsertProjectGroup): Promise<ProjectGroup> {
-    const [newProjectGroup] = await db.insert(projectGroups).values(projectGroup).returning();
-    return newProjectGroup;
+  async createProject(project: InsertProject): Promise<Project> {
+    const [newProject] = await db.insert(projects).values(project).returning();
+    return newProject;
   }
 
-  async updateProjectGroup(id: number, projectGroup: Partial<InsertProjectGroup>): Promise<ProjectGroup | undefined> {
-    const [updatedProjectGroup] = await db
-      .update(projectGroups)
-      .set(projectGroup)
-      .where(eq(projectGroups.id, id))
+  async updateProject(id: number, project: Partial<InsertProject>): Promise<Project | undefined> {
+    const [updatedProject] = await db
+      .update(projects)
+      .set(project)
+      .where(eq(projects.id, id))
       .returning();
-    return updatedProjectGroup;
+    return updatedProject;
   }
 
-  async deleteProjectGroup(id: number): Promise<boolean> {
-    const result = await db.delete(projectGroups).where(eq(projectGroups.id, id));
+  async deleteProject(id: number): Promise<boolean> {
+    const result = await db.delete(projects).where(eq(projects.id, id));
     return result.rowCount > 0;
   }
 
@@ -178,8 +178,8 @@ export class DatabaseStorage implements IStorage {
     return activity;
   }
 
-  async getResearchActivitiesForProjectGroup(projectGroupId: number): Promise<ResearchActivity[]> {
-    return await db.select().from(researchActivities).where(eq(researchActivities.projectGroupId, projectGroupId));
+  async getResearchActivitiesForProject(projectId: number): Promise<ResearchActivity[]> {
+    return await db.select().from(researchActivities).where(eq(researchActivities.projectId, projectId));
   }
 
   async getResearchActivitiesForScientist(scientistId: number): Promise<ResearchActivity[]> {
