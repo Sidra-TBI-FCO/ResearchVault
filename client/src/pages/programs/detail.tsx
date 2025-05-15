@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Program, ProjectGroup } from "@shared/schema";
+import { Program, Project } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Layers, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
