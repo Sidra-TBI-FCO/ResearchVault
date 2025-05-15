@@ -39,7 +39,7 @@ export default function ProjectGroupDetail() {
   });
 
   const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/research-activities', { projectGroupId: id }],
+    queryKey: ['/api/projects', { projectGroupId: id }],
     queryFn: async () => {
       const response = await fetch(`/api/projects?projectGroupId=${id}`);
       if (!response.ok) {

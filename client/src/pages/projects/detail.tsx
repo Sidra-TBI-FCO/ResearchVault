@@ -237,42 +237,21 @@ export default function ResearchActivityDetail() {
               )}
             </div>
 
+            {/* Additional details can be shown in accordion panels */}
             <Accordion type="single" collapsible className="mt-6">
-              <AccordionItem value="methodology">
-                <AccordionTrigger>Methodology</AccordionTrigger>
+              <AccordionItem value="additional">
+                <AccordionTrigger>Additional Information</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 p-2">
-                    {project.methodology ? (
-                      <p>{project.methodology}</p>
-                    ) : (
-                      <p className="text-neutral-400">No methodology information available.</p>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="impact">
-                <AccordionTrigger>Impact</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4 p-2">
-                    {project.impact ? (
-                      <p>{project.impact}</p>
-                    ) : (
-                      <p className="text-neutral-400">No impact information available.</p>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="budget">
-                <AccordionTrigger>Budget Information</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4 p-2">
-                    {project.budget ? (
-                      <p>{project.budget}</p>
-                    ) : (
-                      <p className="text-neutral-400">No budget information available.</p>
-                    )}
+                    <div>
+                      <h3 className="text-sm font-medium text-neutral-400">Budget Source</h3>
+                      <p>{project.budgetSource || 'Not specified'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-neutral-400">Objectives</h3>
+                      <p>{project.objectives || 'Not specified'}</p>
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>

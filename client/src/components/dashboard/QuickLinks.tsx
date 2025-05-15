@@ -12,16 +12,17 @@ interface QuickLinkProps {
 
 function QuickLink({ icon, title, description, href }: QuickLinkProps) {
   return (
-    <Link href={href}>
-      <a className="flex items-center p-3 border border-neutral-100 rounded-md hover:border-primary-300 hover:bg-primary-50 transition-colors">
-        <div className="h-10 w-10 rounded bg-primary-100 flex items-center justify-center text-primary-500 mr-3">
-          {icon}
-        </div>
-        <div>
-          <p className="font-medium text-neutral-400">{title}</p>
-          <p className="text-xs text-neutral-200">{description}</p>
-        </div>
-      </a>
+    <Link 
+      href={href}
+      className="flex items-center p-3 border border-neutral-100 rounded-md hover:border-primary-300 hover:bg-primary-50 transition-colors"
+    >
+      <div className="h-10 w-10 rounded bg-primary-100 flex items-center justify-center text-primary-500 mr-3">
+        {icon}
+      </div>
+      <div>
+        <p className="font-medium text-neutral-400">{title}</p>
+        <p className="text-xs text-neutral-200">{description}</p>
+      </div>
     </Link>
   );
 }
