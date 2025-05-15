@@ -98,7 +98,7 @@ export const researchActivities = pgTable("research_activities", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   principalInvestigatorId: integer("principal_investigator_id"), // Principal Investigator (references scientists.id)
-  staffScientistId: integer("staff_scientist_id"), // Staff Scientist (references scientists.id)
+  leadScientistId: integer("lead_scientist_id"), // Lead Scientist (references scientists.id)
   budgetHolderId: integer("budget_holder_id"), // references scientists.id
   lineManagerId: integer("line_manager_id"), // references scientists.id
   additionalNotificationEmail: text("additional_notification_email"),

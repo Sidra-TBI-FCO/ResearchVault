@@ -330,7 +330,8 @@ export default function TeamDetail(props: TeamDetailProps) {
             </Badge>
           </CardTitle>
           <CardDescription>
-            Manage the research team members and their roles.
+            Manage the research team members and assign team roles (Principal Investigator, Lead Scientist, Team Member).
+            Note: Job titles (like Staff Scientist) are set in the staff member profile and are separate from team roles.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -363,8 +364,8 @@ export default function TeamDetail(props: TeamDetailProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Title</TableHead>
+                    <TableHead>Team Role</TableHead>
+                    <TableHead>Job Title</TableHead>
                     <TableHead>Staff ID</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
