@@ -37,6 +37,9 @@ export default function PatentDetail() {
     },
     enabled: !!patent?.researchActivityId,
   });
+  
+  // Get the number of publications linked to this research activity
+  const { count: publicationCount } = usePublicationCount(patent?.researchActivityId);
 
   if (patentLoading) {
     return (
@@ -230,7 +233,7 @@ export default function PatentDetail() {
                   <span className="flex-1 text-left">Publications</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                      SDR: {researchActivity.sdrNumber}
+                      {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
                     </Badge>
                   )}
                 </Button>

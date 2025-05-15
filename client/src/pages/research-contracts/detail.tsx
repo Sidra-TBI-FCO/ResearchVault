@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users } fr
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { usePublicationCount } from "@/hooks/use-publication-count";
 
 export default function ResearchContractDetail() {
   const params = useParams<{ id: string }>();
@@ -49,6 +50,9 @@ export default function ResearchContractDetail() {
     },
     enabled: !!contract?.leadPIId,
   });
+  
+  // Get the number of publications linked to this research activity
+  const { count: publicationCount } = usePublicationCount(contract?.researchActivityId);
 
   if (contractLoading) {
     return (
