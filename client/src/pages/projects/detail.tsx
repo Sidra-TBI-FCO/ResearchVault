@@ -238,40 +238,40 @@ export default function ResearchActivityDetail() {
             </div>
 
             <Accordion type="single" collapsible className="mt-6">
-              <AccordionItem value="methods">
-                <AccordionTrigger>Methods</AccordionTrigger>
+              <AccordionItem value="methodology">
+                <AccordionTrigger>Methodology</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 p-2">
-                    {project.methods ? (
-                      <p>{project.methods}</p>
+                    {project.methodology ? (
+                      <p>{project.methodology}</p>
                     ) : (
-                      <p className="text-neutral-400">No methods information available.</p>
+                      <p className="text-neutral-400">No methodology information available.</p>
                     )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
               
-              <AccordionItem value="results">
-                <AccordionTrigger>Results</AccordionTrigger>
+              <AccordionItem value="impact">
+                <AccordionTrigger>Impact</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 p-2">
-                    {project.results ? (
-                      <p>{project.results}</p>
+                    {project.impact ? (
+                      <p>{project.impact}</p>
                     ) : (
-                      <p className="text-neutral-400">No results information available.</p>
+                      <p className="text-neutral-400">No impact information available.</p>
                     )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
               
-              <AccordionItem value="conclusions">
-                <AccordionTrigger>Conclusions</AccordionTrigger>
+              <AccordionItem value="budget">
+                <AccordionTrigger>Budget Information</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 p-2">
-                    {project.conclusions ? (
-                      <p>{project.conclusions}</p>
+                    {project.budget ? (
+                      <p>{project.budget}</p>
                     ) : (
-                      <p className="text-neutral-400">No conclusions information available.</p>
+                      <p className="text-neutral-400">No budget information available.</p>
                     )}
                   </div>
                 </AccordionContent>
@@ -353,7 +353,7 @@ export default function ResearchActivityDetail() {
                 
                 <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                   <div className="flex items-center gap-2">
-                    <Flask className="h-4 w-4 text-emerald-500" />
+                    <Beaker className="h-4 w-4 text-emerald-500" />
                     <div>
                       <p className="font-medium">IBC Applications</p>
                     </div>
@@ -365,7 +365,7 @@ export default function ResearchActivityDetail() {
                 
                 <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                   <div className="flex items-center gap-2">
-                    <FileContract className="h-4 w-4 text-amber-500" />
+                    <File className="h-4 w-4 text-amber-500" />
                     <div>
                       <p className="font-medium">Research Contracts</p>
                     </div>

@@ -108,16 +108,18 @@ export default function Sidebar({ user }: SidebarProps) {
         <nav className="flex-1 pt-2 pb-4 overflow-y-auto">
           <div className="px-2 space-y-1">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className={cn(
+              <Link 
+                key={item.href} 
+                href={item.href}
+                className={cn(
                   "flex items-center px-3 py-2 text-sm rounded-md transition-colors",
                   location === item.href 
                     ? "bg-primary-50 text-primary-600 font-medium" 
                     : "text-gray-700 hover:bg-gray-100"
-                )}>
-                  {item.icon}
-                  {item.label}
-                </a>
+                )}
+              >
+                {item.icon}
+                {item.label}
               </Link>
             ))}
           </div>
