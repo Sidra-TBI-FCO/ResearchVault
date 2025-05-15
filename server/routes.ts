@@ -363,35 +363,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activities = await storage.getResearchActivities();
       
-      // Enhance with project and lead PI details
-      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
-        let project = null;
-        if (activity.projectId) {
-          project = await storage.getProject(activity.projectId);
-        }
-        
-        let leadPI = null;
-        if (activity.leadPIId) {
-          leadPI = await storage.getScientist(activity.leadPIId);
-        }
-        
-        return {
-          ...activity,
-          project: project ? {
-            id: project.id,
-            name: project.name,
-            projectId: project.projectId
-          } : null,
-          leadPI: leadPI ? {
-            id: leadPI.id,
-            name: leadPI.name,
-            profileImageInitials: leadPI.profileImageInitials
-          } : null
-        };
-      }));
-      
-      res.json(enhancedActivities);
+      // Directly return the activities without enhancement for now
+      // This will identify if the enhancement is causing issues
+      res.json(activities);
     } catch (error) {
+      console.error("Error fetching research activities:", error);
       res.status(500).json({ message: "Failed to fetch research activities" });
     }
   });
@@ -591,25 +567,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const activities = await storage.getResearchActivitiesForProject(id);
       
-      // Enhance activities with lead PI details
-      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
-        let leadPI = null;
-        if (activity.leadPIId) {
-          leadPI = await storage.getScientist(activity.leadPIId);
-        }
-        
-        return {
-          ...activity,
-          leadPI: leadPI ? {
-            id: leadPI.id,
-            name: leadPI.name,
-            profileImageInitials: leadPI.profileImageInitials
-          } : null
-        };
-      }));
-      
-      res.json(enhancedActivities);
+      // Directly return activities without enhancement for now
+      res.json(activities);
     } catch (error) {
+      console.error("Error fetching research activities for project:", error);
       res.status(500).json({ message: "Failed to fetch research activities for project" });
     }
   });
