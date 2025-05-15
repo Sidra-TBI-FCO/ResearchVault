@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResearchActivity, Publication } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink } from "lucide-react";
+import { ResearchActivity, Publication, Patent } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -33,6 +33,21 @@ export default function PublicationDetail() {
         throw new Error('Failed to fetch research activity');
       }
       return response.json();
+    },
+    enabled: !!publication?.researchActivityId,
+  });
+  
+  // Fetch patents related to the same research activity
+  const { data: relatedPatents, isLoading: patentsLoading } = useQuery<Patent[]>({
+    queryKey: ['/api/patents', publication?.researchActivityId],
+    queryFn: async () => {
+      if (!publication?.researchActivityId) return [];
+      const response = await fetch('/api/patents');
+      if (!response.ok) {
+        throw new Error('Failed to fetch patents');
+      }
+      const patents = await response.json();
+      return patents.filter(patent => patent.researchActivityId === publication.researchActivityId);
     },
     enabled: !!publication?.researchActivityId,
   });
@@ -240,20 +255,32 @@ export default function PublicationDetail() {
                     </Badge>
                   )}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/data-management-plans?researchActivityId=${researchActivity?.id}`)}
-                  disabled={!researchActivity}
-                >
-                  <FileText className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Data Management Plan</span>
-                  {researchActivity && (
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-teal-50 text-teal-700 border-teal-200">
-                      SDR: {researchActivity.id}
+                {relatedPatents && relatedPatents.length > 0 ? (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(`/patents/${relatedPatents[0].id}`)}
+                  >
+                    <Award className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">Related Patent</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
+                      {relatedPatents[0].patentNumber || 'Pending'}
                     </Badge>
-                  )}
-                </Button>
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => researchActivity && navigate(`/patents?researchActivityId=${researchActivity?.id}`)}
+                    disabled={!researchActivity}
+                  >
+                    <Award className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">Related Patents</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-gray-50 text-gray-700 border-gray-200">
+                      0
+                    </Badge>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
