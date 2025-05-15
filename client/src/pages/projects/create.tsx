@@ -20,7 +20,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertProjectSchema } from "@shared/schema";
-import { Scientist } from "@shared/schema";
+import { Scientist, ProjectGroup } from "@shared/schema";
 import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -29,18 +29,26 @@ import { cn } from "@/lib/utils";
 
 // Extend the insert schema with additional validations
 const createProjectSchema = insertProjectSchema.extend({
+  sdrNumber: z.string().min(3, "SDR number must be at least 3 characters"),
   title: z.string().min(5, "Title must be at least 5 characters"),
+  shortTitle: z.string().optional(),
   description: z.string().optional(),
-  leadScientistId: z.number({
-    required_error: "Please select a lead scientist",
+  projectGroupId: z.number({
+    required_error: "Please select a project",
   }),
+  leadPIId: z.number({
+    required_error: "Please select a lead principal investigator",
+  }),
+  budgetHolderId: z.number().optional(),
+  lineManagerId: z.number().optional(),
+  additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
-  status: z.enum(["planning", "active", "completed", "on_hold", "pending"], {
+  status: z.enum(["planning", "active", "completed", "on_hold", "pending", "suspended"], {
     required_error: "Please select a status",
   }),
-  funding: z.string().optional(),
-  budget: z.string().optional(),
+  sidraBranch: z.string().optional(),
+  budgetSource: z.string().optional(),
   objectives: z.string().optional(),
 });
 
@@ -55,9 +63,20 @@ export default function CreateProject() {
     queryKey: ['/api/principal-investigators'],
   });
 
+  // Get all project groups
+  const { data: projectGroups, isLoading: projectGroupsLoading } = useQuery<ProjectGroup[]>({
+    queryKey: ['/api/project-groups'],
+  });
+
+  // Get all scientists
+  const { data: scientists, isLoading: scientistsLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+  });
+
   // Default form values
   const defaultValues: Partial<CreateProjectFormValues> = {
     status: "planning",
+    sidraBranch: "Research",
   };
 
   const form = useForm<CreateProjectFormValues>({
@@ -112,13 +131,82 @@ export default function CreateProject() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
+                  name="sdrNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SDR Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. SDR-2023-001" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Unique identifier for this research activity
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="projectGroupId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString() || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a project" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projectGroupsLoading ? (
+                            <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                          ) : (
+                            projectGroups?.map((project) => (
+                              <SelectItem key={project.id} value={project.id.toString()}>
+                                {project.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Project this research activity belongs to
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem className="col-span-full">
-                      <FormLabel>Project Title</FormLabel>
+                      <FormLabel>Research Activity Title</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. CRISPR-Cas9 Gene Editing for Cancer Treatment" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="shortTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Short Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. CRISPR Cancer Treatment" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Brief name for easier reference
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -132,7 +220,7 @@ export default function CreateProject() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Brief description of the research project" 
+                          placeholder="Brief description of the research activity" 
                           className="resize-none" 
                           rows={3}
                           {...field} 
@@ -145,22 +233,22 @@ export default function CreateProject() {
                 
                 <FormField
                   control={form.control}
-                  name="leadScientistId"
+                  name="leadPIId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lead Scientist</FormLabel>
+                      <FormLabel>Lead Principal Investigator</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select lead scientist" />
+                            <SelectValue placeholder="Select lead PI" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
                           ) : (
                             principalInvestigators?.map((pi) => (
                               <SelectItem key={pi.id} value={pi.id.toString()}>
@@ -170,6 +258,76 @@ export default function CreateProject() {
                           )}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="budgetHolderId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Budget Holder</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString() || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select budget holder" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientistsLoading ? (
+                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                          ) : (
+                            scientists?.map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {scientist.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Person responsible for budget management
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lineManagerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Line Manager</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString() || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select line manager" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientistsLoading ? (
+                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                          ) : (
+                            scientists?.map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {scientist.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Supervisor or administrative manager
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -195,9 +353,27 @@ export default function CreateProject() {
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="pending">Pending</SelectItem>
                           <SelectItem value="on_hold">On Hold</SelectItem>
+                          <SelectItem value="suspended">Suspended</SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="additionalNotificationEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Notification Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="e.g. notifications@example.com" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Secondary email for project notifications
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -280,16 +456,32 @@ export default function CreateProject() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
-                  name="funding"
+                  name="sidraBranch"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Funding Source</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. NIH Grant #R01-CA123456" {...field} />
-                      </FormControl>
+                      <FormLabel>Sidra Branch</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select branch" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Research">Research</SelectItem>
+                          <SelectItem value="Clinical">Clinical</SelectItem>
+                          <SelectItem value="External">External</SelectItem>
+                          <SelectItem value="Administrative">Administrative</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Branch or department within Sidra
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -297,13 +489,31 @@ export default function CreateProject() {
                 
                 <FormField
                   control={form.control}
-                  name="budget"
+                  name="budgetSource"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. $500,000" {...field} />
-                      </FormControl>
+                      <FormLabel>Budget Source</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select budget source" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="IRF">IRF</SelectItem>
+                          <SelectItem value="PI Fund">PI Fund</SelectItem>
+                          <SelectItem value="QNRF">QNRF</SelectItem>
+                          <SelectItem value="External Grant">External Grant</SelectItem>
+                          <SelectItem value="Institutional">Institutional</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Source of funding for this activity
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -317,12 +527,15 @@ export default function CreateProject() {
                       <FormLabel>Objectives</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Key objectives and goals of the project" 
+                          placeholder="Key objectives and goals of the research activity" 
                           className="resize-none" 
                           rows={3}
                           {...field} 
                         />
                       </FormControl>
+                      <FormDescription>
+                        List specific aims and expected outcomes
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
