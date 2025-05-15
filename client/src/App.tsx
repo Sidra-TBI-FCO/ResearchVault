@@ -31,6 +31,7 @@ import ResearchActivityDetail from "@/pages/research-activities/detail";
 // Data Management Plans
 import DataManagementList from "@/pages/data-management";
 import CreateDataManagement from "@/pages/data-management/create";
+import DataManagementPlanDetail from "@/pages/data-management-plans/detail";
 
 // Publications
 import PublicationsList from "@/pages/publications";
@@ -50,6 +51,7 @@ import IrbApplicationDetail from "@/pages/irb-applications/detail";
 // IBC Applications
 import IbcList from "@/pages/ibc";
 import CreateIbc from "@/pages/ibc/create";
+import IbcApplicationDetail from "@/pages/ibc-applications/detail";
 
 // Research Contracts
 import ContractsList from "@/pages/contracts";
@@ -85,7 +87,8 @@ function Router() {
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />
         <Route path="/data-management/create" component={CreateDataManagement} />
-        <Route path="/data-management-plans/:id" component={DataManagementList} />
+        <Route path="/data-management-plans/:id" component={DataManagementPlanDetail} />
+        <Route path="/data-management/:id" component={DataManagementPlanDetail} />
         
         {/* Publications */}
         <Route path="/publications" component={PublicationsList} />
@@ -101,16 +104,19 @@ function Router() {
         <Route path="/irb" component={IrbList} />
         <Route path="/irb/create" component={CreateIrb} />
         <Route path="/irb-applications/:id" component={IrbApplicationDetail} />
+        <Route path="/irb/:id" component={IrbApplicationDetail} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />
         <Route path="/ibc/create" component={CreateIbc} />
-        <Route path="/ibc/:id" component={IbcList} />
+        <Route path="/ibc-applications/:id" component={IbcApplicationDetail} />
+        <Route path="/ibc/:id" component={IbcApplicationDetail} />
         
         {/* Research Contracts */}
         <Route path="/contracts" component={ContractsList} />
         <Route path="/contracts/create" component={CreateContract} />
         <Route path="/research-contracts/:id" component={ResearchContractDetail} />
+        <Route path="/contracts/:id" component={ResearchContractDetail} />
         
         {/* Fallback to 404 */}
         <Route component={NotFound} />
