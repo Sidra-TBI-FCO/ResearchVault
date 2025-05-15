@@ -34,13 +34,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/dashboard/recent-projects', async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const projects = await storage.getRecentProjects(limit);
+      const activities = await storage.getRecentResearchActivities(limit);
       
-      // Enhance projects with lead scientist details
-      const enhancedProjects = await Promise.all(projects.map(async (project) => {
-        const leadScientist = await storage.getScientist(project.leadScientistId);
+      // Enhance research activities with lead scientist details
+      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
+        let leadScientist = null;
+        if (activity.leadPIId) {
+          leadScientist = await storage.getScientist(activity.leadPIId);
+        }
         return {
-          ...project,
+          ...activity,
           leadScientist: leadScientist ? {
             id: leadScientist.id,
             name: leadScientist.name,
@@ -49,9 +52,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      res.json(enhancedProjects);
+      res.json(enhancedActivities);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch recent projects" });
+      console.error("Error fetching recent research activities:", error);
+      res.status(500).json({ message: "Failed to fetch recent research activities" });
     }
   });
 
