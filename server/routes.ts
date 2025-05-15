@@ -507,24 +507,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid project ID" });
       }
 
-      const members = await storage.getProjectMembers(id);
+      // Get project's research activities
+      const activities = await storage.getResearchActivitiesForProject(id);
       
-      // Enhance team members with scientist details
-      const enhancedMembers = await Promise.all(members.map(async (member) => {
-        const scientist = await storage.getScientist(member.scientistId);
-        return {
-          ...member,
-          scientist: scientist ? {
-            id: scientist.id,
-            name: scientist.name,
-            title: scientist.title,
-            profileImageInitials: scientist.profileImageInitials
-          } : null
-        };
-      }));
+      if (activities.length === 0) {
+        return res.json([]);
+      }
       
-      res.json(enhancedMembers);
+      // Get members for each research activity
+      const allMembers = [];
+      for (const activity of activities) {
+        const members = await storage.getProjectMembers(activity.id);
+        
+        // Enhance team members with scientist details
+        const enhancedMembers = await Promise.all(members.map(async (member) => {
+          const scientist = await storage.getScientist(member.scientistId);
+          return {
+            ...member,
+            researchActivityTitle: activity.title,
+            scientist: scientist ? {
+              id: scientist.id,
+              name: scientist.name,
+              title: scientist.title,
+              profileImageInitials: scientist.profileImageInitials
+            } : null
+          };
+        }));
+        
+        allMembers.push(...enhancedMembers);
+      }
+      
+      res.json(allMembers);
     } catch (error) {
+      console.error("Error fetching project members:", error);
       res.status(500).json({ message: "Failed to fetch project members" });
     }
   });
@@ -536,9 +551,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid project ID" });
       }
 
+      // Need to select a research activity for this project
+      const { researchActivityId, scientistId, role } = req.body;
+      
+      if (!researchActivityId) {
+        return res.status(400).json({ message: "Research activity ID is required" });
+      }
+      
+      // Validate that the research activity belongs to this project
+      const researchActivity = await storage.getResearchActivity(researchActivityId);
+      if (!researchActivity) {
+        return res.status(404).json({ message: "Research activity not found" });
+      }
+      
+      if (researchActivity.projectId !== projectId) {
+        return res.status(400).json({ message: "Research activity does not belong to this project" });
+      }
+      
       const validateData = insertProjectMemberSchema.parse({
-        ...req.body,
-        projectId
+        researchActivityId,
+        scientistId,
+        role
       });
       
       // Check if scientist exists
@@ -546,18 +579,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!scientist) {
         return res.status(404).json({ message: "Scientist not found" });
       }
-      
-      // Check if project exists
-      const project = await storage.getProject(projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
+            
       const member = await storage.addProjectMember(validateData);
       
       // Return enhanced member with scientist details
       const enhancedMember = {
         ...member,
+        researchActivityTitle: researchActivity.title,
         scientist: {
           id: scientist.id,
           name: scientist.name,
@@ -571,6 +599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
+      console.error("Error adding project member:", error);
       res.status(500).json({ message: "Failed to add project member" });
     }
   });
