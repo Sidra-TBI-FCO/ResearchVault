@@ -85,7 +85,7 @@ export default function TeamDetail(props: TeamDetailProps) {
     ? scientists.filter(
         (scientist: Scientist) =>
           !teamMembers?.some(
-            (member: ProjectMember) => member.scientist.id === scientist.id
+            (member: ProjectMember) => member.scientistId === scientist.id
           )
       )
     : [];
@@ -298,7 +298,14 @@ export default function TeamDetail(props: TeamDetailProps) {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
+                    {/* Leadership Roles */}
+                    <SelectItem value="Program Director">Program Director</SelectItem>
+                    <SelectItem value="Research Co-Lead">Research Co-Lead</SelectItem>
+                    <SelectItem value="Clinical Co-Lead">Clinical Co-Lead (Physician)</SelectItem>
                     <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
+                    <SelectItem value="Lead Scientist">Lead Scientist</SelectItem>
+
+                    {/* Additional Roles */}
                     <SelectItem value="Co-Investigator">Co-Investigator</SelectItem>
                     <SelectItem value="Research Specialist">Research Specialist</SelectItem>
                     <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
@@ -307,6 +314,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                     <SelectItem value="Lab Technician">Lab Technician</SelectItem>
                     <SelectItem value="Project Coordinator">Project Coordinator</SelectItem>
                     <SelectItem value="Data Analyst">Data Analyst</SelectItem>
+                    <SelectItem value="Biostatistician">Biostatistician</SelectItem>
                     <SelectItem value="Consultant">Consultant</SelectItem>
                   </SelectContent>
                 </Select>
@@ -376,46 +384,51 @@ export default function TeamDetail(props: TeamDetailProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {teamMembers.map((member: ProjectMember) => (
-                    <TableRow key={member.id}>
-                      <TableCell>
-                        <div className="font-medium">{member.scientist.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {member.scientist.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={
-                          member.role === 'Principal Investigator' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                          member.role === 'Co-Investigator' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
-                          'bg-green-100 text-green-800 border-green-200'
-                        }>
-                          {member.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{member.scientist.title || 'N/A'}</TableCell>
-                      <TableCell>
-                        {member.scientist.staffId ? (
-                          <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 border-blue-200">
-                            {member.scientist.staffId}
+                  {teamMembers.map((member: ProjectMember) => {
+                    // Find the scientist details from the scientists list
+                    const scientist = scientists?.find(s => s.id === member.scientistId) || null;
+                    return (
+                      <TableRow key={member.id}>
+                        <TableCell>
+                          <div className="font-medium">{scientist?.name || 'Unknown'}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {scientist?.email || 'No email available'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={
+                            member.role === 'Principal Investigator' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                            member.role === 'Co-Investigator' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+                            member.role === 'Lead Scientist' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                            'bg-green-100 text-green-800 border-green-200'
+                          }>
+                            {member.role}
                           </Badge>
-                        ) : (
-                          'N/A'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveTeamMember(member.scientist.id)}
-                          disabled={removeTeamMember.isPending}
-                        >
-                          <UserMinus className="h-4 w-4 text-destructive" />
-                          <span className="sr-only">Remove</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>{scientist?.title || 'N/A'}</TableCell>
+                        <TableCell>
+                          {scientist?.staffId ? (
+                            <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 border-blue-200">
+                              {scientist.staffId}
+                            </Badge>
+                          ) : (
+                            'N/A'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveTeamMember(member.scientistId)}
+                            disabled={removeTeamMember.isPending}
+                          >
+                            <UserMinus className="h-4 w-4 text-destructive" />
+                            <span className="sr-only">Remove</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
