@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication } from "@shared/schema";
+import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication, DataManagementPlan } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +60,20 @@ export default function ResearchActivityDetail() {
   
   // Get the count of publications for this research activity
   const { count: publicationCount } = usePublicationCount(activity?.id);
+  
+  // Fetch Data Management Plan for this research activity
+  const { data: dmpData } = useQuery<DataManagementPlan[]>({
+    queryKey: ['/api/data-management-plans'],
+    queryFn: async () => {
+      const response = await fetch('/api/data-management-plans');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data management plans');
+      }
+      return response.json();
+    },
+    select: (data) => data.filter(dmp => dmp.researchActivityId === activity?.id),
+    enabled: !!activity?.id,
+  });
   
   // Fetch IRB applications for this research activity
   const { data: irbApplications } = useQuery<IrbApplication[]>({
@@ -265,17 +279,31 @@ export default function ResearchActivityDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => navigate(`/data-management-plans?researchActivityId=${activity.id}`)}
-                >
-                  <FileText className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Data Management Plan</span>
-                  <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
-                    DMP
-                  </Badge>
-                </Button>
+                {dmpData && dmpData.length > 0 ? (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(`/data-management-plans/${dmpData[0].id}`)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">Data Management Plan</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                      {dmpData[0].dmpNumber}
+                    </Badge>
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(`/data-management-plans?researchActivityId=${activity.id}`)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">Data Management Plan</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                      DMP
+                    </Badge>
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
