@@ -29,11 +29,6 @@ export default function Sidebar({ user }: SidebarProps) {
       icon: <Users className="w-4 h-4 mr-3" />
     },
     { 
-      href: "/teams",
-      label: "Research Teams",
-      icon: <UserPlus className="w-4 h-4 mr-3" />
-    },
-    { 
       href: "/programs",
       label: "Programs (PRM)",
       icon: <Beaker className="w-4 h-4 mr-3" />

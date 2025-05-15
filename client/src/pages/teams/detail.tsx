@@ -1,22 +1,25 @@
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { ResearchActivity, Scientist, ProjectMember } from "@shared/schema";
-import { ArrowLeft, UserPlus, UserMinus, User, Users } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -33,400 +37,391 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
+import {
+  ArrowLeft,
+  Plus,
+  UserPlus,
+  UserMinus,
+  ClipboardList,
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { ResearchActivity, Scientist, ProjectMember } from "@/lib/types";
 
-export default function TeamDetail() {
+interface TeamDetailProps {
+  researchActivityId?: number;
+}
+
+export default function TeamDetail(props: TeamDetailProps) {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const id = parseInt(params.id);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const [selectedScientistId, setSelectedScientistId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-
-  // Fetch the research activity details
-  const { data: researchActivity, isLoading: isLoadingActivity } = useQuery<ResearchActivity>({
-    queryKey: ['/api/research-activities', id],
-    queryFn: async () => {
-      const response = await fetch(`/api/research-activities/${id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch research activity');
-      }
-      return response.json();
-    },
+  
+  // Use the provided id or the one from URL params
+  const id = props.researchActivityId || parseInt(params.id);
+  
+  const [open, setOpen] = useState(false);
+  const [selectedScientistId, setSelectedScientistId] = useState<number | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  
+  // Fetch research activity details
+  const { data: activity, isLoading: activityLoading } = useQuery({
+    queryKey: ["/api/research-activities", id],
+  });
+  
+  // Fetch team members
+  const { data: teamMembers, isLoading: teamMembersLoading } = useQuery({
+    queryKey: ["/api/projects", id, "members"],
     enabled: !!id,
   });
-
-  // Fetch the team members for this research activity
-  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery<ProjectMember[]>({
-    queryKey: ['/api/research-activities', id, 'members'],
-    queryFn: async () => {
-      const response = await fetch(`/api/research-activities/${id}/members`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch team members');
-      }
-      return response.json();
-    },
-    enabled: !!id,
+  
+  // Fetch all scientists for the team member selection
+  const { data: scientists, isLoading: scientistsLoading } = useQuery({
+    queryKey: ["/api/scientists"],
   });
-
-  // Fetch all scientists for the dropdown
-  const { data: scientists, isLoading: isLoadingScientists } = useQuery<Scientist[]>({
-    queryKey: ['/api/scientists'],
-    queryFn: async () => {
-      const response = await fetch('/api/scientists');
-      if (!response.ok) {
-        throw new Error('Failed to fetch scientists');
-      }
-      return response.json();
-    },
-  });
-
+  
+  // Filter out scientists who are already team members
+  const availableScientists = scientists
+    ? scientists.filter(
+        (scientist: Scientist) =>
+          !teamMembers?.some(
+            (member: ProjectMember) => member.scientist.id === scientist.id
+          )
+      )
+    : [];
+  
   // Add team member mutation
-  const addMemberMutation = useMutation({
-    mutationFn: async (newMember: { researchActivityId: number; scientistId: number; role: string }) => {
-      const response = await fetch(`/api/research-activities/${id}/members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newMember),
+  const addTeamMember = useMutation({
+    mutationFn: async (data: { scientistId: number; role: string }) => {
+      return apiRequest(`/api/projects/${id}/members`, {
+        method: "POST",
+        body: JSON.stringify(data),
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add team member');
-      }
-      
-      return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", id, "members"] });
+      setSelectedScientistId(null);
+      setSelectedRole("");
+      setOpen(false);
       toast({
-        title: 'Success',
-        description: 'Team member added successfully',
+        title: "Team member added",
+        description: "The team member has been added successfully.",
       });
-      setAddMemberOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/research-activities', id, 'members'] });
     },
     onError: (error) => {
       toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to add team member: " + error.message,
+        variant: "destructive",
       });
     },
   });
-
+  
   // Remove team member mutation
-  const removeMemberMutation = useMutation({
-    mutationFn: async ({ researchActivityId, scientistId }: { researchActivityId: number; scientistId: number }) => {
-      const response = await fetch(`/api/research-activities/${researchActivityId}/members/${scientistId}`, {
-        method: 'DELETE',
+  const removeTeamMember = useMutation({
+    mutationFn: async (scientistId: number) => {
+      return apiRequest(`/api/projects/${id}/members/${scientistId}`, {
+        method: "DELETE",
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to remove team member');
-      }
-      
-      return true;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", id, "members"] });
       toast({
-        title: 'Success',
-        description: 'Team member removed successfully',
+        title: "Team member removed",
+        description: "The team member has been removed successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/research-activities', id, 'members'] });
     },
     onError: (error) => {
       toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to remove team member: " + error.message,
+        variant: "destructive",
       });
     },
   });
-
-  const handleAddMember = () => {
+  
+  const handleAddTeamMember = () => {
     if (!selectedScientistId || !selectedRole) {
       toast({
-        title: 'Error',
-        description: 'Please select a team member and role',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please select a scientist and a role.",
+        variant: "destructive",
       });
       return;
     }
-
-    addMemberMutation.mutate({
-      researchActivityId: id,
-      scientistId: parseInt(selectedScientistId),
+    
+    addTeamMember.mutate({
+      scientistId: selectedScientistId,
       role: selectedRole,
     });
   };
-
-  const handleRemoveMember = (scientistId: number) => {
-    removeMemberMutation.mutate({
-      researchActivityId: id,
-      scientistId,
-    });
+  
+  const handleRemoveTeamMember = (scientistId: number) => {
+    if (window.confirm("Are you sure you want to remove this team member?")) {
+      removeTeamMember.mutate(scientistId);
+    }
   };
-
-  const getScientistById = (scientistId: number) => {
-    return scientists?.find(s => s.id === scientistId);
-  };
-
-  const getRoleLabel = (role: string) => {
-    const roles: Record<string, string> = {
-      'pi': 'Principal Investigator',
-      'co-pi': 'Co-Principal Investigator',
-      'researcher': 'Researcher',
-      'post-doc': 'Post-doctoral Fellow',
-      'phd-student': 'PhD Student',
-      'technician': 'Lab Technician',
-      'specialist': 'Research Specialist',
-      'assistant': 'Research Assistant',
-    };
-    return roles[role] || role;
-  };
-
-  if (isLoadingActivity || isLoadingTeamMembers || isLoadingScientists) {
+  
+  // If the page is loaded directly (not through a research activity)
+  if (activityLoading) {
     return (
-      <div className="container mx-auto py-10">
-        <div className="space-y-4">
-          <Button variant="ghost" onClick={() => navigate('/teams')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Teams
+      <div className="space-y-6 p-6">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
           </Button>
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <Skeleton className="h-8 w-1/2" />
-              </CardTitle>
-              <CardDescription>
-                <Skeleton className="h-4 w-1/3" />
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[400px] w-full" />
-            </CardContent>
-          </Card>
+          <Skeleton className="h-8 w-64" />
         </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Get team lead (PI) info
-  const teamLead = researchActivity?.leadPIId 
-    ? getScientistById(researchActivity.leadPIId)
-    : null;
-
-  return (
-    <div className="container mx-auto py-10">
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={() => navigate('/teams')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Teams
-        </Button>
-        
+  if (!activity) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/research-activities")}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">Team Not Found</h1>
+        </div>
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-6 w-6" />
-                  <span>{researchActivity?.title}</span>
-                </CardTitle>
-                <CardDescription className="mt-2">
-                  <Badge variant="outline" className="font-mono">
-                    {researchActivity?.sdrNumber}
-                  </Badge>
-                  <Badge variant={researchActivity?.status === 'active' ? 'default' : 'secondary'} className="ml-2">
-                    {researchActivity?.status}
-                  </Badge>
-                </CardDescription>
-              </div>
-              
-              <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Add Team Member
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Team Member</DialogTitle>
-                    <DialogDescription>
-                      Select a team member and assign a role for this research activity.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="scientist" className="text-right">
-                        Team Member
-                      </Label>
-                      <Select 
-                        value={selectedScientistId || ''} 
-                        onValueChange={setSelectedScientistId}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select team member" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {scientists?.map((scientist) => (
-                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name} 
-                              {scientist.staffId && (
-                                <span className="ml-2 text-muted-foreground">
-                                  ({scientist.staffId})
-                                </span>
-                              )}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="role" className="text-right">
-                        Role
-                      </Label>
-                      <Select
-                        value={selectedRole || ''}
-                        onValueChange={setSelectedRole}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pi">Principal Investigator</SelectItem>
-                          <SelectItem value="co-pi">Co-Principal Investigator</SelectItem>
-                          <SelectItem value="researcher">Researcher</SelectItem>
-                          <SelectItem value="post-doc">Post-doctoral Fellow</SelectItem>
-                          <SelectItem value="phd-student">PhD Student</SelectItem>
-                          <SelectItem value="technician">Lab Technician</SelectItem>
-                          <SelectItem value="specialist">Research Specialist</SelectItem>
-                          <SelectItem value="assistant">Research Assistant</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button 
-                      type="submit" 
-                      onClick={handleAddMember}
-                      disabled={addMemberMutation.isPending}
-                    >
-                      {addMemberMutation.isPending ? 'Adding...' : 'Add Member'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+          <CardContent className="py-8">
+            <div className="text-center">
+              <p className="text-lg text-neutral-400">
+                The research team you're looking for could not be found.
+              </p>
+              <Button
+                className="mt-4"
+                onClick={() => navigate("/research-activities")}
+              >
+                Return to Research Activities
+              </Button>
             </div>
-          </CardHeader>
-          
-          <CardContent>
-            {/* Team Lead Info Card */}
-            {teamLead && (
-              <Card className="mb-6 bg-muted/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Team Lead</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center">
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                        {teamLead.profileImageInitials || teamLead.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-medium">{teamLead.name}</h3>
-                      <p className="text-sm text-muted-foreground">{teamLead.title}</p>
-                      {teamLead.staffId && (
-                        <Badge variant="secondary" className="mt-1 bg-blue-100 hover:bg-blue-100">
-                          {teamLead.staffId}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Team Members Table */}
-            <Table>
-              <TableCaption>Team members for {researchActivity?.title}</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[250px]">Name</TableHead>
-                  <TableHead>Staff ID</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {teamMembers && teamMembers.length > 0 ? (
-                  teamMembers.map((member) => {
-                    const scientist = getScientistById(member.scientistId);
-                    if (!scientist) return null;
-                    
-                    return (
-                      <TableRow key={`${member.researchActivityId}-${member.scientistId}`}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            <Avatar className="h-8 w-8 mr-2">
-                              <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                {scientist.profileImageInitials || scientist.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {scientist.name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {scientist.staffId ? (
-                            <Badge variant="secondary" className="bg-blue-100 hover:bg-blue-100">
-                              {scientist.staffId}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">N/A</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {getRoleLabel(member.role || '')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{scientist.department || 'N/A'}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveMember(scientist.id)}
-                            disabled={removeMemberMutation.isPending}
-                          >
-                            <UserMinus className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      No team members added yet. Click "Add Team Member" to get started.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/research-activities/${activity.id}`)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to Research Activity
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">Research Team</h1>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Team Member
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Team Member</DialogTitle>
+              <DialogDescription>
+                Add a scientist or staff member to the research team.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="scientist">Scientist</Label>
+                <Select
+                  value={selectedScientistId?.toString() || ""}
+                  onValueChange={(value) => setSelectedScientistId(parseInt(value))}
+                >
+                  <SelectTrigger id="scientist">
+                    <SelectValue placeholder="Select scientist" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scientistsLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Loading scientists...
+                      </SelectItem>
+                    ) : availableScientists.length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        No available scientists
+                      </SelectItem>
+                    ) : (
+                      availableScientists.map((scientist: Scientist) => (
+                        <SelectItem
+                          key={scientist.id}
+                          value={scientist.id.toString()}
+                        >
+                          {scientist.name} {scientist.staffId ? 
+                            <Badge variant="outline" className="ml-2 text-xs font-mono bg-blue-50 text-blue-700 border-blue-200">
+                              {scientist.staffId}
+                            </Badge> : null
+                          }
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="role">Role on Project</Label>
+                <Select
+                  value={selectedRole}
+                  onValueChange={setSelectedRole}
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
+                    <SelectItem value="Co-Investigator">Co-Investigator</SelectItem>
+                    <SelectItem value="Research Specialist">Research Specialist</SelectItem>
+                    <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
+                    <SelectItem value="PhD Student">PhD Student</SelectItem>
+                    <SelectItem value="Research Assistant">Research Assistant</SelectItem>
+                    <SelectItem value="Lab Technician">Lab Technician</SelectItem>
+                    <SelectItem value="Project Coordinator">Project Coordinator</SelectItem>
+                    <SelectItem value="Data Analyst">Data Analyst</SelectItem>
+                    <SelectItem value="Consultant">Consultant</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddTeamMember}
+                disabled={!selectedScientistId || !selectedRole || addTeamMember.isPending}
+              >
+                {addTeamMember.isPending ? "Adding..." : "Add Member"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Team for {activity.title}
+            <Badge variant="outline" className="ml-2 font-mono bg-blue-50 text-blue-700 border-blue-200">
+              {activity.sdrNumber}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            Manage the research team members and their roles.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {teamMembersLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ))}
+            </div>
+          ) : !teamMembers || teamMembers.length === 0 ? (
+            <div className="text-center py-6">
+              <ClipboardList className="mx-auto h-12 w-12 text-neutral-300" />
+              <h3 className="mt-4 text-lg font-semibold">No Team Members</h3>
+              <p className="text-sm text-neutral-500 mt-1">
+                Add team members to this research activity to get started.
+              </p>
+              <Button
+                className="mt-4"
+                onClick={() => setOpen(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Team Member
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Staff ID</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teamMembers.map((member: ProjectMember) => (
+                    <TableRow key={member.id}>
+                      <TableCell>
+                        <div className="font-medium">{member.scientist.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {member.scientist.email}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={
+                          member.role === 'Principal Investigator' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                          member.role === 'Co-Investigator' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+                          'bg-green-100 text-green-800 border-green-200'
+                        }>
+                          {member.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{member.scientist.title || 'N/A'}</TableCell>
+                      <TableCell>
+                        {member.scientist.staffId ? (
+                          <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 border-blue-200">
+                            {member.scientist.staffId}
+                          </Badge>
+                        ) : (
+                          'N/A'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveTeamMember(member.scientist.id)}
+                          disabled={removeTeamMember.isPending}
+                        >
+                          <UserMinus className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Remove</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

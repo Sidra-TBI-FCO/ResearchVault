@@ -27,6 +27,7 @@ import CreateProject from "@/pages/projects/create";
 import ResearchActivitiesList from "@/pages/research-activities";
 import CreateResearchActivity from "@/pages/research-activities/create";
 import ResearchActivityDetail from "@/pages/research-activities/detail";
+import ResearchActivityTeam from "@/pages/research-activities/team";
 
 // Data Management Plans
 import DataManagementList from "@/pages/data-management";
@@ -87,6 +88,7 @@ function Router() {
         <Route path="/research-activities" component={ResearchActivitiesList} />
         <Route path="/research-activities/create" component={CreateResearchActivity} />
         <Route path="/research-activities/:id" component={ResearchActivityDetail} />
+        <Route path="/research-activities/:id/team" component={ResearchActivityTeam} />
         
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />
