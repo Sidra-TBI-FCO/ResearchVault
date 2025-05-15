@@ -337,7 +337,7 @@ export default function ScientistDetail() {
                       <div className="flex items-center">
                         <div className="text-sm font-medium text-neutral-500 mr-2">Job Title:</div>
                         <p className="text-neutral-700">
-                          {scientist.title || (scientist.isStaff ? "Research Staff" : "Principal Investigator")}
+                          {scientist.title || (scientist.isStaff ? "Research Staff" : "Investigator")}
                         </p>
                       </div>
                     </div>

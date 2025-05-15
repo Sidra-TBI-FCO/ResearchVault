@@ -151,7 +151,7 @@ export default function CreateScientist() {
                     <FormItem>
                       <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Principal Investigator" {...field} />
+                        <Input placeholder="Investigator" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

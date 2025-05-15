@@ -13,7 +13,7 @@ export default function Layout({ children }: LayoutProps) {
   // Mock user data - in a real app this would come from an auth context
   const user = {
     name: "Jane Doe, Ph.D.",
-    role: "Principal Investigator",
+    role: "Investigator",
     initials: "JD"
   };
 
