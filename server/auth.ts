@@ -65,7 +65,7 @@ export async function loginUser(username: string, password: string) {
     const foundUser = user[0];
     
     // Check the password
-    if (foundUser.passwordHash !== hashedPassword) {
+    if (foundUser.password !== hashedPassword) {
       return { success: false, message: "Invalid password" };
     }
     

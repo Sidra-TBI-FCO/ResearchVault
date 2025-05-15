@@ -37,10 +37,7 @@ async function setupDatabase() {
         const hashedPassword = createHash('sha256').update('admin').digest('hex');
         const [user] = await db.insert(users).values({
           username: "admin",
-          passwordHash: hashedPassword,
-          name: "Administrator",
-          email: "admin@example.com",
-          role: "admin"
+          password: hashedPassword
         }).returning();
         
         console.log(`Created admin user with ID: ${user.id}`);
