@@ -25,7 +25,7 @@ export default function ProgramDetail() {
     },
   });
   
-  const { data: projectGroups, isLoading: projectsLoading } = useQuery<ProjectGroup[]>({
+  const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ['/api/programs', id, 'projects'],
     queryFn: async () => {
       const response = await fetch(`/api/programs/${id}/projects`);
@@ -145,7 +145,7 @@ export default function ProgramDetail() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Projects</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => navigate("/project-groups/create")}>
+              <Button size="sm" variant="outline" onClick={() => navigate("/projects/create")}>
                 <Plus className="h-4 w-4 mr-2" /> Add Project
               </Button>
             </CardHeader>
@@ -155,7 +155,7 @@ export default function ProgramDetail() {
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                 </div>
-              ) : projectGroups && projectGroups.length > 0 ? (
+              ) : projects && projects.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -165,13 +165,13 @@ export default function ProgramDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {projectGroups.map((project) => (
+                    {projects.map((project) => (
                       <TableRow key={project.id}>
                         <TableCell>
-                          <Badge variant="outline">{project.projectGroupId}</Badge>
+                          <Badge variant="outline">{project.projectId}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Link href={`/project-groups/${project.id}`} className="text-primary hover:underline font-medium">
+                          <Link href={`/projects/${project.id}`} className="text-primary hover:underline font-medium">
                             {project.name}
                           </Link>
                         </TableCell>
@@ -185,7 +185,7 @@ export default function ProgramDetail() {
               ) : (
                 <div className="text-center py-4">
                   <p className="text-neutral-400 mb-4">No projects have been added to this program yet.</p>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/project-groups/create")}>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/projects/create")}>
                     <Plus className="h-4 w-4 mr-2" /> Add Project
                   </Button>
                 </div>
