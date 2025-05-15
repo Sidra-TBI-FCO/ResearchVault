@@ -103,6 +103,9 @@ export const insertResearchActivitySchema = createInsertSchema(researchActivitie
   updatedAt: true,
 });
 
+// For backward compatibility with existing code
+export const insertProjectSchema = insertResearchActivitySchema;
+
 // Project Team Members (Many-to-Many relationship)
 export const projectMembers = pgTable("project_members", {
   id: serial("id").primaryKey(),
@@ -284,6 +287,10 @@ export type InsertScientist = z.infer<typeof insertScientistSchema>;
 
 export type ResearchActivity = typeof researchActivities.$inferSelect;
 export type InsertResearchActivity = z.infer<typeof insertResearchActivitySchema>;
+
+// For backward compatibility with existing code
+export type Project = ResearchActivity;
+export type InsertProject = InsertResearchActivity;
 
 export type ProjectMember = typeof projectMembers.$inferSelect;
 export type InsertProjectMember = z.infer<typeof insertProjectMemberSchema>;

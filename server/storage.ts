@@ -564,7 +564,7 @@ export class MemStorage implements IStorage {
 
   // Dashboard operations
   async getDashboardStats(): Promise<{
-    activeProjects: number;
+    activeResearchActivities: number;
     publications: number;
     patents: number;
     pendingApplications: number;
@@ -583,14 +583,14 @@ export class MemStorage implements IStorage {
       .filter(app => app.status === 'submitted' || app.status === 'pending').length;
     
     return {
-      activeProjects,
+      activeResearchActivities: activeProjects,
       publications,
       patents,
       pendingApplications: pendingIrbApplications + pendingIbcApplications
     };
   }
 
-  async getRecentProjects(limit: number = 5): Promise<Project[]> {
+  async getRecentResearchActivities(limit: number = 5): Promise<ResearchActivity[]> {
     return Array.from(this.projects.values())
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, limit);
