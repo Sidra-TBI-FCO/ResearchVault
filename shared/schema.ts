@@ -31,6 +31,7 @@ export const scientists = pgTable("scientists", {
   lastName: text("last_name"),
   title: text("title"),
   email: text("email").notNull().unique(),
+  staffId: text("staff_id").unique(), // 5-digit staff ID for badges
   department: text("department"),
   role: text("role"),
   bio: text("bio"),
