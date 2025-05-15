@@ -166,19 +166,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Project Groups (PRJ)
+  // Projects (PRJ)
   app.get('/api/projects', async (req: Request, res: Response) => {
     try {
       const programId = req.query.programId ? parseInt(req.query.programId as string) : undefined;
       
-      let projectGroups;
+      let projects;
       if (programId && !isNaN(programId)) {
-        projectGroups = await storage.getProjectGroupsForProgram(programId);
+        projects = await storage.getProjectsForProgram(programId);
       } else {
-        projectGroups = await storage.getProjectGroups();
+        projects = await storage.getProjects();
       }
       
-      res.json(projectGroups);
+      res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch project groups" });
     }
@@ -188,15 +188,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid project group ID" });
+        return res.status(400).json({ message: "Invalid project ID" });
       }
 
-      const projectGroup = await storage.getProjectGroup(id);
-      if (!projectGroup) {
-        return res.status(404).json({ message: "Project group not found" });
+      const project = await storage.getProject(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
       }
       
-      res.json(projectGroup);
+      res.json(project);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch project group" });
     }
@@ -204,9 +204,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/projects', async (req: Request, res: Response) => {
     try {
-      const validateData = insertProjectGroupSchema.parse(req.body);
-      const projectGroup = await storage.createProjectGroup(validateData);
-      res.status(201).json(projectGroup);
+      const validateData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(validateData);
+      res.status(201).json(project);
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
@@ -238,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/project-groups/:id', async (req: Request, res: Response) => {
+  app.delete('/api/projects/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
