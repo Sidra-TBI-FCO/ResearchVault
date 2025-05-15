@@ -61,12 +61,12 @@ function Router() {
         {/* Programs */}
         <Route path="/programs" component={ProgramsList} />
         
-        {/* Project Groups */}
-        <Route path="/project-groups" component={ProjectGroupsList} />
+        {/* Projects (PRJ) */}
+        <Route path="/projects" component={ProjectGroupsList} />
         
-        {/* Research Activities */}
-        <Route path="/projects" component={ProjectsList} />
-        <Route path="/projects/create" component={CreateProject} />
+        {/* Research Activities (SDR) */}
+        <Route path="/research-activities" component={ProjectsList} />
+        <Route path="/research-activities/create" component={CreateProject} />
         
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />

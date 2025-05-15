@@ -34,12 +34,12 @@ export default function Sidebar({ user }: SidebarProps) {
       icon: <Beaker className="w-4 h-4 mr-3" />
     },
     { 
-      href: "/project-groups",
-      label: "Project Groups (PRJ)",
+      href: "/projects",
+      label: "Projects (PRJ)",
       icon: <Table className="w-4 h-4 mr-3" />
     },
     { 
-      href: "/projects",
+      href: "/research-activities",
       label: "Research Activities (SDR)",
       icon: <FlaskConical className="w-4 h-4 mr-3" />
     },

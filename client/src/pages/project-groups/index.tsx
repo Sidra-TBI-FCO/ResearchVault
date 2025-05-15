@@ -88,10 +88,10 @@ export default function ProjectGroupsList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Project Groups (PRJ)</h1>
-        <Link href="/project-groups/create">
+        <h1 className="text-2xl font-semibold text-neutral-400">Projects (PRJ)</h1>
+        <Link href="/projects/create">
           <Button className="bg-primary-500 text-white">
-            <FilePlus className="h-4 w-4 mr-1" /> New Project Group
+            <FilePlus className="h-4 w-4 mr-1" /> New Project
           </Button>
         </Link>
       </div>
@@ -99,13 +99,13 @@ export default function ProjectGroupsList() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <CardTitle>All Project Groups</CardTitle>
+            <CardTitle>All Projects</CardTitle>
             <div className="flex items-center space-x-2">
               <div className="relative w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
-                  placeholder="Search project groups..."
+                  placeholder="Search projects..."
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -211,8 +211,8 @@ export default function ProjectGroupsList() {
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-neutral-200">
                       {projectGroups && projectGroups.length > 0 
-                        ? "No project groups matching your search criteria."
-                        : "No project groups yet. Create your first project group!"}
+                        ? "No projects matching your search criteria."
+                        : "No projects yet. Create your first project!"}
                     </TableCell>
                   </TableRow>
                 )}
