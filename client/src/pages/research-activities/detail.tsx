@@ -2,12 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Project, Scientist, ResearchActivity } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker } from "lucide-react";
+import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { usePublicationCount } from "@/hooks/use-publication-count";
 
 // Define interface for detail data
 interface ResearchActivityDetail extends ResearchActivity {
@@ -55,6 +56,37 @@ export default function ResearchActivityDetail() {
       return response.json();
     },
     enabled: !!activity?.leadPIId,
+  });
+  
+  // Get the count of publications for this research activity
+  const { count: publicationCount } = usePublicationCount(activity?.id);
+  
+  // Fetch IRB applications for this research activity
+  const { data: irbApplications } = useQuery<IrbApplication[]>({
+    queryKey: ['/api/irb-applications'],
+    queryFn: async () => {
+      const response = await fetch('/api/irb-applications');
+      if (!response.ok) {
+        throw new Error('Failed to fetch IRB applications');
+      }
+      return response.json();
+    },
+    select: (data) => data.filter(irb => irb.researchActivityId === activity?.id),
+    enabled: !!activity?.id,
+  });
+  
+  // Fetch IBC applications for this research activity
+  const { data: ibcApplications } = useQuery<IbcApplication[]>({
+    queryKey: ['/api/ibc-applications'],
+    queryFn: async () => {
+      const response = await fetch('/api/ibc-applications');
+      if (!response.ok) {
+        throw new Error('Failed to fetch IBC applications');
+      }
+      return response.json();
+    },
+    select: (data) => data.filter(ibc => ibc.researchActivityId === activity?.id),
+    enabled: !!activity?.id,
   });
 
   if (activityLoading) {
@@ -236,24 +268,59 @@ export default function ResearchActivityDetail() {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => navigate(`/research-activities/${activity.id}/data-management-plan`)}
+                  onClick={() => navigate(`/data-management-plans?researchActivityId=${activity.id}`)}
                 >
-                  <FileText className="h-4 w-4 mr-2" /> Data Management Plan
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Data Management Plan</span>
+                  <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                    DMP
+                  </Badge>
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
                   onClick={() => navigate(`/research-activities/${activity.id}/team`)}
                 >
-                  <Users className="h-4 w-4 mr-2" /> Project Team
+                  <Users className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Project Team</span>
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => navigate(`/research-activities/${activity.id}/publications`)}
+                  onClick={() => navigate(`/publications?researchActivityId=${activity.id}`)}
                 >
-                  <FileText className="h-4 w-4 mr-2" /> Publications
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Publications</span>
+                  <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
+                    {publicationCount}
+                  </Badge>
                 </Button>
+                {irbApplications && irbApplications.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(`/irb-applications/${irbApplications[0].id}`)}
+                  >
+                    <FileCheck className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">IRB Application</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      {irbApplications[0].irbNumber}
+                    </Badge>
+                  </Button>
+                )}
+                {ibcApplications && ibcApplications.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(`/ibc-applications/${ibcApplications[0].id}`)}
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">IBC Application</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
+                      {ibcApplications[0].ibcNumber}
+                    </Badge>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
