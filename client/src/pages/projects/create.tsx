@@ -20,7 +20,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertProjectSchema } from "@shared/schema";
-import { Scientist, ProjectGroup } from "@shared/schema";
+import { Scientist, Program } from "@shared/schema";
 import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -29,27 +29,16 @@ import { cn } from "@/lib/utils";
 
 // Extend the insert schema with additional validations
 const createProjectSchema = insertProjectSchema.extend({
-  sdrNumber: z.string().min(3, "SDR number must be at least 3 characters"),
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  shortTitle: z.string().optional(),
+  name: z.string().min(3, "Project name must be at least 3 characters"),
+  projectId: z.string().min(3, "Project ID must be at least 3 characters"),
   description: z.string().optional(),
-  projectGroupId: z.number({
-    required_error: "Please select a project",
+  programId: z.number({
+    required_error: "Please select a program",
   }),
-  leadPIId: z.number({
-    required_error: "Please select a lead principal investigator",
+  leadScientistId: z.number({
+    required_error: "Please select a lead scientist",
   }),
-  budgetHolderId: z.number().optional(),
-  lineManagerId: z.number().optional(),
-  additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
-  status: z.enum(["planning", "active", "completed", "on_hold", "pending", "suspended"], {
-    required_error: "Please select a status",
-  }),
-  sidraBranch: z.string().optional(),
-  budgetSource: z.string().optional(),
-  objectives: z.string().optional(),
+  // No additional fields needed for projects
 });
 
 type CreateProjectFormValues = z.infer<typeof createProjectSchema>;
@@ -63,9 +52,9 @@ export default function CreateProject() {
     queryKey: ['/api/principal-investigators'],
   });
 
-  // Get all projects
-  const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
+  // Get all programs
+  const { data: programs, isLoading: programsLoading } = useQuery<Program[]>({
+    queryKey: ['/api/programs'],
   });
 
   // Get all scientists
@@ -75,8 +64,9 @@ export default function CreateProject() {
 
   // Default form values
   const defaultValues: Partial<CreateProjectFormValues> = {
-    status: "planning",
-    sidraBranch: "Research",
+    projectId: "",
+    name: "",
+    description: "",
   };
 
   const form = useForm<CreateProjectFormValues>({
@@ -131,15 +121,15 @@ export default function CreateProject() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="sdrNumber"
+                  name="projectId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SDR Number</FormLabel>
+                      <FormLabel>Project ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. SDR-2023-001" {...field} />
+                        <Input placeholder="e.g. PRJ-2023-001" {...field} />
                       </FormControl>
                       <FormDescription>
-                        Unique identifier for this research activity
+                        Unique identifier for this project
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -148,33 +138,33 @@ export default function CreateProject() {
 
                 <FormField
                   control={form.control}
-                  name="projectGroupId"
+                  name="programId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project</FormLabel>
+                      <FormLabel>Program</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a project" />
+                            <SelectValue placeholder="Select a program" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {projectGroupsLoading ? (
-                            <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                          {programsLoading ? (
+                            <SelectItem value="loading" disabled>Loading programs...</SelectItem>
                           ) : (
-                            projectGroups?.map((project) => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.name}
+                            programs?.map((program) => (
+                              <SelectItem key={program.id} value={program.id.toString()}>
+                                {program.name}
                               </SelectItem>
                             ))
                           )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Project this research activity belongs to
+                        Program this project belongs to
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -183,35 +173,18 @@ export default function CreateProject() {
                 
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="name"
                   render={({ field }) => (
                     <FormItem className="col-span-full">
-                      <FormLabel>Research Activity Title</FormLabel>
+                      <FormLabel>Project Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. CRISPR-Cas9 Gene Editing for Cancer Treatment" {...field} />
+                        <Input placeholder="e.g. Precision Medicine Initiative" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="shortTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Short Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. CRISPR Cancer Treatment" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Brief name for easier reference
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
                 <FormField
                   control={form.control}
                   name="description"
@@ -220,7 +193,7 @@ export default function CreateProject() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Brief description of the research activity" 
+                          placeholder="Brief description of the project" 
                           className="resize-none" 
                           rows={3}
                           {...field} 
@@ -233,26 +206,26 @@ export default function CreateProject() {
                 
                 <FormField
                   control={form.control}
-                  name="leadPIId"
+                  name="leadScientistId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lead Principal Investigator</FormLabel>
+                      <FormLabel>Lead Scientist</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select lead PI" />
+                            <SelectValue placeholder="Select lead scientist" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
+                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
                           ) : (
-                            principalInvestigators?.map((pi) => (
-                              <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
+                            principalInvestigators?.map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {scientist.name}
                               </SelectItem>
                             ))
                           )}
