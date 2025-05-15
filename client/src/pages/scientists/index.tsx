@@ -10,7 +10,7 @@ import {
   TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Scientist } from "@shared/schema";
-import { Plus, Search, MoreHorizontal, Mail, Phone } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Mail, Phone, ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
@@ -33,7 +33,29 @@ export default function ScientistsList() {
     if (activeTab === "pis") return matchesSearch && !scientist.isStaff;
     if (activeTab === "staff") return matchesSearch && scientist.isStaff;
     
+    // Filter by job title
+    if (activeTab === "staff-scientist") return matchesSearch && scientist.title === "Staff Scientist";
+    if (activeTab === "investigator") return matchesSearch && scientist.title === "Investigator";
+    if (activeTab === "research-specialist") return matchesSearch && scientist.title === "Research Specialist";
+    if (activeTab === "research-assistant") return matchesSearch && scientist.title === "Research Assistant";
+    if (activeTab === "research-associate") return matchesSearch && scientist.title === "Research Associate";
+    if (activeTab === "phd-student") return matchesSearch && scientist.title === "PhD Student";
+    if (activeTab === "post-doc") return matchesSearch && scientist.title === "Post-doctoral Fellow";
+    if (activeTab === "lab-manager") return matchesSearch && scientist.title === "Lab Manager";
+    
     return matchesSearch;
+  });
+  
+  // Sort scientists based on selected sort field and direction
+  const sortedScientists = filteredScientists?.sort((a, b) => {
+    const fieldA = a[sortField] || '';
+    const fieldB = b[sortField] || '';
+    
+    const comparison = typeof fieldA === 'string' && typeof fieldB === 'string'
+      ? fieldA.localeCompare(fieldB)
+      : String(fieldA).localeCompare(String(fieldB));
+      
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   return (
@@ -65,10 +87,18 @@ export default function ScientistsList() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 flex flex-wrap gap-1">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="pis">Principal Investigators</TabsTrigger>
               <TabsTrigger value="staff">Staff</TabsTrigger>
+              <TabsTrigger value="staff-scientist">Staff Scientist</TabsTrigger>
+              <TabsTrigger value="investigator">Investigator</TabsTrigger>
+              <TabsTrigger value="research-specialist">Research Specialist</TabsTrigger>
+              <TabsTrigger value="research-assistant">Research Assistant</TabsTrigger>
+              <TabsTrigger value="research-associate">Research Associate</TabsTrigger>
+              <TabsTrigger value="phd-student">PhD Student</TabsTrigger>
+              <TabsTrigger value="post-doc">Post-doctoral Fellow</TabsTrigger>
+              <TabsTrigger value="lab-manager">Lab Manager</TabsTrigger>
             </TabsList>
             
             <TabsContent value={activeTab}>
