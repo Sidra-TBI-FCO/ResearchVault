@@ -42,7 +42,6 @@ export default function ScientistsList() {
     if (activeTab === "investigator") return matchesSearch && scientist.title === "Investigator";
     if (activeTab === "research-specialist") return matchesSearch && scientist.title === "Research Specialist";
     if (activeTab === "research-assistant") return matchesSearch && scientist.title === "Research Assistant";
-    if (activeTab === "research-associate") return matchesSearch && scientist.title === "Research Associate";
     if (activeTab === "phd-student") return matchesSearch && scientist.title === "PhD Student";
     if (activeTab === "post-doc") return matchesSearch && scientist.title === "Post-doctoral Fellow";
     if (activeTab === "lab-manager") return matchesSearch && scientist.title === "Lab Manager";
@@ -130,7 +129,6 @@ export default function ScientistsList() {
               <TabsTrigger value="investigator">Investigator</TabsTrigger>
               <TabsTrigger value="research-specialist">Research Specialist</TabsTrigger>
               <TabsTrigger value="research-assistant">Research Assistant</TabsTrigger>
-              <TabsTrigger value="research-associate">Research Associate</TabsTrigger>
               <TabsTrigger value="phd-student">PhD Student</TabsTrigger>
               <TabsTrigger value="post-doc">Post-doctoral Fellow</TabsTrigger>
               <TabsTrigger value="lab-manager">Lab Manager</TabsTrigger>
@@ -153,9 +151,72 @@ export default function ScientistsList() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Job Title</TableHead>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          className="p-0 h-auto font-bold hover:bg-transparent flex items-center"
+                          onClick={() => {
+                            if (sortField === 'name') {
+                              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortField('name');
+                              setSortDirection('asc');
+                            }
+                          }}
+                        >
+                          Name
+                          {sortField === 'name' && (
+                            <span className="ml-1">
+                              {sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </span>
+                          )}
+                          {sortField !== 'name' && <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />}
+                        </Button>
+                      </TableHead>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          className="p-0 h-auto font-bold hover:bg-transparent flex items-center"
+                          onClick={() => {
+                            if (sortField === 'department') {
+                              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortField('department');
+                              setSortDirection('asc');
+                            }
+                          }}
+                        >
+                          Department
+                          {sortField === 'department' && (
+                            <span className="ml-1">
+                              {sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </span>
+                          )}
+                          {sortField !== 'department' && <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />}
+                        </Button>
+                      </TableHead>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          className="p-0 h-auto font-bold hover:bg-transparent flex items-center"
+                          onClick={() => {
+                            if (sortField === 'title') {
+                              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortField('title');
+                              setSortDirection('asc');
+                            }
+                          }}
+                        >
+                          Job Title
+                          {sortField === 'title' && (
+                            <span className="ml-1">
+                              {sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </span>
+                          )}
+                          {sortField !== 'title' && <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />}
+                        </Button>
+                      </TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
