@@ -149,10 +149,30 @@ export default function CreateScientist() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Investigator" {...field} />
-                      </FormControl>
+                      <FormLabel>Job Title</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select job title" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
+                          <SelectItem value="Investigator">Investigator</SelectItem>
+                          <SelectItem value="Research Specialist">Research Specialist</SelectItem>
+                          <SelectItem value="Research Assistant">Research Assistant</SelectItem>
+                          <SelectItem value="Research Associate">Research Associate</SelectItem>
+                          <SelectItem value="PhD Student">PhD Student</SelectItem>
+                          <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
+                          <SelectItem value="Lab Manager">Lab Manager</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Select the job title for this scientist or staff member
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

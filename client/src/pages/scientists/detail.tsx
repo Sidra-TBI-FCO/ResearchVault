@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ScientistDetail() {
   const params = useParams<{ id: string }>();
@@ -216,9 +217,29 @@ export default function ScientistDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Job Title</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="e.g. Staff Scientist, Research Assistant" />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value || undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select job title" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
+                              <SelectItem value="Investigator">Investigator</SelectItem>
+                              <SelectItem value="Research Specialist">Research Specialist</SelectItem>
+                              <SelectItem value="Research Assistant">Research Assistant</SelectItem>
+                              <SelectItem value="Research Associate">Research Associate</SelectItem>
+                              <SelectItem value="PhD Student">PhD Student</SelectItem>
+                              <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
+                              <SelectItem value="Lab Manager">Lab Manager</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Select the job title for this scientist or staff member
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
