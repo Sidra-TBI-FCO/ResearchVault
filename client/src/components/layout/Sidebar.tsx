@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { 
   Beaker, LayoutDashboard, Users, FlaskConical, Database, 
   BookOpen, Award, FileText, Table, Handshake, PieChart,
-  Settings, LogOut
+  Settings, LogOut, UserPlus
 } from "lucide-react";
 
 interface SidebarProps {
@@ -27,6 +27,11 @@ export default function Sidebar({ user }: SidebarProps) {
       href: "/scientists",
       label: "Scientists & Staff",
       icon: <Users className="w-4 h-4 mr-3" />
+    },
+    { 
+      href: "/teams",
+      label: "Research Teams",
+      icon: <UserPlus className="w-4 h-4 mr-3" />
     },
     { 
       href: "/programs",

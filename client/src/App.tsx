@@ -58,6 +58,10 @@ import ContractsList from "@/pages/contracts";
 import CreateContract from "@/pages/contracts/create";
 import ResearchContractDetail from "@/pages/research-contracts/detail";
 
+// Research Teams
+import TeamsList from "@/pages/teams";
+import TeamDetail from "@/pages/teams/detail";
+
 function Router() {
   return (
     <Layout>
@@ -117,6 +121,10 @@ function Router() {
         <Route path="/contracts/create" component={CreateContract} />
         <Route path="/research-contracts/:id" component={ResearchContractDetail} />
         <Route path="/contracts/:id" component={ResearchContractDetail} />
+        
+        {/* Research Teams */}
+        <Route path="/teams" component={TeamsList} />
+        <Route path="/teams/:id" component={TeamDetail} />
         
         {/* Fallback to 404 */}
         <Route component={NotFound} />
