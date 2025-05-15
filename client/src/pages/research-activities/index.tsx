@@ -67,6 +67,7 @@ interface ResearchActivity {
 export default function ResearchActivitiesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [, navigate] = useLocation();
 
   const { data: researchActivities, isLoading: isLoadingActivities } = useQuery<ResearchActivity[]>({
     queryKey: ['/api/research-activities'],

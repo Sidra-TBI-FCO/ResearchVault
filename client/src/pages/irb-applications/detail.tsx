@@ -294,7 +294,7 @@ export default function IrbApplicationDetail() {
                   <span className="flex-1 text-left">Data Management Plans</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-teal-50 text-teal-700 border-teal-200">
-                      {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
+                      DMP
                     </Badge>
                   )}
                 </Button>
