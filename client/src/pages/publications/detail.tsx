@@ -232,15 +232,27 @@ export default function PublicationDetail() {
                   onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
-                  <Layers className="h-4 w-4 mr-2" /> Research Activity
+                  <Layers className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Research Activity</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                      {researchActivity.sdrNumber}
+                    </Badge>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}/data-management-plan`)}
+                  onClick={() => researchActivity && navigate(`/data-management-plans?researchActivityId=${researchActivity?.id}`)}
                   disabled={!researchActivity}
                 >
-                  <FileText className="h-4 w-4 mr-2" /> Data Management Plan
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Data Management Plan</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-teal-50 text-teal-700 border-teal-200">
+                      SDR: {researchActivity.id}
+                    </Badge>
+                  )}
                 </Button>
               </div>
             </CardContent>
