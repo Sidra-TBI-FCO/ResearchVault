@@ -193,9 +193,9 @@ async function seedDatabase() {
         status: "planning",
         startDate: now,
         endDate: oneYearFromNow,
-        leadPIId: scientists[2].id,
-        budgetHolderId: scientists[0].id,
-        lineManagerId: scientists[0].id,
+        leadPIId: scientistsArray[2].id,
+        budgetHolderId: scientistsArray[0].id,
+        lineManagerId: scientistsArray[0].id,
         sidraBranch: "Research",
         budgetSource: "QNRF",
         objectives: "1. Map neural circuits in Alzheimer's disease models\n2. Identify circuit alterations associated with cognitive decline\n3. Test therapeutic approaches to restore circuit function"
@@ -209,9 +209,9 @@ async function seedDatabase() {
         status: "active",
         startDate: sixMonthsAgo,
         endDate: oneYearFromNow,
-        leadPIId: scientists[1].id,
-        budgetHolderId: scientists[1].id,
-        lineManagerId: scientists[0].id,
+        leadPIId: scientistsArray[1].id,
+        budgetHolderId: scientistsArray[1].id,
+        lineManagerId: scientistsArray[0].id,
         sidraBranch: "Clinical",
         budgetSource: "PI Budget",
         objectives: "1. Develop targeted immunotherapies for specific autoimmune disorders\n2. Test efficacy in preclinical models\n3. Initiate clinical trials for promising candidates"
@@ -229,22 +229,22 @@ async function seedDatabase() {
     const projectMembersData = [
       {
         researchActivityId: researchActivityEntities[0].id,
-        scientistId: scientists[0].id,
+        scientistId: scientistsArray[0].id,
         role: "Principal Investigator"
       },
       {
         researchActivityId: researchActivityEntities[0].id,
-        scientistId: scientists[3].id,
+        scientistId: scientistsArray[3].id,
         role: "Lab Manager"
       },
       {
         researchActivityId: researchActivityEntities[1].id,
-        scientistId: scientists[2].id,
+        scientistId: scientistsArray[2].id,
         role: "Principal Investigator"
       },
       {
         researchActivityId: researchActivityEntities[1].id,
-        scientistId: scientists[0].id,
+        scientistId: scientistsArray[0].id,
         role: "Collaborator"
       },
       {
