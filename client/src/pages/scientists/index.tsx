@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 export default function ScientistsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [sortField, setSortField] = useState<"name" | "department" | "title">("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { data: scientists, isLoading } = useQuery<Scientist[]>({
     queryKey: ['/api/scientists'],

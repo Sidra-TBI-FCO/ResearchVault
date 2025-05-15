@@ -299,7 +299,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {/* Only SDR Team Roles */}
-                    <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
+                    <SelectItem value="Investigator">Investigator</SelectItem>
                     <SelectItem value="Lead Scientist">Lead Scientist</SelectItem>
                     <SelectItem value="Team Member">Team Member</SelectItem>
                   </SelectContent>
