@@ -316,7 +316,20 @@ export default function ResearchContractDetail() {
                   <Button 
                     variant="outline" 
                     className="w-full justify-start" 
-                    onClick={() => navigate(`/irb?search=${contract.irbProtocol}`)}
+                    onClick={() => {
+                      // Find the IRB application ID from the protocol number and navigate to its details
+                      fetch(`/api/irb-applications`)
+                        .then(res => res.json())
+                        .then(data => {
+                          const irbApp = data.find(app => app.irbNumber === contract.irbProtocol);
+                          if (irbApp) {
+                            navigate(`/irb/${irbApp.id}`);
+                          } else {
+                            navigate(`/irb?search=${contract.irbProtocol}`);
+                          }
+                        })
+                        .catch(() => navigate(`/irb?search=${contract.irbProtocol}`));
+                    }}
                   >
                     <FileText className="h-4 w-4 mr-2" /> 
                     <span className="flex-1 text-left">IRB Protocol</span>
