@@ -1,0 +1,144 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Table, TableBody, TableCell, TableHead, 
+  TableHeader, TableRow 
+} from "@/components/ui/table";
+import { Scientist } from "@shared/schema";
+import { Plus, Search, MoreHorizontal, Mail, Phone } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function ScientistsList() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+
+  const { data: scientists, isLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+  });
+
+  const filteredScientists = scientists?.filter(scientist => {
+    const matchesSearch = scientist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (scientist.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                         (scientist.department?.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "pis") return matchesSearch && !scientist.isStaff;
+    if (activeTab === "staff") return matchesSearch && scientist.isStaff;
+    
+    return matchesSearch;
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-neutral-400">Scientists & Staff</h1>
+        <Link href="/scientists/create">
+          <Button className="bg-primary-500 text-white">
+            <Plus className="h-4 w-4 mr-1" /> Add Scientist
+          </Button>
+        </Link>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle>Research Team</CardTitle>
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Search team members..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all" onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="pis">Principal Investigators</TabsTrigger>
+              <TabsTrigger value="staff">Staff</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={activeTab}>
+              {isLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 py-2">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead className="w-[100px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredScientists?.map((scientist) => (
+                      <TableRow key={scientist.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-3">
+                            <div className="h-8 w-8 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium">
+                              {scientist.profileImageInitials || scientist.name.substring(0, 2)}
+                            </div>
+                            <div>
+                              <Link href={`/scientists/${scientist.id}`}>
+                                <a className="hover:text-primary-500 transition-colors">{scientist.name}</a>
+                              </Link>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{scientist.department || "—"}</TableCell>
+                        <TableCell>{scientist.role || (scientist.isStaff ? "Staff" : "Principal Investigator")}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2 text-neutral-200">
+                            {scientist.email && (
+                              <a href={`mailto:${scientist.email}`} className="hover:text-primary-500">
+                                <Mail className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredScientists?.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-neutral-200">
+                          No scientists found matching your search.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

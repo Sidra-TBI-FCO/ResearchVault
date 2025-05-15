@@ -1,0 +1,207 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Table, TableBody, TableCell, TableHead, 
+  TableHeader, TableRow 
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { EnhancedIrbApplication } from "@/lib/types";
+import { Plus, Search, MoreHorizontal, CalendarRange, FileText, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function IrbList() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: applications, isLoading } = useQuery<EnhancedIrbApplication[]>({
+    queryKey: ['/api/irb-applications'],
+  });
+
+  const formatDate = (date: string | Date | undefined) => {
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const statusColors = {
+    submitted: "bg-yellow-100 text-yellow-700",
+    approved: "bg-green-100 text-green-700",
+    rejected: "bg-red-100 text-red-600",
+    pending: "bg-blue-100 text-blue-600",
+    expired: "bg-gray-100 text-gray-600",
+    "under review": "bg-purple-100 text-purple-600"
+  };
+
+  const riskLevelColors = {
+    minimal: "bg-green-50 text-green-600",
+    "greater than minimal": "bg-yellow-50 text-yellow-600",
+    high: "bg-red-50 text-red-600"
+  };
+
+  const filteredApplications = applications?.filter(app => {
+    return (
+      app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.protocolNumber && app.protocolNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.principalInvestigator && app.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.project && app.project.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-neutral-400">IRB Applications</h1>
+        <Link href="/irb/create">
+          <Button className="bg-primary-500 text-white">
+            <Plus className="h-4 w-4 mr-1" /> New Application
+          </Button>
+        </Link>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle>IRB Applications</CardTitle>
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Search applications..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 py-3">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-5 w-64" />
+                    <div className="flex gap-4">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[30%]">Application</TableHead>
+                  <TableHead>Protocol #</TableHead>
+                  <TableHead>Principal Investigator</TableHead>
+                  <TableHead>Dates</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Risk Level</TableHead>
+                  <TableHead className="w-[80px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredApplications?.map((application) => (
+                  <TableRow key={application.id}>
+                    <TableCell>
+                      <div className="font-medium">
+                        <Link href={`/irb/${application.id}`}>
+                          <a className="hover:text-primary-500 transition-colors">{application.title}</a>
+                        </Link>
+                      </div>
+                      {application.project && (
+                        <div className="text-sm text-neutral-200 mt-1">
+                          Project: <Link href={`/projects/${application.project.id}`}>
+                            <a className="text-primary-500 hover:text-primary-600 transition-colors">
+                              {application.project.title}
+                            </a>
+                          </Link>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 mr-1 text-neutral-200" />
+                        <span>{application.protocolNumber || "—"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {application.principalInvestigator ? (
+                        <div className="flex items-center">
+                          <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
+                            {application.principalInvestigator.profileImageInitials}
+                          </div>
+                          <span>{application.principalInvestigator.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">Unassigned</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {application.submissionDate && (
+                          <div className="flex items-center mb-1">
+                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <span>Submitted: {formatDate(application.submissionDate)}</span>
+                          </div>
+                        )}
+                        {application.expirationDate && (
+                          <div className="flex items-center">
+                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <span>Expires: {formatDate(application.expirationDate)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {application.status && (
+                        <Badge 
+                          variant="outline"
+                          className={`capitalize ${statusColors[application.status.toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-600"}`}
+                        >
+                          {application.status}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {application.riskLevel ? (
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${riskLevelColors[application.riskLevel.toLowerCase() as keyof typeof riskLevelColors] || "bg-gray-100 text-gray-600"}`}>
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          {application.riskLevel}
+                        </div>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredApplications?.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                      No IRB applications found matching your search.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
