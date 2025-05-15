@@ -228,8 +228,8 @@ export default function PatentDetail() {
                   <FileText className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Publications</span>
                   {researchActivity && (
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-gray-50 text-gray-700 border-gray-200">
-                      {researchActivity.id}
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
+                      SDR: {researchActivity.sdrNumber}
                     </Badge>
                   )}
                 </Button>

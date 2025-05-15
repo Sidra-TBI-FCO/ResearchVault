@@ -290,7 +290,21 @@ export default function IrbApplicationDetail() {
                   <span className="flex-1 text-left">Data Management Plans</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-teal-50 text-teal-700 border-teal-200">
-                      SDR: {researchActivity.id}
+                      SDR: {researchActivity.sdrNumber}
+                    </Badge>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={() => researchActivity && navigate(`/publications?researchActivityId=${researchActivity.id}`)}
+                  disabled={!researchActivity}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Publications</span>
+                  {researchActivity && (
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
+                      SDR: {researchActivity.sdrNumber}
                     </Badge>
                   )}
                 </Button>
