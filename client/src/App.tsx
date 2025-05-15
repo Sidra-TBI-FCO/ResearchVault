@@ -21,6 +21,7 @@ import ProgramDetail from "@/pages/programs/detail";
 // Projects (PRJ)
 import ProjectList from "@/pages/projects";
 import ProjectDetail from "@/pages/projects/detail";
+import CreateProject from "@/pages/projects/create";
 
 // Research Activities (SDR)
 import ResearchActivitiesList from "@/pages/research-activities";
@@ -69,6 +70,7 @@ function Router() {
         
         {/* Projects (PRJ) */}
         <Route path="/projects" component={ProjectList} />
+        <Route path="/projects/create" component={CreateProject} />
         <Route path="/projects/:id" component={ProjectDetail} />
         
         {/* Research Activities (SDR) */}

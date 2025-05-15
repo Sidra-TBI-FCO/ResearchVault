@@ -608,18 +608,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const scientistId = parseInt(req.params.scientistId);
+      const researchActivityId = req.query.researchActivityId ? parseInt(req.query.researchActivityId as string) : undefined;
       
       if (isNaN(projectId) || isNaN(scientistId)) {
         return res.status(400).json({ message: "Invalid ID parameters" });
       }
-
-      // Check if scientist is the lead scientist
-      const project = await storage.getProject(projectId);
-      if (project && project.leadScientistId === scientistId) {
-        return res.status(400).json({ message: "Cannot remove the lead scientist from the project" });
+      
+      if (!researchActivityId) {
+        return res.status(400).json({ message: "Research activity ID is required" });
+      }
+      
+      // Validate that the research activity belongs to this project
+      const researchActivity = await storage.getResearchActivity(researchActivityId);
+      if (!researchActivity) {
+        return res.status(404).json({ message: "Research activity not found" });
+      }
+      
+      if (researchActivity.projectId !== projectId) {
+        return res.status(400).json({ message: "Research activity does not belong to this project" });
       }
 
-      const success = await storage.removeProjectMember(projectId, scientistId);
+      // Check if scientist is the lead scientist of the research activity
+      if (researchActivity.leadPIId === scientistId) {
+        return res.status(400).json({ message: "Cannot remove the lead scientist from the research activity" });
+      }
+
+      const success = await storage.removeProjectMember(researchActivityId, scientistId);
       
       if (!success) {
         return res.status(404).json({ message: "Project member not found" });
@@ -627,6 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).send();
     } catch (error) {
+      console.error("Error removing project member:", error);
       res.status(500).json({ message: "Failed to remove project member" });
     }
   });
