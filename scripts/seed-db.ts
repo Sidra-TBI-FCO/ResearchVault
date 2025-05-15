@@ -134,21 +134,21 @@ async function seedDatabase() {
         programId: programEntities[0].id,
         name: "Precision Oncology Projects",
         description: "Collection of projects focused on precision approaches in oncology",
-        leadScientistId: scientists[0].id
+        leadScientistId: scientistsArray[0].id
       },
       {
         projectGroupId: "PRJ-002",
         programId: programEntities[1].id,
         name: "Neurodegenerative Diseases",
         description: "Projects investigating mechanisms and treatments for neurodegenerative disorders",
-        leadScientistId: scientists[2].id
+        leadScientistId: scientistsArray[2].id
       },
       {
         projectGroupId: "PRJ-003",
         programId: programEntities[2].id,
         name: "Autoimmune Research",
         description: "Research projects focused on autoimmune disorders and treatments",
-        leadScientistId: scientists[1].id
+        leadScientistId: scientistsArray[1].id
       }
     ];
 
@@ -177,9 +177,9 @@ async function seedDatabase() {
         status: "active",
         startDate: sixMonthsAgo,
         endDate: oneYearFromNow,
-        leadPIId: scientists[0].id,
-        budgetHolderId: scientists[0].id,
-        lineManagerId: scientists[3].id,
+        leadPIId: scientistsArray[0].id,
+        budgetHolderId: scientistsArray[0].id,
+        lineManagerId: scientistsArray[3].id,
         sidraBranch: "Research",
         budgetSource: "IRF",
         objectives: "1. Perform whole-genome sequencing on 100 rare cancer samples\n2. Identify novel mutations and potential therapeutic targets\n3. Validate findings using functional studies"
