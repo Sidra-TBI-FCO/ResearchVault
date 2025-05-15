@@ -86,7 +86,7 @@ export default function IrbApplicationDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/irb-applications")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/irb")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -96,7 +96,7 @@ export default function IrbApplicationDetail() {
           <CardContent className="py-8">
             <div className="text-center">
               <p className="text-lg text-neutral-400">The IRB application you're looking for could not be found.</p>
-              <Button className="mt-4" onClick={() => navigate("/irb-applications")}>
+              <Button className="mt-4" onClick={() => navigate("/irb")}>
                 Return to IRB Applications List
               </Button>
             </div>
@@ -109,7 +109,7 @@ export default function IrbApplicationDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/irb-applications")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/irb")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
