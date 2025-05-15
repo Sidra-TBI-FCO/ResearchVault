@@ -33,7 +33,11 @@ export default function Sidebar({ user }: SidebarProps) {
       label: "Programs (PRM)",
       icon: <Beaker className="w-4 h-4 mr-3" />
     },
-
+    { 
+      href: "/project-groups",
+      label: "Projects (PRJ)",
+      icon: <Table className="w-4 h-4 mr-3" />
+    },
     { 
       href: "/projects",
       label: "Research Activities (SDR)",
