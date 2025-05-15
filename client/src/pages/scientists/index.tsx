@@ -88,7 +88,7 @@ export default function ScientistsList() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Department</TableHead>
-                      <TableHead>Role</TableHead>
+                      <TableHead>Job Title</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
