@@ -50,6 +50,9 @@ export default function PublicationDetail() {
       return patents.filter(patent => patent.researchActivityId === publication.researchActivityId);
     },
     enabled: !!publication?.researchActivityId,
+    retry: 2,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
   });
 
   if (publicationLoading) {
@@ -259,12 +262,16 @@ export default function PublicationDetail() {
                   <Button 
                     variant="outline" 
                     className="w-full justify-start" 
-                    onClick={() => navigate(`/patents/${relatedPatents[0].id}`)}
+                    onClick={() => {
+                      if (relatedPatents[0] && relatedPatents[0].id) {
+                        navigate(`/patents/${relatedPatents[0].id}`);
+                      }
+                    }}
                   >
                     <Award className="h-4 w-4 mr-2" /> 
                     <span className="flex-1 text-left">Related Patent</span>
                     <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
-                      {relatedPatents[0].patentNumber || 'Pending'}
+                      {relatedPatents[0]?.patentNumber || 'Pending'}
                     </Badge>
                   </Button>
                 ) : (

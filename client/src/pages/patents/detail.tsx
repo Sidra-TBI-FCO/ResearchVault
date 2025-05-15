@@ -21,8 +21,11 @@ export default function PatentDetail() {
       if (!response.ok) {
         throw new Error('Failed to fetch patent');
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 
   const { data: researchActivity, isLoading: researchActivityLoading } = useQuery<ResearchActivity>({
@@ -33,13 +36,16 @@ export default function PatentDetail() {
       if (!response.ok) {
         throw new Error('Failed to fetch research activity');
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     enabled: !!patent?.researchActivityId,
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
   
   // Get the number of publications linked to this research activity
-  const { count: publicationCount } = usePublicationCount(patent?.researchActivityId);
+  const { count: publicationCount } = usePublicationCount(patent?.researchActivityId || undefined);
 
   if (patentLoading) {
     return (
