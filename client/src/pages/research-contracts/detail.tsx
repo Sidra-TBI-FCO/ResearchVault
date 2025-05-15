@@ -308,7 +308,7 @@ export default function ResearchContractDetail() {
                   <span className="flex-1 text-left">Publications</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                      SDR: {researchActivity.sdrNumber}
+                      {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
                     </Badge>
                   )}
                 </Button>

@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, FileText, Layers, Users, ClipboardCheck } from "lu
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { usePublicationCount } from "@/hooks/use-publication-count";
 
 export default function IrbApplicationDetail() {
   const params = useParams<{ id: string }>();
@@ -49,6 +50,9 @@ export default function IrbApplicationDetail() {
     },
     enabled: !!irbApplication?.principalInvestigatorId,
   });
+  
+  // Get the number of publications linked to this research activity
+  const { count: publicationCount } = usePublicationCount(irbApplication?.researchActivityId);
 
   if (irbApplicationLoading) {
     return (
@@ -290,7 +294,7 @@ export default function IrbApplicationDetail() {
                   <span className="flex-1 text-left">Data Management Plans</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-teal-50 text-teal-700 border-teal-200">
-                      SDR: {researchActivity.sdrNumber}
+                      {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
                     </Badge>
                   )}
                 </Button>
@@ -304,7 +308,7 @@ export default function IrbApplicationDetail() {
                   <span className="flex-1 text-left">Publications</span>
                   {researchActivity && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                      SDR: {researchActivity.sdrNumber}
+                      {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
                     </Badge>
                   )}
                 </Button>
