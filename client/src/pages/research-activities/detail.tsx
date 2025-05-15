@@ -306,11 +306,14 @@ export default function ResearchActivityDetail() {
                 )}
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start" 
+                  className="w-full justify-start bg-blue-50 hover:bg-blue-100 border-blue-200" 
                   onClick={() => navigate(`/research-activities/${activity.id}/team`)}
                 >
-                  <Users className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Project Team</span>
+                  <Users className="h-4 w-4 mr-2 text-blue-600" /> 
+                  <span className="flex-1 text-left font-medium">Project Team</span>
+                  <Badge variant="outline" className="ml-2 rounded-sm bg-blue-100 text-blue-700 border-blue-300">
+                    Manage
+                  </Badge>
                 </Button>
                 <Button 
                   variant="outline" 
