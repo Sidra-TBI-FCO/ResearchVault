@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { 
-  PlusCircle, Upload, ClipboardList, Handshake
+  PlusCircle, Upload, ClipboardList, Handshake, FileText
 } from "lucide-react";
 
 interface QuickLinkProps {
@@ -34,6 +34,12 @@ export default function QuickLinks() {
       title: "Create New Project",
       description: "Start a new research initiative",
       href: "/projects/create"
+    },
+    {
+      icon: <FileText className="h-5 w-5" />,
+      title: "Create Research Activity",
+      description: "Add new research activity (SDR)",
+      href: "/research-activities/create"
     },
     {
       icon: <Upload className="h-5 w-5" />,

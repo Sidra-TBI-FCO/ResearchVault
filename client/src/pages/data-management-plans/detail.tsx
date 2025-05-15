@@ -6,14 +6,13 @@ import { ResearchActivity, DataManagementPlan } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Database, Layers } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 
 export default function DataManagementPlanDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
 
-  const { data: plan, isLoading: planLoading } = useQuery<DataManagementPlan>({
+  const { data: dataManagementPlan, isLoading: dataManagementPlanLoading } = useQuery<DataManagementPlan>({
     queryKey: ['/api/data-management-plans', id],
     queryFn: async () => {
       const response = await fetch(`/api/data-management-plans/${id}`);
@@ -25,19 +24,19 @@ export default function DataManagementPlanDetail() {
   });
 
   const { data: researchActivity, isLoading: researchActivityLoading } = useQuery<ResearchActivity>({
-    queryKey: ['/api/research-activities', plan?.researchActivityId],
+    queryKey: ['/api/research-activities', dataManagementPlan?.researchActivityId],
     queryFn: async () => {
-      if (!plan?.researchActivityId) return null;
-      const response = await fetch(`/api/research-activities/${plan.researchActivityId}`);
+      if (!dataManagementPlan?.researchActivityId) return null;
+      const response = await fetch(`/api/research-activities/${dataManagementPlan.researchActivityId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch research activity');
       }
       return response.json();
     },
-    enabled: !!plan?.researchActivityId,
+    enabled: !!dataManagementPlan?.researchActivityId,
   });
 
-  if (planLoading) {
+  if (dataManagementPlanLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -65,7 +64,7 @@ export default function DataManagementPlanDetail() {
     );
   }
 
-  if (!plan) {
+  if (!dataManagementPlan) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -96,7 +95,7 @@ export default function DataManagementPlanDetail() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{plan.title}</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">{dataManagementPlan.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -107,14 +106,14 @@ export default function DataManagementPlanDetail() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-semibold">{plan.title}</h2>
-                {researchActivity && (
-                  <div className="flex items-center gap-2 mt-1">
+                <h2 className="text-xl font-semibold">{dataManagementPlan.title}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  {researchActivity && (
                     <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
                       {researchActivity.sdrNumber}
                     </Badge>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -137,51 +136,33 @@ export default function DataManagementPlanDetail() {
                     </span>
                   </div>
                 </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Created Date</h3>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>{plan.createdAt ? format(new Date(plan.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Last Updated</h3>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>{plan.updatedAt ? format(new Date(plan.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
-                  </div>
-                </div>
               </div>
 
-              {plan.description && (
+              {dataManagementPlan.description && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-neutral-400">Description</h3>
-                  <p className="mt-1">{plan.description}</p>
+                  <p className="mt-1">{dataManagementPlan.description}</p>
                 </div>
               )}
               
-              <div className="mt-6 space-y-6">
-                <div>
-                  <h3 className="text-md font-medium border-b pb-2">Data Collection Methods</h3>
-                  <p className="mt-2">{plan.dataCollectionMethods || 'Not specified'}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-md font-medium border-b pb-2">Data Storage Plan</h3>
-                  <p className="mt-2">{plan.dataStoragePlan || 'Not specified'}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-md font-medium border-b pb-2">Data Sharing Plan</h3>
-                  <p className="mt-2">{plan.dataSharingPlan || 'Not specified'}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-md font-medium border-b pb-2">Retention Period</h3>
-                  <p className="mt-2">{plan.retentionPeriod || 'Not specified'}</p>
-                </div>
+              <div className="mt-6">
+                <h3 className="text-md font-medium border-b pb-2">Data Collection Methods</h3>
+                <p className="mt-2">{dataManagementPlan.dataCollectionMethods || 'Not specified'}</p>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-md font-medium border-b pb-2">Data Storage Plan</h3>
+                <p className="mt-2">{dataManagementPlan.dataStoragePlan || 'Not specified'}</p>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-md font-medium border-b pb-2">Data Sharing Plan</h3>
+                <p className="mt-2">{dataManagementPlan.dataSharingPlan || 'Not specified'}</p>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-md font-medium border-b pb-2">Retention Period</h3>
+                <p className="mt-2">{dataManagementPlan.retentionPeriod || 'Not specified'}</p>
               </div>
             </div>
           </CardContent>
@@ -205,7 +186,7 @@ export default function DataManagementPlanDetail() {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}/publications`)}
+                  onClick={() => researchActivity && navigate(`/publications?researchActivityId=${researchActivity.id}`)}
                   disabled={!researchActivity}
                 >
                   <FileText className="h-4 w-4 mr-2" /> Publications
@@ -216,12 +197,12 @@ export default function DataManagementPlanDetail() {
           
           <Card>
             <CardHeader>
-              <CardTitle>Documents</CardTitle>
+              <CardTitle>Data Files</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-neutral-400">No documents available.</p>
+              <p className="text-neutral-400">No data files available.</p>
               <Button variant="outline" className="w-full mt-4" disabled>
-                <FileText className="h-4 w-4 mr-2" /> Add Document
+                <Database className="h-4 w-4 mr-2" /> Add Data File
               </Button>
             </CardContent>
           </Card>

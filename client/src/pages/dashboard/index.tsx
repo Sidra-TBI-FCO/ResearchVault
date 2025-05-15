@@ -33,12 +33,17 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
           
-          <Link href="/projects/create">
+          <Link href="/research-activities/create">
             <Button className="bg-primary-500 text-white">
-              <Plus className="h-4 w-4 mr-1" /> New Project
+              <Plus className="h-4 w-4 mr-1" /> New Research Activity
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* Quick Links */}
+      <div className="mb-2">
+        <QuickLinks />
       </div>
 
       {/* Stats Cards */}
@@ -82,17 +87,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Upcoming Deadlines & Quick Links */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upcoming Deadlines */}
-        <div className="lg:col-span-2">
-          <UpcomingDeadlines />
-        </div>
-
-        {/* Quick Links */}
-        <div>
-          <QuickLinks />
-        </div>
+      {/* Upcoming Deadlines */}
+      <div>
+        <UpcomingDeadlines />
       </div>
     </div>
   );
