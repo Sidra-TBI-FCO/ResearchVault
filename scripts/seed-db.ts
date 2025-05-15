@@ -270,6 +270,7 @@ async function seedDatabase() {
     const dataManagementPlansData = [
       {
         researchActivityId: researchActivityEntities[0].id,
+        dmpNumber: "DMP-001",
         title: "Data Management Plan for Genomic Profiling",
         description: "Comprehensive plan for managing genomic data from rare cancer samples",
         dataCollectionMethods: "Whole-genome sequencing, RNA-seq, and proteomics",
@@ -279,6 +280,7 @@ async function seedDatabase() {
       },
       {
         researchActivityId: researchActivityEntities[1].id,
+        dmpNumber: "DMP-002",
         title: "Neural Imaging Data Management Plan",
         description: "Plan for managing large-scale imaging data from neural circuit mapping",
         dataCollectionMethods: "Advanced microscopy, fMRI, and electrophysiology",
@@ -288,6 +290,7 @@ async function seedDatabase() {
       },
       {
         researchActivityId: researchActivityEntities[2].id,
+        dmpNumber: "DMP-003",
         title: "Immunotherapy Clinical Data Management Plan",
         description: "Plan for managing clinical and laboratory data from immunotherapy trials",
         dataCollectionMethods: "Clinical assessments, immunological assays, and patient-reported outcomes",

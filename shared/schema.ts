@@ -132,6 +132,7 @@ export const insertProjectMemberSchema = createInsertSchema(projectMembers).omit
 export const dataManagementPlans = pgTable("data_management_plans", {
   id: serial("id").primaryKey(),
   researchActivityId: integer("research_activity_id").notNull(), // references researchActivities.id
+  dmpNumber: text("dmp_number").notNull().unique(), // DMP number
   title: text("title").notNull(),
   description: text("description"),
   dataCollectionMethods: text("data_collection_methods"),
