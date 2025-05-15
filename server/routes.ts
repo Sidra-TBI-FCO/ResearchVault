@@ -95,6 +95,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch program" });
     }
   });
+  
+  app.get('/api/programs/:id/projects', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid program ID" });
+      }
+
+      const projects = await storage.getProjectGroupsForProgram(id);
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching projects for program:", error);
+      res.status(500).json({ message: "Failed to fetch projects for program" });
+    }
+  });
 
   app.post('/api/programs', async (req: Request, res: Response) => {
     try {
