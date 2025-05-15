@@ -65,7 +65,7 @@ export default function ResearchActivityDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -93,7 +93,7 @@ export default function ResearchActivityDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -103,7 +103,7 @@ export default function ResearchActivityDetail() {
           <CardContent className="py-8">
             <div className="text-center">
               <p className="text-lg text-neutral-400">The research activity you're looking for could not be found.</p>
-              <Button className="mt-4" onClick={() => navigate("/research-activities")}>
+              <Button className="mt-4" onClick={() => navigate("/projects")}>
                 Return to Research Activities List
               </Button>
             </div>
@@ -135,7 +135,7 @@ export default function ResearchActivityDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
@@ -173,7 +173,7 @@ export default function ResearchActivityDetail() {
                         <Button 
                           variant="link" 
                           className="p-0 h-auto text-primary-600"
-                          onClick={() => navigate(`/projects/${projectGroup.id}`)}
+                          onClick={() => navigate(`/project-groups/${projectGroup.id}`)}
                         >
                           {projectGroup.name}
                         </Button>
