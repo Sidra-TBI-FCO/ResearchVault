@@ -171,8 +171,11 @@ export default function ResearchActivitiesList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/research-activities/${activity.id}`}>
-                        <a className="hover:text-primary-500 transition-colors">{activity.title}</a>
+                      <Link 
+                        href={`/projects/${activity.id}`}
+                        className="hover:text-primary-500 transition-colors"
+                      >
+                        {activity.title}
                       </Link>
                       {activity.shortTitle && (
                         <div className="text-sm text-neutral-200 mt-1">
@@ -182,10 +185,11 @@ export default function ResearchActivitiesList() {
                     </TableCell>
                     <TableCell>
                       {activity.projectGroup ? (
-                        <Link href={`/projects/${activity.projectGroup.id}`}>
-                          <a className="text-sm hover:text-primary-500 transition-colors">
-                            {activity.projectGroup.name}
-                          </a>
+                        <Link 
+                          href={`/project-groups/${activity.projectGroup.id}`}
+                          className="text-sm hover:text-primary-500 transition-colors"
+                        >
+                          {activity.projectGroup.name}
                         </Link>
                       ) : (
                         <span className="text-sm text-neutral-200">Not assigned</span>
@@ -208,12 +212,15 @@ export default function ResearchActivitiesList() {
                     </TableCell>
                     <TableCell>
                       {activity.leadPI ? (
-                        <div className="flex items-center">
+                        <Link
+                          href={`/scientists/${activity.leadPI.id}`}
+                          className="flex items-center hover:text-primary-500 transition-colors"
+                        >
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
                             {activity.leadPI.profileImageInitials || activity.leadPI.name.substring(0, 2)}
                           </div>
                           <span>{activity.leadPI.name}</span>
-                        </div>
+                        </Link>
                       ) : (
                         <span className="text-neutral-200">Unassigned</span>
                       )}
