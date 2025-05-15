@@ -15,18 +15,6 @@ export default function PatentDetail() {
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
 
-  // Check if we're coming from another page that might have lost our context
-  useEffect(() => {
-    // Force a refresh if we're here with ID but no data after 1 second
-    const timer = setTimeout(() => {
-      if (id && !patent && !patentLoading) {
-        window.location.reload();
-      }
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [id, patent, patentLoading]);
-
   const { data: patent, isLoading: patentLoading } = useQuery<Patent>({
     queryKey: ['/api/patents', id],
     queryFn: async () => {
@@ -44,6 +32,18 @@ export default function PatentDetail() {
     refetchOnMount: true,
     staleTime: 0, // Always refetch
   });
+  
+  // Check if we're coming from another page that might have lost our context
+  useEffect(() => {
+    // Force a refresh if we're here with ID but no data after 1 second
+    const timer = setTimeout(() => {
+      if (id && !patent && !patentLoading) {
+        window.location.reload();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [id, patent, patentLoading]);
 
   const { data: researchActivity, isLoading: researchActivityLoading } = useQuery<ResearchActivity>({
     queryKey: ['/api/research-activities', patent?.researchActivityId],
