@@ -23,6 +23,7 @@ export default function DataManagementPlanEdit() {
 
   const { data: plan, isLoading } = useQuery<DataManagementPlan>({
     queryKey: ['/api/data-management-plans', id],
+    queryFn: () => fetch(`/api/data-management-plans/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

@@ -24,6 +24,7 @@ export default function ProjectEdit() {
 
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: ['/api/projects', id],
+    queryFn: () => fetch(`/api/projects/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

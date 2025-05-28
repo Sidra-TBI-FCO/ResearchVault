@@ -23,6 +23,7 @@ export default function PublicationEdit() {
 
   const { data: publication, isLoading } = useQuery<Publication>({
     queryKey: ['/api/publications', id],
+    queryFn: () => fetch(`/api/publications/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

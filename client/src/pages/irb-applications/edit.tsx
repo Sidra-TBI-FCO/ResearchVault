@@ -23,6 +23,7 @@ export default function IrbApplicationEdit() {
 
   const { data: irbApplication, isLoading } = useQuery<IrbApplication>({
     queryKey: ['/api/irb-applications', id],
+    queryFn: () => fetch(`/api/irb-applications/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

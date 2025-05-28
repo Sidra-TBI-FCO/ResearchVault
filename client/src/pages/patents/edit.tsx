@@ -23,6 +23,7 @@ export default function PatentEdit() {
 
   const { data: patent, isLoading } = useQuery<Patent>({
     queryKey: ['/api/patents', id],
+    queryFn: () => fetch(`/api/patents/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

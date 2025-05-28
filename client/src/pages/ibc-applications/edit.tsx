@@ -23,6 +23,7 @@ export default function IbcApplicationEdit() {
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
+    queryFn: () => fetch(`/api/ibc-applications/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

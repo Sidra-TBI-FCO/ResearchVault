@@ -23,6 +23,7 @@ export default function ResearchContractEdit() {
 
   const { data: contract, isLoading } = useQuery<ResearchContract>({
     queryKey: ['/api/research-contracts', id],
+    queryFn: () => fetch(`/api/research-contracts/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 
