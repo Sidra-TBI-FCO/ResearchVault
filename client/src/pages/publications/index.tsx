@@ -82,7 +82,7 @@ export default function PublicationsList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-neutral-400">Publications</h1>
           {filterResearchActivityId && researchActivity && (
@@ -105,7 +105,7 @@ export default function PublicationsList() {
           )}
         </div>
         <Link href="/publications/create">
-          <Button className="bg-primary-500 text-white">
+          <Button className="bg-primary-500 text-white flex-shrink-0">
             <Plus className="h-4 w-4 mr-1" /> Add Publication
           </Button>
         </Link>

@@ -44,10 +44,10 @@ export default function ProgramsList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-semibold text-neutral-400">Research Programs (PRM)</h1>
         <Link href="/programs/create">
-          <Button className="bg-primary-500 text-white">
+          <Button className="bg-primary-500 text-white flex-shrink-0">
             <FilePlus className="h-4 w-4 mr-1" /> New Program
           </Button>
         </Link>
