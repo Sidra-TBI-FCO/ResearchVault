@@ -82,24 +82,24 @@ export default function Sidebar({ user }: SidebarProps) {
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
-      <div className="flex flex-col w-64 border-r border-neutral-100">
+      <div className="flex flex-col w-64 border-r border-sidra-teal-light/30 bg-white">
         {/* Logo/Brand */}
-        <div className="h-16 flex items-center px-4 border-b border-neutral-100">
+        <div className="h-16 flex items-center px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
           <div className="flex items-center space-x-2">
-            <Beaker className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg text-primary">ResearchHub</span>
+            <Beaker className="h-5 w-5 text-white" />
+            <span className="font-semibold text-lg text-white">Sidra Research Portal</span>
           </div>
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-neutral-100">
+        <div className="p-4 border-b border-sidra-teal-light/30">
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-full bg-primary-200 flex items-center justify-center text-primary-700 font-medium">
+            <div className="h-10 w-10 rounded-full bg-sidra-teal-light flex items-center justify-center text-sidra-teal-dark font-medium">
               {user.initials}
             </div>
             <div>
-              <div className="font-medium">{user.name}</div>
-              <div className="text-sm text-neutral-200">{user.role}</div>
+              <div className="font-medium text-sidra-navy">{user.name}</div>
+              <div className="text-sm text-sidra-gray">{user.role}</div>
             </div>
           </div>
         </div>
@@ -112,10 +112,10 @@ export default function Sidebar({ user }: SidebarProps) {
                 key={item.href} 
                 href={item.href}
                 className={cn(
-                  "flex items-center px-3 py-2 text-sm rounded-md transition-colors",
+                  "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
                   location === item.href 
-                    ? "bg-primary-50 text-primary-600 font-medium" 
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-sidra-teal text-white font-medium shadow-sm" 
+                    : "text-sidra-navy hover:bg-sidra-teal-light/20 hover:text-sidra-teal-dark"
                 )}
               >
                 {item.icon}
