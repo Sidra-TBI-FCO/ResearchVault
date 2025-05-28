@@ -166,7 +166,7 @@ export default function ResearchActivityDetail() {
           <h1 className="text-2xl font-semibold text-neutral-400">{activity.title}</h1>
         </div>
         <Button 
-          className="bg-primary-600 hover:bg-primary-700 text-white"
+          className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
           onClick={() => navigate(`/research-activities/${activity.id}/edit`)}
         >
           <Edit className="h-4 w-4 mr-2" />
