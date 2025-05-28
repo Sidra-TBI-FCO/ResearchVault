@@ -108,12 +108,21 @@ export default function ResearchContractDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/research-contracts")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/research-contracts")}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">{contract.title}</h1>
+        </div>
+        <Button 
+          className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
+          onClick={() => navigate(`/research-contracts/${contract.id}/edit`)}
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{contract.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
