@@ -17,11 +17,13 @@ import ScientistDetail from "@/pages/scientists/detail";
 // Programs (PRM)
 import ProgramsList from "@/pages/programs";
 import ProgramDetail from "@/pages/programs/detail";
+import EditProgram from "@/pages/programs/edit";
 
 // Projects (PRJ)
 import ProjectList from "@/pages/projects";
 import ProjectDetail from "@/pages/projects/detail";
 import CreateProject from "@/pages/projects/create";
+import EditProject from "@/pages/projects/edit";
 
 // Research Activities (SDR)
 import ResearchActivitiesList from "@/pages/research-activities";
@@ -39,26 +41,31 @@ import DataManagementPlanDetail from "@/pages/data-management-plans/detail";
 import PublicationsList from "@/pages/publications";
 import CreatePublication from "@/pages/publications/create";
 import PublicationDetail from "@/pages/publications/detail";
+import EditPublication from "@/pages/publications/edit";
 
 // Patents
 import PatentsList from "@/pages/patents";
 import CreatePatent from "@/pages/patents/create";
 import PatentDetail from "@/pages/patents/detail";
+import EditPatent from "@/pages/patents/edit";
 
 // IRB Applications
 import IrbList from "@/pages/irb";
 import CreateIrb from "@/pages/irb/create";
 import IrbApplicationDetail from "@/pages/irb-applications/detail";
+import EditIrbApplication from "@/pages/irb-applications/edit";
 
 // IBC Applications
 import IbcList from "@/pages/ibc";
 import CreateIbc from "@/pages/ibc/create";
 import IbcApplicationDetail from "@/pages/ibc-applications/detail";
+import EditIbcApplication from "@/pages/ibc-applications/edit";
 
 // Research Contracts
 import ContractsList from "@/pages/contracts";
 import CreateContract from "@/pages/contracts/create";
 import ResearchContractDetail from "@/pages/research-contracts/detail";
+import EditResearchContract from "@/pages/research-contracts/edit";
 
 // Research Teams
 import TeamsList from "@/pages/teams";
@@ -81,11 +88,13 @@ function Router() {
 
         {/* Programs */}
         <Route path="/programs" component={ProgramsList} />
+        <Route path="/programs/:id/edit" component={EditProgram} />
         <Route path="/programs/:id" component={ProgramDetail} />
         
         {/* Projects (PRJ) */}
         <Route path="/projects" component={ProjectList} />
         <Route path="/projects/create" component={CreateProject} />
+        <Route path="/projects/:id/edit" component={EditProject} />
         <Route path="/projects/:id" component={ProjectDetail} />
         
         {/* Research Activities (SDR) */}
@@ -104,28 +113,33 @@ function Router() {
         {/* Publications */}
         <Route path="/publications" component={PublicationsList} />
         <Route path="/publications/create" component={CreatePublication} />
+        <Route path="/publications/:id/edit" component={EditPublication} />
         <Route path="/publications/:id" component={PublicationDetail} />
         
         {/* Patents */}
         <Route path="/patents" component={PatentsList} />
         <Route path="/patents/create" component={CreatePatent} />
+        <Route path="/patents/:id/edit" component={EditPatent} />
         <Route path="/patents/:id" component={PatentDetail} />
         
         {/* IRB Applications */}
         <Route path="/irb" component={IrbList} />
         <Route path="/irb/create" component={CreateIrb} />
+        <Route path="/irb-applications/:id/edit" component={EditIrbApplication} />
         <Route path="/irb-applications/:id" component={IrbApplicationDetail} />
         <Route path="/irb/:id" component={IrbApplicationDetail} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />
         <Route path="/ibc/create" component={CreateIbc} />
+        <Route path="/ibc-applications/:id/edit" component={EditIbcApplication} />
         <Route path="/ibc-applications/:id" component={IbcApplicationDetail} />
         <Route path="/ibc/:id" component={IbcApplicationDetail} />
         
         {/* Research Contracts */}
         <Route path="/contracts" component={ContractsList} />
         <Route path="/contracts/create" component={CreateContract} />
+        <Route path="/research-contracts/:id/edit" component={EditResearchContract} />
         <Route path="/research-contracts/:id" component={ResearchContractDetail} />
         <Route path="/contracts/:id" component={ResearchContractDetail} />
         
