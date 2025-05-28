@@ -33,6 +33,7 @@ export default function ProgramEdit() {
 
   const { data: program, isLoading } = useQuery<Program>({
     queryKey: ['/api/programs', id],
+    queryFn: () => fetch(`/api/programs/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 
