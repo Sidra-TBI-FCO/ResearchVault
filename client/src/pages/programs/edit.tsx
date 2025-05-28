@@ -13,6 +13,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useEffect } from "react";
 
 const categories = [
   "Cancer",
