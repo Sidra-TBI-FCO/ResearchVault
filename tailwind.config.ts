@@ -61,6 +61,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        sidra: {
+          teal: "hsl(var(--sidra-teal))",
+          "teal-light": "hsl(var(--sidra-teal-light))",
+          "teal-dark": "hsl(var(--sidra-teal-dark))",
+          navy: "hsl(var(--sidra-navy))",
+          coral: "hsl(var(--sidra-coral))",
+          gray: "hsl(var(--sidra-gray))",
+        },
       },
       keyframes: {
         "accordion-down": {

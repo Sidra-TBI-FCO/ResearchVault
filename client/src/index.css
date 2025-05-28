@@ -3,48 +3,60 @@
 @tailwind utilities;
 
 :root {
-      --background: 0 0% 100%;
---foreground: 20 14.3% 4.1%;
---muted: 60 4.8% 95.9%;
---muted-foreground: 25 5.3% 44.7%;
+--background: 0 0% 100%;
+--foreground: 200 20% 15%;
+--muted: 180 15% 95%;
+--muted-foreground: 200 10% 45%;
 --popover: 0 0% 100%;
---popover-foreground: 20 14.3% 4.1%;
+--popover-foreground: 200 20% 15%;
 --card: 0 0% 100%;
---card-foreground: 20 14.3% 4.1%;
---border: 20 5.9% 90%;
---input: 20 5.9% 90%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 60 4.8% 95.9%;
---secondary-foreground: 24 9.8% 10%;
---accent: 60 4.8% 95.9%;
---accent-foreground: 24 9.8% 10%;
+--card-foreground: 200 20% 15%;
+--border: 180 15% 88%;
+--input: 180 15% 88%;
+--primary: 176 85% 38%;
+--primary-foreground: 0 0% 100%;
+--secondary: 180 25% 92%;
+--secondary-foreground: 200 20% 20%;
+--accent: 176 45% 85%;
+--accent-foreground: 200 25% 25%;
 --destructive: 0 84.2% 60.2%;
 --destructive-foreground: 60 9.1% 97.8%;
---ring: 20 14.3% 4.1%;
---radius: 0.5rem;
+--ring: 176 85% 38%;
+--radius: 0.75rem;
+--sidra-teal: 176 85% 38%;
+--sidra-teal-light: 176 45% 85%;
+--sidra-teal-dark: 176 85% 28%;
+--sidra-navy: 210 100% 15%;
+--sidra-coral: 15 85% 65%;
+--sidra-gray: 200 10% 50%;
   }
   .dark {
-      --background: 240 10% 3.9%;
---foreground: 0 0% 98%;
---muted: 240 3.7% 15.9%;
---muted-foreground: 240 5% 64.9%;
---popover: 240 10% 3.9%;
---popover-foreground: 0 0% 98%;
---card: 240 10% 3.9%;
---card-foreground: 0 0% 98%;
---border: 240 3.7% 15.9%;
---input: 240 3.7% 15.9%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 240 3.7% 15.9%;
---secondary-foreground: 0 0% 98%;
---accent: 240 3.7% 15.9%;
---accent-foreground: 0 0% 98%;
+--background: 210 100% 8%;
+--foreground: 180 15% 92%;
+--muted: 210 50% 15%;
+--muted-foreground: 180 10% 65%;
+--popover: 210 100% 10%;
+--popover-foreground: 180 15% 92%;
+--card: 210 100% 10%;
+--card-foreground: 180 15% 92%;
+--border: 210 50% 20%;
+--input: 210 50% 20%;
+--primary: 176 85% 45%;
+--primary-foreground: 210 100% 8%;
+--secondary: 210 50% 18%;
+--secondary-foreground: 180 15% 88%;
+--accent: 176 45% 25%;
+--accent-foreground: 180 15% 88%;
 --destructive: 0 62.8% 30.6%;
 --destructive-foreground: 0 0% 98%;
---ring: 240 4.9% 83.9%;
---radius: 0.5rem;
+--ring: 176 85% 45%;
+--radius: 0.75rem;
+--sidra-teal: 176 85% 45%;
+--sidra-teal-light: 176 45% 25%;
+--sidra-teal-dark: 176 85% 35%;
+--sidra-navy: 210 100% 12%;
+--sidra-coral: 15 85% 65%;
+--sidra-gray: 200 10% 60%;
   }
 
 @layer base {
@@ -54,5 +66,79 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Sidra Medicine Brand Colors */
+  .bg-sidra-teal {
+    background-color: hsl(var(--sidra-teal));
+  }
+  
+  .bg-sidra-teal-light {
+    background-color: hsl(var(--sidra-teal-light));
+  }
+  
+  .bg-sidra-teal-dark {
+    background-color: hsl(var(--sidra-teal-dark));
+  }
+  
+  .bg-sidra-navy {
+    background-color: hsl(var(--sidra-navy));
+  }
+  
+  .bg-sidra-coral {
+    background-color: hsl(var(--sidra-coral));
+  }
+  
+  .text-sidra-teal {
+    color: hsl(var(--sidra-teal));
+  }
+  
+  .text-sidra-teal-dark {
+    color: hsl(var(--sidra-teal-dark));
+  }
+  
+  .text-sidra-navy {
+    color: hsl(var(--sidra-navy));
+  }
+  
+  .text-sidra-coral {
+    color: hsl(var(--sidra-coral));
+  }
+  
+  .border-sidra-teal {
+    border-color: hsl(var(--sidra-teal));
+  }
+  
+  .border-sidra-teal-light {
+    border-color: hsl(var(--sidra-teal-light));
+  }
+  
+  /* Sidra Medicine inspired gradients */
+  .bg-sidra-gradient {
+    background: linear-gradient(135deg, hsl(var(--sidra-teal)) 0%, hsl(var(--sidra-teal-dark)) 100%);
+  }
+  
+  .bg-sidra-gradient-subtle {
+    background: linear-gradient(135deg, hsl(var(--sidra-teal-light)) 0%, hsl(var(--background)) 100%);
+  }
+  
+  /* Enhanced card styling */
+  .sidra-card {
+    @apply bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .sidra-card-header {
+    @apply bg-sidra-gradient text-white rounded-t-xl;
+  }
+  
+  /* Enhanced button styling */
+  .btn-sidra-primary {
+    @apply bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-sidra-secondary {
+    @apply bg-sidra-teal-light hover:bg-sidra-teal text-sidra-teal-dark hover:text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
   }
 }
