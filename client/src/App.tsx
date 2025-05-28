@@ -36,6 +36,7 @@ import ResearchActivityTeam from "@/pages/research-activities/team";
 import DataManagementList from "@/pages/data-management";
 import CreateDataManagement from "@/pages/data-management/create";
 import DataManagementPlanDetail from "@/pages/data-management-plans/detail";
+import EditDataManagementPlan from "@/pages/data-management-plans/edit";
 
 // Publications
 import PublicationsList from "@/pages/publications";
@@ -107,6 +108,7 @@ function Router() {
         {/* Data Management Plans */}
         <Route path="/data-management" component={DataManagementList} />
         <Route path="/data-management/create" component={CreateDataManagement} />
+        <Route path="/data-management-plans/:id/edit" component={EditDataManagementPlan} />
         <Route path="/data-management-plans/:id" component={DataManagementPlanDetail} />
         <Route path="/data-management/:id" component={DataManagementPlanDetail} />
         

@@ -53,7 +53,7 @@ export default function ProgramEdit() {
   });
 
   // Update form when program data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (program) {
       form.reset({
         programId: program.programId,
