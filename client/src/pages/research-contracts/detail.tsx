@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, ResearchContract, Scientist } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
