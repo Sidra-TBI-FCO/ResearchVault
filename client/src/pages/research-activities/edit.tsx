@@ -479,11 +479,11 @@ export default function EditResearchActivity() {
               <div className="flex gap-4">
                 <Button
                   type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white"
+                  className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
                   disabled={updateMutation.isPending}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  {updateMutation.isPending ? "Updating..." : "Update Research Activity"}
+                  {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Update Research Activity
                 </Button>
                 <Button
                   type="button"
