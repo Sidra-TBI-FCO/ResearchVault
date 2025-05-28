@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication, DataManagementPlan } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet, Edit } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -157,12 +157,21 @@ export default function ResearchActivityDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">{activity.title}</h1>
+        </div>
+        <Button 
+          className="bg-primary-600 hover:bg-primary-700 text-white"
+          onClick={() => navigate(`/research-activities/${activity.id}/edit`)}
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{activity.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

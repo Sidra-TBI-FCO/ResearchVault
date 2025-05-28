@@ -26,6 +26,7 @@ import CreateProject from "@/pages/projects/create";
 // Research Activities (SDR)
 import ResearchActivitiesList from "@/pages/research-activities";
 import CreateResearchActivity from "@/pages/research-activities/create";
+import EditResearchActivity from "@/pages/research-activities/edit";
 import ResearchActivityDetail from "@/pages/research-activities/detail";
 import ResearchActivityTeam from "@/pages/research-activities/team";
 
@@ -90,6 +91,7 @@ function Router() {
         {/* Research Activities (SDR) */}
         <Route path="/research-activities" component={ResearchActivitiesList} />
         <Route path="/research-activities/create" component={CreateResearchActivity} />
+        <Route path="/research-activities/:id/edit" component={EditResearchActivity} />
         <Route path="/research-activities/:id" component={ResearchActivityDetail} />
         <Route path="/research-activities/:id/team" component={ResearchActivityTeam} />
         
