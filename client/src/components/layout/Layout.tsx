@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
       )}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={toggleMobileSidebar}></div>
         <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-          <Sidebar user={user} />
+          <Sidebar user={user} mobile={true} />
         </div>
       </div>
 

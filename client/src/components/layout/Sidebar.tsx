@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { 
   Beaker, LayoutDashboard, Users, FlaskConical, Database, 
   BookOpen, Award, FileText, Table, Handshake, PieChart,
-  Settings, LogOut, UserPlus
+  Settings, LogOut, UserPlus, X
 } from "lucide-react";
 
 interface SidebarProps {
@@ -12,9 +12,11 @@ interface SidebarProps {
     role: string;
     initials: string;
   };
+  mobile?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar({ user, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
 
   const navItems = [
@@ -81,14 +83,22 @@ export default function Sidebar({ user }: SidebarProps) {
   ];
 
   return (
-    <div className="hidden md:flex md:flex-shrink-0">
+    <div className={mobile ? "flex flex-shrink-0" : "hidden md:flex md:flex-shrink-0"}>
       <div className="flex flex-col w-64 border-r border-sidra-teal-light/30 bg-white">
         {/* Logo/Brand */}
-        <div className="h-16 flex items-center px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
           <div className="flex items-center space-x-2">
             <Beaker className="h-5 w-5 text-white" />
             <span className="font-semibold text-lg text-white">Sidra Research Portal</span>
           </div>
+          {mobile && onClose && (
+            <button 
+              onClick={onClose}
+              className="text-white hover:text-sidra-teal-light"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* User Info */}
