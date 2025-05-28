@@ -291,8 +291,8 @@ export default function CreatePatent() {
                     <FormItem className="col-span-full">
                       <FormLabel>Associated Project</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
-                        defaultValue={field.value?.toString() || undefined}
+                        onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                        defaultValue={field.value?.toString() || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -300,7 +300,7 @@ export default function CreatePatent() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {projectsLoading ? (
                             <SelectItem value="loading" disabled>Loading projects...</SelectItem>
                           ) : (
