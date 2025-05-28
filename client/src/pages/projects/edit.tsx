@@ -13,6 +13,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useEffect } from "react";
 import React from "react";
 
 export default function ProjectEdit() {
@@ -38,34 +39,22 @@ export default function ProjectEdit() {
     resolver: zodResolver(insertProjectSchema),
     defaultValues: {
       projectId: project?.projectId || "",
-      title: project?.title || "",
-      shortTitle: project?.shortTitle || "",
+      name: project?.name || "",
+      description: project?.description || "",
       programId: project?.programId || 0,
       principalInvestigatorId: project?.principalInvestigatorId || 0,
-      additionalNotificationEmail: project?.additionalNotificationEmail || "",
-      status: project?.status || "Active",
-      description: project?.description || "",
-      objectives: project?.objectives || "",
-      startDate: project?.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
-      endDate: project?.endDate ? new Date(project.endDate).toISOString().split('T')[0] : "",
     },
   });
 
   // Update form when project data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (project) {
       form.reset({
         projectId: project.projectId,
-        title: project.title,
-        shortTitle: project.shortTitle || "",
+        name: project.name,
+        description: project.description || "",
         programId: project.programId,
         principalInvestigatorId: project.principalInvestigatorId || 0,
-        additionalNotificationEmail: project.additionalNotificationEmail || "",
-        status: project.status,
-        description: project.description || "",
-        objectives: project.objectives || "",
-        startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
-        endDate: project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : "",
       });
     }
   }, [project, form]);
