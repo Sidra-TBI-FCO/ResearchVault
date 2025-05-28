@@ -13,7 +13,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 const categories = [
   "Cancer",
@@ -190,12 +190,12 @@ export default function ProgramEdit() {
 
               <FormField
                 control={form.control}
-                name="shortTitle"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Short Title</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input placeholder="Short title or abbreviation" {...field} />
+                      <Textarea placeholder="Program description" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
