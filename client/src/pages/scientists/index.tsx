@@ -66,9 +66,20 @@ export default function ScientistsList() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-semibold text-neutral-400">Scientists & Staff</h1>
         <Link href="/scientists/create">
-          <Button className="bg-primary-500 text-white flex-shrink-0">
-            <Plus className="h-4 w-4 mr-1" /> Add Scientist
-          </Button>
+          <button 
+            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
+            style={{ 
+              backgroundColor: '#2D9C95',
+              color: 'white',
+              opacity: '1',
+              visibility: 'visible',
+              display: 'block'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
+          >
+            Add Scientist
+          </button>
         </Link>
       </div>
 
