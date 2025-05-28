@@ -189,8 +189,8 @@ export default function CreateContract() {
                     <FormItem>
                       <FormLabel>Investigator</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
-                        defaultValue={field.value?.toString() || undefined}
+                        onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                        defaultValue={field.value?.toString() || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -198,7 +198,7 @@ export default function CreateContract() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {piLoading ? (
                             <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
                           ) : (
