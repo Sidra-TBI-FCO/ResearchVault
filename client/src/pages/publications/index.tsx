@@ -9,6 +9,12 @@ import {
   TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EnhancedPublication } from "@/lib/types";
 import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -202,9 +208,25 @@ export default function PublicationsList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/publications/${publication.id}`}>
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/publications/${publication.id}/edit`}>
+                              Edit Publication
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
