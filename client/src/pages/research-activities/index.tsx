@@ -117,8 +117,14 @@ export default function ResearchActivitiesList() {
         <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
         <Link href="/research-activities/create">
           <button 
-            className="bg-primary-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-600 transition-colors"
-            style={{ opacity: 1, visibility: 'visible' }}
+            className="px-4 py-2 rounded-lg flex items-center gap-2"
+            style={{ 
+              backgroundColor: '#2D9C95 !important',
+              color: 'white !important',
+              opacity: '1 !important',
+              visibility: 'visible !important',
+              display: 'flex !important'
+            }}
           >
             <FilePlus className="h-4 w-4" /> New Research Activity
           </button>
