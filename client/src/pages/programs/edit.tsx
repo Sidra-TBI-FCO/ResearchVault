@@ -40,16 +40,12 @@ export default function ProgramEdit() {
     resolver: zodResolver(insertProgramSchema),
     defaultValues: {
       programId: program?.programId || "",
-      title: program?.title || "",
-      shortTitle: program?.shortTitle || "",
-      category: program?.category || "",
+      name: program?.name || "",
       description: program?.description || "",
-      objectives: program?.objectives || "",
-      status: program?.status || "Active",
-      programDirector: program?.programDirector || "",
-      researchCoLead: program?.researchCoLead || "",
-      clinicalCoLead1: program?.clinicalCoLead1 || "",
-      clinicalCoLead2: program?.clinicalCoLead2 || "",
+      programDirectorId: program?.programDirectorId || null,
+      researchCoLeadId: program?.researchCoLeadId || null,
+      clinicalCoLead1Id: program?.clinicalCoLead1Id || null,
+      clinicalCoLead2Id: program?.clinicalCoLead2Id || null,
     },
   });
 
@@ -58,16 +54,12 @@ export default function ProgramEdit() {
     if (program) {
       form.reset({
         programId: program.programId,
-        title: program.title,
-        shortTitle: program.shortTitle || "",
-        category: program.category,
+        name: program.name,
         description: program.description || "",
-        objectives: program.objectives || "", 
-        status: program.status,
-        programDirector: program.programDirector || "",
-        researchCoLead: program.researchCoLead || "",
-        clinicalCoLead1: program.clinicalCoLead1 || "",
-        clinicalCoLead2: program.clinicalCoLead2 || "",
+        programDirectorId: program.programDirectorId || null,
+        researchCoLeadId: program.researchCoLeadId || null,
+        clinicalCoLead1Id: program.clinicalCoLead1Id || null,
+        clinicalCoLead2Id: program.clinicalCoLead2Id || null,
       });
     }
   }, [program, form]);

@@ -34,16 +34,13 @@ export default function DataManagementPlanEdit() {
     resolver: zodResolver(insertDataManagementPlanSchema),
     defaultValues: {
       researchActivityId: plan?.researchActivityId || 0,
+      dmpNumber: plan?.dmpNumber || "",
       title: plan?.title || "",
       description: plan?.description || "",
-      dataTypes: plan?.dataTypes || "",
-      dataCollection: plan?.dataCollection || "",
-      dataStorage: plan?.dataStorage || "",
-      dataSharing: plan?.dataSharing || "",
-      dataRetention: plan?.dataRetention || "",
-      ethicalConsiderations: plan?.ethicalConsiderations || "",
-      complianceRequirements: plan?.complianceRequirements || "",
-      status: plan?.status || "Draft",
+      dataCollectionMethods: plan?.dataCollectionMethods || "",
+      dataStoragePlan: plan?.dataStoragePlan || "",
+      dataSharingPlan: plan?.dataSharingPlan || "",
+      retentionPeriod: plan?.retentionPeriod || "",
     },
   });
 
@@ -52,16 +49,13 @@ export default function DataManagementPlanEdit() {
     if (plan) {
       form.reset({
         researchActivityId: plan.researchActivityId,
+        dmpNumber: plan.dmpNumber,
         title: plan.title,
         description: plan.description || "",
-        dataTypes: plan.dataTypes || "",
-        dataCollection: plan.dataCollection || "",
-        dataStorage: plan.dataStorage || "",
-        dataSharing: plan.dataSharing || "",
-        dataRetention: plan.dataRetention || "",
-        ethicalConsiderations: plan.ethicalConsiderations || "",
-        complianceRequirements: plan.complianceRequirements || "",
-        status: plan.status,
+        dataCollectionMethods: plan.dataCollectionMethods || "",
+        dataStoragePlan: plan.dataStoragePlan || "",
+        dataSharingPlan: plan.dataSharingPlan || "",
+        retentionPeriod: plan.retentionPeriod || "",
       });
     }
   }, [plan, form]);
@@ -200,25 +194,13 @@ export default function DataManagementPlanEdit() {
 
               <FormField
                 control={form.control}
-                name="status"
+                name="dmpNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Under Review">Under Review</SelectItem>
-                        <SelectItem value="Approved">Approved</SelectItem>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>DMP Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="DMP-001" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -244,28 +226,10 @@ export default function DataManagementPlanEdit() {
 
               <FormField
                 control={form.control}
-                name="dataTypes"
+                name="dataCollectionMethods"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data Types</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Types of data to be collected and managed..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="dataCollection"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data Collection</FormLabel>
+                    <FormLabel>Data Collection Methods</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Methods and procedures for data collection..."
@@ -280,10 +244,10 @@ export default function DataManagementPlanEdit() {
 
               <FormField
                 control={form.control}
-                name="dataStorage"
+                name="dataStoragePlan"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data Storage</FormLabel>
+                    <FormLabel>Data Storage Plan</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Storage infrastructure, security measures, and backup procedures..."
@@ -298,10 +262,10 @@ export default function DataManagementPlanEdit() {
 
               <FormField
                 control={form.control}
-                name="dataSharing"
+                name="dataSharingPlan"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data Sharing</FormLabel>
+                    <FormLabel>Data Sharing Plan</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Plans for data sharing, access permissions, and collaboration..."
@@ -316,46 +280,10 @@ export default function DataManagementPlanEdit() {
 
               <FormField
                 control={form.control}
-                name="dataRetention"
+                name="retentionPeriod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data Retention</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Retention periods, archival procedures, and disposal methods..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="ethicalConsiderations"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ethical Considerations</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Privacy, consent, anonymization, and ethical guidelines..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="complianceRequirements"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Compliance Requirements</FormLabel>
+                    <FormLabel>Retention Period</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Regulatory compliance, institutional policies, and legal requirements..."
