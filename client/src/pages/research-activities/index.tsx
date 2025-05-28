@@ -115,11 +115,13 @@ export default function ResearchActivitiesList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
-        <Link href="/research-activities/create">
-          <Button className="bg-primary-500 hover:bg-primary-600 text-white flex-shrink-0 min-w-fit">
-            <FilePlus className="h-4 w-4 mr-1" /> New Research Activity
-          </Button>
-        </Link>
+        <div className="flex-shrink-0">
+          <Link href="/research-activities/create">
+            <Button className="bg-primary-500 hover:bg-primary-600 text-white">
+              <FilePlus className="h-4 w-4 mr-1" /> New Research Activity
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card>
