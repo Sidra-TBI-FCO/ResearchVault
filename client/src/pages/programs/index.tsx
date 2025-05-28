@@ -9,6 +9,12 @@ import {
   TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Beaker, FilePlus, Search, MoreHorizontal } from "lucide-react";
 
 interface Program {
@@ -102,7 +108,7 @@ export default function ProgramsList() {
                     </TableCell>
                     <TableCell>
                       <Link href={`/programs/${program.id}`}>
-                        <a className="hover:text-primary-500 transition-colors">{program.name}</a>
+                        <span className="hover:text-primary-500 transition-colors cursor-pointer">{program.name}</span>
                       </Link>
                     </TableCell>
                     <TableCell className="max-w-md">
@@ -111,9 +117,25 @@ export default function ProgramsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/programs/${program.id}`}>
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/programs/${program.id}/edit`}>
+                              Edit Program
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
