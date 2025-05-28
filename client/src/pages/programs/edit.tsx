@@ -52,9 +52,10 @@ export default function ProgramEdit() {
   // Update form when program data loads
   useEffect(() => {
     if (program) {
+      console.log('Loading program data:', program);
       form.reset({
-        programId: program.programId,
-        name: program.name,
+        programId: program.programId || "",
+        name: program.name || "",
         description: program.description || "",
         programDirectorId: program.programDirectorId || null,
         researchCoLeadId: program.researchCoLeadId || null,
