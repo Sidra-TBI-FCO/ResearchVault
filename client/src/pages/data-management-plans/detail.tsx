@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, DataManagementPlan } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Database, Layers } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Database, Layers, Edit } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { usePublicationCount } from "@/hooks/use-publication-count";
@@ -94,12 +94,21 @@ export default function DataManagementPlanDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/data-management-plans")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/data-management")}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">{dataManagementPlan.title}</h1>
+        </div>
+        <Button 
+          onClick={() => navigate(`/data-management-plans/${id}/edit`)}
+          className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{dataManagementPlan.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

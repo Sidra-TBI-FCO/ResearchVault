@@ -13,7 +13,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import React from "react";
+import { useEffect } from "react";
 
 export default function DataManagementPlanEdit() {
   const { id } = useParams();
@@ -48,7 +48,7 @@ export default function DataManagementPlanEdit() {
   });
 
   // Update form when plan data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (plan) {
       form.reset({
         researchActivityId: plan.researchActivityId,
