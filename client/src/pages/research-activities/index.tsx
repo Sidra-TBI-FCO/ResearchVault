@@ -117,16 +117,18 @@ export default function ResearchActivitiesList() {
         <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
         <Link href="/research-activities/create">
           <button 
-            className="px-4 py-2 rounded-lg flex items-center gap-2"
+            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
             style={{ 
-              backgroundColor: '#2D9C95 !important',
-              color: 'white !important',
-              opacity: '1 !important',
-              visibility: 'visible !important',
-              display: 'flex !important'
+              backgroundColor: '#2D9C95',
+              color: 'white',
+              opacity: '1',
+              visibility: 'visible',
+              display: 'block'
             }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
           >
-            <FilePlus className="h-4 w-4" /> New Research Activity
+            New Research Activity
           </button>
         </Link>
       </div>

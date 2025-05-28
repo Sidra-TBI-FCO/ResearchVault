@@ -162,10 +162,10 @@ export default function CreateProject() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {projectGroupsLoading ? (
+                          {projectsLoading ? (
                             <SelectItem value="loading" disabled>Loading projects...</SelectItem>
                           ) : (
-                            projectGroups?.map((project) => (
+                            projects?.map((project) => (
                               <SelectItem key={project.id} value={project.id.toString()}>
                                 {project.name}
                               </SelectItem>
