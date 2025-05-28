@@ -39,13 +39,13 @@ export default function ProgramEdit() {
   const form = useForm<InsertProgram>({
     resolver: zodResolver(insertProgramSchema),
     defaultValues: {
-      programId: program?.programId || "",
-      name: program?.name || "",
-      description: program?.description || "",
-      programDirectorId: program?.programDirectorId || null,
-      researchCoLeadId: program?.researchCoLeadId || null,
-      clinicalCoLead1Id: program?.clinicalCoLead1Id || null,
-      clinicalCoLead2Id: program?.clinicalCoLead2Id || null,
+      programId: "",
+      name: "",
+      description: "",
+      programDirectorId: null,
+      researchCoLeadId: null,
+      clinicalCoLead1Id: null,
+      clinicalCoLead2Id: null,
     },
   });
 
