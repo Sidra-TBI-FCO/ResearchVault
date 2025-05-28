@@ -186,9 +186,9 @@ export default function ProjectsList() {
                     <TableCell>
                       {project.program ? (
                         <Link href={`/programs/${project.program.id}`}>
-                          <a className="text-sm hover:text-primary-500 transition-colors">
+                          <span className="text-sm hover:text-primary-500 transition-colors cursor-pointer">
                             {project.program.name}
-                          </a>
+                          </span>
                         </Link>
                       ) : (
                         <span className="text-sm text-neutral-200">Not assigned</span>
