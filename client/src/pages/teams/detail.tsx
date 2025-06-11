@@ -174,11 +174,46 @@ export default function TeamDetail(props: TeamDetailProps) {
     },
   });
   
+  // Check role constraints
+  const getRoleConstraints = () => {
+    const currentRoles = teamMembers?.map((member: any) => member.role) || [];
+    const hasPrincipalInvestigator = currentRoles.includes('Principal Investigator');
+    const hasLeadScientist = currentRoles.includes('Lead Scientist');
+    
+    return {
+      hasPrincipalInvestigator,
+      hasLeadScientist,
+      canAddPrincipalInvestigator: !hasPrincipalInvestigator,
+      canAddLeadScientist: !hasLeadScientist,
+    };
+  };
+
   const handleAddTeamMember = () => {
     if (!selectedScientistId || !selectedRole) {
       toast({
         title: "Error",
         description: "Please select a scientist and a role.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const constraints = getRoleConstraints();
+    
+    // Validate role constraints
+    if (selectedRole === 'Principal Investigator' && !constraints.canAddPrincipalInvestigator) {
+      toast({
+        title: "Role Constraint Violation",
+        description: "Each research activity can only have one Principal Investigator.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (selectedRole === 'Lead Scientist' && !constraints.canAddLeadScientist) {
+      toast({
+        title: "Role Constraint Violation", 
+        description: "Each research activity can only have one Lead Scientist.",
         variant: "destructive",
       });
       return;
@@ -348,13 +383,24 @@ export default function TeamDetail(props: TeamDetailProps) {
                         ? scientists?.find(s => s.id === selectedScientistId)
                         : null;
                       const canBePrincipalInvestigator = selectedScientist?.title === "Investigator";
+                      const constraints = getRoleConstraints();
                       
                       return (
                         <>
                           {canBePrincipalInvestigator && (
-                            <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
+                            <SelectItem 
+                              value="Principal Investigator"
+                              disabled={!constraints.canAddPrincipalInvestigator}
+                            >
+                              Principal Investigator {!constraints.canAddPrincipalInvestigator && "(Already assigned)"}
+                            </SelectItem>
                           )}
-                          <SelectItem value="Lead Scientist">Lead Scientist</SelectItem>
+                          <SelectItem 
+                            value="Lead Scientist"
+                            disabled={!constraints.canAddLeadScientist}
+                          >
+                            Lead Scientist {!constraints.canAddLeadScientist && "(Already assigned)"}
+                          </SelectItem>
                           <SelectItem value="Team Member">Team Member</SelectItem>
                         </>
                       );
@@ -425,8 +471,44 @@ export default function TeamDetail(props: TeamDetailProps) {
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
+            <div className="space-y-4">
+              {/* Team Status Indicator */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">Team Composition Requirements</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                  {(() => {
+                    const constraints = getRoleConstraints();
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span>Principal Investigator:</span>
+                          <Badge variant={constraints.hasPrincipalInvestigator ? "default" : "outline"}>
+                            {constraints.hasPrincipalInvestigator ? "✓ Assigned" : "Required"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Lead Scientist:</span>
+                          <Badge variant={constraints.hasLeadScientist ? "default" : "outline"}>
+                            {constraints.hasLeadScientist ? "✓ Assigned" : "Required"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Team Members:</span>
+                          <Badge variant="outline">
+                            {teamMembers?.filter(m => m.role === 'Team Member').length || 0} assigned
+                          </Badge>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <p className="text-xs text-blue-700 mt-2">
+                  Each research activity must have exactly 1 Principal Investigator and 1 Lead Scientist, plus any number of team members.
+                </p>
+              </div>
+              
+              <div className="rounded-md border">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -482,7 +564,8 @@ export default function TeamDetail(props: TeamDetailProps) {
                     );
                   })}
                 </TableBody>
-              </Table>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>

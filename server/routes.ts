@@ -809,6 +809,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (memberExists) {
         return res.status(400).json({ message: "Scientist is already a member of this research activity" });
       }
+      
+      // Enforce role constraints: Only 1 Principal Investigator and 1 Lead Scientist per research activity
+      const currentRoles = existingMembers.map(m => m.role);
+      
+      if (validateData.role === "Principal Investigator") {
+        const hasPrincipalInvestigator = currentRoles.includes("Principal Investigator");
+        if (hasPrincipalInvestigator) {
+          return res.status(400).json({ 
+            message: "Each research activity can only have one Principal Investigator" 
+          });
+        }
+      }
+      
+      if (validateData.role === "Lead Scientist") {
+        const hasLeadScientist = currentRoles.includes("Lead Scientist");
+        if (hasLeadScientist) {
+          return res.status(400).json({ 
+            message: "Each research activity can only have one Lead Scientist" 
+          });
+        }
+      }
             
       const member = await storage.addProjectMember(validateData);
       
