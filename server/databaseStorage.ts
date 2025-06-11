@@ -183,9 +183,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getResearchActivitiesForScientist(scientistId: number): Promise<ResearchActivity[]> {
-    // Get activities where scientist is principal investigator
-    const asPI = await db.select().from(researchActivities).where(eq(researchActivities.principalInvestigatorId, scientistId));
-    
     // Get activities where scientist is a team member
     const teamMemberActivities = await db
       .select({ activityId: projectMembers.researchActivityId })
@@ -194,21 +191,15 @@ export class DatabaseStorage implements IStorage {
     
     const activityIds = teamMemberActivities.map(a => a.activityId);
     
-    // If not a team member of any activities, just return the PI activities
+    // If not a team member of any activities, return empty array
     if (activityIds.length === 0) {
-      return asPI;
+      return [];
     }
     
     // Get activities where scientist is team member
-    const asTeamMember = await db.select().from(researchActivities).where(inArray(researchActivities.id, activityIds));
+    const activities = await db.select().from(researchActivities).where(inArray(researchActivities.id, activityIds));
     
-    // Combine and deduplicate
-    const allActivities = [...asPI, ...asTeamMember];
-    const uniqueActivities = allActivities.filter((activity, index, self) => 
-      index === self.findIndex(a => a.id === activity.id)
-    );
-    
-    return uniqueActivities;
+    return activities;
   }
 
   async createResearchActivity(activity: InsertResearchActivity): Promise<ResearchActivity> {
