@@ -121,6 +121,12 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
               <Link 
                 key={item.href} 
                 href={item.href}
+                onClick={() => {
+                  // Close mobile menu when navigation item is clicked
+                  if (mobile && onClose) {
+                    onClose();
+                  }
+                }}
                 className={cn(
                   "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
                   location === item.href 
