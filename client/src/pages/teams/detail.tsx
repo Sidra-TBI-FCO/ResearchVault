@@ -495,7 +495,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                         <div className="flex items-center justify-between">
                           <span>Team Members:</span>
                           <Badge variant="outline">
-                            {teamMembers?.filter(m => m.role === 'Team Member').length || 0} assigned
+                            {teamMembers?.filter((m: any) => m.role === 'Team Member').length || 0} assigned
                           </Badge>
                         </div>
                       </>
