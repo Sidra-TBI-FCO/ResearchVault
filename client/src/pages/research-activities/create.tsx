@@ -140,7 +140,7 @@ export default function CreateResearchActivity() {
 
                 <FormField
                   control={form.control}
-                  name="projectGroupId"
+                  name="projectId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Project</FormLabel>
@@ -507,16 +507,16 @@ export default function CreateResearchActivity() {
               <CardFooter className="flex justify-end space-x-2 px-0">
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/projects")}
+                  onClick={() => navigate("/research-activities")}
                   type="button"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={createProjectMutation.isPending}
+                  disabled={createResearchActivityMutation.isPending}
                 >
-                  {createProjectMutation.isPending ? 'Creating...' : 'Create Project'}
+                  {createResearchActivityMutation.isPending ? 'Creating...' : 'Create Research Activity'}
                 </Button>
               </CardFooter>
             </form>
