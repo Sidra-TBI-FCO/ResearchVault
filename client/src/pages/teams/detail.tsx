@@ -444,6 +444,7 @@ export default function TeamDetail(props: TeamDetailProps) {
           <CardDescription>
             Manage the research team members and assign team roles (Principal Investigator, Lead Scientist, Team Member).
             Note: Job titles (like Staff Scientist) are set in the staff member profile and are separate from team roles.
+            To change a member's role, remove them and add them back with the desired role.
           </CardDescription>
         </CardHeader>
         <CardContent>
