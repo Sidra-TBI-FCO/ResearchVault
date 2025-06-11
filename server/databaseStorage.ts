@@ -1,4 +1,4 @@
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { IStorage } from "./storage";
 import {
@@ -183,8 +183,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getResearchActivitiesForScientist(scientistId: number): Promise<ResearchActivity[]> {
-    // Get activities where scientist is lead PI
-    const asLeadPI = await db.select().from(researchActivities).where(eq(researchActivities.leadPIId, scientistId));
+    // Get activities where scientist is principal investigator
+    const asPI = await db.select().from(researchActivities).where(eq(researchActivities.principalInvestigatorId, scientistId));
     
     // Get activities where scientist is a team member
     const teamMemberActivities = await db
@@ -194,21 +194,21 @@ export class DatabaseStorage implements IStorage {
     
     const activityIds = teamMemberActivities.map(a => a.activityId);
     
-    // If not a team member of any activities, just return the lead PI activities
+    // If not a team member of any activities, just return the PI activities
     if (activityIds.length === 0) {
-      return asLeadPI;
+      return asPI;
     }
     
-    // Otherwise, get activities where scientist is either lead PI or team member
-    return await db
-      .select()
-      .from(researchActivities)
-      .where(
-        or(
-          eq(researchActivities.leadPIId, scientistId),
-          sql`${researchActivities.id} IN (${activityIds.join(',')})`
-        )
-      );
+    // Get activities where scientist is team member
+    const asTeamMember = await db.select().from(researchActivities).where(inArray(researchActivities.id, activityIds));
+    
+    // Combine and deduplicate
+    const allActivities = [...asPI, ...asTeamMember];
+    const uniqueActivities = allActivities.filter((activity, index, self) => 
+      index === self.findIndex(a => a.id === activity.id)
+    );
+    
+    return uniqueActivities;
   }
 
   async createResearchActivity(activity: InsertResearchActivity): Promise<ResearchActivity> {
