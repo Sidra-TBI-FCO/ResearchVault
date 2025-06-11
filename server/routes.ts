@@ -422,11 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         project = await storage.getProject(activity.projectId);
       }
       
-      // Get lead PI details if leadPIId exists
-      let leadPI = null;
-      if (activity.leadPIId) {
-        leadPI = await storage.getScientist(activity.leadPIId);
-      }
+      // Principal Investigator details now come from team membership
       
       const enhancedActivity = {
         ...activity,
@@ -434,11 +430,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: project.id,
           name: project.name,
           projectId: project.projectId
-        } : null,
-        leadPI: leadPI ? {
-          id: leadPI.id,
-          name: leadPI.name,
-          profileImageInitials: leadPI.profileImageInitials
         } : null
       };
       
@@ -736,10 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Research activity does not belong to this project" });
       }
 
-      // Check if scientist is the lead scientist of the research activity
-      if (researchActivity.leadPIId === scientistId) {
-        return res.status(400).json({ message: "Cannot remove the lead scientist from the research activity" });
-      }
+      // Note: Principal Investigator role is now managed through team membership
 
       const success = await storage.removeProjectMember(researchActivityId, scientistId);
       
@@ -856,11 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid ID parameters" });
       }
       
-      // Check if scientist is the lead scientist of the research activity
-      const researchActivity = await storage.getResearchActivity(researchActivityId);
-      if (researchActivity && researchActivity.leadPIId === scientistId) {
-        return res.status(400).json({ message: "Cannot remove the lead scientist from the research activity" });
-      }
+      // Note: Principal Investigator role is now managed through team membership
 
       const success = await storage.removeProjectMember(researchActivityId, scientistId);
       
