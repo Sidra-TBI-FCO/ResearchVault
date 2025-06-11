@@ -111,6 +111,27 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(scientists);
   }
 
+  async getScientistsWithActivityCount(): Promise<(Scientist & { activeResearchActivities: number })[]> {
+    const scientistsData = await db.select().from(scientists);
+    
+    // Get activity count for each scientist
+    const scientistsWithCount = await Promise.all(
+      scientistsData.map(async (scientist) => {
+        const activities = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(projectMembers)
+          .where(eq(projectMembers.scientistId, scientist.id));
+        
+        return {
+          ...scientist,
+          activeResearchActivities: activities[0]?.count || 0
+        };
+      })
+    );
+    
+    return scientistsWithCount;
+  }
+
   async getScientist(id: number): Promise<Scientist | undefined> {
     const [scientist] = await db.select().from(scientists).where(eq(scientists.id, id));
     return scientist;

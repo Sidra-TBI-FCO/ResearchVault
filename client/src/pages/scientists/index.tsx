@@ -26,8 +26,9 @@ export default function ScientistsList() {
   const [sortField, setSortField] = useState<"name" | "department" | "title">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const { data: scientists, isLoading } = useQuery<Scientist[]>({
-    queryKey: ['/api/scientists'],
+  const { data: scientists, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
+    queryKey: ['/api/scientists', { includeActivityCount: true }],
+    queryFn: () => fetch('/api/scientists?includeActivityCount=true').then(res => res.json()),
   });
 
   const filteredScientists = scientists?.filter(scientist => {
@@ -229,6 +230,7 @@ export default function ScientistsList() {
                         </Button>
                       </TableHead>
                       <TableHead>Contact</TableHead>
+                      <TableHead className="text-center">Active SDRs</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -264,6 +266,11 @@ export default function ScientistsList() {
                               </a>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {scientist.activeResearchActivities || 0}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>

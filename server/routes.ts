@@ -247,8 +247,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scientists
   app.get('/api/scientists', async (req: Request, res: Response) => {
     try {
-      const scientists = await storage.getScientists();
-      res.json(scientists);
+      const includeActivityCount = req.query.includeActivityCount === 'true';
+      
+      if (includeActivityCount) {
+        const scientists = await storage.getScientistsWithActivityCount();
+        res.json(scientists);
+      } else {
+        const scientists = await storage.getScientists();
+        res.json(scientists);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch scientists" });
     }
