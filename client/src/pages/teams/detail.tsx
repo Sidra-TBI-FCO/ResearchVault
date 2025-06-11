@@ -46,7 +46,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { ResearchActivity, Scientist, ProjectMember } from "@/lib/types";
+import { type ResearchActivity, type Scientist, type ProjectMember } from "@shared/schema";
 
 interface TeamDetailProps {
   researchActivityId?: number;
@@ -65,44 +65,55 @@ export default function TeamDetail(props: TeamDetailProps) {
   const [selectedRole, setSelectedRole] = useState<string>("");
   
   // Fetch research activity details
-  const { data: activity, isLoading: activityLoading } = useQuery({
+  const { data: activity, isLoading: activityLoading } = useQuery<ResearchActivity>({
     queryKey: ["/api/research-activities", id],
+    queryFn: () => fetch(`/api/research-activities/${id}`).then(res => res.json()),
+    enabled: !!id,
   });
   
-  // Fetch team members
+  // Fetch team members for research activity
   const { data: teamMembers, isLoading: teamMembersLoading } = useQuery({
-    queryKey: ["/api/projects", id, "members"],
+    queryKey: ["/api/research-activities", id, "members"],
+    queryFn: () => fetch(`/api/research-activities/${id}/members`).then(res => res.json()),
     enabled: !!id,
   });
   
   // Fetch all scientists for the team member selection
-  const { data: scientists, isLoading: scientistsLoading } = useQuery({
+  const { data: scientists, isLoading: scientistsLoading } = useQuery<Scientist[]>({
     queryKey: ["/api/scientists"],
   });
   
   // Filter out scientists who are already team members
-  const availableScientists = scientists
+  const availableScientists = scientists && teamMembers
     ? scientists.filter(
         (scientist: Scientist) =>
-          !teamMembers?.some(
-            (member: ProjectMember) => member.scientistId === scientist.id
+          !teamMembers.some(
+            (member: any) => member.scientistId === scientist.id
           )
       )
-    : [];
+    : scientists || [];
   
   // Add team member mutation
   const addTeamMember = useMutation({
     mutationFn: async (data: { scientistId: number; role: string }) => {
-      return apiRequest(`/api/projects/${id}/members`, {
+      const response = await fetch(`/api/research-activities/${id}/members`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          ...data,
-          researchActivityId: id, // Include the research activity ID
+          scientistId: data.scientistId,
+          role: data.role,
         }),
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to add team member");
+      }
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects", id, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/research-activities", id, "members"] });
       setSelectedScientistId(null);
       setSelectedRole("");
       setOpen(false);
@@ -123,12 +134,17 @@ export default function TeamDetail(props: TeamDetailProps) {
   // Remove team member mutation
   const removeTeamMember = useMutation({
     mutationFn: async (scientistId: number) => {
-      return apiRequest(`/api/projects/${id}/members/${scientistId}`, {
+      const response = await fetch(`/api/research-activities/${id}/members/${scientistId}`, {
         method: "DELETE",
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to remove team member");
+      }
+      return response.status === 204 ? null : response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects", id, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/research-activities", id, "members"] });
       toast({
         title: "Team member removed",
         description: "The team member has been removed successfully.",
@@ -234,7 +250,7 @@ export default function TeamDetail(props: TeamDetailProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/research-activities/${activity.id}`)}
+            onClick={() => navigate(`/research-activities/${activity?.id || id}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Research Activity
@@ -327,9 +343,9 @@ export default function TeamDetail(props: TeamDetailProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            Team for {activity.title}
+            Team for {activity?.title || "Research Activity"}
             <Badge variant="outline" className="ml-2 font-mono bg-blue-50 text-blue-700 border-blue-200">
-              {activity.sdrNumber}
+              {activity?.sdrNumber || "SDR-???"}
             </Badge>
           </CardTitle>
           <CardDescription>

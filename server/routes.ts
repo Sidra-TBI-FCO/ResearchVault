@@ -722,6 +722,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Research Activity Members - Direct access routes
+  app.get('/api/research-activities/:id/members', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const members = await storage.getProjectMembers(id);
+      
+      // Enhance team members with scientist details
+      const enhancedMembers = await Promise.all(members.map(async (member) => {
+        const scientist = await storage.getScientist(member.scientistId);
+        return {
+          ...member,
+          scientist: scientist ? {
+            id: scientist.id,
+            name: scientist.name,
+            title: scientist.title,
+            email: scientist.email,
+            staffId: scientist.staffId,
+            profileImageInitials: scientist.profileImageInitials
+          } : null
+        };
+      }));
+      
+      res.json(enhancedMembers);
+    } catch (error) {
+      console.error("Error fetching research activity members:", error);
+      res.status(500).json({ message: "Failed to fetch research activity members" });
+    }
+  });
+
+  app.post('/api/research-activities/:id/members', async (req: Request, res: Response) => {
+    try {
+      const researchActivityId = parseInt(req.params.id);
+      if (isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const { scientistId, role } = req.body;
+      
+      const validateData = insertProjectMemberSchema.parse({
+        researchActivityId,
+        scientistId,
+        role
+      });
+      
+      // Check if scientist exists
+      const scientist = await storage.getScientist(validateData.scientistId);
+      if (!scientist) {
+        return res.status(404).json({ message: "Scientist not found" });
+      }
+      
+      // Check if member already exists
+      const existingMembers = await storage.getProjectMembers(researchActivityId);
+      const memberExists = existingMembers.some(m => m.scientistId === scientistId);
+      if (memberExists) {
+        return res.status(400).json({ message: "Scientist is already a member of this research activity" });
+      }
+            
+      const member = await storage.addProjectMember(validateData);
+      
+      // Return enhanced member with scientist details
+      const enhancedMember = {
+        ...member,
+        scientist: {
+          id: scientist.id,
+          name: scientist.name,
+          title: scientist.title,
+          email: scientist.email,
+          staffId: scientist.staffId,
+          profileImageInitials: scientist.profileImageInitials
+        }
+      };
+      
+      res.status(201).json(enhancedMember);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error adding research activity member:", error);
+      res.status(500).json({ message: "Failed to add research activity member" });
+    }
+  });
+
+  app.delete('/api/research-activities/:id/members/:scientistId', async (req: Request, res: Response) => {
+    try {
+      const researchActivityId = parseInt(req.params.id);
+      const scientistId = parseInt(req.params.scientistId);
+      
+      if (isNaN(researchActivityId) || isNaN(scientistId)) {
+        return res.status(400).json({ message: "Invalid ID parameters" });
+      }
+      
+      // Check if scientist is the lead scientist of the research activity
+      const researchActivity = await storage.getResearchActivity(researchActivityId);
+      if (researchActivity && researchActivity.leadPIId === scientistId) {
+        return res.status(400).json({ message: "Cannot remove the lead scientist from the research activity" });
+      }
+
+      const success = await storage.removeProjectMember(researchActivityId, scientistId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Research activity member not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing research activity member:", error);
+      res.status(500).json({ message: "Failed to remove research activity member" });
+    }
+  });
+
   // Data Management Plans
   app.get('/api/data-management-plans', async (req: Request, res: Response) => {
     try {
