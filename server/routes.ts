@@ -776,6 +776,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Scientist not found" });
       }
       
+      // Validate role assignment: Only Investigators can be Principal Investigators
+      if (validateData.role === "Principal Investigator" && scientist.title !== "Investigator") {
+        return res.status(400).json({ 
+          message: "Only scientists with the job title 'Investigator' can be assigned the role of Principal Investigator" 
+        });
+      }
+      
       // Check if member already exists
       const existingMembers = await storage.getProjectMembers(researchActivityId);
       const memberExists = existingMembers.some(m => m.scientistId === scientistId);

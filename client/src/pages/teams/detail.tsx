@@ -276,7 +276,11 @@ export default function TeamDetail(props: TeamDetailProps) {
                 <Label htmlFor="scientist">Scientist</Label>
                 <Select
                   value={selectedScientistId?.toString() || ""}
-                  onValueChange={(value) => setSelectedScientistId(parseInt(value))}
+                  onValueChange={(value) => {
+                    setSelectedScientistId(parseInt(value));
+                    // Clear role selection when scientist changes to prevent invalid combinations
+                    setSelectedRole("");
+                  }}
                 >
                   <SelectTrigger id="scientist">
                     <SelectValue placeholder="Select scientist" />
@@ -317,12 +321,34 @@ export default function TeamDetail(props: TeamDetailProps) {
                     <SelectValue placeholder="Select team role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Only SDR Team Roles */}
-                    <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
-                    <SelectItem value="Lead Scientist">Lead Scientist</SelectItem>
-                    <SelectItem value="Team Member">Team Member</SelectItem>
+                    {/* Only SDR Team Roles - Principal Investigator only for Investigators */}
+                    {(() => {
+                      const selectedScientist = selectedScientistId 
+                        ? scientists?.find(s => s.id === selectedScientistId)
+                        : null;
+                      const canBePrincipalInvestigator = selectedScientist?.title === "Investigator";
+                      
+                      return (
+                        <>
+                          {canBePrincipalInvestigator && (
+                            <SelectItem value="Principal Investigator">Principal Investigator</SelectItem>
+                          )}
+                          <SelectItem value="Lead Scientist">Lead Scientist</SelectItem>
+                          <SelectItem value="Team Member">Team Member</SelectItem>
+                        </>
+                      );
+                    })()}
                   </SelectContent>
                 </Select>
+                {selectedScientistId && (() => {
+                  const selectedScientist = scientists?.find(s => s.id === selectedScientistId);
+                  return selectedScientist?.title !== "Investigator" && (
+                    <p className="text-sm text-amber-600 mt-1">
+                      <span className="font-medium">Note:</span> Only scientists with job title "Investigator" can be assigned as Principal Investigator. 
+                      {selectedScientist?.name} has the job title "{selectedScientist?.title}".
+                    </p>
+                  );
+                })()}
               </div>
             </div>
             <DialogFooter>
