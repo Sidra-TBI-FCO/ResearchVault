@@ -36,9 +36,7 @@ const createProjectSchema = insertProjectSchema.extend({
   projectGroupId: z.number({
     required_error: "Please select a project",
   }),
-  leadPIId: z.number({
-    required_error: "Please select a lead principal investigator",
-  }),
+
   budgetHolderId: z.number().optional(),
   lineManagerId: z.number().optional(),
   additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
@@ -231,37 +229,7 @@ export default function CreateProject() {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="leadPIId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lead Investigator</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select lead PI" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
-                          ) : (
-                            principalInvestigators?.map((pi) => (
-                              <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
 
                 <FormField
                   control={form.control}

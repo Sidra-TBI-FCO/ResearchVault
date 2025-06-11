@@ -44,10 +44,7 @@ export default function EditResearchActivity() {
     queryKey: ['/api/projects'],
   });
 
-  // Fetch scientists for PI selection
-  const { data: scientists, isLoading: scientistsLoading } = useQuery<Scientist[]>({
-    queryKey: ['/api/scientists'],
-  });
+
 
   const form = useForm<InsertResearchActivity>({
     resolver: zodResolver(insertResearchActivitySchema),
@@ -59,7 +56,6 @@ export default function EditResearchActivity() {
       objectives: "",
       status: "planning",
       projectId: undefined,
-      principalInvestigatorId: undefined,
       leadPIId: undefined,
       leadScientistId: undefined,
       startDate: undefined,
@@ -80,7 +76,6 @@ export default function EditResearchActivity() {
         objectives: activity.objectives || "",
         status: activity.status || "planning",
         projectId: activity.projectId || undefined,
-        principalInvestigatorId: activity.principalInvestigatorId || undefined,
         leadPIId: activity.leadPIId || undefined,
         leadScientistId: activity.leadScientistId || undefined,
         startDate: activity.startDate ? new Date(activity.startDate) : undefined,
@@ -260,71 +255,37 @@ export default function EditResearchActivity() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="projectId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Associated Project</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a project" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {projectsLoading ? (
-                            <SelectItem value="loading" disabled>Loading projects...</SelectItem>
-                          ) : (
-                            projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="principalInvestigatorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Principal Investigator</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select PI" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {scientistsLoading ? (
-                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
-                          ) : (
-                            scientists?.map((scientist) => (
-                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="projectId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Associated Project</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value?.toString() || undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {projectsLoading ? (
+                          <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                        ) : (
+                          projects?.map((project) => (
+                            <SelectItem key={project.id} value={project.id.toString()}>
+                              {project.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
