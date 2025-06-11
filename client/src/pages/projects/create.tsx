@@ -35,8 +35,8 @@ const createProjectSchema = insertProjectSchema.extend({
   programId: z.number({
     required_error: "Please select a program",
   }),
-  leadScientistId: z.number({
-    required_error: "Please select a lead scientist",
+  principalInvestigatorId: z.number({
+    required_error: "Please select a project lead investigator",
   }),
   // No additional fields needed for projects
 });
@@ -206,7 +206,7 @@ export default function CreateProject() {
                 
                 <FormField
                   control={form.control}
-                  name="leadScientistId"
+                  name="principalInvestigatorId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Project Lead Investigator</FormLabel>

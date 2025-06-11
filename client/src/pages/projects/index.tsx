@@ -70,12 +70,12 @@ export default function ProjectsList() {
   // Enhance projects with related data
   const enhancedProjects = projects?.map(project => {
     const program = programs?.find(p => p.id === project.programId);
-    const leadScientist = project.leadScientistId ? 
-      scientists?.find(s => s.id === project.leadScientistId) : undefined;
+    const principalInvestigator = project.principalInvestigatorId ? 
+      scientists?.find(s => s.id === project.principalInvestigatorId) : undefined;
     return {
       ...project,
       program,
-      leadScientist
+      principalInvestigator
     };
   });
 
@@ -171,7 +171,7 @@ export default function ProjectsList() {
                   <TableHead>PRJ ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Program</TableHead>
-                  <TableHead>Lead Scientist</TableHead>
+                  <TableHead>Project Lead Investigator</TableHead>
                   <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -206,12 +206,12 @@ export default function ProjectsList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {project.leadScientist ? (
+                      {project.principalInvestigator ? (
                         <div className="flex items-center">
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
-                            {project.leadScientist.profileImageInitials || project.leadScientist.name.substring(0, 2)}
+                            {project.principalInvestigator.profileImageInitials || project.principalInvestigator.name.substring(0, 2)}
                           </div>
-                          <span>{project.leadScientist.name}</span>
+                          <span>{project.principalInvestigator.name}</span>
                         </div>
                       ) : (
                         <span className="text-neutral-200">Unassigned</span>
