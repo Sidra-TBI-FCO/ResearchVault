@@ -46,16 +46,16 @@ export default function ResearchActivityDetail() {
   });
 
   const { data: leadPI, isLoading: leadPILoading } = useQuery<Scientist>({
-    queryKey: ['/api/scientists', activity?.leadPIId],
+    queryKey: ['/api/scientists', activity?.principalInvestigatorId],
     queryFn: async () => {
-      if (!activity?.leadPIId) return null;
-      const response = await fetch(`/api/scientists/${activity.leadPIId}`);
+      if (!activity?.principalInvestigatorId) return null;
+      const response = await fetch(`/api/scientists/${activity.principalInvestigatorId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch lead PI');
       }
       return response.json();
     },
-    enabled: !!activity?.leadPIId,
+    enabled: !!activity?.principalInvestigatorId,
   });
   
   // Get the count of publications for this research activity

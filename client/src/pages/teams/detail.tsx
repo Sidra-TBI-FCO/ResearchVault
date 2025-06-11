@@ -83,15 +83,30 @@ export default function TeamDetail(props: TeamDetailProps) {
     queryKey: ["/api/scientists"],
   });
   
-  // Filter out scientists who are already team members
+  // Filter out scientists who are already team members and sort by last name
   const availableScientists = scientists && teamMembers
-    ? scientists.filter(
-        (scientist: Scientist) =>
-          !teamMembers.some(
-            (member: any) => member.scientistId === scientist.id
-          )
-      )
-    : scientists || [];
+    ? scientists
+        .filter(
+          (scientist: Scientist) =>
+            !teamMembers.some(
+              (member: any) => member.scientistId === scientist.id
+            )
+        )
+        .sort((a, b) => {
+          // Extract last name from full name
+          const getLastName = (name: string) => {
+            const parts = name.trim().split(' ');
+            return parts[parts.length - 1].toLowerCase();
+          };
+          return getLastName(a.name).localeCompare(getLastName(b.name));
+        })
+    : scientists?.sort((a, b) => {
+        const getLastName = (name: string) => {
+          const parts = name.trim().split(' ');
+          return parts[parts.length - 1].toLowerCase();
+        };
+        return getLastName(a.name).localeCompare(getLastName(b.name));
+      }) || [];
   
   // Add team member mutation
   const addTeamMember = useMutation({
@@ -300,11 +315,17 @@ export default function TeamDetail(props: TeamDetailProps) {
                           key={scientist.id}
                           value={scientist.id.toString()}
                         >
-                          {scientist.name} {scientist.staffId ? 
-                            <Badge variant="outline" className="ml-2 text-xs font-mono bg-blue-50 text-blue-700 border-blue-200">
-                              {scientist.staffId}
-                            </Badge> : null
-                          }
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{scientist.name}</span>
+                              <span className="text-xs text-muted-foreground">{scientist.title}</span>
+                            </div>
+                            {scientist.staffId && 
+                              <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700 border-blue-200">
+                                {scientist.staffId}
+                              </Badge>
+                            }
+                          </div>
                         </SelectItem>
                       ))
                     )}
