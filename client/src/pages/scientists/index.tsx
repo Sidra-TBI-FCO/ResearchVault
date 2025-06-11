@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 export default function ScientistsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [sortField, setSortField] = useState<"name" | "department" | "title">("name");
+  const [sortField, setSortField] = useState<"name" | "department" | "title" | "activeResearchActivities">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { data: scientists, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
@@ -52,14 +52,22 @@ export default function ScientistsList() {
   
   // Sort scientists based on selected sort field and direction
   const sortedScientists = filteredScientists?.sort((a, b) => {
-    const fieldA = a[sortField] || '';
-    const fieldB = b[sortField] || '';
+    let fieldA: any, fieldB: any;
     
-    const comparison = typeof fieldA === 'string' && typeof fieldB === 'string'
-      ? fieldA.localeCompare(fieldB)
-      : String(fieldA).localeCompare(String(fieldB));
+    if (sortField === 'activeResearchActivities') {
+      fieldA = a.activeResearchActivities || 0;
+      fieldB = b.activeResearchActivities || 0;
+      return sortDirection === 'asc' ? fieldA - fieldB : fieldB - fieldA;
+    } else {
+      fieldA = a[sortField] || '';
+      fieldB = b[sortField] || '';
       
-    return sortDirection === 'asc' ? comparison : -comparison;
+      const comparison = typeof fieldA === 'string' && typeof fieldB === 'string'
+        ? fieldA.localeCompare(fieldB)
+        : String(fieldA).localeCompare(String(fieldB));
+        
+      return sortDirection === 'asc' ? comparison : -comparison;
+    }
   });
 
   return (
@@ -94,7 +102,7 @@ export default function ScientistsList() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <ArrowUpDown className="h-4 w-4" />
-                    Sort by: {sortField === 'name' ? 'Name' : sortField === 'department' ? 'Department' : 'Job Title'}
+                    Sort by: {sortField === 'name' ? 'Name' : sortField === 'department' ? 'Department' : sortField === 'title' ? 'Job Title' : 'Active SDRs'}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -106,6 +114,9 @@ export default function ScientistsList() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortField('title')}>
                     Job Title
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortField('activeResearchActivities')}>
+                    Active SDRs
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
