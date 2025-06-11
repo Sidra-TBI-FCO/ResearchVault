@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Project, Program, ResearchActivity } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users, Edit } from "lucide-react";
+import { Project, Program, ResearchActivity, Scientist } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Layers, Users, Edit, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -48,6 +48,19 @@ export default function ProjectDetail() {
       return response.json();
     },
     enabled: !!id
+  });
+
+  const { data: principalInvestigator, isLoading: piLoading } = useQuery<Scientist>({
+    queryKey: ['/api/scientists', project?.principalInvestigatorId],
+    queryFn: async () => {
+      if (!project?.principalInvestigatorId) return null;
+      const response = await fetch(`/api/scientists/${project.principalInvestigatorId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch principal investigator');
+      }
+      return response.json();
+    },
+    enabled: !!project?.principalInvestigatorId,
   });
 
   if (projectLoading) {
@@ -150,6 +163,26 @@ export default function ProjectDetail() {
                           onClick={() => navigate(`/programs/${program.id}`)}
                         >
                           {program.name}
+                        </Button>
+                      ) : 'Not assigned'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Project Lead Investigator</h3>
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>
+                      {piLoading ? (
+                        <Skeleton className="h-4 w-24 inline-block" />
+                      ) : principalInvestigator ? (
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto text-primary-600"
+                          onClick={() => navigate(`/scientists/${principalInvestigator.id}`)}
+                        >
+                          {principalInvestigator.name}
                         </Button>
                       ) : 'Not assigned'}
                     </span>

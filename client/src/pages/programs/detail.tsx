@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Program, Project } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Plus, Edit } from "lucide-react";
+import { Program, Project, Scientist } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Layers, Plus, Edit, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -35,6 +35,58 @@ export default function ProgramDetail() {
       return response.json();
     },
     enabled: !!program,
+  });
+
+  const { data: programDirector, isLoading: pdLoading } = useQuery<Scientist>({
+    queryKey: ['/api/scientists', program?.programDirectorId],
+    queryFn: async () => {
+      if (!program?.programDirectorId) return null;
+      const response = await fetch(`/api/scientists/${program.programDirectorId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch program director');
+      }
+      return response.json();
+    },
+    enabled: !!program?.programDirectorId,
+  });
+
+  const { data: researchCoLead, isLoading: rclLoading } = useQuery<Scientist>({
+    queryKey: ['/api/scientists', program?.researchCoLeadId],
+    queryFn: async () => {
+      if (!program?.researchCoLeadId) return null;
+      const response = await fetch(`/api/scientists/${program.researchCoLeadId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch research co-lead');
+      }
+      return response.json();
+    },
+    enabled: !!program?.researchCoLeadId,
+  });
+
+  const { data: clinicalCoLead1, isLoading: ccl1Loading } = useQuery<Scientist>({
+    queryKey: ['/api/scientists', program?.clinicalCoLead1Id],
+    queryFn: async () => {
+      if (!program?.clinicalCoLead1Id) return null;
+      const response = await fetch(`/api/scientists/${program.clinicalCoLead1Id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch clinical co-lead 1');
+      }
+      return response.json();
+    },
+    enabled: !!program?.clinicalCoLead1Id,
+  });
+
+  const { data: clinicalCoLead2, isLoading: ccl2Loading } = useQuery<Scientist>({
+    queryKey: ['/api/scientists', program?.clinicalCoLead2Id],
+    queryFn: async () => {
+      if (!program?.clinicalCoLead2Id) return null;
+      const response = await fetch(`/api/scientists/${program.clinicalCoLead2Id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch clinical co-lead 2');
+      }
+      return response.json();
+    },
+    enabled: !!program?.clinicalCoLead2Id,
   });
 
   if (programLoading) {
@@ -123,6 +175,86 @@ export default function ProgramDetail() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Program Director</h3>
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>
+                      {pdLoading ? (
+                        <Skeleton className="h-4 w-24 inline-block" />
+                      ) : programDirector ? (
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto text-primary-600"
+                          onClick={() => navigate(`/scientists/${programDirector.id}`)}
+                        >
+                          {programDirector.name}
+                        </Button>
+                      ) : 'Not assigned'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Research Co-Lead</h3>
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>
+                      {rclLoading ? (
+                        <Skeleton className="h-4 w-24 inline-block" />
+                      ) : researchCoLead ? (
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto text-primary-600"
+                          onClick={() => navigate(`/scientists/${researchCoLead.id}`)}
+                        >
+                          {researchCoLead.name}
+                        </Button>
+                      ) : 'Not assigned'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Clinical Co-Lead 1</h3>
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>
+                      {ccl1Loading ? (
+                        <Skeleton className="h-4 w-24 inline-block" />
+                      ) : clinicalCoLead1 ? (
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto text-primary-600"
+                          onClick={() => navigate(`/scientists/${clinicalCoLead1.id}`)}
+                        >
+                          {clinicalCoLead1.name}
+                        </Button>
+                      ) : 'Not assigned'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Clinical Co-Lead 2</h3>
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>
+                      {ccl2Loading ? (
+                        <Skeleton className="h-4 w-24 inline-block" />
+                      ) : clinicalCoLead2 ? (
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto text-primary-600"
+                          onClick={() => navigate(`/scientists/${clinicalCoLead2.id}`)}
+                        >
+                          {clinicalCoLead2.name}
+                        </Button>
+                      ) : 'Not assigned'}
+                    </span>
+                  </div>
+                </div>
+                
                 <div>
                   <h3 className="text-sm font-medium text-neutral-400">Added Date</h3>
                   <div className="flex items-center gap-1">
