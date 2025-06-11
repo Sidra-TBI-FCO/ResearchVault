@@ -19,8 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertProjectSchema } from "@shared/schema";
-import { Scientist, ProjectGroup } from "@shared/schema";
+import { insertResearchActivitySchema } from "@shared/schema";
+import { Scientist, Project } from "@shared/schema";
 import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -28,15 +28,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 
 // Extend the insert schema with additional validations
-const createProjectSchema = insertProjectSchema.extend({
+const createResearchActivitySchema = insertResearchActivitySchema.extend({
   sdrNumber: z.string().min(3, "SDR number must be at least 3 characters"),
   title: z.string().min(5, "Title must be at least 5 characters"),
   shortTitle: z.string().optional(),
   description: z.string().optional(),
-  projectGroupId: z.number({
+  projectId: z.number({
     required_error: "Please select a project",
   }),
-
   budgetHolderId: z.number().optional(),
   lineManagerId: z.number().optional(),
   additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
@@ -50,16 +49,11 @@ const createProjectSchema = insertProjectSchema.extend({
   objectives: z.string().optional(),
 });
 
-type CreateProjectFormValues = z.infer<typeof createProjectSchema>;
+type CreateResearchActivityFormValues = z.infer<typeof createResearchActivitySchema>;
 
-export default function CreateProject() {
+export default function CreateResearchActivity() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  
-  // Get all principal investigators for lead scientist selection
-  const { data: principalInvestigators, isLoading: piLoading } = useQuery<Scientist[]>({
-    queryKey: ['/api/principal-investigators'],
-  });
 
   // Get all projects
   const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
@@ -72,56 +66,56 @@ export default function CreateProject() {
   });
 
   // Default form values
-  const defaultValues: Partial<CreateProjectFormValues> = {
+  const defaultValues: Partial<CreateResearchActivityFormValues> = {
     status: "planning",
     sidraBranch: "Research",
   };
 
-  const form = useForm<CreateProjectFormValues>({
-    resolver: zodResolver(createProjectSchema),
+  const form = useForm<CreateResearchActivityFormValues>({
+    resolver: zodResolver(createResearchActivitySchema),
     defaultValues,
   });
 
-  const createProjectMutation = useMutation({
-    mutationFn: async (data: CreateProjectFormValues) => {
-      const response = await apiRequest("POST", "/api/projects", data);
+  const createResearchActivityMutation = useMutation({
+    mutationFn: async (data: CreateResearchActivityFormValues) => {
+      const response = await apiRequest("POST", "/api/research-activities", data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/research-activities'] });
       toast({
-        title: "Project created",
-        description: "The project has been successfully created.",
+        title: "Research Activity created",
+        description: "The research activity has been successfully created.",
       });
-      navigate("/projects");
+      navigate("/research-activities");
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "There was an error creating the project.",
+        description: error.message || "There was an error creating the research activity.",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: CreateProjectFormValues) => {
-    createProjectMutation.mutate(data);
+  const onSubmit = (data: CreateResearchActivityFormValues) => {
+    createResearchActivityMutation.mutate(data);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/research-activities")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Create New Project</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">Create New Research Activity</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Project Information</CardTitle>
-          <CardDescription>Enter the details for the new research project</CardDescription>
+          <CardTitle>Research Activity Information</CardTitle>
+          <CardDescription>Enter the details for the new research activity</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
