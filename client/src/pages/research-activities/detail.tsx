@@ -13,7 +13,6 @@ import { usePublicationCount } from "@/hooks/use-publication-count";
 // Define interface for detail data
 interface ResearchActivityDetail extends ResearchActivity {
   project?: Project;
-  leadPI?: Scientist;
 }
 
 export default function ResearchActivityDetail() {
@@ -45,18 +44,23 @@ export default function ResearchActivityDetail() {
     enabled: !!activity?.projectId,
   });
 
-  const { data: leadPI, isLoading: leadPILoading } = useQuery<Scientist>({
-    queryKey: ['/api/scientists', activity?.principalInvestigatorId],
+  // Fetch team members to get Principal Investigator from membership
+  const { data: teamMembers, isLoading: teamMembersLoading } = useQuery({
+    queryKey: ['/api/research-activities', id, 'members'],
     queryFn: async () => {
-      if (!activity?.principalInvestigatorId) return null;
-      const response = await fetch(`/api/scientists/${activity.principalInvestigatorId}`);
+      const response = await fetch(`/api/research-activities/${id}/members`);
       if (!response.ok) {
-        throw new Error('Failed to fetch lead PI');
+        throw new Error('Failed to fetch team members');
       }
       return response.json();
     },
-    enabled: !!activity?.principalInvestigatorId,
+    enabled: !!id,
   });
+
+  // Find Principal Investigator from team members
+  const principalInvestigator = teamMembers?.find((member: any) => 
+    member.role === 'Principal Investigator' || member.role === 'PI'
+  );
   
   // Get the count of publications for this research activity
   const { count: publicationCount } = usePublicationCount(activity?.id);
@@ -218,14 +222,14 @@ export default function ResearchActivityDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Lead PI</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Principal Investigator</h3>
                   <div className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
                     <span>
-                      {leadPILoading ? (
+                      {teamMembersLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
-                      ) : leadPI ? (
-                        leadPI.name
+                      ) : principalInvestigator?.scientist ? (
+                        principalInvestigator.scientist.name
                       ) : 'Not assigned'}
                     </span>
                   </div>

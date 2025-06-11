@@ -36,21 +36,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       const activities = await storage.getRecentResearchActivities(limit);
       
-      // Enhance research activities with lead scientist details
-      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
-        let leadScientist = null;
-        if (activity.leadPIId) {
-          leadScientist = await storage.getScientist(activity.leadPIId);
-        }
-        return {
-          ...activity,
-          leadScientist: leadScientist ? {
-            id: leadScientist.id,
-            name: leadScientist.name,
-            profileImageInitials: leadScientist.profileImageInitials
-          } : null
-        };
-      }));
+      // Research activities are returned as-is, lead scientist info comes from team membership
+      const enhancedActivities = activities;
       
       res.json(enhancedActivities);
     } catch (error) {
