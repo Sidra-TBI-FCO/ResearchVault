@@ -2,8 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Scientist, insertScientistSchema } from "@shared/schema";
-import { ArrowLeft, Mail, Phone, Building, Calendar, User, Pencil, Save, X } from "lucide-react";
+import { Scientist, insertScientistSchema, ResearchActivity, Project, Program, ProjectMember } from "@shared/schema";
+import { ArrowLeft, Mail, Phone, Building, Calendar, User, Pencil, Save, X, ChevronRight, ChevronDown, Folder, FileText, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,6 +16,150 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+// Tree structure component for research activities
+interface ResearchActivitiesTreeProps {
+  activities: (ResearchActivity & { project?: Project; program?: Program; memberRole?: string })[];
+  navigate: (path: string) => void;
+}
+
+function ResearchActivitiesTree({ activities, navigate }: ResearchActivitiesTreeProps) {
+  const [expandedPrograms, setExpandedPrograms] = useState<Set<number>>(new Set());
+  const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
+
+  // Group activities by program, then by project
+  const groupedActivities = activities.reduce((acc, activity) => {
+    const programId = activity.program?.id || 0; // 0 for "No Program"
+    const projectId = activity.project?.id || 0; // 0 for "No Project"
+    
+    if (!acc[programId]) {
+      acc[programId] = {
+        program: activity.program || { id: 0, name: "No Program", programId: "NONE", description: null, createdAt: null, updatedAt: null },
+        projects: {}
+      };
+    }
+    
+    if (!acc[programId].projects[projectId]) {
+      acc[programId].projects[projectId] = {
+        project: activity.project || { id: 0, name: "No Project", projectId: "NONE", programId: null, description: null, createdAt: null, updatedAt: null, principalInvestigatorId: null },
+        activities: []
+      };
+    }
+    
+    acc[programId].projects[projectId].activities.push(activity);
+    return acc;
+  }, {} as Record<number, { program: Program; projects: Record<number, { project: Project; activities: typeof activities }> }>);
+
+  const toggleProgram = (programId: number) => {
+    const newExpanded = new Set(expandedPrograms);
+    if (newExpanded.has(programId)) {
+      newExpanded.delete(programId);
+    } else {
+      newExpanded.add(programId);
+    }
+    setExpandedPrograms(newExpanded);
+  };
+
+  const toggleProject = (projectId: number) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+    }
+    setExpandedProjects(newExpanded);
+  };
+
+  return (
+    <div className="space-y-1">
+      {Object.entries(groupedActivities).map(([programId, { program, projects }]) => (
+        <div key={programId} className="space-y-1">
+          <Collapsible 
+            open={expandedPrograms.has(Number(programId))}
+            onOpenChange={() => toggleProgram(Number(programId))}
+          >
+            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-50 rounded-md">
+              {expandedPrograms.has(Number(programId)) ? (
+                <ChevronDown className="h-4 w-4 text-neutral-400" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-neutral-400" />
+              )}
+              <Folder className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-sm">
+                {program.name}
+              </span>
+              <Badge variant="outline" className="text-xs">
+                {Object.values(projects).reduce((sum, proj) => sum + proj.activities.length, 0)}
+              </Badge>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="ml-6 space-y-1">
+              {Object.entries(projects).map(([projectId, { project, activities: projectActivities }]) => (
+                <div key={projectId} className="space-y-1">
+                  <Collapsible
+                    open={expandedProjects.has(Number(projectId))}
+                    onOpenChange={() => toggleProject(Number(projectId))}
+                  >
+                    <CollapsibleTrigger className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-50 rounded-md">
+                      {expandedProjects.has(Number(projectId)) ? (
+                        <ChevronDown className="h-4 w-4 text-neutral-400" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-neutral-400" />
+                      )}
+                      <Building className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">
+                        {project.name}
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {projectActivities.length}
+                      </Badge>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="ml-6 space-y-1">
+                      {projectActivities.map((activity) => (
+                        <Button
+                          key={activity.id}
+                          variant="ghost"
+                          className="flex items-center gap-2 w-full justify-start p-2 h-auto text-left"
+                          onClick={() => navigate(`/research-activities/${activity.id}`)}
+                        >
+                          <FileText className="h-4 w-4 text-purple-600" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium truncate">
+                              {activity.title}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-neutral-500">
+                              <Badge variant="outline" className="text-xs font-mono">
+                                {activity.sdrNumber}
+                              </Badge>
+                              {activity.memberRole && (
+                                <Badge variant="outline" className="text-xs">
+                                  {activity.memberRole}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className={`text-xs ${
+                                activity.status === 'active' ? 'bg-green-50 text-green-700' :
+                                activity.status === 'completed' ? 'bg-blue-50 text-blue-700' :
+                                'bg-yellow-50 text-yellow-700'
+                              }`}>
+                                {activity.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ScientistDetail() {
   const params = useParams<{ id: string }>();
@@ -34,6 +178,19 @@ export default function ScientistDetail() {
       }
       return response.json();
     },
+  });
+
+  // Fetch scientist's research activities
+  const { data: scientistActivities, isLoading: activitiesLoading } = useQuery<(ResearchActivity & { project?: Project; program?: Program; memberRole?: string })[]>({
+    queryKey: ['/api/scientists', id, 'research-activities'],
+    queryFn: async () => {
+      const response = await fetch(`/api/scientists/${id}/research-activities`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch research activities');
+      }
+      return response.json();
+    },
+    enabled: !!id,
   });
   
   const updateMutation = useMutation({
@@ -465,10 +622,24 @@ export default function ScientistDetail() {
           
           <Card>
             <CardHeader>
-              <CardTitle>Related Projects</CardTitle>
+              <CardTitle>Research Activities</CardTitle>
+              <CardDescription>Organized by program and project</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-neutral-400">Projects list to be added.</p>
+              {activitiesLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : !scientistActivities || scientistActivities.length === 0 ? (
+                <p className="text-neutral-400 text-sm">No research activities found.</p>
+              ) : (
+                <ResearchActivitiesTree 
+                  activities={scientistActivities} 
+                  navigate={navigate}
+                />
+              )}
             </CardContent>
           </Card>
         </div>

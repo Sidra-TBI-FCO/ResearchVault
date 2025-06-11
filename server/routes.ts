@@ -267,6 +267,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/scientists/:id/research-activities', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get research activities where scientist is a team member
+      const activities = await storage.getResearchActivitiesForScientist(id);
+      
+      // Enhance with project and program information
+      const enhancedActivities = await Promise.all(
+        activities.map(async (activity) => {
+          let project = null;
+          let program = null;
+          let memberRole = null;
+          
+          // Get project info if activity has projectId
+          if (activity.projectId) {
+            project = await storage.getProject(activity.projectId);
+            
+            // Get program info if project has programId
+            if (project?.programId) {
+              program = await storage.getProgram(project.programId);
+            }
+          }
+          
+          // Get member role from project_members table
+          const members = await storage.getProjectMembers(activity.id);
+          const member = members.find(m => m.scientistId === id);
+          memberRole = member?.role || null;
+          
+          return {
+            ...activity,
+            project,
+            program,
+            memberRole
+          };
+        })
+      );
+      
+      res.json(enhancedActivities);
+    } catch (error) {
+      console.error('Error fetching scientist research activities:', error);
+      res.status(500).json({ message: 'Failed to fetch research activities' });
+    }
+  });
+
   app.get('/api/scientists/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
