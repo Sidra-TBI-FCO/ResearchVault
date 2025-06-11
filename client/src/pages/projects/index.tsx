@@ -42,13 +42,13 @@ interface Project {
   programId: number;
   name: string;
   description: string | null;
-  leadScientistId: number | null;
+  principalInvestigatorId: number | null;
   createdAt: string;
   updatedAt: string;
   
   // Related entities
   program?: Program;
-  leadScientist?: Scientist;
+  principalInvestigator?: Scientist;
 }
 
 export default function ProjectsList() {

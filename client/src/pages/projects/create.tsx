@@ -209,23 +209,23 @@ export default function CreateProject() {
                   name="leadScientistId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lead Scientist</FormLabel>
+                      <FormLabel>Project Lead Investigator</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select lead scientist" />
+                            <SelectValue placeholder="Select project lead investigator" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                            <SelectItem value="loading" disabled>Loading investigators...</SelectItem>
                           ) : (
-                            principalInvestigators?.map((scientist) => (
+                            principalInvestigators?.filter(scientist => scientist.title === 'Investigator').map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name}
+                                {scientist.name} - {scientist.title}
                               </SelectItem>
                             ))
                           )}

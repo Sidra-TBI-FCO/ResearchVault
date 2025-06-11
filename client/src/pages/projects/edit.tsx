@@ -232,17 +232,17 @@ export default function ProjectEdit() {
                   name="principalInvestigatorId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Principal Investigator</FormLabel>
+                      <FormLabel>Project Lead Investigator</FormLabel>
                       <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select principal investigator" />
+                            <SelectValue placeholder="Select project lead investigator" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {scientists?.map((scientist) => (
+                          {scientists?.filter(scientist => scientist.title === 'Investigator').map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name}
+                              {scientist.name} - {scientist.title}
                             </SelectItem>
                           ))}
                         </SelectContent>
