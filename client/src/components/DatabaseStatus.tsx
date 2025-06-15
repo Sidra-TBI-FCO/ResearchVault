@@ -1,14 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export function DatabaseStatus() {
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [wasOffline, setWasOffline] = useState(false);
+  
   const { data: isOnline, isLoading } = useQuery({
     queryKey: ['/api/health/database'],
     retry: false,
     refetchInterval: 30000, // Check every 30 seconds
     staleTime: 10000, // Consider data stale after 10 seconds
   });
+
+  useEffect(() => {
+    if (isOnline === false) {
+      setWasOffline(true);
+    } else if (isOnline === true && wasOffline) {
+      // Show success message only if we were previously offline
+      setShowSuccessMessage(true);
+      setWasOffline(false);
+      
+      // Auto-dismiss after 3 seconds
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, wasOffline]);
 
   if (isLoading) {
     return (
@@ -33,7 +54,7 @@ export function DatabaseStatus() {
     );
   }
 
-  if (isOnline === true) {
+  if (isOnline === true && showSuccessMessage) {
     return (
       <Alert className="mb-4 border-green-200 bg-green-50">
         <CheckCircle className="h-4 w-4 text-green-600" />
