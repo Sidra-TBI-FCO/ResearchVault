@@ -58,6 +58,20 @@ export default function ScientistsList() {
       fieldA = a.activeResearchActivities || 0;
       fieldB = b.activeResearchActivities || 0;
       return sortDirection === 'asc' ? fieldA - fieldB : fieldB - fieldA;
+    } else if (sortField === 'name') {
+      // Sort by last name, ignoring titles
+      const getLastName = (scientist: any) => {
+        if (scientist.lastName) return scientist.lastName.toLowerCase();
+        // Extract last name from full name, ignoring titles
+        const nameWithoutTitle = scientist.name.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
+        const nameParts = nameWithoutTitle.trim().split(/\s+/);
+        return nameParts[nameParts.length - 1].toLowerCase();
+      };
+      
+      const lastNameA = getLastName(a);
+      const lastNameB = getLastName(b);
+      const comparison = lastNameA.localeCompare(lastNameB);
+      return sortDirection === 'asc' ? comparison : -comparison;
     } else {
       fieldA = a[sortField] || '';
       fieldB = b[sortField] || '';
