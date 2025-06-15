@@ -1192,6 +1192,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Publication Authors
+  app.get('/api/publications/:id/authors', async (req: Request, res: Response) => {
+    try {
+      const publicationId = parseInt(req.params.id);
+      if (isNaN(publicationId)) {
+        return res.status(400).json({ message: "Invalid publication ID" });
+      }
+
+      const authors = await storage.getPublicationAuthors(publicationId);
+      res.json(authors);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch publication authors" });
+    }
+  });
+
+  app.post('/api/publications/:id/authors', async (req: Request, res: Response) => {
+    try {
+      const publicationId = parseInt(req.params.id);
+      if (isNaN(publicationId)) {
+        return res.status(400).json({ message: "Invalid publication ID" });
+      }
+
+      const validateData = insertPublicationAuthorSchema.parse({
+        ...req.body,
+        publicationId
+      });
+
+      const author = await storage.addPublicationAuthor(validateData);
+      res.status(201).json(author);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to add publication author" });
+    }
+  });
+
+  app.delete('/api/publications/:publicationId/authors/:scientistId', async (req: Request, res: Response) => {
+    try {
+      const publicationId = parseInt(req.params.publicationId);
+      const scientistId = parseInt(req.params.scientistId);
+      
+      if (isNaN(publicationId) || isNaN(scientistId)) {
+        return res.status(400).json({ message: "Invalid publication or scientist ID" });
+      }
+
+      const success = await storage.removePublicationAuthor(publicationId, scientistId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Publication author not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove publication author" });
+    }
+  });
+
   // Patents
   app.get('/api/patents', async (req: Request, res: Response) => {
     try {

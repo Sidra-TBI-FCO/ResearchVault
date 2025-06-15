@@ -1,28 +1,110 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResearchActivity, Publication, Patent } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit } from "lucide-react";
+import { ResearchActivity, Publication, Patent, PublicationAuthor, Scientist, InsertPublicationAuthor } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function PublicationDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
+  const [selectedScientist, setSelectedScientist] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [authorPosition, setAuthorPosition] = useState<string>("");
 
   const { data: publication, isLoading: publicationLoading } = useQuery<Publication>({
-    queryKey: ['/api/publications', id],
-    queryFn: async () => {
-      const response = await fetch(`/api/publications/${id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch publication');
-      }
+    queryKey: [`/api/publications/${id}`],
+  });
+
+  const { data: publicationAuthors = [], isLoading: authorsLoading } = useQuery<(PublicationAuthor & { scientist: Scientist })[]>({
+    queryKey: [`/api/publications/${id}/authors`],
+    enabled: !!publication,
+  });
+
+  const { data: scientists = [], isLoading: scientistsLoading } = useQuery<Scientist[]>({
+    queryKey: [`/api/scientists`],
+  });
+
+  // Mutations for author management
+  const addAuthorMutation = useMutation({
+    mutationFn: async (data: { scientistId: number; authorshipType: string; authorPosition?: number }) => {
+      const response = await fetch(`/api/publications/${id}/authors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to add author');
       return response.json();
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/publications/${id}/authors`] });
+      toast({ title: "Success", description: "Author added successfully" });
+      setIsAddAuthorOpen(false);
+      setSelectedScientist("");
+      setSelectedRole("");
+      setAuthorPosition("");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add author", variant: "destructive" });
+    },
   });
+
+  const removeAuthorMutation = useMutation({
+    mutationFn: async (scientistId: number) => {
+      const response = await fetch(`/api/publications/${id}/authors/${scientistId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to remove author');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/publications/${id}/authors`] });
+      toast({ title: "Success", description: "Author removed successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to remove author", variant: "destructive" });
+    },
+  });
+
+  const handleAddAuthor = () => {
+    if (!selectedScientist || !selectedRole) {
+      toast({ title: "Error", description: "Please select both scientist and role", variant: "destructive" });
+      return;
+    }
+
+    addAuthorMutation.mutate({
+      scientistId: parseInt(selectedScientist),
+      authorshipType: selectedRole,
+      authorPosition: authorPosition ? parseInt(authorPosition) : undefined,
+    });
+  };
+
+  const availableScientists = scientists.filter(
+    scientist => !publicationAuthors.some(author => author.scientistId === scientist.id)
+  );
+
+  const authorshipTypeColors = {
+    'First Author': 'bg-blue-100 text-blue-800',
+    'Contributing Author': 'bg-green-100 text-green-800',
+    'Senior Author': 'bg-purple-100 text-purple-800',
+    'Last Author': 'bg-orange-100 text-orange-800',
+    'Corresponding Author': 'bg-red-100 text-red-800',
+  };
 
   const { data: researchActivity, isLoading: researchActivityLoading } = useQuery<ResearchActivity>({
     queryKey: ['/api/research-activities', publication?.researchActivityId],

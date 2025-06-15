@@ -403,9 +403,61 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  async getPublicationAuthors(publicationId: number): Promise<(PublicationAuthor & { scientist: Scientist })[]> {
+    const results = await db
+      .select({
+        id: publicationAuthors.id,
+        publicationId: publicationAuthors.publicationId,
+        scientistId: publicationAuthors.scientistId,
+        authorshipType: publicationAuthors.authorshipType,
+        authorPosition: publicationAuthors.authorPosition,
+        scientist: {
+          id: scientists.id,
+          name: scientists.name,
+          firstName: scientists.firstName,
+          lastName: scientists.lastName,
+          email: scientists.email,
+          jobTitle: scientists.jobTitle,
+          department: scientists.department,
+          phoneNumber: scientists.phoneNumber,
+          hireDate: scientists.hireDate,
+          createdAt: scientists.createdAt,
+          updatedAt: scientists.updatedAt,
+        }
+      })
+      .from(publicationAuthors)
+      .innerJoin(scientists, eq(publicationAuthors.scientistId, scientists.id))
+      .where(eq(publicationAuthors.publicationId, publicationId))
+      .orderBy(publicationAuthors.authorPosition);
+    
+    return results as (PublicationAuthor & { scientist: Scientist })[];
+  }
+
   async addPublicationAuthor(author: InsertPublicationAuthor): Promise<PublicationAuthor> {
     const [newAuthor] = await db.insert(publicationAuthors).values(author).returning();
     return newAuthor;
+  }
+
+  async removePublicationAuthor(publicationId: number, scientistId: number): Promise<boolean> {
+    const result = await db
+      .delete(publicationAuthors)
+      .where(and(
+        eq(publicationAuthors.publicationId, publicationId),
+        eq(publicationAuthors.scientistId, scientistId)
+      ));
+    return result.rowCount > 0;
+  }
+
+  async updatePublicationAuthor(publicationId: number, scientistId: number, updates: Partial<InsertPublicationAuthor>): Promise<PublicationAuthor | undefined> {
+    const [updatedAuthor] = await db
+      .update(publicationAuthors)
+      .set(updates)
+      .where(and(
+        eq(publicationAuthors.publicationId, publicationId),
+        eq(publicationAuthors.scientistId, scientistId)
+      ))
+      .returning();
+    return updatedAuthor;
   }
 
   // Patent operations
