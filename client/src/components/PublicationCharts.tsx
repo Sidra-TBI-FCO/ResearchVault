@@ -96,7 +96,7 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
         <CardHeader>
           <CardTitle>Publication Statistics</CardTitle>
           <CardDescription>
-            {totalPublications} publications with authorship breakdown
+            {totalPublications} publications (Published or In Press only) with authorship breakdown
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -124,7 +124,7 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
               Authorship Trends
             </CardTitle>
             <CardDescription>
-              Publications by authorship type per year
+              Publications by authorship type per year (Published or In Press only)
             </CardDescription>
           </CardHeader>
           <CardContent>

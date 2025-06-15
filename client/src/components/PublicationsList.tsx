@@ -69,7 +69,7 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
           Publications (Last {yearsSince} Years)
         </CardTitle>
         <CardDescription>
-          {publications.length} publications with external collaborator tracking
+          {publications.length} publications (Published or In Press only) with external collaborator tracking
         </CardDescription>
       </CardHeader>
       <CardContent>
