@@ -21,6 +21,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
   const apiRouter = app.route('/api');
 
+  // Health check for database connection
+  app.get('/api/health/database', async (req: Request, res: Response) => {
+    try {
+      // Test database connection with a simple query
+      await storage.getDashboardStats();
+      res.json(true);
+    } catch (error) {
+      console.error("Database health check failed:", error);
+      res.json(false);
+    }
+  });
+
   // Dashboard
   app.get('/api/dashboard/stats', async (req: Request, res: Response) => {
     try {

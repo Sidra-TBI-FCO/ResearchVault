@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import { DatabaseStatus } from "../DatabaseStatus";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -42,6 +43,7 @@ export default function Layout({ children }: LayoutProps) {
         <Header onMenuClick={toggleMobileSidebar} />
         
         <main className="flex-1 overflow-y-auto p-6 bg-sidra-teal-light/10">
+          <DatabaseStatus />
           {children}
         </main>
       </div>
