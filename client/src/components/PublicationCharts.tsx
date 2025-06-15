@@ -44,11 +44,11 @@ const authorshipOrder = ['First Author', 'Contributing Author', 'Senior Author',
 
 export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationChartsProps) {
   const { data: publications = [], isLoading: pubLoading } = useQuery({
-    queryKey: ['/api/scientists', scientistId, 'publications', { years: yearsSince }],
+    queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
 
   const { data: authorshipStats = [], isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/scientists', scientistId, 'authorship-stats', { years: yearsSince }],
+    queryKey: [`/api/scientists/${scientistId}/authorship-stats?years=${yearsSince}`],
   });
 
   const chartData = React.useMemo(() => {

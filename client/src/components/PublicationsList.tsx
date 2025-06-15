@@ -38,7 +38,7 @@ const authorshipColors = {
 
 export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsListProps) {
   const { data: publications = [], isLoading } = useQuery({
-    queryKey: ['/api/scientists', scientistId, 'publications', { years: yearsSince }],
+    queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
 
   if (isLoading) {
