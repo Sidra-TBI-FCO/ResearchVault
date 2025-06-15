@@ -391,8 +391,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(publicationAuthors.scientistId, scientistId),
           or(
-            eq(publications.status, 'Published'),
-            eq(publications.status, 'In Press')
+            sql`LOWER(${publications.status}) = 'published'`,
+            sql`LOWER(${publications.status}) = 'in press'`
           ),
           sql`${publications.publicationDate} >= ${cutoffDate.toISOString()}`
         )
