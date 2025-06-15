@@ -41,6 +41,7 @@ const authorshipColors = {
 };
 
 const authorshipOrder = ['First Author', 'Contributing Author', 'Senior Author', 'Last Author', 'Corresponding Author'];
+const chartAuthorshipOrder = ['First Author', 'Contributing Author', 'Senior Author', 'Last Author']; // Exclude Corresponding Author from chart to avoid overlap
 
 export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationChartsProps) {
   const { data: publications = [], isLoading: pubLoading } = useQuery({
@@ -146,7 +147,7 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  {authorshipOrder.map((type) => (
+                  {chartAuthorshipOrder.map((type) => (
                     <Bar 
                       key={type}
                       dataKey={type} 
