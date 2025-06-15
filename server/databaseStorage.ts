@@ -318,6 +318,7 @@ export class DatabaseStorage implements IStorage {
   // Publication Author operations
   async getPublicationsForScientist(scientistId: number, yearsSince: number = 5): Promise<(Publication & { authorshipType: string; authorPosition: number | null })[]> {
     // Get all publications for the scientist first, then filter by date in JavaScript
+    console.log(`Getting publications for scientist ${scientistId}`);
     const allResults = await db
       .select({
         id: publications.id,
@@ -345,6 +346,7 @@ export class DatabaseStorage implements IStorage {
           eq(publicationAuthors.scientistId, scientistId),
           or(
             eq(publications.status, 'Published'),
+            eq(publications.status, 'published'),
             eq(publications.status, 'In Press')
           )
         )
@@ -359,6 +361,16 @@ export class DatabaseStorage implements IStorage {
       if (!pub.publicationDate) return true; // Include publications without date
       const pubDate = new Date(pub.publicationDate);
       return pubDate >= cutoffDate;
+    });
+    
+    // Sort by publication date (most recent first), then by ID for consistent ordering
+    filteredResults.sort((a, b) => {
+      if (a.publicationDate && b.publicationDate) {
+        return new Date(b.publicationDate).getTime() - new Date(a.publicationDate).getTime();
+      }
+      if (a.publicationDate && !b.publicationDate) return -1;
+      if (!a.publicationDate && b.publicationDate) return 1;
+      return b.id - a.id;
     });
     
     return filteredResults;
