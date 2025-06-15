@@ -1122,7 +1122,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/publications', async (req: Request, res: Response) => {
     try {
-      const validateData = insertPublicationSchema.parse(req.body);
+      // Transform date string to Date object before validation
+      const bodyData = { ...req.body };
+      if (bodyData.publicationDate && typeof bodyData.publicationDate === 'string') {
+        bodyData.publicationDate = new Date(bodyData.publicationDate);
+      }
+      
+      const validateData = insertPublicationSchema.parse(bodyData);
       
       // Check if project exists if projectId is provided
       if (validateData.projectId) {
@@ -1149,7 +1155,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid publication ID" });
       }
 
-      const validateData = insertPublicationSchema.partial().parse(req.body);
+      // Transform date string to Date object before validation
+      const bodyData = { ...req.body };
+      if (bodyData.publicationDate && typeof bodyData.publicationDate === 'string') {
+        bodyData.publicationDate = new Date(bodyData.publicationDate);
+      }
+      
+      const validateData = insertPublicationSchema.partial().parse(bodyData);
       
       // Check if project exists if projectId is provided
       if (validateData.projectId) {

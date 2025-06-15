@@ -71,13 +71,13 @@ export default function PublicationEdit() {
   }, [publication, form]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: InsertPublication) => 
+    mutationFn: (data: any) => 
       apiRequest(`/api/publications/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       }),
     onSuccess: () => {
       toast({

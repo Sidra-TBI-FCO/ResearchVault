@@ -177,6 +177,16 @@ export const insertPublicationSchema = createInsertSchema(publications).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  publicationDate: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        return new Date(val);
+      }
+      return val;
+    },
+    z.date().nullable().optional()
+  )
 });
 
 // Publication Authors (Many-to-Many relationship to track authorship types)
