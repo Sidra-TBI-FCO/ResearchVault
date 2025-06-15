@@ -315,6 +315,81 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
+  // Publication Author operations
+  async getPublicationsForScientist(scientistId: number, yearsSince: number = 5): Promise<(Publication & { authorshipType: string; authorPosition: number | null })[]> {
+    const cutoffDate = new Date();
+    cutoffDate.setFullYear(cutoffDate.getFullYear() - yearsSince);
+    
+    const results = await db
+      .select({
+        id: publications.id,
+        researchActivityId: publications.researchActivityId,
+        title: publications.title,
+        abstract: publications.abstract,
+        authors: publications.authors,
+        journal: publications.journal,
+        volume: publications.volume,
+        issue: publications.issue,
+        pages: publications.pages,
+        doi: publications.doi,
+        publicationDate: publications.publicationDate,
+        publicationType: publications.publicationType,
+        status: publications.status,
+        createdAt: publications.createdAt,
+        updatedAt: publications.updatedAt,
+        authorshipType: publicationAuthors.authorshipType,
+        authorPosition: publicationAuthors.authorPosition,
+      })
+      .from(publications)
+      .innerJoin(publicationAuthors, eq(publications.id, publicationAuthors.publicationId))
+      .where(
+        and(
+          eq(publicationAuthors.scientistId, scientistId),
+          or(
+            eq(publications.status, 'Published'),
+            eq(publications.status, 'In Press')
+          ),
+          sql`${publications.publicationDate} >= ${cutoffDate.toISOString()}`
+        )
+      )
+      .orderBy(desc(publications.publicationDate));
+    
+    return results;
+  }
+
+  async getAuthorshipStatsByYear(scientistId: number, yearsSince: number = 5): Promise<{ year: number; authorshipType: string; count: number }[]> {
+    const cutoffDate = new Date();
+    cutoffDate.setFullYear(cutoffDate.getFullYear() - yearsSince);
+    
+    const results = await db
+      .select({
+        year: sql<number>`EXTRACT(YEAR FROM ${publications.publicationDate})`,
+        authorshipType: publicationAuthors.authorshipType,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(publications)
+      .innerJoin(publicationAuthors, eq(publications.id, publicationAuthors.publicationId))
+      .where(
+        and(
+          eq(publicationAuthors.scientistId, scientistId),
+          or(
+            eq(publications.status, 'Published'),
+            eq(publications.status, 'In Press')
+          ),
+          sql`${publications.publicationDate} >= ${cutoffDate.toISOString()}`
+        )
+      )
+      .groupBy(sql`EXTRACT(YEAR FROM ${publications.publicationDate})`, publicationAuthors.authorshipType)
+      .orderBy(sql`EXTRACT(YEAR FROM ${publications.publicationDate}) DESC`);
+    
+    return results;
+  }
+
+  async addPublicationAuthor(author: InsertPublicationAuthor): Promise<PublicationAuthor> {
+    const [newAuthor] = await db.insert(publicationAuthors).values(author).returning();
+    return newAuthor;
+  }
+
   // Patent operations
   async getPatents(): Promise<Patent[]> {
     return await db.select().from(patents);

@@ -336,6 +336,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/scientists/:id/publications', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid scientist ID" });
+      }
+
+      const yearsSince = req.query.years ? parseInt(req.query.years as string) : 5;
+      const publications = await storage.getPublicationsForScientist(id, yearsSince);
+      
+      res.json(publications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch scientist publications" });
+    }
+  });
+
+  app.get('/api/scientists/:id/authorship-stats', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid scientist ID" });
+      }
+
+      const yearsSince = req.query.years ? parseInt(req.query.years as string) : 5;
+      const stats = await storage.getAuthorshipStatsByYear(id, yearsSince);
+      
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch authorship statistics" });
+    }
+  });
+
   app.post('/api/scientists', async (req: Request, res: Response) => {
     try {
       const validateData = insertScientistSchema.parse(req.body);
