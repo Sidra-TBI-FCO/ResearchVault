@@ -154,9 +154,17 @@ export default function PublicationDetail() {
       return true; // If no authors list, show all available scientists
     })
     .sort((a, b) => {
-      // Sort alphabetically by last name
-      const lastNameA = a.lastName?.toLowerCase() || a.name.toLowerCase();
-      const lastNameB = b.lastName?.toLowerCase() || b.name.toLowerCase();
+      // Sort alphabetically by last name, ignoring titles
+      const getLastName = (scientist: any) => {
+        if (scientist.lastName) return scientist.lastName.toLowerCase();
+        // Extract last name from full name, ignoring titles
+        const nameWithoutTitle = scientist.name.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
+        const nameParts = nameWithoutTitle.trim().split(/\s+/);
+        return nameParts[nameParts.length - 1].toLowerCase();
+      };
+      
+      const lastNameA = getLastName(a);
+      const lastNameB = getLastName(b);
       return lastNameA.localeCompare(lastNameB);
     });
 

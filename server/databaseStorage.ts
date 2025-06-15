@@ -109,11 +109,11 @@ export class DatabaseStorage implements IStorage {
 
   // Scientist operations
   async getScientists(): Promise<Scientist[]> {
-    return await db.select().from(scientists);
+    return await db.select().from(scientists).orderBy(scientists.lastName, scientists.firstName);
   }
 
   async getScientistsWithActivityCount(): Promise<(Scientist & { activeResearchActivities: number })[]> {
-    const scientistsData = await db.select().from(scientists);
+    const scientistsData = await db.select().from(scientists).orderBy(scientists.lastName, scientists.firstName);
     
     // Get activity count for each scientist
     const scientistsWithCount = await Promise.all(
@@ -158,11 +158,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStaff(): Promise<Scientist[]> {
-    return await db.select().from(scientists).where(eq(scientists.isStaff, true));
+    return await db.select().from(scientists).where(eq(scientists.isStaff, true)).orderBy(scientists.lastName, scientists.firstName);
   }
 
   async getPrincipalInvestigators(): Promise<Scientist[]> {
-    return await db.select().from(scientists).where(eq(scientists.isStaff, false));
+    return await db.select().from(scientists).where(eq(scientists.isStaff, false)).orderBy(scientists.lastName, scientists.firstName);
   }
 
   // Research Activity operations
