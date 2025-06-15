@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ScientistPublications } from "@/components/ScientistPublications";
 
 // Tree structure component for research activities
 interface ResearchActivitiesTreeProps {
@@ -642,6 +643,9 @@ export default function ScientistDetail() {
               )}
             </CardContent>
           </Card>
+
+          {/* Publications Section */}
+          <ScientistPublications scientistId={id} yearsSince={5} />
         </div>
       </div>
     </div>
