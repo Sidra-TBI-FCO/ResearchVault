@@ -318,7 +318,6 @@ export class DatabaseStorage implements IStorage {
   // Publication Author operations
   async getPublicationsForScientist(scientistId: number, yearsSince: number = 5): Promise<(Publication & { authorshipType: string; authorPosition: number | null })[]> {
     // Get all publications for the scientist first, then filter by date in JavaScript
-    console.log(`Getting publications for scientist ${scientistId}`);
     const allResults = await db
       .select({
         id: publications.id,
