@@ -73,6 +73,19 @@ export function ScientistPublications({ scientistId, yearsSince = 5 }: Scientist
     return url;
   };
 
+  const formatPublicationDate = (dateString: string) => {
+    if (!dateString) return 'Date not available';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      return format(date, 'MMMM d, yyyy');
+    } catch {
+      return 'Invalid date';
+    }
+  };
+
   // Transform stats data for chart
   const chartData = React.useMemo(() => {
     const yearMap = new Map();
@@ -221,7 +234,7 @@ export function ScientistPublications({ scientistId, yearsSince = 5 }: Scientist
                           {pub.pages && `: ${pub.pages}`}
                         </p>
                         <p>
-                          Published: {format(new Date(pub.publicationDate), 'MMMM d, yyyy')}
+                          Published: {formatPublicationDate(pub.publicationDate)}
                         </p>
                         {pub.abstract && (
                           <p className="text-gray-700 mt-2 text-sm leading-relaxed">
