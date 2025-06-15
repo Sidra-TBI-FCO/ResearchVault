@@ -35,18 +35,16 @@ export default function PublicationEdit() {
   const form = useForm<InsertPublication>({
     resolver: zodResolver(insertPublicationSchema),
     defaultValues: {
-      researchActivityId: publication?.researchActivityId || 0,
+      researchActivityId: publication?.researchActivityId || undefined,
       title: publication?.title || "",
       authors: publication?.authors || "",
       journal: publication?.journal || "",
       volume: publication?.volume || "",
       issue: publication?.issue || "",
       pages: publication?.pages || "",
-      publicationDate: publication?.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : "",
+      publicationDate: publication?.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : undefined,
       doi: publication?.doi || "",
-      pmid: publication?.pmid || "",
       abstract: publication?.abstract || "",
-      keywords: publication?.keywords || "",
       publicationType: publication?.publicationType || "Journal Article",
       status: publication?.status || "Draft",
     },
@@ -63,11 +61,9 @@ export default function PublicationEdit() {
         volume: publication.volume || "",
         issue: publication.issue || "",
         pages: publication.pages || "",
-        publicationDate: publication.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : "",
+        publicationDate: publication.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : undefined,
         doi: publication.doi || "",
-        pmid: publication.pmid || "",
         abstract: publication.abstract || "",
-        keywords: publication.keywords || "",
         publicationType: publication.publicationType || "Journal Article",
         status: publication.status || "Draft",
       });
@@ -306,35 +302,19 @@ export default function PublicationEdit() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="doi"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>DOI</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digital Object Identifier" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="pmid"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>PMID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="PubMed ID" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="doi"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>DOI</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digital Object Identifier" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
@@ -390,20 +370,6 @@ export default function PublicationEdit() {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="keywords"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Keywords</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Keywords separated by commas" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}
