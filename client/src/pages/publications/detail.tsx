@@ -20,7 +20,6 @@ export default function PublicationDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const [selectedScientist, setSelectedScientist] = useState<string>("");
