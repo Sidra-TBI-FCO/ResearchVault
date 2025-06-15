@@ -317,10 +317,8 @@ export class DatabaseStorage implements IStorage {
 
   // Publication Author operations
   async getPublicationsForScientist(scientistId: number, yearsSince: number = 5): Promise<(Publication & { authorshipType: string; authorPosition: number | null })[]> {
-    const cutoffDate = new Date();
-    cutoffDate.setFullYear(cutoffDate.getFullYear() - yearsSince);
-    
-    const results = await db
+    // Get all publications for the scientist first, then filter by date in JavaScript
+    const allResults = await db
       .select({
         id: publications.id,
         researchActivityId: publications.researchActivityId,
@@ -348,16 +346,22 @@ export class DatabaseStorage implements IStorage {
           or(
             eq(publications.status, 'Published'),
             eq(publications.status, 'In Press')
-          ),
-          or(
-            sql`${publications.publicationDate} IS NULL`,
-            gte(publications.publicationDate, cutoffDate.toISOString().split('T')[0])
           )
         )
       )
-      .orderBy(desc(publications.publicationDate));
+      .orderBy(desc(publications.id));
     
-    return results;
+    // Filter by date in JavaScript to avoid SQL date issues
+    const cutoffDate = new Date();
+    cutoffDate.setFullYear(cutoffDate.getFullYear() - yearsSince);
+    
+    const filteredResults = allResults.filter(pub => {
+      if (!pub.publicationDate) return true; // Include publications without date
+      const pubDate = new Date(pub.publicationDate);
+      return pubDate >= cutoffDate;
+    });
+    
+    return filteredResults;
   }
 
   async getAuthorshipStatsByYear(scientistId: number, yearsSince: number = 5): Promise<{ year: number; authorshipType: string; count: number }[]> {
