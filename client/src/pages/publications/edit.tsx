@@ -79,7 +79,8 @@ export default function PublicationEdit() {
         description: "Publication updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/publications', id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/publications/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/publications/${id}/authors`] });
       navigate(`/publications/${id}`);
     },
     onError: (error: any) => {
