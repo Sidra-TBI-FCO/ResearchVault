@@ -72,13 +72,7 @@ export default function PublicationEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => 
-      apiRequest(`/api/publications/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      }),
+      apiRequest('PATCH', `/api/publications/${id}`, data),
     onSuccess: () => {
       toast({
         title: "Success",
