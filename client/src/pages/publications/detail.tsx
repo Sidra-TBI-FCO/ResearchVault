@@ -94,9 +94,41 @@ export default function PublicationDetail() {
     });
   };
 
-  const availableScientists = scientists.filter(
-    scientist => !publicationAuthors.some(author => author.scientistId === scientist.id)
-  );
+  const availableScientists = scientists
+    .filter(scientist => {
+      // Exclude scientists already added as authors
+      if (publicationAuthors.some(author => author.scientistId === scientist.id)) {
+        return false;
+      }
+      
+      // Filter by names in the publication's comma-separated author list
+      if (publication?.authors) {
+        const authorNames = publication.authors.split(',').map(name => name.trim().toLowerCase());
+        const scientistFullName = scientist.name.toLowerCase();
+        const scientistLastName = scientist.lastName?.toLowerCase() || '';
+        const scientistFirstName = scientist.firstName?.toLowerCase() || '';
+        
+        // Check if scientist's name appears in the author list
+        return authorNames.some(authorName => 
+          scientistFullName.includes(authorName) || 
+          authorName.includes(scientistLastName) ||
+          authorName.includes(scientistFirstName) ||
+          (scientistLastName && scientistFirstName && 
+           authorName.includes(`${scientistFirstName} ${scientistLastName}`) ||
+           authorName.includes(`${scientistLastName}, ${scientistFirstName}`) ||
+           authorName.includes(`${scientistLastName}`) ||
+           authorName.includes(`${scientistFirstName}`))
+        );
+      }
+      
+      return true; // If no authors list, show all available scientists
+    })
+    .sort((a, b) => {
+      // Sort alphabetically by last name
+      const lastNameA = a.lastName?.toLowerCase() || a.name.toLowerCase();
+      const lastNameB = b.lastName?.toLowerCase() || b.name.toLowerCase();
+      return lastNameA.localeCompare(lastNameB);
+    });
 
   const authorshipTypeColors = {
     'First Author': 'bg-blue-100 text-blue-800',
