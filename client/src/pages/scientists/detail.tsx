@@ -325,12 +325,14 @@ export default function ScientistDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle>Profile</CardTitle>
-              <CardDescription>Personal and contact information</CardDescription>
-            </div>
+        {/* Left Column - Profile and Publications */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle>Profile</CardTitle>
+                <CardDescription>Personal and contact information</CardDescription>
+              </div>
             <Button 
               variant="outline" 
               size="sm" 
@@ -570,57 +572,12 @@ export default function ScientistDetail() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {scientist.staffId && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Staff ID</h3>
-                    <p className="flex items-center">
-                      <User className="h-3 w-3 mr-1" />
-                      <span>{scientist.staffId}</span>
-                    </p>
-                  </div>
-                )}
-              
-                {scientist.expertise && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Areas of Expertise</h3>
-                    <p>{scientist.expertise}</p>
-                  </div>
-                )}
-                
-                {scientist.orcidId && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">ORCID ID</h3>
-                    <p>{scientist.orcidId}</p>
-                  </div>
-                )}
-                
-                {scientist.isStaff && scientist.supervisorId && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Reports To</h3>
-                    <p>ID: {scientist.supervisorId}</p>
-                  </div>
-                )}
-                
-                {scientist.createdAt && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Added On</h3>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>{format(new Date(scientist.createdAt), 'MMM d, yyyy')}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
+        {/* Publications Section */}
+        <ScientistPublications scientistId={id} yearsSince={5} />
+        </div>
+
+        {/* Right Column - Research Activities */}
+        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle>Research Activities</CardTitle>
@@ -643,9 +600,6 @@ export default function ScientistDetail() {
               )}
             </CardContent>
           </Card>
-
-          {/* Publications Section */}
-          <ScientistPublications scientistId={id} yearsSince={5} />
         </div>
       </div>
     </div>
