@@ -59,7 +59,13 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
       if (!yearMap.has(stat.year)) {
         yearMap.set(stat.year, { year: stat.year });
       }
-      yearMap.get(stat.year)[stat.authorshipType] = stat.count;
+      
+      // Handle compound authorship types by splitting on comma
+      const types = stat.authorshipType.split(',').map(type => type.trim());
+      types.forEach(type => {
+        const currentCount = yearMap.get(stat.year)[type] || 0;
+        yearMap.get(stat.year)[type] = currentCount + parseInt(stat.count.toString());
+      });
     });
     
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
@@ -85,7 +91,11 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
 
   const totalPublications = publications.length;
   const authorshipCounts = publications.reduce((acc: Record<string, number>, pub: Publication) => {
-    acc[pub.authorshipType] = (acc[pub.authorshipType] || 0) + 1;
+    // Handle compound authorship types by splitting on comma and trimming
+    const types = pub.authorshipType.split(',').map(type => type.trim());
+    types.forEach(type => {
+      acc[type] = (acc[type] || 0) + 1;
+    });
     return acc;
   }, {});
 
