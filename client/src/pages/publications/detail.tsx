@@ -171,8 +171,7 @@ export default function PublicationDetail() {
   const authorshipTypeColors = {
     'First Author': 'bg-blue-100 text-blue-800',
     'Contributing Author': 'bg-green-100 text-green-800',
-    'Senior Author': 'bg-purple-100 text-purple-800',
-    'Last Author': 'bg-orange-100 text-orange-800',
+    'Senior/Last Author': 'bg-purple-100 text-purple-800',
     'Corresponding Author': 'bg-red-100 text-red-800',
   };
 
@@ -435,9 +434,22 @@ export default function PublicationDetail() {
                             </TableCell>
                             <TableCell>
                               <Badge 
-                                className={`${authorshipTypeColors[author.authorshipType as keyof typeof authorshipTypeColors] || 'bg-gray-100 text-gray-800'} text-xs`}
+                                className={`${(() => {
+                                  // Map Senior Author and Last Author to Senior/Last Author for display
+                                  const displayType = author.authorshipType.split(',').map(type => {
+                                    const trimmed = type.trim();
+                                    return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
+                                  }).join(', ');
+                                  return authorshipTypeColors[displayType as keyof typeof authorshipTypeColors] || 'bg-gray-100 text-gray-800';
+                                })()} text-xs`}
                               >
-                                {author.authorshipType}
+                                {(() => {
+                                  // Display combined authorship type
+                                  return author.authorshipType.split(',').map(type => {
+                                    const trimmed = type.trim();
+                                    return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
+                                  }).join(', ');
+                                })()}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -520,8 +532,7 @@ export default function PublicationDetail() {
                           <SelectContent>
                             <SelectItem value="First Author">First Author</SelectItem>
                             <SelectItem value="Contributing Author">Contributing Author</SelectItem>
-                            <SelectItem value="Senior Author">Senior Author</SelectItem>
-                            <SelectItem value="Last Author">Last Author</SelectItem>
+                            <SelectItem value="Senior/Last Author">Senior/Last Author</SelectItem>
                             <SelectItem value="Corresponding Author">Corresponding Author</SelectItem>
                           </SelectContent>
                         </Select>
