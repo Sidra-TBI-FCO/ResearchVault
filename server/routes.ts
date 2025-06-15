@@ -1204,7 +1204,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const authors = await storage.getPublicationAuthors(publicationId);
       res.json(authors);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch publication authors" });
+      console.error("Error fetching publication authors:", error);
+      res.status(500).json({ message: "Failed to fetch publication authors", error: error.message });
     }
   });
 

@@ -411,19 +411,7 @@ export class DatabaseStorage implements IStorage {
         scientistId: publicationAuthors.scientistId,
         authorshipType: publicationAuthors.authorshipType,
         authorPosition: publicationAuthors.authorPosition,
-        scientist: {
-          id: scientists.id,
-          name: scientists.name,
-          firstName: scientists.firstName,
-          lastName: scientists.lastName,
-          email: scientists.email,
-          jobTitle: scientists.jobTitle,
-          department: scientists.department,
-          phoneNumber: scientists.phoneNumber,
-          hireDate: scientists.hireDate,
-          createdAt: scientists.createdAt,
-          updatedAt: scientists.updatedAt,
-        }
+        scientist: scientists
       })
       .from(publicationAuthors)
       .innerJoin(scientists, eq(publicationAuthors.scientistId, scientists.id))
