@@ -10,6 +10,7 @@ import {
   projectMembers, ProjectMember, InsertProjectMember,
   dataManagementPlans, DataManagementPlan, InsertDataManagementPlan,
   publications, Publication, InsertPublication,
+  publicationAuthors, PublicationAuthor, InsertPublicationAuthor,
   patents, Patent, InsertPatent,
   irbApplications, IrbApplication, InsertIrbApplication,
   ibcApplications, IbcApplication, InsertIbcApplication,

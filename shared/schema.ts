@@ -179,6 +179,23 @@ export const insertPublicationSchema = createInsertSchema(publications).omit({
   updatedAt: true,
 });
 
+// Publication Authors (Many-to-Many relationship to track authorship types)
+export const publicationAuthors = pgTable("publication_authors", {
+  id: serial("id").primaryKey(),
+  publicationId: integer("publication_id").notNull(), // references publications.id
+  scientistId: integer("scientist_id").notNull(), // references scientists.id
+  authorshipType: text("authorship_type").notNull(), // First Author, Contributing Author, Senior Author, Last Author, Corresponding Author
+  authorPosition: integer("author_position"), // Position in author list (1, 2, 3, etc.)
+}, (table) => {
+  return {
+    publicationScientistIdx: uniqueIndex("publication_scientist_idx").on(table.publicationId, table.scientistId),
+  };
+});
+
+export const insertPublicationAuthorSchema = createInsertSchema(publicationAuthors).omit({
+  id: true,
+});
+
 // Patents
 export const patents = pgTable("patents", {
   id: serial("id").primaryKey(),
@@ -313,6 +330,9 @@ export type InsertDataManagementPlan = z.infer<typeof insertDataManagementPlanSc
 
 export type Publication = typeof publications.$inferSelect;
 export type InsertPublication = z.infer<typeof insertPublicationSchema>;
+
+export type PublicationAuthor = typeof publicationAuthors.$inferSelect;
+export type InsertPublicationAuthor = z.infer<typeof insertPublicationAuthorSchema>;
 
 export type Patent = typeof patents.$inferSelect;
 export type InsertPatent = z.infer<typeof insertPatentSchema>;
