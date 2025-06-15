@@ -349,7 +349,10 @@ export class DatabaseStorage implements IStorage {
             eq(publications.status, 'Published'),
             eq(publications.status, 'In Press')
           ),
-          gte(publications.publicationDate, cutoffDate.toISOString().split('T')[0])
+          or(
+            sql`${publications.publicationDate} IS NULL`,
+            gte(publications.publicationDate, cutoffDate.toISOString().split('T')[0])
+          )
         )
       )
       .orderBy(desc(publications.publicationDate));
