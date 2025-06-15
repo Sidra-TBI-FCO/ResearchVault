@@ -1,4 +1,4 @@
-import { eq, and, desc, or, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray, gte } from "drizzle-orm";
 import { db } from "./db";
 import { IStorage } from "./storage";
 import {
@@ -349,7 +349,7 @@ export class DatabaseStorage implements IStorage {
             eq(publications.status, 'Published'),
             eq(publications.status, 'In Press')
           ),
-          sql`${publications.publicationDate} >= ${cutoffDate.toISOString()}`
+          gte(publications.publicationDate, cutoffDate.toISOString().split('T')[0])
         )
       )
       .orderBy(desc(publications.publicationDate));
