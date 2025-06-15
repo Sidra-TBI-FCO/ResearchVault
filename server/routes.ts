@@ -1221,8 +1221,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         publicationId
       });
 
-      const author = await storage.addPublicationAuthor(validateData);
-      res.status(201).json(author);
+      // Check if scientist is already an author
+      const existingAuthors = await storage.getPublicationAuthors(publicationId);
+      const existingAuthor = existingAuthors.find(author => author.scientistId === validateData.scientistId);
+
+      if (existingAuthor) {
+        // Update existing author by combining authorship types
+        const existingTypes = existingAuthor.authorshipType.split(',').map(t => t.trim());
+        const newTypes = validateData.authorshipType.split(',').map(t => t.trim());
+        
+        // Combine types, avoiding duplicates
+        const combinedTypes = [...new Set([...existingTypes, ...newTypes])];
+        
+        const updatedAuthor = await storage.updatePublicationAuthor(
+          publicationId,
+          validateData.scientistId,
+          {
+            authorshipType: combinedTypes.join(', '),
+            authorPosition: validateData.authorPosition || existingAuthor.authorPosition
+          }
+        );
+        res.status(200).json(updatedAuthor);
+      } else {
+        // Add new author
+        const author = await storage.addPublicationAuthor(validateData);
+        res.status(201).json(author);
+      }
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
