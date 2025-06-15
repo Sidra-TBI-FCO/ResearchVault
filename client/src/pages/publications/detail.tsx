@@ -104,21 +104,51 @@ export default function PublicationDetail() {
       // Filter by names in the publication's comma-separated author list
       if (publication?.authors) {
         const authorNames = publication.authors.split(',').map(name => name.trim().toLowerCase());
-        const scientistFullName = scientist.name.toLowerCase();
         const scientistLastName = scientist.lastName?.toLowerCase() || '';
         const scientistFirstName = scientist.firstName?.toLowerCase() || '';
         
         // Check if scientist's name appears in the author list
-        return authorNames.some(authorName => 
-          scientistFullName.includes(authorName) || 
-          authorName.includes(scientistLastName) ||
-          authorName.includes(scientistFirstName) ||
-          (scientistLastName && scientistFirstName && 
-           authorName.includes(`${scientistFirstName} ${scientistLastName}`) ||
-           authorName.includes(`${scientistLastName}, ${scientistFirstName}`) ||
-           authorName.includes(`${scientistLastName}`) ||
-           authorName.includes(`${scientistFirstName}`))
-        );
+        return authorNames.some(authorName => {
+          // Remove common titles and clean the author name
+          const cleanAuthorName = authorName.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '').trim();
+          
+          // Handle abbreviated names like "Chen E", "Wilson J", "Ahmed S"
+          const nameParts = cleanAuthorName.split(/\s+/);
+          
+          if (nameParts.length >= 2) {
+            const [lastPart, firstPart] = nameParts;
+            
+            // Check if last name matches and first name/initial matches
+            if (scientistLastName && scientistFirstName) {
+              // Match "LastName FirstInitial" format (e.g., "Chen E")
+              if (lastPart === scientistLastName && 
+                  firstPart.startsWith(scientistFirstName.charAt(0))) {
+                return true;
+              }
+              
+              // Match "FirstInitial LastName" format (e.g., "E Chen")
+              if (firstPart === scientistLastName && 
+                  lastPart.startsWith(scientistFirstName.charAt(0))) {
+                return true;
+              }
+              
+              // Match full names in either order
+              if ((lastPart === scientistLastName && firstPart === scientistFirstName) ||
+                  (firstPart === scientistLastName && lastPart === scientistFirstName)) {
+                return true;
+              }
+            }
+          }
+          
+          // Fallback: check if last name appears anywhere in the author name
+          if (scientistLastName && cleanAuthorName.includes(scientistLastName)) {
+            return true;
+          }
+          
+          // Additional check for full name match
+          const scientistFullName = scientist.name.toLowerCase().replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
+          return cleanAuthorName.includes(scientistFullName) || scientistFullName.includes(cleanAuthorName);
+        });
       }
       
       return true; // If no authors list, show all available scientists
