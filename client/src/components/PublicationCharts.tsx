@@ -35,13 +35,12 @@ interface PublicationChartsProps {
 const authorshipColors = {
   'First Author': '#3b82f6', // blue
   'Contributing Author': '#10b981', // green
-  'Senior Author': '#8b5cf6', // purple
-  'Last Author': '#8b5cf6', // purple (same as Senior Author - they're synonymous)
+  'Senior/Last Author': '#8b5cf6', // purple
   'Corresponding Author': '#ef4444', // red
 };
 
-const authorshipOrder = ['First Author', 'Contributing Author', 'Senior Author', 'Last Author', 'Corresponding Author'];
-const chartAuthorshipOrder = ['First Author', 'Contributing Author', 'Senior Author', 'Last Author']; // Exclude Corresponding Author from chart to avoid overlap
+const authorshipOrder = ['First Author', 'Contributing Author', 'Senior/Last Author', 'Corresponding Author'];
+const chartAuthorshipOrder = ['First Author', 'Contributing Author', 'Senior/Last Author']; // Exclude Corresponding Author from chart to avoid overlap
 
 export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationChartsProps) {
   const { data: publications = [], isLoading: pubLoading } = useQuery({
@@ -64,8 +63,10 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
       // Handle compound authorship types by splitting on comma
       const types = stat.authorshipType.split(',').map(type => type.trim());
       types.forEach(type => {
-        const currentCount = yearMap.get(stat.year)[type] || 0;
-        yearMap.get(stat.year)[type] = currentCount + parseInt(stat.count.toString());
+        // Combine Senior Author and Last Author into Senior/Last Author
+        const mappedType = (type === 'Senior Author' || type === 'Last Author') ? 'Senior/Last Author' : type;
+        const currentCount = yearMap.get(stat.year)[mappedType] || 0;
+        yearMap.get(stat.year)[mappedType] = currentCount + parseInt(stat.count.toString());
       });
     });
     
@@ -95,7 +96,12 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
     // Handle compound authorship types by splitting on comma and trimming
     const types = pub.authorshipType.split(',').map(type => type.trim());
     types.forEach(type => {
-      acc[type] = (acc[type] || 0) + 1;
+      // Combine Senior Author and Last Author into Senior/Last Author
+      if (type === 'Senior Author' || type === 'Last Author') {
+        acc['Senior/Last Author'] = (acc['Senior/Last Author'] || 0) + 1;
+      } else {
+        acc[type] = (acc[type] || 0) + 1;
+      }
     });
     return acc;
   }, {});

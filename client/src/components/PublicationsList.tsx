@@ -31,8 +31,7 @@ interface PublicationsListProps {
 const authorshipColors = {
   'First Author': 'bg-blue-100 text-blue-800',
   'Contributing Author': 'bg-green-100 text-green-800',
-  'Senior Author': 'bg-purple-100 text-purple-800',
-  'Last Author': 'bg-purple-100 text-purple-800', // Same as Senior Author - they're synonymous
+  'Senior/Last Author': 'bg-purple-100 text-purple-800',
   'Corresponding Author': 'bg-red-100 text-red-800',
 };
 
@@ -83,9 +82,22 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
                   <h4 className="font-medium text-gray-900 leading-tight">{pub.title}</h4>
                   <Badge 
                     variant="secondary" 
-                    className={`ml-2 text-xs ${authorshipColors[pub.authorshipType as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800'}`}
+                    className={`ml-2 text-xs ${(() => {
+                      // Map Senior Author and Last Author to Senior/Last Author for display
+                      const displayType = pub.authorshipType.split(',').map(type => {
+                        const trimmed = type.trim();
+                        return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
+                      }).join(', ');
+                      return authorshipColors[displayType as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800';
+                    })()}`}
                   >
-                    {pub.authorshipType}
+                    {(() => {
+                      // Display combined authorship type
+                      return pub.authorshipType.split(',').map(type => {
+                        const trimmed = type.trim();
+                        return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
+                      }).join(', ');
+                    })()}
                   </Badge>
                 </div>
                 
