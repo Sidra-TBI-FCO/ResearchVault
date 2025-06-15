@@ -32,7 +32,7 @@ const authorshipColors = {
   'First Author': 'bg-blue-100 text-blue-800',
   'Contributing Author': 'bg-green-100 text-green-800',
   'Senior Author': 'bg-purple-100 text-purple-800',
-  'Last Author': 'bg-amber-100 text-amber-800',
+  'Last Author': 'bg-purple-100 text-purple-800', // Same as Senior Author - they're synonymous
   'Corresponding Author': 'bg-red-100 text-red-800',
 };
 

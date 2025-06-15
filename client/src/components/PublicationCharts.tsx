@@ -36,7 +36,7 @@ const authorshipColors = {
   'First Author': '#3b82f6', // blue
   'Contributing Author': '#10b981', // green
   'Senior Author': '#8b5cf6', // purple
-  'Last Author': '#f59e0b', // amber
+  'Last Author': '#8b5cf6', // purple (same as Senior Author - they're synonymous)
   'Corresponding Author': '#ef4444', // red
 };
 
