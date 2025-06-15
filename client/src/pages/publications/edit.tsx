@@ -13,6 +13,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 import React from "react";
 
 export default function PublicationEdit() {
@@ -100,8 +101,14 @@ export default function PublicationEdit() {
     },
   });
 
-  const onSubmit = (data: InsertPublication) => {
-    updateMutation.mutate(data);
+  const onSubmit = (data: any) => {
+    // Convert string date from HTML input to Date object for API
+    const submitData = {
+      ...data,
+      publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
+      researchActivityId: data.researchActivityId || null,
+    };
+    updateMutation.mutate(submitData);
   };
 
   if (isLoading) {
