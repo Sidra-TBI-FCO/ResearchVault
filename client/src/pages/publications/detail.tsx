@@ -4,7 +4,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, Publication, Patent, PublicationAuthor, Scientist, InsertPublicationAuthor } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -466,6 +466,19 @@ export default function PublicationDetail() {
                         Link an internal scientist to this publication and specify their authorship role.
                       </DialogDescription>
                     </DialogHeader>
+                    
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <div className="flex items-start gap-2">
+                        <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-blue-800">
+                          <p className="font-medium mb-1">Smart Filtering Active</p>
+                          <p className="text-blue-700">
+                            Only scientists whose names match the publication's author list are shown, 
+                            sorted alphabetically by last name. This works with abbreviated names like "Chen E" or "Wilson J".
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                     
                     <div className="space-y-4">
                       <div>
