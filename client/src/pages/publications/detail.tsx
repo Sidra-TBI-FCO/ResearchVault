@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function PublicationDetail() {
   const params = useParams<{ id: string }>();
@@ -25,6 +26,7 @@ export default function PublicationDetail() {
   const [selectedScientist, setSelectedScientist] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [authorPosition, setAuthorPosition] = useState<string>("");
+  const [isCorrespondingAuthor, setIsCorrespondingAuthor] = useState<boolean>(false);
 
   const { data: publication, isLoading: publicationLoading } = useQuery<Publication>({
     queryKey: [`/api/publications/${id}`],
@@ -58,6 +60,7 @@ export default function PublicationDetail() {
       setSelectedScientist("");
       setSelectedRole("");
       setAuthorPosition("");
+      setIsCorrespondingAuthor(false);
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to add author", variant: "destructive" });
@@ -87,18 +90,26 @@ export default function PublicationDetail() {
       return;
     }
 
+    // Combine primary role with corresponding author if checked
+    let combinedAuthorshipType = selectedRole;
+    if (isCorrespondingAuthor) {
+      combinedAuthorshipType = `${selectedRole}, Corresponding Author`;
+    }
+
     addAuthorMutation.mutate({
       scientistId: parseInt(selectedScientist),
-      authorshipType: selectedRole,
+      authorshipType: combinedAuthorshipType,
       authorPosition: authorPosition ? parseInt(authorPosition) : undefined,
     });
   };
 
   const availableScientists = scientists
     .filter(scientist => {
-      // Exclude scientists already added as authors
-      if (publicationAuthors.some(author => author.scientistId === scientist.id)) {
-        return false;
+      // If we're only adding corresponding author role, allow existing authors who don't already have corresponding author role
+      const existingAuthor = publicationAuthors.find(author => author.scientistId === scientist.id);
+      if (existingAuthor) {
+        // If scientist is already an author, only allow if they don't have corresponding author role and we're adding corresponding author
+        return isCorrespondingAuthor && !existingAuthor.authorshipType.includes('Corresponding Author');
       }
       
       // Filter by names in the publication's comma-separated author list
@@ -533,9 +544,19 @@ export default function PublicationDetail() {
                             <SelectItem value="First Author">First Author</SelectItem>
                             <SelectItem value="Contributing Author">Contributing Author</SelectItem>
                             <SelectItem value="Senior/Last Author">Senior/Last Author</SelectItem>
-                            <SelectItem value="Corresponding Author">Corresponding Author</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="corresponding-author"
+                          checked={isCorrespondingAuthor}
+                          onCheckedChange={setIsCorrespondingAuthor}
+                        />
+                        <Label htmlFor="corresponding-author" className="text-sm font-normal">
+                          Also corresponding author
+                        </Label>
                       </div>
 
                       <div>
