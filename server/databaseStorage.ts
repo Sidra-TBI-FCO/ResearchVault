@@ -713,3 +713,5 @@ export class DatabaseStorage implements IStorage {
       .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
   }
 }
+
+export const storage = new DatabaseStorage();

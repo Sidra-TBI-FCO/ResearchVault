@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -329,6 +330,150 @@ export default function PublicationDetail() {
         </Card>
 
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Internal Authors
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {authorsLoading ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : publicationAuthors.length === 0 ? (
+                  <p className="text-neutral-400 text-sm">No internal authors added yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Scientist</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Position</TableHead>
+                          <TableHead className="w-[70px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {publicationAuthors.map((author) => (
+                          <TableRow key={author.id}>
+                            <TableCell className="font-medium">
+                              {author.scientist.name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                className={`${authorshipTypeColors[author.authorshipType as keyof typeof authorshipTypeColors] || 'bg-gray-100 text-gray-800'} text-xs`}
+                              >
+                                {author.authorshipType}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {author.authorPosition || 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeAuthorMutation.mutate(author.scientistId)}
+                                disabled={removeAuthorMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                <Dialog open={isAddAuthorOpen} onOpenChange={setIsAddAuthorOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Internal Author
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Internal Author</DialogTitle>
+                      <DialogDescription>
+                        Link an internal scientist to this publication and specify their authorship role.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="scientist">Scientist</Label>
+                        <Select value={selectedScientist} onValueChange={setSelectedScientist}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a scientist" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {scientistsLoading ? (
+                              <div className="p-2 text-sm text-neutral-400">Loading scientists...</div>
+                            ) : availableScientists.length === 0 ? (
+                              <div className="p-2 text-sm text-neutral-400">All scientists already added</div>
+                            ) : (
+                              availableScientists.map((scientist) => (
+                                <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                  {scientist.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="role">Authorship Role</Label>
+                        <Select value={selectedRole} onValueChange={setSelectedRole}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select authorship type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="First Author">First Author</SelectItem>
+                            <SelectItem value="Contributing Author">Contributing Author</SelectItem>
+                            <SelectItem value="Senior Author">Senior Author</SelectItem>
+                            <SelectItem value="Last Author">Last Author</SelectItem>
+                            <SelectItem value="Corresponding Author">Corresponding Author</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="position">Author Position (Optional)</Label>
+                        <Input
+                          value={authorPosition}
+                          onChange={(e) => setAuthorPosition(e.target.value)}
+                          placeholder="e.g., 1, 2, 3..."
+                          type="number"
+                          min="1"
+                        />
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddAuthorOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleAddAuthor}
+                        disabled={addAuthorMutation.isPending || !selectedScientist || !selectedRole}
+                      >
+                        {addAuthorMutation.isPending ? "Adding..." : "Add Author"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Related Resources</CardTitle>
