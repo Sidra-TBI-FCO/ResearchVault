@@ -17,7 +17,8 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ScientistPublications } from "@/components/ScientistPublications";
+import { PublicationsList } from "@/components/PublicationsList";
+import { PublicationCharts } from "@/components/PublicationCharts";
 
 // Tree structure component for research activities
 interface ResearchActivitiesTreeProps {
@@ -572,12 +573,12 @@ export default function ScientistDetail() {
           </CardContent>
         </Card>
 
-        {/* Publications Section */}
-        <ScientistPublications scientistId={id} yearsSince={5} />
+        {/* Publications List */}
+        <PublicationsList scientistId={id} yearsSince={5} />
         </div>
 
-        {/* Right Column - Research Activities */}
-        <div className="lg:col-span-1">
+        {/* Right Column - Research Activities and Publication Charts */}
+        <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Research Activities</CardTitle>
@@ -600,6 +601,9 @@ export default function ScientistDetail() {
               )}
             </CardContent>
           </Card>
+
+          {/* Publication Charts and Statistics */}
+          <PublicationCharts scientistId={id} yearsSince={5} />
         </div>
       </div>
     </div>

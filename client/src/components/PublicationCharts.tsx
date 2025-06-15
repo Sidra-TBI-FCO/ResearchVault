@@ -1,0 +1,156 @@
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3 } from "lucide-react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+
+interface Publication {
+  id: number;
+  title: string;
+  authors: string;
+  journal: string;
+  volume: string;
+  issue: string;
+  pages: string;
+  doi: string;
+  publicationDate: string;
+  publicationType: string;
+  status: string;
+  abstract: string;
+  authorshipType: string;
+  authorPosition: number | null;
+}
+
+interface AuthorshipStats {
+  year: number;
+  authorshipType: string;
+  count: number;
+}
+
+interface PublicationChartsProps {
+  scientistId: number;
+  yearsSince?: number;
+}
+
+const authorshipColors = {
+  'First Author': '#3b82f6', // blue
+  'Contributing Author': '#10b981', // green
+  'Senior Author': '#8b5cf6', // purple
+  'Last Author': '#f59e0b', // amber
+  'Corresponding Author': '#ef4444', // red
+};
+
+const authorshipOrder = ['First Author', 'Contributing Author', 'Senior Author', 'Last Author', 'Corresponding Author'];
+
+export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationChartsProps) {
+  const { data: publications = [], isLoading: pubLoading } = useQuery({
+    queryKey: ['/api/scientists', scientistId, 'publications', { years: yearsSince }],
+  });
+
+  const { data: authorshipStats = [], isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/scientists', scientistId, 'authorship-stats', { years: yearsSince }],
+  });
+
+  const chartData = React.useMemo(() => {
+    if (!authorshipStats.length) return [];
+    
+    const yearMap = new Map();
+    authorshipStats.forEach((stat: AuthorshipStats) => {
+      if (!yearMap.has(stat.year)) {
+        yearMap.set(stat.year, { year: stat.year });
+      }
+      yearMap.get(stat.year)[stat.authorshipType] = stat.count;
+    });
+    
+    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+  }, [authorshipStats]);
+
+  if (pubLoading || statsLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Publication Statistics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="animate-pulse space-y-4">
+              <div className="h-24 bg-gray-200 rounded"></div>
+              <div className="h-48 bg-gray-200 rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const totalPublications = publications.length;
+  const authorshipCounts = publications.reduce((acc: Record<string, number>, pub: Publication) => {
+    acc[pub.authorshipType] = (acc[pub.authorshipType] || 0) + 1;
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Publication Statistics</CardTitle>
+          <CardDescription>
+            {totalPublications} publications with authorship breakdown
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4">
+            {authorshipOrder.map((type) => {
+              const count = authorshipCounts[type] || 0;
+              if (count === 0) return null;
+              return (
+                <div key={type} className="flex justify-between items-center">
+                  <div className="text-sm text-gray-600">{type}</div>
+                  <div className="text-lg font-bold text-gray-900">{count}</div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Authorship Trends Chart */}
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Authorship Trends
+            </CardTitle>
+            <CardDescription>
+              Publications by authorship type per year
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {authorshipOrder.map((type) => (
+                    <Bar 
+                      key={type}
+                      dataKey={type} 
+                      stackId="authorship"
+                      fill={authorshipColors[type as keyof typeof authorshipColors]} 
+                      name={type}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
