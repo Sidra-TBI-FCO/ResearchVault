@@ -27,6 +27,7 @@ export default function PublicationDetail() {
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [authorPosition, setAuthorPosition] = useState<string>("");
   const [isCorrespondingAuthor, setIsCorrespondingAuthor] = useState<boolean>(false);
+  const [isSharedPosition, setIsSharedPosition] = useState<boolean>(false);
 
   const { data: publication, isLoading: publicationLoading } = useQuery<Publication>({
     queryKey: [`/api/publications/${id}`],
@@ -61,6 +62,7 @@ export default function PublicationDetail() {
       setSelectedRole("");
       setAuthorPosition("");
       setIsCorrespondingAuthor(false);
+      setIsSharedPosition(false);
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to add author", variant: "destructive" });
@@ -90,10 +92,16 @@ export default function PublicationDetail() {
       return;
     }
 
-    // Combine primary role with corresponding author if checked
-    let combinedAuthorshipType = selectedRole;
+    // Apply "Co-" prefix if shared position is checked (only for First Author and Senior/Last Author)
+    let baseRole = selectedRole;
+    if (isSharedPosition && (selectedRole === "First Author" || selectedRole === "Senior/Last Author")) {
+      baseRole = `Co-${selectedRole}`;
+    }
+
+    // Combine with corresponding author if checked
+    let combinedAuthorshipType = baseRole;
     if (isCorrespondingAuthor) {
-      combinedAuthorshipType = `${selectedRole}, Corresponding Author`;
+      combinedAuthorshipType = `${baseRole}, Corresponding Author`;
     }
 
     addAuthorMutation.mutate({
@@ -181,8 +189,10 @@ export default function PublicationDetail() {
 
   const authorshipTypeColors = {
     'First Author': 'bg-blue-100 text-blue-800',
+    'Co-First Author': 'bg-blue-100 text-blue-800',
     'Contributing Author': 'bg-green-100 text-green-800',
     'Senior/Last Author': 'bg-purple-100 text-purple-800',
+    'Co-Senior/Last Author': 'bg-purple-100 text-purple-800',
     'Corresponding Author': 'bg-red-100 text-red-800',
   };
 
@@ -558,6 +568,19 @@ export default function PublicationDetail() {
                           Also corresponding author
                         </Label>
                       </div>
+
+                      {(selectedRole === "First Author" || selectedRole === "Senior/Last Author") && (
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="shared-position"
+                            checked={isSharedPosition}
+                            onCheckedChange={setIsSharedPosition}
+                          />
+                          <Label htmlFor="shared-position" className="text-sm font-normal">
+                            Shared position (Co-)
+                          </Label>
+                        </div>
+                      )}
 
                       <div>
                         <Label htmlFor="position">Author Position (Optional)</Label>
