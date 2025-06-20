@@ -205,8 +205,10 @@ export default function IrbOfficePortal() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to={`/irb-office/protocol/${application.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
                     </Button>
                     {status === 'submitted' && (
                       <Button variant="ghost" size="sm">
