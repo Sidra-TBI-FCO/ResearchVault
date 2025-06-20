@@ -174,19 +174,36 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const renderReviewHistory = () => {
-    const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}' && application.reviewComments !== '"{\\"test\\": \\"test\\"}"';
-    
-    if (!hasReviewComments) return null;
+    if (!application?.reviewComments) return null;
     
     try {
+      console.log('Raw review comments:', application.reviewComments);
+      
+      // Handle double-encoded JSON strings
+      let reviewCommentsStr = application.reviewComments;
+      if (typeof reviewCommentsStr === 'string' && reviewCommentsStr.startsWith('"')) {
+        reviewCommentsStr = JSON.parse(reviewCommentsStr);
+      }
+      
+      console.log('Parsed review comments string:', reviewCommentsStr);
+      
+      // Skip if it's just test data
+      if (reviewCommentsStr === '{}' || reviewCommentsStr.includes('"test"')) {
+        return null;
+      }
+      
+      const reviewComments = JSON.parse(reviewCommentsStr);
+      console.log('Final parsed comments:', reviewComments);
+      
       const allEntries: Array<[string, any]> = [];
       
-      const reviewComments = JSON.parse(application.reviewComments);
       Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
         // Determine type based on content or existing type field
         const entryType = review.type || (review.submittedBy ? 'pi_submission' : 'irb_review');
         allEntries.push([timestamp, { ...review, type: entryType }]);
       });
+      
+      if (allEntries.length === 0) return null;
       
       // Sort by timestamp (most recent first)
       allEntries.sort(([a], [b]) => {
