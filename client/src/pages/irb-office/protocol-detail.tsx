@@ -363,7 +363,7 @@ export default function IrbOfficeProtocolDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Assign Reviewer */}
-              {application.workflowStatus === 'submitted' && (
+              {(application.workflowStatus === 'submitted' || application.workflowStatus === 'resubmitted') && (
                 <div>
                   <label className="text-sm font-medium">Assign Reviewer</label>
                   <Select value={assignedReviewer} onValueChange={setAssignedReviewer}>
@@ -390,7 +390,7 @@ export default function IrbOfficeProtocolDetail() {
               )}
 
               {/* Review Decision */}
-              {(application.workflowStatus === 'under_review' || application.workflowStatus === 'submitted') && (
+              {(application.workflowStatus === 'under_review' || application.workflowStatus === 'submitted' || application.workflowStatus === 'resubmitted') && (
                 <>
                   <div>
                     <label className="text-sm font-medium">Review Decision</label>
