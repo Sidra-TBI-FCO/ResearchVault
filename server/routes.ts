@@ -1504,6 +1504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         irbNumber,
         workflowStatus: req.body.workflowStatus || 'draft',
+        status: 'Active', // Required field for database
       };
       
       // Check if research activity exists
