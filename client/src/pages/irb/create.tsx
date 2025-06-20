@@ -88,16 +88,29 @@ export default function CreateIrb() {
 
   const createIrbApplicationMutation = useMutation({
     mutationFn: async (data: CreateIrbApplicationFormValues) => {
-      const response = await apiRequest("POST", "/api/irb-applications", data);
+      const response = await fetch('/api/irb-applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          workflowStatus: 'draft', // Always start as draft
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create IRB application');
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/irb-applications'] });
       toast({
-        title: "IRB Application created",
-        description: "The IRB application has been successfully submitted.",
+        title: "IRB Application Draft Created",
+        description: `IRB application ${data.irbNumber} has been created as a draft. You can now submit it for review when ready.`,
       });
-      navigate("/irb");
+      navigate(`/irb/${data.id}`);
     },
     onError: (error) => {
       toast({
@@ -109,6 +122,7 @@ export default function CreateIrb() {
   });
 
   const onSubmit = (data: CreateIrbApplicationFormValues) => {
+    console.log('Form submitted with data:', data);
     createIrbApplicationMutation.mutate(data);
   };
 
@@ -230,22 +244,25 @@ export default function CreateIrb() {
                   name="riskLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Risk Level</FormLabel>
+                      <FormLabel>Risk Level from PI Perspective</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select risk level" />
+                            <SelectValue placeholder="Select risk level from PI perspective" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Minimal">Minimal</SelectItem>
-                          <SelectItem value="Greater Than Minimal">Greater Than Minimal</SelectItem>
-                          <SelectItem value="High">High</SelectItem>
+                          <SelectItem value="minimal">Minimal Risk</SelectItem>
+                          <SelectItem value="greater_than_minimal">Greater Than Minimal Risk</SelectItem>
+                          <SelectItem value="high">High Risk</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        PI's assessment of the risk level for this research protocol
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
