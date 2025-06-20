@@ -152,12 +152,10 @@ export default function IrbOfficePortal() {
           {filteredApps.map((application) => {
             const daysSince = getDaysSince(application.submissionDate);
             return (
-              <TableRow key={application.id}>
+              <TableRow key={application.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/irb-office/protocol/${application.id}`}>
                 <TableCell>
-                  <div className="font-medium">
-                    <Link href={`/irb-office/protocols/${application.id}`}>
-                      <a className="hover:text-primary-500 transition-colors">{application.title}</a>
-                    </Link>
+                  <div className="font-medium text-blue-600 hover:text-blue-800">
+                    {application.title}
                   </div>
                   {application.researchActivity && (
                     <div className="text-sm text-gray-500 mt-1">
@@ -205,10 +203,15 @@ export default function IrbOfficePortal() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/irb-office/protocol/${application.id}`}>
-                        <Eye className="h-4 w-4" />
-                      </Link>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `/irb-office/protocol/${application.id}`;
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
                     </Button>
                     {status === 'submitted' && (
                       <Button variant="ghost" size="sm">
