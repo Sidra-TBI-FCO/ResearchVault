@@ -64,9 +64,11 @@ export default function ProtocolAssembly() {
     enabled: !!applicationId,
   });
 
-  // Load existing protocol members from application data
+  // Load existing protocol members and documents from application data
   useEffect(() => {
     console.log('Application data changed:', application);
+    
+    // Load protocol team members
     if (application?.protocolTeamMembers) {
       try {
         console.log('Raw protocol team members:', application.protocolTeamMembers);
@@ -84,6 +86,23 @@ export default function ProtocolAssembly() {
     } else {
       console.log('No protocol team members found, resetting to empty array');
       setProtocolMembers([]);
+    }
+
+    // Load existing documents
+    if (application?.documents) {
+      try {
+        console.log('Raw documents:', application.documents);
+        let existingDocuments;
+        if (typeof application.documents === 'string') {
+          existingDocuments = JSON.parse(application.documents) as typeof documents;
+        } else {
+          existingDocuments = application.documents as typeof documents;
+        }
+        console.log('Parsed documents:', existingDocuments);
+        setDocuments(existingDocuments);
+      } catch (error) {
+        console.error('Failed to parse documents:', error);
+      }
     }
   }, [application]);
 
@@ -279,16 +298,7 @@ export default function ProtocolAssembly() {
     }
   });
 
-  // Auto-save documents whenever they change
-  useEffect(() => {
-    if (documents.length > 0) {
-      const timeoutId = setTimeout(() => {
-        autoSaveDocumentsMutation.mutate();
-      }, 1000); // Auto-save after 1 second of inactivity
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [documents, autoSaveDocumentsMutation]);
 
   const submitProtocolMutation = useMutation({
     mutationFn: async () => {
