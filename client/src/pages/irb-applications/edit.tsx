@@ -39,9 +39,7 @@ export default function IrbApplicationEdit() {
       cayuseProtocolNumber: irbApplication?.cayuseProtocolNumber || "",
       title: irbApplication?.title || "",
       principalInvestigatorId: irbApplication?.principalInvestigatorId || 0,
-      submissionDate: irbApplication?.submissionDate ? new Date(irbApplication.submissionDate).toISOString().split('T')[0] : "",
-      approvalDate: irbApplication?.approvalDate ? new Date(irbApplication.approvalDate).toISOString().split('T')[0] : "",
-      expirationDate: irbApplication?.expirationDate ? new Date(irbApplication.expirationDate).toISOString().split('T')[0] : "",
+
       workflowStatus: irbApplication?.workflowStatus || "draft",
     },
   });
@@ -55,9 +53,7 @@ export default function IrbApplicationEdit() {
         cayuseProtocolNumber: irbApplication.cayuseProtocolNumber || "",
         title: irbApplication.title,
         principalInvestigatorId: irbApplication.principalInvestigatorId,
-        submissionDate: irbApplication.submissionDate ? new Date(irbApplication.submissionDate).toISOString().split('T')[0] : "",
-        approvalDate: irbApplication.approvalDate ? new Date(irbApplication.approvalDate).toISOString().split('T')[0] : "",
-        expirationDate: irbApplication.expirationDate ? new Date(irbApplication.expirationDate).toISOString().split('T')[0] : "",
+
         status: irbApplication.status,
       });
     }
