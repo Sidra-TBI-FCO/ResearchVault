@@ -53,22 +53,34 @@ export default function IrbProtocolDetail() {
 
   const updateApplicationMutation = useMutation({
     mutationFn: async (action: ReviewAction) => {
+      const now = new Date().toISOString();
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      
+      const updateData: any = {
+        workflowStatus: getNewStatus(action.action),
+        reviewComments: JSON.stringify({
+          ...JSON.parse(application?.reviewComments || '{}'),
+          [now]: {
+            action: action.action,
+            comments: action.comments,
+            reviewerId: action.reviewerId,
+            decision: action.decision
+          }
+        }),
+        ...(action.reviewerId && { reviewerAssignments: JSON.stringify({ primaryReviewer: action.reviewerId }) })
+      };
+      
+      // Set dates based on action
+      if (action.action === 'approve') {
+        updateData.initialApprovalDate = now;
+        updateData.expirationDate = oneYearFromNow.toISOString();
+      }
+      
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workflowStatus: getNewStatus(action.action),
-          reviewComments: JSON.stringify({
-            ...JSON.parse(application?.reviewComments || '{}'),
-            [new Date().toISOString()]: {
-              action: action.action,
-              comments: action.comments,
-              reviewerId: action.reviewerId,
-              decision: action.decision
-            }
-          }),
-          ...(action.reviewerId && { reviewerAssignments: JSON.stringify({ primaryReviewer: action.reviewerId }) })
-        }),
+        body: JSON.stringify(updateData),
       });
       if (!response.ok) throw new Error('Failed to update application');
       return response.json();

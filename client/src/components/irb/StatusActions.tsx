@@ -30,15 +30,17 @@ export default function StatusActions({ applicationId, currentStatus, onStatusCh
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ status, comments }: { status: string; comments?: string }) => {
+      const now = new Date().toISOString();
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workflowStatus: status,
-          ...(status === 'submitted' && { submissionDate: new Date().toISOString() }),
+          ...(status === 'submitted' && { submissionDate: now }),
+          ...(status === 'draft' && { submissionDate: null }), // Clear submission date when withdrawing
           ...(comments && { 
             reviewComments: JSON.stringify({
-              [new Date().toISOString()]: {
+              [now]: {
                 action: status === 'submitted' ? 'submit' : 'withdraw',
                 comments: comments,
                 userId: 'current_user' // In a real app, this would come from auth context

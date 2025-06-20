@@ -36,9 +36,7 @@ const createIrbApplicationSchema = insertIrbApplicationSchema.extend({
   principalInvestigatorId: z.number({
     required_error: "Please select a principal investigator",
   }),
-  submissionDate: z.date().optional(),
-  approvalDate: z.date().optional(),
-  expirationDate: z.date().optional(),
+
   protocolNumber: z.string().optional(),
   riskLevel: z.string().optional(),
   description: z.string().optional(),
@@ -138,7 +136,8 @@ export default function CreateIrb() {
                   <div>
                     <h3 className="font-medium text-blue-900">IRB Application Process</h3>
                     <p className="text-sm text-blue-800 mt-1">
-                      Start by selecting the Principal Investigator, then choose from their active research activities (SDRs) to create the IRB application.
+                      Start by selecting the Principal Investigator, then choose from their active research activities (SDRs). 
+                      Important dates (submission, approval, expiration) are automatically set based on workflow actions.
                     </p>
                   </div>
                 </div>
