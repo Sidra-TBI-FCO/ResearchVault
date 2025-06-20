@@ -181,15 +181,12 @@ export default function IrbOfficeProtocolDetail() {
     try {
       const allEntries: Array<[string, any]> = [];
       
-      // Parse review comments which may contain both IRB office and PI submissions
-      if (hasReviewComments) {
-        const reviewComments = JSON.parse(application.reviewComments);
-        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
-          // Determine type based on content or existing type field
-          const entryType = review.type || (review.submittedBy ? 'pi_submission' : 'irb_review');
-          allEntries.push([timestamp, { ...review, type: entryType }]);
-        });
-      }
+      const reviewComments = JSON.parse(application.reviewComments);
+      Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
+        // Determine type based on content or existing type field
+        const entryType = review.type || (review.submittedBy ? 'pi_submission' : 'irb_review');
+        allEntries.push([timestamp, { ...review, type: entryType }]);
+      });
       
       // Sort by timestamp (most recent first)
       allEntries.sort(([a], [b]) => {
