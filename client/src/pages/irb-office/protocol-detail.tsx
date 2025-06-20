@@ -119,6 +119,9 @@ export default function IrbOfficeProtocolDetail() {
       setReviewComments("");
       setReviewDecision("");
       setAssignedReviewer("");
+      setSecondaryReviewer("");
+      setReviewType("");
+      setAssignedReviewer("");
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update protocol", variant: "destructive" });
@@ -317,7 +320,8 @@ export default function IrbOfficeProtocolDetail() {
           variant="outline"
           className={`capitalize ${getStatusBadge(application.workflowStatus || 'submitted')}`}
         >
-          {application.workflowStatus === 'revisions_requested' ? 'revisions requested' : 
+          {application.workflowStatus === 'revisions_requested' ? 'revisions requested' :
+           application.workflowStatus === 'triage_complete' ? 'triage complete' :
            (application.workflowStatus || 'submitted').replace('_', ' ')}
         </Badge>
       </div>
@@ -432,70 +436,156 @@ export default function IrbOfficeProtocolDetail() {
               <CardTitle>Review Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Assign Reviewer */}
+              {/* Triage Stage */}
               {(application.workflowStatus === 'submitted' || application.workflowStatus === 'resubmitted') && (
-                <div>
-                  <label className="text-sm font-medium">Assign Reviewer</label>
-                  <Select value={assignedReviewer} onValueChange={setAssignedReviewer}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select reviewer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {reviewers.map((reviewer) => (
-                        <SelectItem key={reviewer.id} value={reviewer.id.toString()}>
-                          {reviewer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    className="w-full mt-2" 
-                    variant="outline"
-                    onClick={() => handleAction('assign_reviewer')}
-                    disabled={!assignedReviewer || updateApplicationMutation.isPending}
-                  >
-                    Assign for Review
-                  </Button>
-                </div>
-              )}
-
-              {/* Review Decision */}
-              {(application.workflowStatus === 'under_review' || application.workflowStatus === 'submitted' || application.workflowStatus === 'resubmitted') && (
                 <>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Triage Stage</h4>
+                    <p className="text-sm text-blue-700 mb-3">Initial review to determine if protocol is complete and ready for formal review.</p>
+                  </div>
+                  
                   <div>
-                    <label className="text-sm font-medium">Review Decision</label>
+                    <label className="text-sm font-medium">Triage Decision</label>
                     <Select value={reviewDecision} onValueChange={setReviewDecision}>
                       <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select decision" />
+                        <SelectValue placeholder="Select triage decision" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="approved">Approve</SelectItem>
-                        <SelectItem value="approved_with_modifications">Approve with Modifications</SelectItem>
-                        <SelectItem value="revisions_required">Revisions Required</SelectItem>
-                        <SelectItem value="rejected">Reject</SelectItem>
+                        <SelectItem value="complete_triage">Complete - Ready for Review</SelectItem>
+                        <SelectItem value="revisions_required">Request Revisions</SelectItem>
+                        <SelectItem value="rejected">Reject Protocol</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Comments</label>
+                    <label className="text-sm font-medium">Triage Comments</label>
                     <Textarea
                       className="mt-1"
-                      placeholder="Enter review comments..."
+                      placeholder="Enter triage comments..."
                       value={reviewComments}
                       onChange={(e) => setReviewComments(e.target.value)}
-                      rows={4}
+                      rows={3}
+                    />
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handleAction('triage')}
+                    disabled={!reviewComments.trim() || !reviewDecision || updateApplicationMutation.isPending}
+                  >
+                    Submit Triage Decision
+                  </Button>
+                </>
+              )}
+
+              {/* Reviewer Assignment Stage */}
+              {application.workflowStatus === 'triage_complete' && (
+                <>
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-green-900 mb-2">Assign Reviewers</h4>
+                    <p className="text-sm text-green-700 mb-3">Protocol has passed triage. Assign reviewers for formal review.</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Primary Reviewer</label>
+                    <Select value={assignedReviewer} onValueChange={setAssignedReviewer}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select primary reviewer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {reviewers.map((reviewer) => (
+                          <SelectItem key={reviewer.id} value={reviewer.id.toString()}>
+                            {reviewer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Secondary Reviewer (Optional)</label>
+                    <Select value={secondaryReviewer} onValueChange={setSecondaryReviewer}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select secondary reviewer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {reviewers.map((reviewer) => (
+                          <SelectItem key={reviewer.id} value={reviewer.id.toString()}>
+                            {reviewer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Review Type</label>
+                    <Select value={reviewType} onValueChange={setReviewType}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select review type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="expedited">Expedited Review</SelectItem>
+                        <SelectItem value="full_board">Full Board Review</SelectItem>
+                        <SelectItem value="exempt">Exempt Review</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handleAction('assign_reviewers')}
+                    disabled={!assignedReviewer || !reviewType || updateApplicationMutation.isPending}
+                  >
+                    Assign Reviewers & Start Review
+                  </Button>
+                </>
+              )}
+
+              {/* Under Review Stage */}
+              {application.workflowStatus === 'under_review' && (
+                <>
+                  <div className="bg-yellow-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-yellow-900 mb-2">Under Review</h4>
+                    <p className="text-sm text-yellow-700 mb-3">Protocol is currently under formal review by assigned reviewers.</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Final Decision</label>
+                    <Select value={reviewDecision} onValueChange={setReviewDecision}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select final decision" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="approved">Approve</SelectItem>
+                        <SelectItem value="approved_with_modifications">Approve with Modifications</SelectItem>
+                        <SelectItem value="deferred">Defer for More Information</SelectItem>
+                        <SelectItem value="disapproved">Disapprove</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Review Decision Letter</label>
+                    <Textarea
+                      className="mt-1"
+                      placeholder="Enter detailed review decision and rationale..."
+                      value={reviewComments}
+                      onChange={(e) => setReviewComments(e.target.value)}
+                      rows={6}
                     />
                   </div>
 
                   <div className="flex gap-2">
                     <Button 
                       className="flex-1" 
-                      onClick={() => handleAction('approve')}
-                      disabled={!reviewComments.trim() || updateApplicationMutation.isPending}
+                      onClick={() => handleAction('final_decision')}
+                      disabled={!reviewComments.trim() || !reviewDecision || updateApplicationMutation.isPending}
                     >
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Approve
+                      Submit Decision
                     </Button>
                     <Button 
                       variant="outline" 
