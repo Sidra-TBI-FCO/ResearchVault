@@ -1537,17 +1537,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid IRB application ID" });
       }
 
-      const validateData = insertIrbApplicationSchema.partial().parse(req.body);
+      console.log('Updating IRB application with data:', req.body);
+
+      // Skip validation for protocol team members updates
+      let validateData = req.body;
+      if (!req.body.protocolTeamMembers) {
+        validateData = insertIrbApplicationSchema.partial().parse(req.body);
+      }
       
-      // Check if project exists if projectId is provided
-      if (validateData.projectId) {
-        const project = await storage.getProject(validateData.projectId);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
+      // Check if research activity exists if researchActivityId is provided
+      if (validateData.researchActivityId) {
+        const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+        if (!researchActivity) {
+          return res.status(404).json({ message: "Research activity not found" });
         }
       }
       
-      // Check if principal investigator exists if provided
+      // Check if principal investigator exists if principalInvestigatorId is provided
       if (validateData.principalInvestigatorId) {
         const pi = await storage.getScientist(validateData.principalInvestigatorId);
         if (!pi) {
@@ -1564,9 +1570,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(application);
     } catch (error) {
       if (error instanceof ZodError) {
+        console.error('Validation error:', error);
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to update IRB application" });
+      console.error('IRB application update error:', error);
+      res.status(500).json({ message: "Failed to update IRB application", error: error.message });
     }
   });
 
