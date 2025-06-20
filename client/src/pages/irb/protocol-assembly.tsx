@@ -66,13 +66,24 @@ export default function ProtocolAssembly() {
 
   // Load existing protocol members from application data
   useEffect(() => {
+    console.log('Application data changed:', application);
     if (application?.protocolTeamMembers) {
       try {
-        const existingMembers = JSON.parse(application.protocolTeamMembers as string) as ProtocolMember[];
+        console.log('Raw protocol team members:', application.protocolTeamMembers);
+        let existingMembers;
+        if (typeof application.protocolTeamMembers === 'string') {
+          existingMembers = JSON.parse(application.protocolTeamMembers) as ProtocolMember[];
+        } else {
+          existingMembers = application.protocolTeamMembers as ProtocolMember[];
+        }
+        console.log('Parsed protocol team members:', existingMembers);
         setProtocolMembers(existingMembers);
       } catch (error) {
         console.error('Failed to parse protocol team members:', error);
       }
+    } else {
+      console.log('No protocol team members found, resetting to empty array');
+      setProtocolMembers([]);
     }
   }, [application]);
 
