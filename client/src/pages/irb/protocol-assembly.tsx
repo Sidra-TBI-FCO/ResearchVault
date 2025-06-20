@@ -397,25 +397,30 @@ export default function ProtocolAssembly() {
 
   const submitProtocolMutation = useMutation({
     mutationFn: async () => {
+      const isResubmission = application?.workflowStatus === 'revisions_requested';
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workflowStatus: 'submitted',
+          workflowStatus: isResubmission ? 'resubmitted' : 'submitted',
           submissionDate: new Date().toISOString(),
-          documents: JSON.stringify(documents)
+          documents: JSON.stringify(documents),
+          submissionComment: submissionComment || null
         }),
       });
       if (!response.ok) throw new Error('Failed to submit protocol');
       return response.json();
     },
     onSuccess: () => {
+      setSubmissionComment("");
       queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/irb-applications'] });
       queryClient.refetchQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
       toast({
-        title: "Protocol Submitted",
-        description: "Your IRB protocol has been submitted for review."
+        title: application?.workflowStatus === 'revisions_requested' ? "Protocol Resubmitted" : "Protocol Submitted",
+        description: application?.workflowStatus === 'revisions_requested' ? 
+          "Your IRB protocol has been resubmitted with your responses." :
+          "Your IRB protocol has been submitted for review."
       });
       navigate(`/irb/${applicationId}`);
     },
@@ -919,7 +924,8 @@ export default function ProtocolAssembly() {
                 disabled={!isReadyForSubmission() || submitProtocolMutation.isPending}
                 onClick={() => submitProtocolMutation.mutate()}
               >
-                {submitProtocolMutation.isPending ? 'Submitting...' : 'Submit for IRB Review'}
+                {submitProtocolMutation.isPending ? 'Submitting...' : 
+                 application?.workflowStatus === 'revisions_requested' ? 'Resubmit Protocol' : 'Submit for IRB Review'}
               </Button>
               
 
