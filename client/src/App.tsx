@@ -131,6 +131,11 @@ function Router() {
         <Route path="/patents/:id/edit" component={EditPatent} />
         <Route path="/patents/:id" component={PatentDetail} />
         
+        {/* IRB Office - Put these BEFORE IRB Applications to avoid conflicts */}
+        <Route path="/irb-office" component={IrbOfficePortal} />
+        <Route path="/irb-office/protocols/:id" component={IrbOfficeProtocolDetail} />
+        <Route path="/irb-office/protocol/:id" component={IrbOfficeProtocolDetail} />
+        
         {/* IRB Applications */}
         <Route path="/irb" component={IrbList} />
         <Route path="/irb/create" component={CreateIrb} />
@@ -140,11 +145,6 @@ function Router() {
         <Route path="/irb-applications/:id/edit" component={EditIrbApplication} />
         <Route path="/irb-applications/:id" component={IrbApplicationDetail} />
         <Route path="/irb/:id" component={IrbApplicationDetail} />
-        
-        {/* IRB Office */}
-        <Route path="/irb-office" component={IrbOfficePortal} />
-        <Route path="/irb-office/protocols/:id" component={IrbOfficeProtocolDetail} />
-        <Route path="/irb-office/protocol/:id" component={IrbOfficeProtocolDetail} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />
