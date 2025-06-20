@@ -496,47 +496,53 @@ export default function ProtocolAssembly() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              if (document.uploadedFile) {
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span>Uploaded: {document.uploadedFile?.name || 'Document uploaded'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                window.open('#', '_blank');
                                 toast({
                                   title: "Document Preview",
-                                  description: `Viewing ${document.uploadedFile.name}`
+                                  description: `Opening ${document.uploadedFile?.name || document.name} in new tab`
                                 });
-                              }
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              if (document.uploadedFile) {
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                const link = window.document.createElement('a');
+                                link.href = '#'; // In real app, would be actual file URL
+                                link.download = document.uploadedFile?.name || document.name;
+                                link.click();
                                 toast({
                                   title: "Download Started",
-                                  description: `Downloading ${document.uploadedFile.name}`
+                                  description: `Downloading ${document.uploadedFile?.name || document.name}`
                                 });
-                                // In real app, would trigger actual download
-                              }
-                            }}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </Button>
-                          {document.signatureRequired && document.signatures.length === 0 && (
-                            <Button 
-                              size="sm"
-                              onClick={() => handleSignDocument(document.id)}
+                              }}
                             >
-                              <Signature className="h-4 w-4 mr-1" />
-                              Sign Document
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
                             </Button>
-                          )}
+                            {document.signatureRequired && document.signatures.length === 0 && (
+                              <Button 
+                                size="sm"
+                                onClick={() => handleSignDocument(document.id)}
+                              >
+                                <Signature className="h-4 w-4 mr-1" />
+                                Sign Document
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
