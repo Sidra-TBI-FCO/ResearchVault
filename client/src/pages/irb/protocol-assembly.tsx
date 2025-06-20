@@ -74,9 +74,10 @@ export default function ProtocolAssembly() {
     enabled: !!application?.researchActivityId,
   });
 
-  const { data: allScientists = [] } = useQuery<Scientist[]>({
-    queryKey: ['/api/scientists'],
-  });
+  // Filter available scientists to only SDR team members
+  const availableScientists = projectMembers.filter(
+    member => !protocolMembers.some(pm => pm.scientistId === member.scientistId)
+  );
 
   // Mock document requirements for demonstration
   const [documents, setDocuments] = useState<DocumentUpload[]>([
@@ -168,14 +169,14 @@ export default function ProtocolAssembly() {
 
   const addProtocolMemberMutation = useMutation({
     mutationFn: async ({ scientistId, roles }: { scientistId: number; roles: string[] }) => {
-      const scientist = allScientists.find(s => s.id === scientistId);
-      if (!scientist) throw new Error('Scientist not found');
+      const projectMember = projectMembers.find(pm => pm.scientistId === scientistId);
+      if (!projectMember?.scientist) throw new Error('Team member not found in SDR');
       
       const newMember: ProtocolMember = {
         id: Date.now(), // Temporary ID
         scientistId,
-        name: scientist.name,
-        email: scientist.email || `${scientist.name.toLowerCase().replace(/\s+/g, '.')}@sidra.org`,
+        name: projectMember.scientist.name,
+        email: projectMember.scientist.email || `${projectMember.scientist.name.toLowerCase().replace(/\s+/g, '.')}@sidra.org`,
         roles,
         hasAccess: true,
         hasSigned: false,
@@ -392,7 +393,7 @@ export default function ProtocolAssembly() {
                 <Button
                   size="sm"
                   onClick={() => setShowAddMember(true)}
-                  disabled={!application?.researchActivityId}
+                  disabled={!application?.researchActivityId || availableScientists.length === 0}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Member
@@ -406,26 +407,24 @@ export default function ProtocolAssembly() {
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Select Team Member</label>
+                      <label className="text-sm font-medium">Select SDR Team Member</label>
                       <select
                         className="w-full mt-1 p-2 border rounded-md"
                         value={selectedScientistId || ''}
                         onChange={(e) => setSelectedScientistId(e.target.value ? parseInt(e.target.value) : null)}
                       >
-                        <option value="">Choose a scientist...</option>
-                        {projectMembers.map((member) => (
+                        <option value="">Choose from SDR team members...</option>
+                        {availableScientists.map((member) => (
                           <option key={member.scientistId} value={member.scientistId}>
                             {member.scientist?.name} - {member.role}
                           </option>
                         ))}
-                        {allScientists
-                          .filter(scientist => !projectMembers.some(pm => pm.scientistId === scientist.id))
-                          .map((scientist) => (
-                          <option key={scientist.id} value={scientist.id}>
-                            {scientist.name} - Available Scientist
-                          </option>
-                        ))}
                       </select>
+                      {availableScientists.length === 0 && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          All SDR team members have already been added to the protocol team.
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -522,7 +521,7 @@ export default function ProtocolAssembly() {
                 
                 {protocolMembers.length === 0 && (
                   <div className="text-center py-4 text-gray-500">
-                    No protocol team members assigned yet. Add members to grant access and assign roles.
+                    No protocol team members assigned yet. Add SDR team members to grant access and assign protocol-specific roles.
                   </div>
                 )}
               </div>
