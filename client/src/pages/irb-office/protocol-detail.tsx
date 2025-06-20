@@ -174,35 +174,69 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const renderReviewHistory = () => {
-    if (!application?.reviewComments) return null;
+    const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}' && application.reviewComments !== '"{\\"test\\": \\"test\\"}"';
+    
+    if (!hasReviewComments) return null;
     
     try {
-      const comments = JSON.parse(application.reviewComments);
-      const entries = Object.entries(comments).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
+      const allEntries: Array<[string, any]> = [];
+      
+      // Parse review comments which may contain both IRB office and PI submissions
+      if (hasReviewComments) {
+        const reviewComments = JSON.parse(application.reviewComments);
+        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
+          // Determine type based on content or existing type field
+          const entryType = review.type || (review.submittedBy ? 'pi_submission' : 'irb_review');
+          allEntries.push([timestamp, { ...review, type: entryType }]);
+        });
+      }
+      
+      // Sort by timestamp (most recent first)
+      allEntries.sort(([a], [b]) => {
+        const timeA = isNaN(Number(a)) ? new Date(a).getTime() : Number(a);
+        const timeB = isNaN(Number(b)) ? new Date(b).getTime() : Number(b);
+        return timeB - timeA;
+      });
       
       return (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              Review History
+              Protocol History
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {entries.map(([timestamp, review]: [string, any]) => (
-                <div key={timestamp} className="border-l-2 border-gray-200 pl-4">
+              {allEntries.map(([timestamp, entry]: [string, any], index) => (
+                <div key={`${timestamp}-${index}`} className="border-l-2 border-gray-200 pl-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="capitalize">
-                      {review.action.replace('_', ' ')}
+                    <Badge 
+                      variant="outline" 
+                      className={`capitalize ${
+                        entry.type === 'irb_review' 
+                          ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                          : 'bg-green-50 text-green-700 border-green-200'
+                      }`}
+                    >
+                      {entry.type === 'irb_review' 
+                        ? `IRB Office - ${entry.action?.replace('_', ' ') || 'Review'}` 
+                        : 'PI Submission'
+                      }
                     </Badge>
                     <span className="text-sm text-gray-500">
-                      {formatDate(timestamp)}
+                      {formatDate(isNaN(Number(timestamp)) ? timestamp : new Date(Number(timestamp)))}
                     </span>
                   </div>
-                  <p className="text-sm">{review.comments}</p>
-                  {review.decision && (
-                    <p className="text-sm font-medium mt-1">Decision: {review.decision}</p>
+                  <p className="text-sm">{entry.comments}</p>
+                  {entry.decision && (
+                    <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
+                  )}
+                  {entry.changes && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium">Changes Made:</p>
+                      <p className="text-sm text-gray-600">{entry.changes}</p>
+                    </div>
                   )}
                 </div>
               ))}
@@ -211,7 +245,20 @@ export default function IrbOfficeProtocolDetail() {
         </Card>
       );
     } catch (error) {
-      return null;
+      console.error('Error parsing review history:', error);
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Protocol History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">Unable to load history</p>
+          </CardContent>
+        </Card>
+      );
     }
   };
 
