@@ -506,20 +506,6 @@ export default function ProtocolAssembly() {
                               variant="outline" 
                               size="sm"
                               onClick={() => {
-                                window.open('#', '_blank');
-                                toast({
-                                  title: "Document Preview",
-                                  description: `Opening ${document.uploadedFile?.name || document.name} in new tab`
-                                });
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
                                 const link = window.document.createElement('a');
                                 link.href = '#'; // In real app, would be actual file URL
                                 link.download = document.uploadedFile?.name || document.name;
