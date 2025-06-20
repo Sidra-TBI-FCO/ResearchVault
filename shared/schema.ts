@@ -247,11 +247,97 @@ export const irbApplications = pgTable("irb_applications", {
   subjectEnrollmentReasons: text("subject_enrollment_reasons").array(), // Sample Collection, Data Collection, etc.
   description: text("description"),
   documents: json("documents"), // Store metadata for related documents
+  
+  // Enhanced workflow and submission fields
+  workflowStatus: text("workflow_status").notNull().default("draft"), // draft, submitted, under_review, approved, rejected, etc.
+  submissionType: text("submission_type").default("initial"), // initial, amendment, continuing_review, closure
+  version: integer("version").default(1), // Version control for submissions
+  formData: json("form_data"), // Store dynamic form responses
+  riskLevel: text("risk_level"), // minimal, greater_than_minimal, high
+  vulnerablePopulations: text("vulnerable_populations").array(), // children, pregnant_women, prisoners, etc.
+  studyDesign: text("study_design"), // observational, interventional, survey, etc.
+  dataCollectionMethods: text("data_collection_methods").array(), // surveys, interviews, medical_records, etc.
+  expectedParticipants: integer("expected_participants"),
+  studyDuration: text("study_duration"), // Duration in months or description
+  fundingSource: text("funding_source"),
+  conflictOfInterest: boolean("conflict_of_interest").default(false),
+  multiSite: boolean("multi_site").default(false),
+  internationalSites: boolean("international_sites").default(false),
+  
+  // Review tracking
+  reviewerAssignments: json("reviewer_assignments"), // Track assigned reviewers
+  reviewComments: json("review_comments"), // Compiled reviewer feedback
+  piResponses: json("pi_responses"), // PI responses to reviewer comments
+  
+  // Compliance fields
+  requiresMonitoring: boolean("requires_monitoring").default(false),
+  monitoringFrequency: text("monitoring_frequency"), // annually, semi_annually, etc.
+  reportingRequirements: text("reporting_requirements").array(),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertIrbApplicationSchema = createInsertSchema(irbApplications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// IRB Submissions - Track individual submission instances within an application
+export const irbSubmissions = pgTable("irb_submissions", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull(), // references irbApplications.id
+  submissionType: text("submission_type").notNull(), // initial, amendment, continuing_review, closure, adverse_event
+  version: integer("version").notNull().default(1),
+  submittedBy: integer("submitted_by").notNull(), // references scientists.id
+  submissionDate: timestamp("submission_date").defaultNow(),
+  dueDate: timestamp("due_date"), // For continuing reviews, etc.
+  
+  // Submission content
+  formData: json("form_data"), // Dynamic form responses specific to submission type
+  changes: text("changes"), // Description of changes for amendments
+  documents: json("documents"), // Documents uploaded with this submission
+  
+  // Review workflow
+  workflowStatus: text("workflow_status").notNull().default("submitted"), // submitted, under_review, approved, rejected, returned_for_revision
+  reviewerAssignments: json("reviewer_assignments"),
+  reviewComments: json("review_comments"),
+  piResponses: json("pi_responses"),
+  finalDecision: text("final_decision"), // approved, approved_with_modifications, disapproved
+  decisionDate: timestamp("decision_date"),
+  decisionRationale: text("decision_rationale"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIrbSubmissionSchema = createInsertSchema(irbSubmissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// IRB Documents - Track all documents associated with applications
+export const irbDocuments = pgTable("irb_documents", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id"), // references irbApplications.id
+  submissionId: integer("submission_id"), // references irbSubmissions.id (optional, for submission-specific docs)
+  documentType: text("document_type").notNull(), // protocol, consent_form, investigator_brochure, cv, etc.
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  version: integer("version").default(1),
+  uploadedBy: integer("uploaded_by").notNull(), // references scientists.id
+  isRequired: boolean("is_required").default(false),
+  status: text("status").default("active"), // active, superseded, deleted
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIrbDocumentSchema = createInsertSchema(irbDocuments).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -349,6 +435,12 @@ export type InsertPatent = z.infer<typeof insertPatentSchema>;
 
 export type IrbApplication = typeof irbApplications.$inferSelect;
 export type InsertIrbApplication = z.infer<typeof insertIrbApplicationSchema>;
+
+export type IrbSubmission = typeof irbSubmissions.$inferSelect;
+export type InsertIrbSubmission = z.infer<typeof insertIrbSubmissionSchema>;
+
+export type IrbDocument = typeof irbDocuments.$inferSelect;
+export type InsertIrbDocument = z.infer<typeof insertIrbDocumentSchema>;
 
 export type IbcApplication = typeof ibcApplications.$inferSelect;
 export type InsertIbcApplication = z.infer<typeof insertIbcApplicationSchema>;
