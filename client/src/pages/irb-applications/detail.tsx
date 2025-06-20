@@ -132,13 +132,19 @@ export default function IrbApplicationDetail() {
           </Button>
           <h1 className="text-2xl font-semibold text-neutral-400">{irbApplication.title}</h1>
         </div>
-        <Button 
-          className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
-          onClick={() => navigate(`/irb-applications/${irbApplication.id}/edit`)}
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
+        <div className="flex gap-2">
+          <StatusActions 
+            applicationId={id}
+            currentStatus={irbApplication.workflowStatus || 'draft'}
+          />
+          <Button 
+            variant="outline"
+            onClick={() => navigate(`/irb-applications/${id}/edit`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
