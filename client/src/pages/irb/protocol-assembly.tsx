@@ -12,6 +12,7 @@ import {
   ArrowLeft, Upload, Download, FileText, Users, CheckCircle, 
   AlertCircle, Clock, Signature, Plus, X, Eye 
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { IrbApplication, ResearchActivity, Scientist, ProjectMember } from "@shared/schema";
 
 interface DocumentUpload {
@@ -26,13 +27,25 @@ interface DocumentUpload {
 
 interface ProtocolMember {
   id: number;
+  scientistId: number;
   name: string;
-  role: string;
   email: string;
+  roles: string[]; // Multiple roles per member
   hasAccess: boolean;
   hasSigned: boolean;
   signedAt?: string;
 }
+
+const PROTOCOL_ROLES = [
+  'Research Enrolment',
+  'Clinical Data Manager', 
+  'Sample/Lab Manager',
+  'Report Manager',
+  'Metadata Manager',
+  'PHI Data Manager',
+  'PHI Data Reader',
+  'PHI Reports'
+] as const;
 
 export default function ProtocolAssembly() {
   const params = useParams<{ id: string }>();
@@ -41,8 +54,10 @@ export default function ProtocolAssembly() {
   const queryClient = useQueryClient();
   const applicationId = parseInt(params.id);
   
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [newMemberRole, setNewMemberRole] = useState("");
+  const [selectedScientistId, setSelectedScientistId] = useState<number | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
 
   const { data: application, isLoading } = useQuery<IrbApplication>({
     queryKey: [`/api/irb-applications/${applicationId}`],
@@ -57,6 +72,10 @@ export default function ProtocolAssembly() {
   const { data: projectMembers = [] } = useQuery<ProjectMember[]>({
     queryKey: [`/api/research-activities/${application?.researchActivityId}/members`],
     enabled: !!application?.researchActivityId,
+  });
+
+  const { data: allScientists = [] } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
   });
 
   // Mock document requirements for demonstration
@@ -146,6 +165,47 @@ export default function ProtocolAssembly() {
     return uploadedRequired.length === requiredDocs.length && 
            signedRequired.length === requiredDocs.length;
   };
+
+  const addProtocolMemberMutation = useMutation({
+    mutationFn: async ({ scientistId, roles }: { scientistId: number; roles: string[] }) => {
+      const scientist = allScientists.find(s => s.id === scientistId);
+      if (!scientist) throw new Error('Scientist not found');
+      
+      const newMember: ProtocolMember = {
+        id: Date.now(), // Temporary ID
+        scientistId,
+        name: scientist.name,
+        email: scientist.email || `${scientist.name.toLowerCase().replace(/\s+/g, '.')}@sidra.org`,
+        roles,
+        hasAccess: true,
+        hasSigned: false,
+      };
+      
+      setProtocolMembers(prev => [...prev, newMember]);
+      return newMember;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Member Added",
+        description: "Protocol member has been added successfully."
+      });
+      setSelectedScientistId(null);
+      setSelectedRoles([]);
+      setShowAddMember(false);
+    },
+  });
+
+  const removeProtocolMemberMutation = useMutation({
+    mutationFn: async (memberId: number) => {
+      setProtocolMembers(prev => prev.filter(m => m.id !== memberId));
+    },
+    onSuccess: () => {
+      toast({
+        title: "Member Removed",
+        description: "Protocol member has been removed."
+      });
+    },
+  });
 
   const submitProtocolMutation = useMutation({
     mutationFn: async () => {
@@ -321,36 +381,148 @@ export default function ProtocolAssembly() {
             </CardContent>
           </Card>
 
-          {/* Team Access & Signatures */}
+          {/* Protocol Team Management */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Team Member Access
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Protocol Team Members
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setShowAddMember(true)}
+                  disabled={!application?.researchActivityId}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Member
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {projectMembers.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+              {showAddMember && (
+                <div className="border rounded-lg p-4 mb-4 bg-gray-50">
+                  <h4 className="font-medium mb-3">Add Protocol Team Member</h4>
+                  
+                  <div className="space-y-4">
                     <div>
-                      <div className="font-medium">{member.scientist?.name}</div>
-                      <div className="text-sm text-gray-500">{member.role}</div>
+                      <label className="text-sm font-medium">Select Team Member</label>
+                      <select
+                        className="w-full mt-1 p-2 border rounded-md"
+                        value={selectedScientistId || ''}
+                        onChange={(e) => setSelectedScientistId(e.target.value ? parseInt(e.target.value) : null)}
+                      >
+                        <option value="">Choose a scientist...</option>
+                        {projectMembers.map((member) => (
+                          <option key={member.scientistId} value={member.scientistId}>
+                            {member.scientist?.name} - {member.role}
+                          </option>
+                        ))}
+                        {allScientists
+                          .filter(scientist => !projectMembers.some(pm => pm.scientistId === scientist.id))
+                          .map((scientist) => (
+                          <option key={scientist.id} value={scientist.id}>
+                            {scientist.name} - Available Scientist
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Protocol Roles (Select Multiple)</label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {PROTOCOL_ROLES.map((role) => (
+                          <label key={role} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedRoles.includes(role)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedRoles(prev => [...prev, role]);
+                                } else {
+                                  setSelectedRoles(prev => prev.filter(r => r !== role));
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm">{role}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (selectedScientistId && selectedRoles.length > 0) {
+                            addProtocolMemberMutation.mutate({
+                              scientistId: selectedScientistId,
+                              roles: selectedRoles
+                            });
+                          }
+                        }}
+                        disabled={!selectedScientistId || selectedRoles.length === 0 || addProtocolMemberMutation.isPending}
+                      >
+                        {addProtocolMemberMutation.isPending ? 'Adding...' : 'Add Member'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setShowAddMember(false);
+                          setSelectedScientistId(null);
+                          setSelectedRoles([]);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {protocolMembers.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium">{member.name}</div>
+                      <div className="text-sm text-gray-500">{member.email}</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {member.roles.map((role) => (
+                          <Badge key={role} variant="secondary" className="text-xs">
+                            {role}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="bg-green-50 text-green-700">
-                        Access Granted
+                        {member.hasAccess ? 'Access Granted' : 'No Access'}
                       </Badge>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        Signed
-                      </Badge>
+                      {member.hasSigned ? (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                          Signed
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-orange-50 text-orange-700">
+                          Pending Signature
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeProtocolMemberMutation.mutate(member.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
                 
-                {projectMembers.length === 0 && (
+                {protocolMembers.length === 0 && (
                   <div className="text-center py-4 text-gray-500">
-                    No team members assigned to this research activity
+                    No protocol team members assigned yet. Add members to grant access and assign roles.
                   </div>
                 )}
               </div>
