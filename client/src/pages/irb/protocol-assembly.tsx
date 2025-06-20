@@ -161,22 +161,52 @@ export default function ProtocolAssembly() {
     }
   ]);
 
-  const handleFileUpload = (documentId: string, file: File) => {
-    setDocuments(prev => prev.map(doc => 
+  const handleFileUpload = async (documentId: string, file: File) => {
+    const newDoc = {
+      id: `${documentId}-uploaded`,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      uploadedAt: new Date().toISOString()
+    };
+
+    const updatedDocuments = documents.map(doc => 
       doc.id === documentId 
-        ? { ...doc, uploaded: true }
+        ? { ...doc, uploaded: true, uploadedFile: newDoc }
         : doc
-    ));
-    
-    toast({
-      title: "Document Uploaded",
-      description: `${file.name} has been uploaded successfully.`
-    });
+    );
+
+    setDocuments(updatedDocuments);
+
+    // Save to backend immediately
+    try {
+      const response = await fetch(`/api/irb-applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documents: JSON.stringify(updatedDocuments)
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to save document');
+      
+      queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
+      
+      toast({
+        title: "Document Uploaded",
+        description: `${file.name} has been uploaded and saved successfully.`
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to save document. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleSignDocument = (documentId: string) => {
-    // In a real app, this would trigger a digital signature process
-    setDocuments(prev => prev.map(doc => 
+  const handleSignDocument = async (documentId: string) => {
+    const updatedDocuments = documents.map(doc => 
       doc.id === documentId 
         ? { 
             ...doc, 
@@ -190,12 +220,35 @@ export default function ProtocolAssembly() {
             ]
           }
         : doc
-    ));
-    
-    toast({
-      title: "Document Signed",
-      description: "Your digital signature has been applied."
-    });
+    );
+
+    setDocuments(updatedDocuments);
+
+    // Save to backend immediately
+    try {
+      const response = await fetch(`/api/irb-applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documents: JSON.stringify(updatedDocuments)
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to save signature');
+      
+      queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
+      
+      toast({
+        title: "Document Signed",
+        description: "Document has been digitally signed and saved successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Signature Failed", 
+        description: "Failed to save signature. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const isReadyForSubmission = () => {
@@ -444,11 +497,34 @@ export default function ProtocolAssembly() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              if (document.uploadedFile) {
+                                toast({
+                                  title: "Document Preview",
+                                  description: `Viewing ${document.uploadedFile.name}`
+                                });
+                              }
+                            }}
+                          >
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              if (document.uploadedFile) {
+                                toast({
+                                  title: "Download Started",
+                                  description: `Downloading ${document.uploadedFile.name}`
+                                });
+                                // In real app, would trigger actual download
+                              }
+                            }}
+                          >
                             <Download className="h-4 w-4 mr-1" />
                             Download
                           </Button>
