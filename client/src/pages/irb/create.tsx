@@ -58,6 +58,18 @@ export default function CreateIrb() {
     queryKey: ['/api/principal-investigators'],
   });
 
+  // Default form values
+  const defaultValues: Partial<CreateIrbApplicationFormValues> = {
+    status: "Submitted",
+    submissionDate: new Date(),
+    riskLevel: "Minimal",
+  };
+
+  const form = useForm<CreateIrbApplicationFormValues>({
+    resolver: zodResolver(createIrbApplicationSchema),
+    defaultValues,
+  });
+
   // Get research activities filtered by selected PI
   const selectedPiId = form.watch('principalInvestigatorId');
   const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
@@ -69,18 +81,6 @@ export default function CreateIrb() {
       return response.json();
     },
     enabled: !!selectedPiId,
-  });
-
-  // Default form values
-  const defaultValues: Partial<CreateIrbApplicationFormValues> = {
-    status: "Submitted",
-    submissionDate: new Date(),
-    riskLevel: "Minimal",
-  };
-
-  const form = useForm<CreateIrbApplicationFormValues>({
-    resolver: zodResolver(createIrbApplicationSchema),
-    defaultValues,
   });
 
   const createIrbApplicationMutation = useMutation({
