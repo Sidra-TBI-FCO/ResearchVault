@@ -55,6 +55,13 @@ export default function IrbSubmissionWizard() {
     
     // Documents
     uploadedDocuments: [] as any[],
+    
+    // Additional IRB-specific fields based on real forms
+    irbNetNumber: "",
+    oldNumber: "",
+    additionalNotificationEmail: "",
+    subjectEnrollmentReasons: [] as string[],
+    reportingRequirements: [] as string[],
   });
 
   const steps: SubmissionWizardStep[] = [
@@ -80,7 +87,7 @@ export default function IrbSubmissionWizard() {
       id: "documents",
       title: "Documents",
       description: "Upload required protocol documents",
-      completed: formData.uploadedDocuments.length > 0
+      completed: formData.uploadedDocuments.length >= 3 // At least 3 required documents
     },
     {
       id: "review",
@@ -252,6 +259,53 @@ export default function IrbSubmissionWizard() {
                   placeholder="Source of funding"
                   className="mt-1"
                 />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="irbNetNumber">IRBNet Number (if applicable)</Label>
+                <Input
+                  id="irbNetNumber"
+                  value={formData.irbNetNumber}
+                  onChange={(e) => updateFormData('irbNetNumber', e.target.value)}
+                  placeholder="IRBNet allocated number"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="additionalNotificationEmail">Additional Notification Email</Label>
+                <Input
+                  id="additionalNotificationEmail"
+                  type="email"
+                  value={formData.additionalNotificationEmail}
+                  onChange={(e) => updateFormData('additionalNotificationEmail', e.target.value)}
+                  placeholder="Additional email for notifications"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Subject Enrollment Reasons</Label>
+              <p className="text-sm text-gray-600 mb-3">Select all reasons for subject enrollment:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  "sample_collection", "data_collection", "intervention_testing", 
+                  "survey_completion", "interview_participation", "follow_up_monitoring"
+                ].map((reason) => (
+                  <div key={reason} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={reason}
+                      checked={formData.subjectEnrollmentReasons.includes(reason)}
+                      onCheckedChange={(checked) => handleArrayField('subjectEnrollmentReasons', reason, checked as boolean)}
+                    />
+                    <Label htmlFor={reason} className="capitalize">
+                      {reason.replace('_', ' ')}
+                    </Label>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -437,17 +491,29 @@ export default function IrbSubmissionWizard() {
                   <p className="text-sm text-blue-800 mt-1">
                     Please upload all required documents for your IRB submission. All documents must be in PDF format.
                   </p>
+                  <div className="mt-2">
+                    <Link href="/irb/templates">
+                      <Button variant="outline" size="sm" className="text-blue-700 border-blue-300">
+                        Download Templates
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
             
             <div className="space-y-4">
               {[
-                { type: "protocol", label: "Research Protocol", required: true },
-                { type: "consent_form", label: "Informed Consent Form", required: true },
-                { type: "investigator_cv", label: "Principal Investigator CV", required: true },
-                { type: "data_safety_plan", label: "Data Safety & Security Plan", required: false },
-                { type: "recruitment_materials", label: "Recruitment Materials", required: false },
+                { type: "protocol", label: "Research Protocol (IRB-413)", required: true, description: "Clinical Research Protocol using IRB-413 template" },
+                { type: "consent_form", label: "Informed Consent Form (IRB-400)", required: true, description: "Completed IRB-400 consent form in English/Arabic" },
+                { type: "investigator_cv", label: "Principal Investigator CV", required: true, description: "Current CV of the PI with research experience" },
+                { type: "study_team_cv", label: "Study Team CVs", required: true, description: "CVs of all co-investigators and key personnel" },
+                { type: "data_safety_plan", label: "Data Safety & Security Plan", required: true, description: "Plan for data protection and confidentiality" },
+                { type: "recruitment_materials", label: "Recruitment Materials", required: false, description: "Flyers, advertisements, or recruitment scripts" },
+                { type: "survey_instruments", label: "Survey/Data Collection Instruments", required: false, description: "Questionnaires, surveys, or data collection forms" },
+                { type: "site_approval", label: "Site Approval Letters", required: false, description: "Letters from collaborating institutions (if multi-site)" },
+                { type: "regulatory_approvals", label: "Regulatory Approvals", required: false, description: "FDA/EMA approvals for investigational products" },
+                { type: "insurance_coverage", label: "Insurance Coverage Letter", required: false, description: "Proof of research insurance coverage" },
               ].map((doc) => (
                 <div key={doc.type} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -456,12 +522,13 @@ export default function IrbSubmissionWizard() {
                       {doc.required && <Badge variant="destructive" className="text-xs">Required</Badge>}
                     </div>
                   </div>
+                  <p className="text-sm text-gray-600 mb-3">{doc.description}</p>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload File
                     </Button>
-                    <span className="text-sm text-gray-500">No file selected</span>
+                    <span className="text-sm text-gray-500">No file selected • PDF format only</span>
                   </div>
                 </div>
               ))}

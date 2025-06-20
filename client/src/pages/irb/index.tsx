@@ -59,22 +59,30 @@ export default function IrbList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-neutral-400">IRB Applications</h1>
-        <Link href="/irb/create">
-          <button 
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-            style={{ 
-              backgroundColor: '#2D9C95',
-              color: 'white',
-              opacity: '1',
-              visibility: 'visible',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-          >
-            New Application
-          </button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/irb/templates">
+            <Button variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              Document Templates
+            </Button>
+          </Link>
+          <Link href="/irb/create">
+            <button 
+              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
+              style={{ 
+                backgroundColor: '#2D9C95',
+                color: 'white',
+                opacity: '1',
+                visibility: 'visible',
+                display: 'block'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
+            >
+              New Application
+            </button>
+          </Link>
+        </div>
       </div>
 
       <Card>

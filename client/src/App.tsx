@@ -54,6 +54,7 @@ import EditPatent from "@/pages/patents/edit";
 import IrbList from "@/pages/irb";
 import CreateIrb from "@/pages/irb/create";
 import IrbSubmissionWizard from "@/pages/irb/submission-wizard";
+import IrbDocumentTemplates from "@/pages/irb/document-templates";
 import IrbApplicationDetail from "@/pages/irb-applications/detail";
 import EditIrbApplication from "@/pages/irb-applications/edit";
 
@@ -128,6 +129,7 @@ function Router() {
         {/* IRB Applications */}
         <Route path="/irb" component={IrbList} />
         <Route path="/irb/create" component={CreateIrb} />
+        <Route path="/irb/templates" component={IrbDocumentTemplates} />
         <Route path="/irb/:id/submit" component={IrbSubmissionWizard} />
         <Route path="/irb-applications/:id/edit" component={EditIrbApplication} />
         <Route path="/irb-applications/:id" component={IrbApplicationDetail} />
