@@ -273,6 +273,7 @@ export const irbApplications = pgTable("irb_applications", {
   requiresMonitoring: boolean("requires_monitoring").default(false),
   monitoringFrequency: text("monitoring_frequency"), // annually, semi_annually, etc.
   reportingRequirements: text("reporting_requirements").array(),
+  protocolTeamMembers: json("protocol_team_members"), // Store protocol team member assignments
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
