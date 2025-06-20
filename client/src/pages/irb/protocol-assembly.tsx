@@ -410,6 +410,8 @@ export default function ProtocolAssembly() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/irb-applications'] });
+      queryClient.refetchQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
       toast({
         title: "Protocol Submitted",
         description: "Your IRB protocol has been submitted for review."
