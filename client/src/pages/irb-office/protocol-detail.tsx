@@ -233,7 +233,8 @@ export default function IrbProtocolDetail() {
           variant="outline"
           className={`capitalize ${getStatusBadge(application.workflowStatus || 'submitted')}`}
         >
-          {(application.workflowStatus || 'submitted').replace('_', ' ')}
+          {application.workflowStatus === 'revisions_requested' ? 'revisions requested' : 
+           (application.workflowStatus || 'submitted').replace('_', ' ')}
         </Badge>
       </div>
 

@@ -133,7 +133,7 @@ export default function IrbApplicationDetail() {
           <h1 className="text-2xl font-semibold text-neutral-400">{irbApplication.title}</h1>
         </div>
         <div className="flex gap-2">
-          {(irbApplication.workflowStatus === 'draft') && (
+          {(irbApplication.workflowStatus === 'draft' || irbApplication.workflowStatus === 'revisions_requested') && (
             <Button 
               onClick={() => navigate(`/irb/${id}/assembly`)}
             >
@@ -178,9 +178,11 @@ export default function IrbApplicationDetail() {
                     irbApplication.workflowStatus === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
                     irbApplication.workflowStatus === 'under_review' ? 'bg-blue-100 text-blue-800' :
                     irbApplication.workflowStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                    irbApplication.workflowStatus === 'revisions_requested' ? 'bg-orange-100 text-orange-800' :
                     'bg-gray-100 text-gray-800'
                   }>
-                    {(irbApplication.workflowStatus || 'draft').replace('_', ' ')}
+                    {irbApplication.workflowStatus === 'revisions_requested' ? 'revisions requested' : 
+                     (irbApplication.workflowStatus || 'draft').replace('_', ' ')}
                   </Badge>
                 </div>
               </div>
