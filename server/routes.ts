@@ -1541,17 +1541,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Skip validation for protocol team members updates and documents updates
       let validateData = req.body;
+      
+      // Always convert date strings to Date objects if present
+      if (req.body.submissionDate && typeof req.body.submissionDate === 'string') {
+        req.body.submissionDate = new Date(req.body.submissionDate);
+      }
+      if (req.body.initialApprovalDate && typeof req.body.initialApprovalDate === 'string') {
+        req.body.initialApprovalDate = new Date(req.body.initialApprovalDate);
+      }
+      if (req.body.expirationDate && typeof req.body.expirationDate === 'string') {
+        req.body.expirationDate = new Date(req.body.expirationDate);
+      }
+      
       if (!req.body.protocolTeamMembers && !req.body.documents) {
-        // Convert date strings to Date objects if present
-        if (req.body.submissionDate && typeof req.body.submissionDate === 'string') {
-          req.body.submissionDate = new Date(req.body.submissionDate);
-        }
-        if (req.body.initialApprovalDate && typeof req.body.initialApprovalDate === 'string') {
-          req.body.initialApprovalDate = new Date(req.body.initialApprovalDate);
-        }
-        if (req.body.expirationDate && typeof req.body.expirationDate === 'string') {
-          req.body.expirationDate = new Date(req.body.expirationDate);
-        }
         validateData = insertIrbApplicationSchema.partial().parse(req.body);
       }
       
