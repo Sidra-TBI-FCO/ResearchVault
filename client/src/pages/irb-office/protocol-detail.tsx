@@ -31,6 +31,8 @@ export default function IrbOfficeProtocolDetail() {
   const [reviewComments, setReviewComments] = useState("");
   const [reviewDecision, setReviewDecision] = useState<string>("");
   const [assignedReviewer, setAssignedReviewer] = useState<string>("");
+  const [secondaryReviewer, setSecondaryReviewer] = useState<string>("");
+  const [reviewType, setReviewType] = useState<string>("");
 
   const { data: application, isLoading } = useQuery<IrbApplication>({
     queryKey: [`/api/irb-applications/${applicationId}`],
@@ -121,7 +123,6 @@ export default function IrbOfficeProtocolDetail() {
       setAssignedReviewer("");
       setSecondaryReviewer("");
       setReviewType("");
-      setAssignedReviewer("");
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update protocol", variant: "destructive" });
@@ -138,18 +139,125 @@ export default function IrbOfficeProtocolDetail() {
     }
   };
 
-  const handleAction = (action: 'approve' | 'reject' | 'request_revisions' | 'assign_reviewer') => {
-    if (!reviewComments.trim() && action !== 'assign_reviewer') {
-      toast({ title: "Error", description: "Comments are required", variant: "destructive" });
-      return;
+  const handleAction = async (action: string) => {
+    if (!reviewComments.trim()) return;
+
+    const timestamp = Date.now().toString();
+    let updateData;
+
+    if (action === 'triage') {
+      if (reviewDecision === 'complete_triage') {
+        updateData = {
+          workflowStatus: 'triage_complete',
+          reviewComments: JSON.stringify({
+            [timestamp]: {
+              action: 'triage_complete',
+              comments: reviewComments,
+              decision: 'triage_complete',
+              stage: 'triage',
+              timestamp: new Date().toISOString()
+            }
+          })
+        };
+      } else if (reviewDecision === 'revisions_required') {
+        updateData = {
+          workflowStatus: 'revisions_requested',
+          reviewComments: JSON.stringify({
+            [timestamp]: {
+              action: 'request_revisions',
+              comments: reviewComments,
+              decision: 'revisions_required',
+              stage: 'triage',
+              timestamp: new Date().toISOString()
+            }
+          })
+        };
+      } else if (reviewDecision === 'rejected') {
+        updateData = {
+          workflowStatus: 'rejected',
+          reviewComments: JSON.stringify({
+            [timestamp]: {
+              action: 'reject',
+              comments: reviewComments,
+              decision: 'rejected',
+              stage: 'triage',
+              timestamp: new Date().toISOString()
+            }
+          })
+        };
+      }
+    } else if (action === 'assign_reviewers') {
+      const reviewerAssignments = {
+        primaryReviewer: assignedReviewer,
+        secondaryReviewer: secondaryReviewer || null,
+        reviewType: reviewType,
+        assignedDate: new Date().toISOString()
+      };
+
+      updateData = {
+        workflowStatus: 'under_review',
+        protocolType: reviewType,
+        reviewerAssignments: JSON.stringify(reviewerAssignments),
+        reviewComments: JSON.stringify({
+          [timestamp]: {
+            action: 'assign_reviewers',
+            comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
+            decision: 'reviewers_assigned',
+            stage: 'assignment',
+            reviewerAssignments,
+            timestamp: new Date().toISOString()
+          }
+        })
+      };
+    } else if (action === 'final_decision') {
+      let newStatus = reviewDecision;
+      if (reviewDecision === 'approved_with_modifications') {
+        newStatus = 'revisions_requested';
+      } else if (reviewDecision === 'deferred') {
+        newStatus = 'revisions_requested';
+      } else if (reviewDecision === 'disapproved') {
+        newStatus = 'rejected';
+      }
+
+      updateData = {
+        workflowStatus: newStatus,
+        reviewComments: JSON.stringify({
+          [timestamp]: {
+            action: 'final_decision',
+            comments: reviewComments,
+            decision: reviewDecision,
+            stage: 'final_review',
+            timestamp: new Date().toISOString()
+          }
+        })
+      };
     }
 
-    updateApplicationMutation.mutate({
-      action,
-      comments: reviewComments,
-      reviewerId: assignedReviewer ? parseInt(assignedReviewer) : undefined,
-      decision: reviewDecision
-    });
+    if (updateData) {
+      try {
+        const response = await fetch(`/api/irb-applications/${applicationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (!response.ok) throw new Error('Failed to update application');
+        
+        queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
+        queryClient.invalidateQueries({ queryKey: ['/api/irb-applications'] });
+        
+        toast({ title: "Success", description: "Protocol updated successfully" });
+        
+        // Reset form
+        setReviewComments('');
+        setReviewDecision('');
+        setAssignedReviewer('');
+        setSecondaryReviewer('');
+        setReviewType('');
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to update protocol", variant: "destructive" });
+      }
+    }
   };
 
   const formatDate = (date: string | Date | undefined) => {
@@ -164,16 +272,24 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const getStatusBadge = (status: string) => {
-    const colors = {
-      submitted: "bg-yellow-100 text-yellow-700",
-      under_review: "bg-blue-100 text-blue-700",
-      ready_for_pi: "bg-purple-100 text-purple-700",
-      approved: "bg-green-100 text-green-700",
-      rejected: "bg-red-100 text-red-600",
-      closed: "bg-gray-100 text-gray-600"
-    };
-    
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-600";
+    switch (status) {
+      case 'submitted':
+        return 'bg-blue-100 text-blue-800';
+      case 'triage_complete':
+        return 'bg-cyan-100 text-cyan-800';
+      case 'under_review':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'revisions_requested':
+        return 'bg-orange-100 text-orange-800';
+      case 'resubmitted':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const renderReviewHistory = () => {
