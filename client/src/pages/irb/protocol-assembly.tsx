@@ -260,40 +260,35 @@ export default function ProtocolAssembly() {
     },
   });
 
-  const saveDraftMutation = useMutation({
+  // Auto-save documents when they change
+  const autoSaveDocumentsMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workflowStatus: 'draft',
-          documents: JSON.stringify(documents),
-          protocolTeamMembers: JSON.stringify(protocolMembers)
+          documents: JSON.stringify(documents)
         }),
       });
       
-      if (!response.ok) throw new Error('Failed to save draft');
+      if (!response.ok) throw new Error('Failed to auto-save documents');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
-      toast({
-        title: "Draft Saved",
-        description: "Your protocol assembly progress has been saved as a draft."
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Save Failed",
-        description: "Failed to save draft. Please try again.",
-        variant: "destructive"
-      });
     }
   });
 
-  const handleSaveDraft = () => {
-    saveDraftMutation.mutate();
-  };
+  // Auto-save documents whenever they change
+  useEffect(() => {
+    if (documents.length > 0) {
+      const timeoutId = setTimeout(() => {
+        autoSaveDocumentsMutation.mutate();
+      }, 1000); // Auto-save after 1 second of inactivity
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [documents, autoSaveDocumentsMutation]);
 
   const submitProtocolMutation = useMutation({
     mutationFn: async () => {
@@ -672,9 +667,7 @@ export default function ProtocolAssembly() {
                 {submitProtocolMutation.isPending ? 'Submitting...' : 'Submit for IRB Review'}
               </Button>
               
-              <Button variant="outline" className="w-full">
-                Save as Draft
-              </Button>
+
               
               <Button variant="outline" className="w-full">
                 Download Protocol Package
