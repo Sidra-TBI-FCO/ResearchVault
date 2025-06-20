@@ -28,7 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 
 // Extend the insert schema with additional validations
-const createIrbApplicationSchema = insertIrbApplicationSchema.extend({
+const createIrbApplicationSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   researchActivityId: z.number({
     required_error: "Please select a research activity (SDR)",
@@ -36,18 +36,10 @@ const createIrbApplicationSchema = insertIrbApplicationSchema.extend({
   principalInvestigatorId: z.number({
     required_error: "Please select a principal investigator",
   }),
-
   protocolNumber: z.string().optional(),
   riskLevel: z.string().optional(),
   description: z.string().optional(),
-}).omit({
-  irbNumber: true, // IRB number will be auto-generated
-  workflowStatus: true, // Will be set to 'draft' automatically
-  submissionDate: true, // Will be set when submitted
-  initialApprovalDate: true, // Will be set when approved
-  expirationDate: true, // Will be set when approved
-  createdAt: true,
-  updatedAt: true,
+  cayuseProtocolNumber: z.string().optional(),
 });
 
 type CreateIrbApplicationFormValues = z.infer<typeof createIrbApplicationSchema>;
