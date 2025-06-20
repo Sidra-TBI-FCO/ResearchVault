@@ -174,39 +174,43 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const renderReviewHistory = () => {
-    if (!application?.reviewComments) return null;
+    const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}';
+    const hasPiResponses = application?.piResponses && application.piResponses !== '{}';
+    
+    if (!hasReviewComments && !hasPiResponses) return null;
     
     try {
-      let reviewComments;
-      
-      // Handle different data formats
-      if (typeof application.reviewComments === 'string') {
-        reviewComments = JSON.parse(application.reviewComments);
-      } else {
-        reviewComments = application.reviewComments;
-      }
-      
-      // Skip if empty or test data
-      if (!reviewComments || Object.keys(reviewComments).length === 0) {
-        return null;
-      }
-      
-      // Check if it contains test data
-      const hasTestData = Object.values(reviewComments).some((entry: any) => 
-        entry.comments === 'test' || entry.action === 'test'
-      );
-      
-      if (hasTestData) {
-        return null;
-      }
-      
       const allEntries: Array<[string, any]> = [];
       
-      Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
-        // Determine type based on content or existing type field
-        const entryType = review.type || (review.submittedBy ? 'pi_submission' : 'irb_review');
-        allEntries.push([timestamp, { ...review, type: entryType }]);
-      });
+      // Add IRB review comments
+      if (hasReviewComments) {
+        let reviewComments;
+        if (typeof application.reviewComments === 'string') {
+          reviewComments = JSON.parse(application.reviewComments);
+        } else {
+          reviewComments = application.reviewComments;
+        }
+        
+        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
+          if (review.comments !== 'test' && review.action !== 'test') {
+            allEntries.push([timestamp, { ...review, type: 'irb_review' }]);
+          }
+        });
+      }
+      
+      // Add PI responses
+      if (hasPiResponses) {
+        let piResponses;
+        if (typeof application.piResponses === 'string') {
+          piResponses = JSON.parse(application.piResponses);
+        } else {
+          piResponses = application.piResponses;
+        }
+        
+        Object.entries(piResponses).forEach(([timestamp, response]: [string, any]) => {
+          allEntries.push([timestamp, { ...response, type: 'pi_submission' }]);
+        });
+      }
       
       if (allEntries.length === 0) return null;
       
@@ -247,7 +251,7 @@ export default function IrbOfficeProtocolDetail() {
                       {formatDate(isNaN(Number(timestamp)) ? timestamp : new Date(Number(timestamp)))}
                     </span>
                   </div>
-                  <p className="text-sm">{entry.comments}</p>
+                  <p className="text-sm">{entry.comment || entry.comments}</p>
                   {entry.decision && (
                     <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
                   )}

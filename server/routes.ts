@@ -1539,6 +1539,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Updating IRB application with data:', req.body);
 
+      // Handle submission comments separately
+      if (req.body.submissionComment) {
+        const currentApp = await storage.getIrbApplication(id);
+        if (currentApp) {
+          const existingResponses = currentApp.piResponses ? JSON.parse(currentApp.piResponses as string) : {};
+          const newResponse = {
+            timestamp: new Date().toISOString(),
+            comment: req.body.submissionComment,
+            workflowStatus: req.body.workflowStatus || 'resubmitted'
+          };
+          existingResponses[Date.now()] = newResponse;
+          req.body.piResponses = JSON.stringify(existingResponses);
+          delete req.body.submissionComment; // Remove from body to avoid validation issues
+        }
+      }
+
       // Skip validation for protocol team members updates and documents updates
       let validateData = req.body;
       
@@ -1553,7 +1569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.expirationDate = new Date(req.body.expirationDate);
       }
       
-      if (!req.body.protocolTeamMembers && !req.body.documents) {
+      if (!req.body.protocolTeamMembers && !req.body.documents && !req.body.piResponses) {
         validateData = insertIrbApplicationSchema.partial().parse(req.body);
       }
       
