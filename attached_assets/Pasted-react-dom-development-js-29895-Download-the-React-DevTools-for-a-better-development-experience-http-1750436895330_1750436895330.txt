@@ -1,0 +1,43 @@
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+protocol-detail.tsx:180 Raw review comments: Object
+protocol-detail.tsx:188 Parsed review comments string: Object
+protocol-detail.tsx:262  Error parsing review history: TypeError: reviewCommentsStr.includes is not a function
+    at renderReviewHistory (protocol-detail.tsx:191:59)
+    at IrbOfficeProtocolDetail (protocol-detail.tsx:392:12)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at updateFunctionComponent (react-dom.development.js:19617:20)
+    at beginWork (react-dom.development.js:21640:16)
+    at beginWork$1 (react-dom.development.js:27465:14)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+    at renderRootSync (react-dom.development.js:26473:7)
+    at performSyncWorkOnRoot (react-dom.development.js:26124:20)
+renderReviewHistory @ protocol-detail.tsx:262
+protocol-detail.tsx:180 Raw review comments: Object
+protocol-detail.tsx:188 Parsed review comments string: Object
+protocol-detail.tsx:262  Error parsing review history: TypeError: reviewCommentsStr.includes is not a function
+    at renderReviewHistory (protocol-detail.tsx:191:59)
+    at IrbOfficeProtocolDetail (protocol-detail.tsx:392:12)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at updateFunctionComponent (react-dom.development.js:19617:20)
+    at beginWork (react-dom.development.js:21640:16)
+    at beginWork$1 (react-dom.development.js:27465:14)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+    at renderRootSync (react-dom.development.js:26473:7)
+    at performSyncWorkOnRoot (react-dom.development.js:26124:20)
+renderReviewHistory @ protocol-detail.tsx:262
+protocol-detail.tsx:180 Raw review comments: Object
+protocol-detail.tsx:188 Parsed review comments string: Object
+protocol-detail.tsx:262  Error parsing review history: TypeError: reviewCommentsStr.includes is not a function
+    at renderReviewHistory (protocol-detail.tsx:191:59)
+    at IrbOfficeProtocolDetail (protocol-detail.tsx:392:12)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at updateFunctionComponent (react-dom.development.js:19617:20)
+    at beginWork (react-dom.development.js:21640:16)
+    at beginWork$1 (react-dom.development.js:27465:14)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+    at renderRootSync (react-dom.development.js:26473:7)
+    at performSyncWorkOnRoot (react-dom.development.js:26124:20)
+renderReviewHistory @ protocol-detail.tsx:262

@@ -177,23 +177,28 @@ export default function IrbOfficeProtocolDetail() {
     if (!application?.reviewComments) return null;
     
     try {
-      console.log('Raw review comments:', application.reviewComments);
+      let reviewComments;
       
-      // Handle double-encoded JSON strings
-      let reviewCommentsStr = application.reviewComments;
-      if (typeof reviewCommentsStr === 'string' && reviewCommentsStr.startsWith('"')) {
-        reviewCommentsStr = JSON.parse(reviewCommentsStr);
+      // Handle different data formats
+      if (typeof application.reviewComments === 'string') {
+        reviewComments = JSON.parse(application.reviewComments);
+      } else {
+        reviewComments = application.reviewComments;
       }
       
-      console.log('Parsed review comments string:', reviewCommentsStr);
-      
-      // Skip if it's just test data
-      if (reviewCommentsStr === '{}' || reviewCommentsStr.includes('"test"')) {
+      // Skip if empty or test data
+      if (!reviewComments || Object.keys(reviewComments).length === 0) {
         return null;
       }
       
-      const reviewComments = JSON.parse(reviewCommentsStr);
-      console.log('Final parsed comments:', reviewComments);
+      // Check if it contains test data
+      const hasTestData = Object.values(reviewComments).some((entry: any) => 
+        entry.comments === 'test' || entry.action === 'test'
+      );
+      
+      if (hasTestData) {
+        return null;
+      }
       
       const allEntries: Array<[string, any]> = [];
       
