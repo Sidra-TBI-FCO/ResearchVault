@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, IrbApplication, Scientist, DataManagementPlan } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users, ClipboardCheck, Edit } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Layers, Users, ClipboardCheck, Edit, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -54,6 +54,117 @@ export default function IrbApplicationDetail() {
   
   // Get the number of publications linked to this research activity
   const { count: publicationCount } = usePublicationCount(irbApplication?.researchActivityId);
+
+  const formatDate = (date: string | Date | undefined) => {
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const renderProtocolHistory = () => {
+    const hasReviewComments = irbApplication?.reviewComments && irbApplication.reviewComments !== '{}';
+    const hasPiResponses = irbApplication?.piResponses && irbApplication.piResponses !== '{}';
+    
+    if (!hasReviewComments && !hasPiResponses) return null;
+    
+    try {
+      const allEntries: Array<[string, any]> = [];
+      
+      // Add IRB review comments
+      if (hasReviewComments) {
+        let reviewComments;
+        if (typeof irbApplication.reviewComments === 'string') {
+          reviewComments = JSON.parse(irbApplication.reviewComments);
+        } else {
+          reviewComments = irbApplication.reviewComments;
+        }
+        
+        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
+          if (review.comments !== 'test' && review.action !== 'test') {
+            allEntries.push([timestamp, { ...review, type: 'irb_review' }]);
+          }
+        });
+      }
+      
+      // Add PI responses
+      if (hasPiResponses) {
+        let piResponses;
+        if (typeof irbApplication.piResponses === 'string') {
+          piResponses = JSON.parse(irbApplication.piResponses);
+        } else {
+          piResponses = irbApplication.piResponses;
+        }
+        
+        Object.entries(piResponses).forEach(([timestamp, response]: [string, any]) => {
+          allEntries.push([timestamp, { ...response, type: 'pi_submission' }]);
+        });
+      }
+      
+      if (allEntries.length === 0) return null;
+      
+      // Sort by timestamp (most recent first)
+      allEntries.sort(([a], [b]) => {
+        const timeA = isNaN(Number(a)) ? new Date(a).getTime() : Number(a);
+        const timeB = isNaN(Number(b)) ? new Date(b).getTime() : Number(b);
+        return timeB - timeA;
+      });
+      
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Protocol History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {allEntries.map(([timestamp, entry]: [string, any], index) => (
+                <div key={`${timestamp}-${index}`} className="border-l-2 border-gray-200 pl-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge 
+                      variant="outline" 
+                      className={`capitalize ${
+                        entry.type === 'irb_review' 
+                          ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                          : 'bg-green-50 text-green-700 border-green-200'
+                      }`}
+                    >
+                      {entry.type === 'irb_review' 
+                        ? `IRB Office - ${entry.action?.replace('_', ' ') || 'Review'}` 
+                        : 'PI Submission'
+                      }
+                    </Badge>
+                    <span className="text-sm text-gray-500">
+                      {formatDate(isNaN(Number(timestamp)) ? timestamp : new Date(Number(timestamp)))}
+                    </span>
+                  </div>
+                  <p className="text-sm">{entry.comment || entry.comments}</p>
+                  {entry.decision && (
+                    <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
+                  )}
+                  {entry.changes && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium">Changes Made:</p>
+                      <p className="text-sm text-gray-600">{entry.changes}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      );
+    } catch (error) {
+      console.error('Error parsing protocol history:', error);
+      return null;
+    }
+  };
   
   // Get the data management plan for this research activity
   const { data: dataManagementPlan, isLoading: dmpLoading } = useQuery<DataManagementPlan>({
@@ -397,6 +508,9 @@ export default function IrbApplicationDetail() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Protocol History */}
+          {renderProtocolHistory()}
         </div>
       </div>
     </div>
