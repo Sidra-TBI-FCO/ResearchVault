@@ -144,6 +144,7 @@ function Router() {
         {/* IRB Office */}
         <Route path="/irb-office" component={IrbOfficePortal} />
         <Route path="/irb-office/protocols/:id" component={IrbProtocolDetail} />
+        <Route path="/irb-office/protocol/:id" component={IrbProtocolDetail} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />

@@ -152,7 +152,7 @@ export default function IrbOfficePortal() {
           {filteredApps.map((application) => {
             const daysSince = getDaysSince(application.submissionDate);
             return (
-              <TableRow key={application.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/irb-office/protocol/${application.id}`}>
+              <TableRow key={application.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/irb-office/protocols/${application.id}`}>
                 <TableCell>
                   <div className="font-medium text-blue-600 hover:text-blue-800">
                     {application.title}
@@ -208,7 +208,7 @@ export default function IrbOfficePortal() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.location.href = `/irb-office/protocol/${application.id}`;
+                        window.location.href = `/irb-office/protocols/${application.id}`;
                       }}
                     >
                       <Eye className="h-4 w-4" />
