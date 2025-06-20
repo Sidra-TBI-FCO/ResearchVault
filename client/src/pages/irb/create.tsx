@@ -39,12 +39,11 @@ const createIrbApplicationSchema = insertIrbApplicationSchema.extend({
   submissionDate: z.date().optional(),
   approvalDate: z.date().optional(),
   expirationDate: z.date().optional(),
-  status: z.string({
-    required_error: "Please select a status",
-  }),
   protocolNumber: z.string().optional(),
   riskLevel: z.string().optional(),
   description: z.string().optional(),
+}).omit({
+  irbNumber: true, // IRB number will be auto-generated
 });
 
 type CreateIrbApplicationFormValues = z.infer<typeof createIrbApplicationSchema>;
@@ -60,9 +59,15 @@ export default function CreateIrb() {
 
   // Default form values
   const defaultValues: Partial<CreateIrbApplicationFormValues> = {
-    status: "Submitted",
-    submissionDate: new Date(),
-    riskLevel: "Minimal",
+    title: '',
+    description: '',
+    protocolType: 'observational',
+    riskLevel: 'minimal',
+    isInterventional: false,
+    expectedParticipants: 0,
+    vulnerablePopulations: [],
+    researchActivityId: undefined,
+    principalInvestigatorId: undefined,
   };
 
   const form = useForm<CreateIrbApplicationFormValues>({
@@ -217,51 +222,9 @@ export default function CreateIrb() {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Submitted">Submitted</SelectItem>
-                          <SelectItem value="Under Review">Under Review</SelectItem>
-                          <SelectItem value="Approved">Approved</SelectItem>
-                          <SelectItem value="Rejected">Rejected</SelectItem>
-                          <SelectItem value="Revisions Required">Revisions Required</SelectItem>
-                          <SelectItem value="Expired">Expired</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 
-                <FormField
-                  control={form.control}
-                  name="protocolNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Protocol Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. IRB-2023-045" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Leave blank if not yet assigned
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 
                 <FormField
                   control={form.control}
@@ -444,7 +407,7 @@ export default function CreateIrb() {
                   type="submit"
                   disabled={createIrbApplicationMutation.isPending}
                 >
-                  {createIrbApplicationMutation.isPending ? 'Submitting...' : 'Submit Application'}
+                  {createIrbApplicationMutation.isPending ? 'Creating...' : 'Create Draft'}
                 </Button>
               </CardFooter>
             </form>

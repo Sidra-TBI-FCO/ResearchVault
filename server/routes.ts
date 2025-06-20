@@ -1491,7 +1491,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/irb-applications', async (req: Request, res: Response) => {
     try {
-      const validateData = insertIrbApplicationSchema.parse(req.body);
+      // Generate IRB number automatically
+      const currentYear = new Date().getFullYear();
+      const existingApps = await storage.getIrbApplications();
+      const yearlyApps = existingApps.filter(app => 
+        app.irbNumber && app.irbNumber.startsWith(`IRB-${currentYear}-`)
+      );
+      const nextNumber = (yearlyApps.length + 1).toString().padStart(3, '0');
+      const irbNumber = `IRB-${currentYear}-${nextNumber}`;
+      
+      const validateData = insertIrbApplicationSchema.parse({
+        ...req.body,
+        irbNumber,
+        workflowStatus: req.body.workflowStatus || 'draft',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
       
       // Check if research activity exists
       const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
@@ -1511,6 +1526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
+      console.error('IRB application creation error:', error);
       res.status(500).json({ message: "Failed to create IRB application" });
     }
   });
