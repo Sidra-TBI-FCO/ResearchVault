@@ -759,7 +759,7 @@ export default function ProtocolAssembly() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(JSON.parse(application.reviewComments)).map(([timestamp, comment]: [string, any]) => (
+                  {Object.entries(typeof application.reviewComments === 'string' ? JSON.parse(application.reviewComments) : application.reviewComments).map(([timestamp, comment]: [string, any]) => (
                     <div key={timestamp} className="bg-white p-3 rounded border">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-sm font-medium text-orange-800">
