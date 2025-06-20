@@ -260,6 +260,41 @@ export default function ProtocolAssembly() {
     },
   });
 
+  const saveDraftMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/irb-applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workflowStatus: 'draft',
+          documents: JSON.stringify(documents),
+          protocolTeamMembers: JSON.stringify(protocolMembers)
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to save draft');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
+      toast({
+        title: "Draft Saved",
+        description: "Your protocol assembly progress has been saved as a draft."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSaveDraft = () => {
+    saveDraftMutation.mutate();
+  };
+
   const submitProtocolMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
