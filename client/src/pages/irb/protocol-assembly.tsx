@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Upload, Download, FileText, Users, CheckCircle, 
-  AlertCircle, Clock, Signature, Plus, X, Eye 
+  AlertCircle, Clock, Signature, Plus, X, Eye, AlertTriangle, Calendar 
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IrbApplication, ResearchActivity, Scientist, ProjectMember } from "@shared/schema";
