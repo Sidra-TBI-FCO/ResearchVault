@@ -21,7 +21,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertIrbApplicationSchema } from "@shared/schema";
 import { Scientist, ResearchActivity } from "@shared/schema";
-import { CalendarIcon, ArrowLeft } from "lucide-react";
+import { CalendarIcon, ArrowLeft, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -58,9 +58,17 @@ export default function CreateIrb() {
     queryKey: ['/api/principal-investigators'],
   });
 
-  // Get all research activities for selection
+  // Get research activities filtered by selected PI
+  const selectedPiId = form.watch('principalInvestigatorId');
   const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/research-activities'],
+    queryKey: ['/api/research-activities', selectedPiId],
+    queryFn: async () => {
+      if (!selectedPiId) return [];
+      const response = await fetch(`/api/research-activities?principalInvestigatorId=${selectedPiId}`);
+      if (!response.ok) throw new Error('Failed to fetch research activities');
+      return response.json();
+    },
+    enabled: !!selectedPiId,
   });
 
   // Default form values
@@ -119,6 +127,17 @@ export default function CreateIrb() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium text-blue-900">IRB Application Process</h3>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Start by selecting the Principal Investigator, then choose from their active research activities (SDRs) to create the IRB application.
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
