@@ -1411,25 +1411,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // IRB Applications
   app.get('/api/irb-applications', async (req: Request, res: Response) => {
     try {
-      const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+      const researchActivityId = req.query.researchActivityId ? parseInt(req.query.researchActivityId as string) : undefined;
       
       let applications;
-      if (projectId && !isNaN(projectId)) {
-        applications = await storage.getIrbApplicationsForProject(projectId);
+      if (researchActivityId && !isNaN(researchActivityId)) {
+        applications = await storage.getIrbApplicationsForResearchActivity(researchActivityId);
       } else {
         applications = await storage.getIrbApplications();
       }
       
-      // Enhance applications with project and PI details
+      // Enhance applications with research activity and PI details
       const enhancedApplications = await Promise.all(applications.map(async (app) => {
-        const project = await storage.getProject(app.projectId);
+        const researchActivity = app.researchActivityId ? await storage.getResearchActivity(app.researchActivityId) : null;
         const pi = await storage.getScientist(app.principalInvestigatorId);
         
         return {
           ...app,
-          project: project ? {
-            id: project.id,
-            title: project.title
+          researchActivity: researchActivity ? {
+            id: researchActivity.id,
+            sdrNumber: researchActivity.sdrNumber,
+            title: researchActivity.title
           } : null,
           principalInvestigator: pi ? {
             id: pi.id,
@@ -1484,10 +1485,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validateData = insertIrbApplicationSchema.parse(req.body);
       
-      // Check if project exists
-      const project = await storage.getProject(validateData.projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+      // Check if research activity exists
+      const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+      if (!researchActivity) {
+        return res.status(404).json({ message: "Research activity not found" });
       }
       
       // Check if principal investigator exists

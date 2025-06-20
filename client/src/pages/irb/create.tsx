@@ -20,7 +20,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertIrbApplicationSchema } from "@shared/schema";
-import { Scientist, Project } from "@shared/schema";
+import { Scientist, ResearchActivity } from "@shared/schema";
 import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,8 +30,8 @@ import { cn } from "@/lib/utils";
 // Extend the insert schema with additional validations
 const createIrbApplicationSchema = insertIrbApplicationSchema.extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
-  projectId: z.number({
-    required_error: "Please select a project",
+  researchActivityId: z.number({
+    required_error: "Please select a research activity (SDR)",
   }),
   principalInvestigatorId: z.number({
     required_error: "Please select a principal investigator",
@@ -58,9 +58,9 @@ export default function CreateIrb() {
     queryKey: ['/api/principal-investigators'],
   });
 
-  // Get all projects for selection
-  const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
+  // Get all research activities for selection
+  const { data: researchActivities, isLoading: researchActivitiesLoading } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/research-activities'],
   });
 
   // Default form values

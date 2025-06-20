@@ -120,6 +120,9 @@ export default function IrbSubmissionWizard() {
           ...submissionData,
           workflowStatus: 'submitted',
           submissionDate: new Date().toISOString(),
+          irbNetNumber: formData.irbNetNumber,
+          additionalNotificationEmail: formData.additionalNotificationEmail,
+          subjectEnrollmentReasons: formData.subjectEnrollmentReasons,
         }),
       });
       if (!response.ok) throw new Error('Failed to submit application');

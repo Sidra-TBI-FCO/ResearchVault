@@ -51,7 +51,8 @@ export default function IrbList() {
       (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.protocolNumber && app.protocolNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.principalInvestigator && app.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.project && app.project.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      (app.researchActivity && app.researchActivity.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.researchActivity && app.researchActivity.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   });
 
@@ -139,11 +140,11 @@ export default function IrbList() {
                           <a className="hover:text-primary-500 transition-colors">{application.title}</a>
                         </Link>
                       </div>
-                      {application.project && (
+                      {application.researchActivity && (
                         <div className="text-sm text-neutral-200 mt-1">
-                          Project: <Link href={`/projects/${application.project.id}`}>
+                          Research Activity: <Link href={`/research-activities/${application.researchActivity.id}`}>
                             <a className="text-primary-500 hover:text-primary-600 transition-colors">
-                              {application.project.title}
+                              {application.researchActivity.sdrNumber} - {application.researchActivity.title}
                             </a>
                           </Link>
                         </div>
