@@ -396,7 +396,7 @@ export default function ProtocolAssembly() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => document.getElementById(`file-${document.id}`)?.click()}
+                            onClick={() => window.document.getElementById(`file-${document.id}`)?.click()}
                           >
                             <Upload className="h-4 w-4 mr-1" />
                             Upload
