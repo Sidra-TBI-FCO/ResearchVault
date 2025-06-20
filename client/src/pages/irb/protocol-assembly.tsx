@@ -58,6 +58,7 @@ export default function ProtocolAssembly() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
+  const [submissionComment, setSubmissionComment] = useState("");
 
   const { data: application, isLoading } = useQuery<IrbApplication>({
     queryKey: [`/api/irb-applications/${applicationId}`],
@@ -775,7 +776,7 @@ export default function ProtocolAssembly() {
                           displayText = comment;
                         } else if (comment && typeof comment === 'object') {
                           displayText = comment.comments || comment.text || JSON.stringify(comment);
-                          actionText = comment.action === 'request_revisions' ? 'Revisions Requested' : (comment.action || 'Review Comment');
+                          actionText = comment.action === 'request_revisions' ? 'IRB Office - Protocol Triage' : (comment.action || 'IRB Office Comment');
                         } else {
                           displayText = String(comment);
                         }
@@ -796,6 +797,9 @@ export default function ProtocolAssembly() {
                               </span>
                             </div>
                             <p className="text-sm text-gray-700">{displayText}</p>
+                            <div className="mt-2 text-xs text-gray-500 italic">
+                              Protocol is currently in triage stage - formal review has not yet begun
+                            </div>
                           </div>
                         );
                       });
@@ -883,6 +887,26 @@ export default function ProtocolAssembly() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Resubmission Comment */}
+          {application?.workflowStatus === 'revisions_requested' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Response to IRB Comments</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Textarea
+                  placeholder="Describe the changes made in response to IRB comments..."
+                  value={submissionComment}
+                  onChange={(e) => setSubmissionComment(e.target.value)}
+                  rows={4}
+                />
+                <p className="text-xs text-gray-500">
+                  This comment will be included with your resubmission to help the IRB office understand your changes.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           <Card>
