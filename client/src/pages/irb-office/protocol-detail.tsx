@@ -58,15 +58,16 @@ export default function IrbOfficeProtocolDetail() {
       const oneYearFromNow = new Date();
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
       
-      const updateData: any = {
+      const updateData = {
         workflowStatus: getNewStatus(action.action),
         reviewComments: JSON.stringify({
           ...JSON.parse(application?.reviewComments || '{}'),
-          [now]: {
+          [Date.now()]: {
             action: action.action,
             comments: action.comments,
             reviewerId: action.reviewerId,
-            decision: action.decision
+            decision: action.decision,
+            timestamp: now
           }
         }),
         ...(action.reviewerId && { reviewerAssignments: JSON.stringify({ primaryReviewer: action.reviewerId }) })
@@ -74,16 +75,18 @@ export default function IrbOfficeProtocolDetail() {
       
       // Set dates based on action
       if (action.action === 'approve') {
-        updateData.initialApprovalDate = new Date(now);
-        updateData.expirationDate = new Date(oneYearFromNow.toISOString());
+        updateData.initialApprovalDate = now;
+        updateData.expirationDate = oneYearFromNow.toISOString();
       }
       
       console.log('Sending update data:', updateData);
       
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData),
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
       });
       
       if (!response.ok) {
