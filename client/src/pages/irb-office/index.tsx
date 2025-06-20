@@ -58,6 +58,7 @@ export default function IrbOfficePortal() {
   const getWorkflowStatusBadge = (status: string, daysSince: number = 0) => {
     const colors = {
       submitted: daysSince > 14 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700",
+      resubmitted: "bg-blue-100 text-blue-700",
       under_review: daysSince > 21 ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700",
       revisions_requested: "bg-orange-100 text-orange-700",
       ready_for_pi: "bg-purple-100 text-purple-700",
@@ -85,7 +86,7 @@ export default function IrbOfficePortal() {
       
       switch (status) {
         case 'submitted':
-          return (app.workflowStatus === 'submitted' || app.workflowStatus === 'draft') && matchesSearch;
+          return (app.workflowStatus === 'submitted' || app.workflowStatus === 'draft' || app.workflowStatus === 'resubmitted') && matchesSearch;
         case 'review':
           return app.workflowStatus === 'under_review' && matchesSearch;
         case 'ready_for_pi':
