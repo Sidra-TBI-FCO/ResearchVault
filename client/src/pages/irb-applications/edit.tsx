@@ -42,7 +42,7 @@ export default function IrbApplicationEdit() {
       submissionDate: irbApplication?.submissionDate ? new Date(irbApplication.submissionDate).toISOString().split('T')[0] : "",
       approvalDate: irbApplication?.approvalDate ? new Date(irbApplication.approvalDate).toISOString().split('T')[0] : "",
       expirationDate: irbApplication?.expirationDate ? new Date(irbApplication.expirationDate).toISOString().split('T')[0] : "",
-      status: irbApplication?.status || "Submitted",
+      workflowStatus: irbApplication?.workflowStatus || "draft",
     },
   });
 
@@ -298,33 +298,7 @@ export default function IrbApplicationEdit() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Submitted">Submitted</SelectItem>
-                        <SelectItem value="Under Review">Under Review</SelectItem>
-                        <SelectItem value="Approved">Approved</SelectItem>
-                        <SelectItem value="Conditionally Approved">Conditionally Approved</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                        <SelectItem value="Withdrawn">Withdrawn</SelectItem>
-                        <SelectItem value="Expired">Expired</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               <div className="flex gap-4">
                 <Button 
