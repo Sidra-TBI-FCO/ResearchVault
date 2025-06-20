@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,10 +36,8 @@ export default function IrbApplicationEdit() {
     defaultValues: {
       researchActivityId: irbApplication?.researchActivityId || 0,
       irbNumber: irbApplication?.irbNumber || "",
-      cayuseProtocolNumber: irbApplication?.cayuseProtocolNumber || "",
       title: irbApplication?.title || "",
       principalInvestigatorId: irbApplication?.principalInvestigatorId || 0,
-
       workflowStatus: irbApplication?.workflowStatus || "draft",
     },
   });
@@ -50,11 +48,10 @@ export default function IrbApplicationEdit() {
       form.reset({
         researchActivityId: irbApplication.researchActivityId || 0,
         irbNumber: irbApplication.irbNumber,
-        cayuseProtocolNumber: irbApplication.cayuseProtocolNumber || "",
         title: irbApplication.title,
         principalInvestigatorId: irbApplication.principalInvestigatorId,
-
         status: irbApplication.status,
+        workflowStatus: irbApplication.workflowStatus,
       });
     }
   }, [irbApplication, form]);
@@ -177,35 +174,27 @@ export default function IrbApplicationEdit() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="irbNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>IRB Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., IRB-001" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cayuseProtocolNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cayuse Protocol Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cayuse protocol number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="irbNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>IRB Application Number</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g., IRB-001" 
+                        {...field} 
+                        disabled 
+                        className="bg-gray-50" 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      IRB numbers are automatically assigned and cannot be edited
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
