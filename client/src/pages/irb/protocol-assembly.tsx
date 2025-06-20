@@ -59,6 +59,11 @@ export default function ProtocolAssembly() {
   const [showAddMember, setShowAddMember] = useState(false);
   const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
 
+  const { data: application, isLoading } = useQuery<IrbApplication>({
+    queryKey: [`/api/irb-applications/${applicationId}`],
+    enabled: !!applicationId,
+  });
+
   // Load existing protocol members from application data
   useEffect(() => {
     if (application?.protocolTeamMembers) {
@@ -70,11 +75,6 @@ export default function ProtocolAssembly() {
       }
     }
   }, [application]);
-
-  const { data: application, isLoading } = useQuery<IrbApplication>({
-    queryKey: [`/api/irb-applications/${applicationId}`],
-    enabled: !!applicationId,
-  });
 
   const { data: researchActivity } = useQuery<ResearchActivity>({
     queryKey: [`/api/research-activities/${application?.researchActivityId}`],
