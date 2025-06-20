@@ -30,12 +30,13 @@ export default function IrbList() {
   };
 
   const statusColors = {
+    draft: "bg-gray-100 text-gray-700",
     submitted: "bg-yellow-100 text-yellow-700",
+    under_review: "bg-purple-100 text-purple-600",
     approved: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-600",
     pending: "bg-blue-100 text-blue-600",
-    expired: "bg-gray-100 text-gray-600",
-    "under review": "bg-purple-100 text-purple-600"
+    expired: "bg-gray-100 text-gray-600"
   };
 
   const riskLevelColors = {
@@ -139,6 +140,15 @@ export default function IrbList() {
                           </Link>
                         </div>
                       )}
+                      {application.workflowStatus === 'draft' && (
+                        <div className="mt-2">
+                          <Link href={`/irb/${application.id}/submit`}>
+                            <Button size="sm" variant="outline" className="text-xs">
+                              Complete Submission
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
@@ -175,12 +185,12 @@ export default function IrbList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {application.status && (
+                      {(application.workflowStatus || application.status) && (
                         <Badge 
                           variant="outline"
-                          className={`capitalize ${statusColors[application.status.toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-600"}`}
+                          className={`capitalize ${statusColors[(application.workflowStatus || application.status).toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-600"}`}
                         >
-                          {application.status}
+                          {(application.workflowStatus || application.status).replace('_', ' ')}
                         </Badge>
                       )}
                     </TableCell>

@@ -13,6 +13,8 @@ import {
   publicationAuthors, PublicationAuthor, InsertPublicationAuthor,
   patents, Patent, InsertPatent,
   irbApplications, IrbApplication, InsertIrbApplication,
+  irbSubmissions, IrbSubmission, InsertIrbSubmission,
+  irbDocuments, IrbDocument, InsertIrbDocument,
   ibcApplications, IbcApplication, InsertIbcApplication,
   researchContracts, ResearchContract, InsertResearchContract
 } from "@shared/schema";
@@ -516,6 +518,76 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIrbApplication(id: number): Promise<boolean> {
     const result = await db.delete(irbApplications).where(eq(irbApplications.id, id));
+    return result.rowCount > 0;
+  }
+
+  // IRB Submission operations
+  async getIrbSubmissions(): Promise<IrbSubmission[]> {
+    return await db.select().from(irbSubmissions);
+  }
+
+  async getIrbSubmission(id: number): Promise<IrbSubmission | undefined> {
+    const [submission] = await db.select().from(irbSubmissions).where(eq(irbSubmissions.id, id));
+    return submission;
+  }
+
+  async getIrbSubmissionsForApplication(applicationId: number): Promise<IrbSubmission[]> {
+    return await db.select().from(irbSubmissions).where(eq(irbSubmissions.applicationId, applicationId));
+  }
+
+  async createIrbSubmission(submission: InsertIrbSubmission): Promise<IrbSubmission> {
+    const [newSubmission] = await db.insert(irbSubmissions).values(submission).returning();
+    return newSubmission;
+  }
+
+  async updateIrbSubmission(id: number, submission: Partial<InsertIrbSubmission>): Promise<IrbSubmission | undefined> {
+    const [updatedSubmission] = await db
+      .update(irbSubmissions)
+      .set(submission)
+      .where(eq(irbSubmissions.id, id))
+      .returning();
+    return updatedSubmission;
+  }
+
+  async deleteIrbSubmission(id: number): Promise<boolean> {
+    const result = await db.delete(irbSubmissions).where(eq(irbSubmissions.id, id));
+    return result.rowCount > 0;
+  }
+
+  // IRB Document operations
+  async getIrbDocuments(): Promise<IrbDocument[]> {
+    return await db.select().from(irbDocuments);
+  }
+
+  async getIrbDocument(id: number): Promise<IrbDocument | undefined> {
+    const [document] = await db.select().from(irbDocuments).where(eq(irbDocuments.id, id));
+    return document;
+  }
+
+  async getIrbDocumentsForApplication(applicationId: number): Promise<IrbDocument[]> {
+    return await db.select().from(irbDocuments).where(eq(irbDocuments.applicationId, applicationId));
+  }
+
+  async getIrbDocumentsForSubmission(submissionId: number): Promise<IrbDocument[]> {
+    return await db.select().from(irbDocuments).where(eq(irbDocuments.submissionId, submissionId));
+  }
+
+  async createIrbDocument(document: InsertIrbDocument): Promise<IrbDocument> {
+    const [newDocument] = await db.insert(irbDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async updateIrbDocument(id: number, document: Partial<InsertIrbDocument>): Promise<IrbDocument | undefined> {
+    const [updatedDocument] = await db
+      .update(irbDocuments)
+      .set(document)
+      .where(eq(irbDocuments.id, id))
+      .returning();
+    return updatedDocument;
+  }
+
+  async deleteIrbDocument(id: number): Promise<boolean> {
+    const result = await db.delete(irbDocuments).where(eq(irbDocuments.id, id));
     return result.rowCount > 0;
   }
 
