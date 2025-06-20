@@ -59,6 +59,7 @@ export default function IrbOfficePortal() {
     const colors = {
       submitted: daysSince > 14 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700",
       under_review: daysSince > 21 ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700",
+      revisions_requested: "bg-orange-100 text-orange-700",
       ready_for_pi: "bg-purple-100 text-purple-700",
       approved: "bg-green-100 text-green-700",
       rejected: "bg-red-100 text-red-600",
@@ -88,7 +89,7 @@ export default function IrbOfficePortal() {
         case 'review':
           return app.workflowStatus === 'under_review' && matchesSearch;
         case 'ready_for_pi':
-          return app.workflowStatus === 'ready_for_pi' && matchesSearch;
+          return (app.workflowStatus === 'ready_for_pi' || app.workflowStatus === 'revisions_requested') && matchesSearch;
         case 'approved':
           return app.workflowStatus === 'approved' && matchesSearch;
         case 'closed':
@@ -103,7 +104,7 @@ export default function IrbOfficePortal() {
     return {
       submitted: applications.filter(app => app.workflowStatus === 'submitted' || app.workflowStatus === 'draft').length,
       review: applications.filter(app => app.workflowStatus === 'under_review').length,
-      ready_for_pi: applications.filter(app => app.workflowStatus === 'ready_for_pi').length,
+      ready_for_pi: applications.filter(app => app.workflowStatus === 'ready_for_pi' || app.workflowStatus === 'revisions_requested').length,
       approved: applications.filter(app => app.workflowStatus === 'approved').length,
       closed: applications.filter(app => app.workflowStatus === 'closed' || app.workflowStatus === 'rejected').length,
     };
