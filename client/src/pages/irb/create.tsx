@@ -136,26 +136,26 @@ export default function CreateIrb() {
                 
                 <FormField
                   control={form.control}
-                  name="projectId"
+                  name="researchActivityId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Associated Project</FormLabel>
+                      <FormLabel>Research Activity (SDR)</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a project" />
+                            <SelectValue placeholder="Select a research activity" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {projectsLoading ? (
-                            <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                          {researchActivitiesLoading ? (
+                            <SelectItem value="loading" disabled>Loading research activities...</SelectItem>
                           ) : (
-                            projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.title}
+                            researchActivities?.map((activity) => (
+                              <SelectItem key={activity.id} value={activity.id.toString()}>
+                                {activity.sdrNumber} - {activity.title}
                               </SelectItem>
                             ))
                           )}
