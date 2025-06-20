@@ -446,10 +446,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Research Activities
   app.get('/api/research-activities', async (req: Request, res: Response) => {
     try {
-      const activities = await storage.getResearchActivities();
+      const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+      const principalInvestigatorId = req.query.principalInvestigatorId ? parseInt(req.query.principalInvestigatorId as string) : undefined;
       
-      // Directly return the activities without enhancement for now
-      // This will identify if the enhancement is causing issues
+      let activities;
+      if (projectId && !isNaN(projectId)) {
+        activities = await storage.getResearchActivitiesForProject(projectId);
+      } else if (principalInvestigatorId && !isNaN(principalInvestigatorId)) {
+        activities = await storage.getResearchActivitiesForScientist(principalInvestigatorId);
+      } else {
+        activities = await storage.getResearchActivities();
+      }
+      
       res.json(activities);
     } catch (error) {
       console.error("Error fetching research activities:", error);
