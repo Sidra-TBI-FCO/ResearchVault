@@ -53,6 +53,7 @@ export default function IrbProtocolDetail() {
 
   const updateApplicationMutation = useMutation({
     mutationFn: async (action: ReviewAction) => {
+      console.log('Starting IRB office action:', action);
       const now = new Date().toISOString();
       const oneYearFromNow = new Date();
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
@@ -73,17 +74,27 @@ export default function IrbProtocolDetail() {
       
       // Set dates based on action
       if (action.action === 'approve') {
-        updateData.initialApprovalDate = now;
-        updateData.expirationDate = oneYearFromNow.toISOString();
+        updateData.initialApprovalDate = new Date(now);
+        updateData.expirationDate = new Date(oneYearFromNow.toISOString());
       }
+      
+      console.log('Sending update data:', updateData);
       
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
       });
-      if (!response.ok) throw new Error('Failed to update application');
-      return response.json();
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Update failed:', response.status, errorText);
+        throw new Error(`Failed to update application: ${response.status} ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Update successful:', result);
+      return result;
     },
     onSuccess: (_, action) => {
       queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
