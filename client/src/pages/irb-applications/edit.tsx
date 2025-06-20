@@ -63,12 +63,7 @@ export default function IrbApplicationEdit() {
     mutationFn: (data: InsertIrbApplication) => 
       apiRequest(`/api/irb-applications/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          submissionDate: data.submissionDate ? new Date(data.submissionDate) : null,
-          approvalDate: data.approvalDate ? new Date(data.approvalDate) : null,
-          expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
-        }),
+        body: JSON.stringify(data),
       }),
     onSuccess: () => {
       toast({
@@ -250,49 +245,7 @@ export default function IrbApplicationEdit() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="submissionDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Submission Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="approvalDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Approval Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expirationDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiration Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
 
 
