@@ -42,6 +42,12 @@ const createIrbApplicationSchema = insertIrbApplicationSchema.extend({
   description: z.string().optional(),
 }).omit({
   irbNumber: true, // IRB number will be auto-generated
+  workflowStatus: true, // Will be set to 'draft' automatically
+  submissionDate: true, // Will be set when submitted
+  initialApprovalDate: true, // Will be set when approved
+  expirationDate: true, // Will be set when approved
+  createdAt: true,
+  updatedAt: true,
 });
 
 type CreateIrbApplicationFormValues = z.infer<typeof createIrbApplicationSchema>;
@@ -123,6 +129,7 @@ export default function CreateIrb() {
 
   const onSubmit = (data: CreateIrbApplicationFormValues) => {
     console.log('Form submitted with data:', data);
+    console.log('Form validation errors:', form.formState.errors);
     createIrbApplicationMutation.mutate(data);
   };
 
@@ -290,7 +297,7 @@ export default function CreateIrb() {
                 />
               </div>
 
-              <CardFooter className="flex justify-end space-x-2 px-0">
+              <div className="flex justify-end space-x-2 mt-6">
                 <Button 
                   variant="outline" 
                   onClick={() => navigate("/irb")}
@@ -301,10 +308,15 @@ export default function CreateIrb() {
                 <Button 
                   type="submit"
                   disabled={createIrbApplicationMutation.isPending}
+                  onClick={(e) => {
+                    console.log('Button clicked');
+                    e.preventDefault();
+                    form.handleSubmit(onSubmit)();
+                  }}
                 >
                   {createIrbApplicationMutation.isPending ? 'Creating...' : 'Create Draft'}
                 </Button>
-              </CardFooter>
+              </div>
             </form>
           </Form>
         </CardContent>
