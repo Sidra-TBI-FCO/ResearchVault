@@ -57,11 +57,21 @@ export default function IrbApplicationEdit() {
   }, [irbApplication, form]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: InsertIrbApplication) => 
-      apiRequest(`/api/irb-applications/${id}`, {
+    mutationFn: async (data: InsertIrbApplication) => {
+      const response = await fetch(`/api/irb-applications/${id}`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
-      }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update IRB application');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Success",
