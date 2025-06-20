@@ -280,7 +280,13 @@ export default function ProtocolAssembly() {
                 </div>
                 {researchActivity && (
                   <div>
-                    <span className="font-medium">Research Activity:</span> {researchActivity.sdrNumber} - {researchActivity.title}
+                    <span className="font-medium">Research Activity:</span>{' '}
+                    <button
+                      onClick={() => navigate(`/research-activities/${researchActivity.id}`)}
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {researchActivity.sdrNumber} - {researchActivity.title}
+                    </button>
                   </div>
                 )}
               </div>
@@ -595,17 +601,74 @@ export default function ProtocolAssembly() {
               <CardTitle>Document Templates</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                size="sm"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = '/templates/IRB-400-Informed-Consent-Form.docx';
+                  link.download = 'IRB-400-Informed-Consent-Form.docx';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  toast({
+                    title: "Template Downloaded",
+                    description: "IRB-400 Consent Form template has been downloaded."
+                  });
+                }}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 IRB-400 Consent Form Template
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                size="sm"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = '/templates/IRB-413-Protocol-Template.docx';
+                  link.download = 'IRB-413-Protocol-Template.docx';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  toast({
+                    title: "Template Downloaded",
+                    description: "IRB-413 Protocol template has been downloaded."
+                  });
+                }}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 IRB-413 Protocol Template
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                size="sm"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = '/templates/IRB-417-Adverse-Events-Form.docx';
+                  link.download = 'IRB-417-Adverse-Events-Form.docx';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  toast({
+                    title: "Template Downloaded",
+                    description: "IRB-417 Adverse Events Form has been downloaded."
+                  });
+                }}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 IRB-417 Adverse Events Form
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                size="sm"
+                onClick={() => navigate('/irb/templates')}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                View All Templates
               </Button>
             </CardContent>
           </Card>
