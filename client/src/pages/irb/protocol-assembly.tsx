@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,18 @@ export default function ProtocolAssembly() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
+
+  // Load existing protocol members from application data
+  useEffect(() => {
+    if (application?.protocolTeamMembers) {
+      try {
+        const existingMembers = JSON.parse(application.protocolTeamMembers as string) as ProtocolMember[];
+        setProtocolMembers(existingMembers);
+      } catch (error) {
+        console.error('Failed to parse protocol team members:', error);
+      }
+    }
+  }, [application]);
 
   const { data: application, isLoading } = useQuery<IrbApplication>({
     queryKey: [`/api/irb-applications/${applicationId}`],
@@ -182,13 +194,27 @@ export default function ProtocolAssembly() {
         hasSigned: false,
       };
       
-      setProtocolMembers(prev => [...prev, newMember]);
+      const updatedMembers = [...protocolMembers, newMember];
+      
+      // Save to backend
+      const response = await fetch(`/api/irb-applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          protocolTeamMembers: JSON.stringify(updatedMembers)
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to save protocol member');
+      
+      setProtocolMembers(updatedMembers);
       return newMember;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
       toast({
         title: "Member Added",
-        description: "Protocol member has been added successfully."
+        description: "Protocol member has been added and saved successfully."
       });
       setSelectedScientistId(null);
       setSelectedRoles([]);
@@ -198,12 +224,27 @@ export default function ProtocolAssembly() {
 
   const removeProtocolMemberMutation = useMutation({
     mutationFn: async (memberId: number) => {
-      setProtocolMembers(prev => prev.filter(m => m.id !== memberId));
+      const updatedMembers = protocolMembers.filter(m => m.id !== memberId);
+      
+      // Save to backend
+      const response = await fetch(`/api/irb-applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          protocolTeamMembers: JSON.stringify(updatedMembers)
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to remove protocol member');
+      
+      setProtocolMembers(updatedMembers);
+      return memberId;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
       toast({
         title: "Member Removed",
-        description: "Protocol member has been removed."
+        description: "Protocol member has been removed and saved."
       });
     },
   });
