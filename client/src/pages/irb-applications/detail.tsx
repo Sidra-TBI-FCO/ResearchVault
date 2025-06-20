@@ -185,18 +185,18 @@ export default function IrbApplicationDetail() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Related Research Activity</h3>
-                  <div className="flex items-center gap-1">
-                    <Layers className="h-3 w-3" />
-                    <span>
+                  <div className="flex items-start gap-1 mt-1">
+                    <Layers className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span className="break-words">
                       {researchActivityLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
                       ) : researchActivity ? (
                         <Button 
                           variant="link" 
-                          className="p-0 h-auto text-primary-600"
+                          className="p-0 h-auto text-primary-600 text-left whitespace-normal"
                           onClick={() => navigate(`/research-activities/${researchActivity.id}`)}
                         >
                           {researchActivity.title}
@@ -206,11 +206,11 @@ export default function IrbApplicationDetail() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Investigator</h3>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    <span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Users className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">
                       {principalInvestigatorLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
                       ) : principalInvestigator ? (
@@ -220,11 +220,11 @@ export default function IrbApplicationDetail() {
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Submission Date</h3>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">
                       {irbApplication.submissionDate 
                         ? format(new Date(irbApplication.submissionDate), 'MMM d, yyyy') 
                         : 'Not specified'}
@@ -232,11 +232,11 @@ export default function IrbApplicationDetail() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Initial Approval Date</h3>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">
                       {irbApplication.initialApprovalDate 
                         ? format(new Date(irbApplication.initialApprovalDate), 'MMM d, yyyy') 
                         : 'Not approved yet'}
@@ -244,11 +244,11 @@ export default function IrbApplicationDetail() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Expiration Date</h3>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">
                       {irbApplication.expirationDate 
                         ? format(new Date(irbApplication.expirationDate), 'MMM d, yyyy') 
                         : 'Not specified'}
@@ -256,25 +256,25 @@ export default function IrbApplicationDetail() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Protocol Type</h3>
-                  <div className="flex items-center gap-1">
-                    <ClipboardCheck className="h-3 w-3" />
-                    <span>{irbApplication.protocolType || 'Not specified'}</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <ClipboardCheck className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{irbApplication.protocolType || 'Not specified'}</span>
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">IRB Net Number</h3>
-                  <div className="flex items-center gap-1">
-                    <span>{irbApplication.irbNetNumber || 'Not specified'}</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="truncate">{irbApplication.irbNetNumber || 'Not specified'}</span>
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Interventional</h3>
-                  <div className="flex items-center gap-1">
-                    <span>{irbApplication.isInterventional ? 'Yes' : 'No'}</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="truncate">{irbApplication.isInterventional ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               </div>
