@@ -205,6 +205,47 @@ export default function ProtocolAssembly() {
     }
   };
 
+  const handleReplaceDocument = async (documentId: string) => {
+    const updatedDocuments = documents.map(doc => 
+      doc.id === documentId 
+        ? { 
+            ...doc, 
+            uploaded: false,
+            uploadedFile: undefined,
+            signatures: [] // Clear signatures when replacing document
+          }
+        : doc
+    );
+
+    setDocuments(updatedDocuments);
+
+    // Save to backend immediately
+    try {
+      const response = await fetch(`/api/irb-applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documents: JSON.stringify(updatedDocuments)
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to reset document');
+      
+      queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
+      
+      toast({
+        title: "Document Reset",
+        description: "Document and signature cleared. You can now upload a new file."
+      });
+    } catch (error) {
+      toast({
+        title: "Reset Failed", 
+        description: "Failed to reset document. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSignDocument = async (documentId: string) => {
     const updatedDocuments = documents.map(doc => 
       doc.id === documentId 
@@ -518,6 +559,14 @@ export default function ProtocolAssembly() {
                             >
                               <Download className="h-4 w-4 mr-1" />
                               Download
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleReplaceDocument(document.id)}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              Replace
                             </Button>
                             {document.signatureRequired && document.signatures.length === 0 && (
                               <Button 
