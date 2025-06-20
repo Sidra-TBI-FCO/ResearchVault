@@ -114,7 +114,18 @@ export default function IrbDocumentTemplates() {
               </p>
               
               <div className="flex items-center gap-2">
-                <Button size="sm" className="flex-1">
+                <Button 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => {
+                    const link = window.document.createElement('a');
+                    link.href = template.downloadUrl;
+                    link.download = template.downloadUrl.split('/').pop() || template.title;
+                    window.document.body.appendChild(link);
+                    link.click();
+                    window.document.body.removeChild(link);
+                  }}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Download Template
                 </Button>
