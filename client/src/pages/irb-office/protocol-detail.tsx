@@ -115,7 +115,7 @@ export default function IrbProtocolDetail() {
     switch (action) {
       case 'approve': return 'approved';
       case 'reject': return 'rejected';
-      case 'request_revisions': return 'ready_for_pi';
+      case 'request_revisions': return 'revisions_requested';
       case 'assign_reviewer': return 'under_review';
       default: return application?.workflowStatus;
     }
