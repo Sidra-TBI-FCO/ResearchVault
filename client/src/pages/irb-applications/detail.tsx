@@ -133,6 +133,14 @@ export default function IrbApplicationDetail() {
           <h1 className="text-2xl font-semibold text-neutral-400">{irbApplication.title}</h1>
         </div>
         <div className="flex gap-2">
+          {(irbApplication.workflowStatus === 'draft') && (
+            <Button 
+              onClick={() => navigate(`/irb/${id}/assembly`)}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Protocol Assembly
+            </Button>
+          )}
           <StatusActions 
             applicationId={id}
             currentStatus={irbApplication.workflowStatus || 'draft'}

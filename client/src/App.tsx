@@ -61,6 +61,7 @@ import EditIrbApplication from "@/pages/irb-applications/edit";
 // IRB Office
 import IrbOfficePortal from "@/pages/irb-office";
 import IrbProtocolDetail from "@/pages/irb-office/protocol-detail";
+import ProtocolAssembly from "@/pages/irb/protocol-assembly";
 
 // IBC Applications
 import IbcList from "@/pages/ibc";
@@ -135,6 +136,7 @@ function Router() {
         <Route path="/irb/create" component={CreateIrb} />
         <Route path="/irb/templates" component={IrbDocumentTemplates} />
         <Route path="/irb/:id/submit" component={IrbSubmissionWizard} />
+        <Route path="/irb/:id/assembly" component={ProtocolAssembly} />
         <Route path="/irb-applications/:id/edit" component={EditIrbApplication} />
         <Route path="/irb-applications/:id" component={IrbApplicationDetail} />
         <Route path="/irb/:id" component={IrbApplicationDetail} />

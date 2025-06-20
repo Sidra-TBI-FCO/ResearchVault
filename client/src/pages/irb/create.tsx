@@ -308,11 +308,6 @@ export default function CreateIrb() {
                 <Button 
                   type="submit"
                   disabled={createIrbApplicationMutation.isPending}
-                  onClick={(e) => {
-                    console.log('Button clicked');
-                    e.preventDefault();
-                    form.handleSubmit(onSubmit)();
-                  }}
                 >
                   {createIrbApplicationMutation.isPending ? 'Creating...' : 'Create Draft'}
                 </Button>
