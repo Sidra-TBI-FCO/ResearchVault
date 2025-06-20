@@ -748,7 +748,74 @@ export default function ProtocolAssembly() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Submission Status */}
+          {/* IRB Review Comments */}
+          {application?.workflowStatus === 'revisions_requested' && application?.reviewComments && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardHeader>
+                <CardTitle className="text-lg text-orange-800 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  IRB Review Comments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(JSON.parse(application.reviewComments)).map(([timestamp, comment]: [string, any]) => (
+                    <div key={timestamp} className="bg-white p-3 rounded border">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm font-medium text-orange-800">
+                          {comment.action === 'request_revisions' ? 'Revisions Requested' : comment.action}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(timestamp).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700">{comment.comments}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Protocol Timeline */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Protocol Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 text-sm">
+                {application?.submissionDate && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <span>Submitted: {new Date(application.submissionDate).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {application?.workflowStatus === 'revisions_requested' && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                    <span>Revisions Requested</span>
+                  </div>
+                )}
+                {application?.initialApprovalDate && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                    <span>Approved: {new Date(application.initialApprovalDate).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {application?.expirationDate && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                    <span>Expires: {new Date(application.expirationDate).toLocaleDateString()}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Submission Checklist */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Submission Checklist</CardTitle>
