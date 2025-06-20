@@ -1500,13 +1500,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const nextNumber = (yearlyApps.length + 1).toString().padStart(3, '0');
       const irbNumber = `IRB-${currentYear}-${nextNumber}`;
       
-      const validateData = insertIrbApplicationSchema.parse({
+      const validateData = {
         ...req.body,
         irbNumber,
         workflowStatus: req.body.workflowStatus || 'draft',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      };
       
       // Check if research activity exists
       const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
