@@ -21,7 +21,7 @@ interface ReviewAction {
   decision?: string;
 }
 
-export default function IrbProtocolDetail() {
+export default function IrbOfficeProtocolDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -491,3 +491,6 @@ export default function IrbProtocolDetail() {
     </div>
   );
 }
+
+// Force component name for debugging
+IrbOfficeProtocolDetail.displayName = 'IrbOfficeProtocolDetail';
