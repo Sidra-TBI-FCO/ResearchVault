@@ -759,19 +759,54 @@ export default function ProtocolAssembly() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(typeof application.reviewComments === 'string' ? JSON.parse(application.reviewComments) : application.reviewComments).map(([timestamp, comment]: [string, any]) => (
-                    <div key={timestamp} className="bg-white p-3 rounded border">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-medium text-orange-800">
-                          {comment.action === 'request_revisions' ? 'Revisions Requested' : comment.action}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700">{comment.comments}</p>
-                    </div>
-                  ))}
+                  {(() => {
+                    try {
+                      const comments = typeof application.reviewComments === 'string' 
+                        ? JSON.parse(application.reviewComments) 
+                        : application.reviewComments;
+                      
+                      return Object.entries(comments).map(([key, comment]: [string, any]) => {
+                        // Handle different possible data structures
+                        let displayText = '';
+                        let actionText = 'Review Comment';
+                        let dateText = '';
+                        
+                        if (typeof comment === 'string') {
+                          displayText = comment;
+                        } else if (comment && typeof comment === 'object') {
+                          displayText = comment.comments || comment.text || JSON.stringify(comment);
+                          actionText = comment.action === 'request_revisions' ? 'Revisions Requested' : (comment.action || 'Review Comment');
+                        } else {
+                          displayText = String(comment);
+                        }
+                        
+                        // Try to parse the key as a timestamp, fallback to current date
+                        const timestamp = !isNaN(Number(key)) ? Number(key) : Date.now();
+                        const date = new Date(timestamp);
+                        dateText = isNaN(date.getTime()) ? 'Recent' : date.toLocaleDateString();
+                        
+                        return (
+                          <div key={key} className="bg-white p-3 rounded border">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-sm font-medium text-orange-800">
+                                {actionText}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {dateText}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700">{displayText}</p>
+                          </div>
+                        );
+                      });
+                    } catch (error) {
+                      return (
+                        <div className="bg-white p-3 rounded border">
+                          <p className="text-sm text-orange-800">Error loading review comments</p>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               </CardContent>
             </Card>
