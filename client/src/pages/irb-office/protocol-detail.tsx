@@ -276,18 +276,21 @@ export default function IrbOfficeProtocolDetail() {
     try {
       const events: Array<[string, any]> = [];
       
-      // Add initial submission with guaranteed early timestamp
-      const submissionTime = new Date(application.submissionDate).getTime();
-      events.push([
-        (submissionTime - 100000).toString(), // Ensure it's always first
-        {
-          type: 'system',
-          action: 'submitted',
-          actor: 'System',
-          description: 'Protocol submitted for review',
-          timestamp: application.submissionDate
-        }
-      ]);
+      // Add initial submission with guaranteed early timestamp  
+      if (application.submissionDate) {
+        const submissionTime = new Date(application.submissionDate).getTime();
+        events.push([
+          (submissionTime - 100000).toString(), // Ensure it's always first
+          {
+            type: 'system',
+            action: 'submitted',
+            actor: 'Principal Investigator',
+            description: 'Initial protocol submission',
+            timestamp: application.submissionDate,
+            comments: 'Protocol submitted for IRB review'
+          }
+        ]);
+      }
       
       // Add IRB review comments
       const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}';
@@ -345,7 +348,7 @@ export default function IrbOfficeProtocolDetail() {
         });
       }
       
-      if (events.length <= 1) return null;
+      if (events.length === 0) return null;
       
       // Sort by timestamp (chronological order - oldest first)
       events.sort(([a], [b]) => {
