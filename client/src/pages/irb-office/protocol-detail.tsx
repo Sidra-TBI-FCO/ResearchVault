@@ -651,7 +651,9 @@ export default function IrbOfficeProtocolDetail() {
                           assignedDate: now
                         }),
                         reviewComments: JSON.stringify({
-                          ...JSON.parse(application?.reviewComments || '{}'),
+                          ...(typeof application?.reviewComments === 'string' 
+                            ? JSON.parse(application.reviewComments) 
+                            : application?.reviewComments || {}),
                           [timestamp]: {
                             action: 'assign_reviewers',
                             comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer && secondaryReviewer !== 'none' ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
