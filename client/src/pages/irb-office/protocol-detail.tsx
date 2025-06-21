@@ -658,7 +658,7 @@ export default function IrbOfficeProtocolDetail() {
                     onClick={() => handleAction('assign_reviewers')}
                     disabled={!assignedReviewer || !reviewType || updateApplicationMutation.isPending}
                   >
-                    Assign Reviewers & Start Review
+                    {updateApplicationMutation.isPending ? 'Assigning...' : 'Assign Reviewers & Start Review'}
                   </Button>
                 </>
               )}
