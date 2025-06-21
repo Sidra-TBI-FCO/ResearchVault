@@ -34,7 +34,14 @@ export default function IrbBoardManager() {
   const [selectedScientist, setSelectedScientist] = useState("");
   const [selectedRole, setSelectedRole] = useState<'member' | 'chair' | 'deputy_chair'>('member');
   const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
-  const [termEndDate, setTermEndDate] = useState("");
+  // Set default term end date to 3 years from now
+  const getDefaultTermEndDate = () => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 3);
+    return date.toISOString().split('T')[0];
+  };
+
+  const [termEndDate, setTermEndDate] = useState(getDefaultTermEndDate());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
   const { toast } = useToast();
@@ -109,20 +116,26 @@ export default function IrbBoardManager() {
     setSelectedScientist("");
     setSelectedRole('member');
     setSelectedExpertise([]);
-    setTermEndDate("");
+    setTermEndDate(getDefaultTermEndDate());
   };
 
   const handleAddMember = () => {
-    if (!selectedScientist || !termEndDate) return;
+    if (!selectedScientist) {
+      toast({ title: "Error", description: "Please select a scientist", variant: "destructive" });
+      return;
+    }
     
-    addBoardMemberMutation.mutate({
+    const memberData = {
       scientistId: parseInt(selectedScientist),
       role: selectedRole,
       expertise: selectedExpertise,
       appointmentDate: new Date().toISOString(),
-      termEndDate: termEndDate,
+      termEndDate: new Date(termEndDate).toISOString(),
       isActive: true
-    });
+    };
+
+    console.log('Adding board member with data:', memberData);
+    addBoardMemberMutation.mutate(memberData);
   };
 
   const handleRoleChange = (memberId: number, newRole: 'member' | 'chair' | 'deputy_chair') => {
@@ -240,6 +253,9 @@ export default function IrbBoardManager() {
                   onChange={(e) => setTermEndDate(e.target.value)}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Default: 3 years from appointment date
+                </p>
               </div>
 
               <div>
@@ -265,8 +281,11 @@ export default function IrbBoardManager() {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleAddMember} disabled={!selectedScientist || !termEndDate}>
-                  Add Member
+                <Button 
+                  onClick={handleAddMember} 
+                  disabled={!selectedScientist || addBoardMemberMutation.isPending}
+                >
+                  {addBoardMemberMutation.isPending ? 'Adding...' : 'Add Member'}
                 </Button>
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
