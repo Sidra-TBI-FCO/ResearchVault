@@ -1543,7 +1543,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.submissionComment) {
         const currentApp = await storage.getIrbApplication(id);
         if (currentApp) {
-          const existingResponses = currentApp.piResponses ? JSON.parse(currentApp.piResponses as string) : {};
+          let existingResponses = {};
+          
+          // Handle both string and object formats for piResponses
+          if (currentApp.piResponses) {
+            if (typeof currentApp.piResponses === 'string') {
+              try {
+                existingResponses = JSON.parse(currentApp.piResponses);
+              } catch (e) {
+                console.error('Error parsing existing PI responses:', e);
+                existingResponses = {};
+              }
+            } else if (typeof currentApp.piResponses === 'object') {
+              existingResponses = currentApp.piResponses;
+            }
+          }
+          
           const newResponse = {
             timestamp: new Date().toISOString(),
             comment: req.body.submissionComment,
