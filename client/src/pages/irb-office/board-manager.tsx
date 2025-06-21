@@ -328,11 +328,21 @@ export default function IrbBoardManager() {
               <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
                 <Crown className="h-5 w-5 text-yellow-600" />
               </div>
-              <div>
-                <div className="text-2xl font-bold">
-                  {boardMembers.find(m => m.role === 'chair' && m.isActive) ? '1' : '0'}
-                </div>
-                <div className="text-xs text-gray-500">Chair</div>
+              <div className="flex-1 min-w-0">
+                {(() => {
+                  const chair = boardMembers.find(m => m.role === 'chair' && m.isActive);
+                  return chair ? (
+                    <>
+                      <div className="text-sm font-medium truncate">{chair.scientist.name}</div>
+                      <div className="text-xs text-gray-500">Chair</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-sm font-medium text-gray-400">No Chair</div>
+                      <div className="text-xs text-gray-500">Vacant</div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </CardContent>
@@ -344,11 +354,21 @@ export default function IrbBoardManager() {
               <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
                 <Shield className="h-5 w-5 text-purple-600" />
               </div>
-              <div>
-                <div className="text-2xl font-bold">
-                  {boardMembers.find(m => m.role === 'deputy_chair' && m.isActive) ? '1' : '0'}
-                </div>
-                <div className="text-xs text-gray-500">Deputy Chair</div>
+              <div className="flex-1 min-w-0">
+                {(() => {
+                  const deputy = boardMembers.find(m => m.role === 'deputy_chair' && m.isActive);
+                  return deputy ? (
+                    <>
+                      <div className="text-sm font-medium truncate">{deputy.scientist.name}</div>
+                      <div className="text-xs text-gray-500">Deputy Chair</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-sm font-medium text-gray-400">No Deputy Chair</div>
+                      <div className="text-xs text-gray-500">Vacant</div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </CardContent>
