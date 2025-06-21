@@ -1491,14 +1491,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/irb-applications', async (req: Request, res: Response) => {
     try {
-      // Generate IRB number automatically
+      // Generate IRB number automatically using database query for accuracy
       const currentYear = new Date().getFullYear();
-      const existingApps = await storage.getIrbApplications();
-      const yearlyApps = existingApps.filter(app => 
-        app.irbNumber && app.irbNumber.startsWith(`IRB-${currentYear}-`)
-      );
-      const nextNumber = (yearlyApps.length + 1).toString().padStart(3, '0');
-      const irbNumber = `IRB-${currentYear}-${nextNumber}`;
+      const maxNumberResult = await db.execute(`
+        SELECT MAX(CAST(SUBSTRING(irb_number FROM 'IRB-${currentYear}-(\\d+)') AS INTEGER)) as max_number 
+        FROM irb_applications 
+        WHERE irb_number LIKE 'IRB-${currentYear}-%'
+      `);
+      
+      const maxNumber = maxNumberResult.rows[0]?.max_number || 0;
+      const nextNumber = maxNumber + 1;
+      const irbNumber = `IRB-${currentYear}-${nextNumber.toString().padStart(3, '0')}`;
       
       const validateData = {
         ...req.body,

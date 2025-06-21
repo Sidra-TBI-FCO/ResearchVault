@@ -71,6 +71,11 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
       icon: <Shield className="w-4 h-4 mr-3" />
     },
     { 
+      href: "/irb-reviewer",
+      label: "IRB Reviewer",
+      icon: <FileText className="w-4 h-4 mr-3" />
+    },
+    { 
       href: "/ibc",
       label: "IBC Applications",
       icon: <Table className="w-4 h-4 mr-3" />

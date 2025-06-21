@@ -64,6 +64,10 @@ import IrbOfficeProtocolDetail from "@/pages/irb-office/protocol-detail";
 import IrbBoardManager from "@/pages/irb-office/board-manager";
 import ProtocolAssembly from "@/pages/irb/protocol-assembly";
 
+// IRB Reviewer
+import IrbReviewerDashboard from "@/pages/irb-reviewer/index";
+import IrbProtocolReview from "@/pages/irb-reviewer/protocol-review";
+
 // IBC Applications
 import IbcList from "@/pages/ibc";
 import CreateIbc from "@/pages/ibc/create";
@@ -138,6 +142,10 @@ function Router() {
         <Route path="/irb-office/:id" component={IrbOfficeProtocolDetail} />
         <Route path="/irb-office/protocols/:id" component={IrbOfficeProtocolDetail} />
         <Route path="/irb-office/protocol/:id" component={IrbOfficeProtocolDetail} />
+        
+        {/* IRB Reviewer */}
+        <Route path="/irb-reviewer" component={IrbReviewerDashboard} />
+        <Route path="/irb-reviewer/:id" component={IrbProtocolReview} />
         
         {/* IRB Applications */}
         <Route path="/irb" component={IrbList} />
