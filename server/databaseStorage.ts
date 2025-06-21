@@ -776,79 +776,45 @@ export class DatabaseStorage implements IStorage {
 
   // IRB Board Members
   async getIrbBoardMembers(): Promise<(IrbBoardMember & { scientist: Scientist })[]> {
-    const results = await db
-      .select({
-        id: irbBoardMembers.id,
-        scientistId: irbBoardMembers.scientistId,
-        role: irbBoardMembers.role,
-        expertise: irbBoardMembers.expertise,
-        appointmentDate: irbBoardMembers.appointmentDate,
-        termEndDate: irbBoardMembers.termEndDate,
-        isActive: irbBoardMembers.isActive,
-        createdAt: irbBoardMembers.createdAt,
-        updatedAt: irbBoardMembers.updatedAt,
-        scientist: {
-          id: scientists.id,
-          name: scientists.name,
-          firstName: scientists.firstName,
-          lastName: scientists.lastName,
-          email: scientists.email,
-          profileImageInitials: scientists.profileImageInitials,
-          position: scientists.position,
-          department: scientists.department,
-          institution: scientists.institution,
-          researchInterests: scientists.researchInterests,
-          profilePictureUrl: scientists.profilePictureUrl,
-          createdAt: scientists.createdAt,
-          updatedAt: scientists.updatedAt,
-        }
+    const boardMembers = await db.select().from(irbBoardMembers).orderBy(desc(irbBoardMembers.createdAt));
+    
+    const results = await Promise.all(
+      boardMembers.map(async (member) => {
+        const scientist = await db.select().from(scientists).where(eq(scientists.id, member.scientistId)).limit(1);
+        return {
+          ...member,
+          scientist: scientist[0] || null
+        };
       })
-      .from(irbBoardMembers)
-      .leftJoin(scientists, eq(irbBoardMembers.scientistId, scientists.id))
-      .orderBy(desc(irbBoardMembers.createdAt));
+    );
 
-    return results as (IrbBoardMember & { scientist: Scientist })[];
+    return results.filter(r => r.scientist) as (IrbBoardMember & { scientist: Scientist })[];
   }
 
   async getIrbBoardMember(id: number): Promise<(IrbBoardMember & { scientist: Scientist }) | undefined> {
-    const [result] = await db
-      .select({
-        id: irbBoardMembers.id,
-        scientistId: irbBoardMembers.scientistId,
-        role: irbBoardMembers.role,
-        expertise: irbBoardMembers.expertise,
-        appointmentDate: irbBoardMembers.appointmentDate,
-        termEndDate: irbBoardMembers.termEndDate,
-        isActive: irbBoardMembers.isActive,
-        createdAt: irbBoardMembers.createdAt,
-        updatedAt: irbBoardMembers.updatedAt,
-        scientist: {
-          id: scientists.id,
-          name: scientists.name,
-          firstName: scientists.firstName,
-          lastName: scientists.lastName,
-          email: scientists.email,
-          profileImageInitials: scientists.profileImageInitials,
-          position: scientists.position,
-          department: scientists.department,
-          institution: scientists.institution,
-          researchInterests: scientists.researchInterests,
-          profilePictureUrl: scientists.profilePictureUrl,
-          createdAt: scientists.createdAt,
-          updatedAt: scientists.updatedAt,
-        }
-      })
-      .from(irbBoardMembers)
-      .leftJoin(scientists, eq(irbBoardMembers.scientistId, scientists.id))
-      .where(eq(irbBoardMembers.id, id));
+    const [member] = await db.select().from(irbBoardMembers).where(eq(irbBoardMembers.id, id));
+    if (!member) return undefined;
 
-    return result as (IrbBoardMember & { scientist: Scientist }) | undefined;
+    const [scientist] = await db.select().from(scientists).where(eq(scientists.id, member.scientistId));
+    if (!scientist) return undefined;
+
+    return {
+      ...member,
+      scientist
+    };
   }
 
   async createIrbBoardMember(member: InsertIrbBoardMember): Promise<IrbBoardMember> {
+    // Convert date strings to Date objects
+    const memberData = {
+      ...member,
+      appointmentDate: member.appointmentDate ? new Date(member.appointmentDate) : new Date(),
+      termEndDate: new Date(member.termEndDate)
+    };
+
     const [newMember] = await db
       .insert(irbBoardMembers)
-      .values(member)
+      .values(memberData)
       .returning();
     return newMember;
   }
@@ -870,39 +836,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActiveIrbBoardMembers(): Promise<(IrbBoardMember & { scientist: Scientist })[]> {
-    const results = await db
-      .select({
-        id: irbBoardMembers.id,
-        scientistId: irbBoardMembers.scientistId,
-        role: irbBoardMembers.role,
-        expertise: irbBoardMembers.expertise,
-        appointmentDate: irbBoardMembers.appointmentDate,
-        termEndDate: irbBoardMembers.termEndDate,
-        isActive: irbBoardMembers.isActive,
-        createdAt: irbBoardMembers.createdAt,
-        updatedAt: irbBoardMembers.updatedAt,
-        scientist: {
-          id: scientists.id,
-          name: scientists.name,
-          firstName: scientists.firstName,
-          lastName: scientists.lastName,
-          email: scientists.email,
-          profileImageInitials: scientists.profileImageInitials,
-          position: scientists.position,
-          department: scientists.department,
-          institution: scientists.institution,
-          researchInterests: scientists.researchInterests,
-          profilePictureUrl: scientists.profilePictureUrl,
-          createdAt: scientists.createdAt,
-          updatedAt: scientists.updatedAt,
-        }
-      })
+    const activeMembers = await db
+      .select()
       .from(irbBoardMembers)
-      .leftJoin(scientists, eq(irbBoardMembers.scientistId, scientists.id))
       .where(eq(irbBoardMembers.isActive, true))
-      .orderBy(irbBoardMembers.role, scientists.name);
+      .orderBy(irbBoardMembers.role);
+    
+    const results = await Promise.all(
+      activeMembers.map(async (member) => {
+        const scientist = await db.select().from(scientists).where(eq(scientists.id, member.scientistId)).limit(1);
+        return {
+          ...member,
+          scientist: scientist[0] || null
+        };
+      })
+    );
 
-    return results as (IrbBoardMember & { scientist: Scientist })[];
+    return results.filter(r => r.scientist) as (IrbBoardMember & { scientist: Scientist })[];
   }
 }
 
