@@ -57,42 +57,8 @@ export default function IrbOfficeProtocolDetail() {
   const reviewers = boardMembers.map(member => member.scientist).filter(Boolean);
 
   const updateApplicationMutation = useMutation({
-    mutationFn: async (action: ReviewAction) => {
-      console.log('Starting IRB office action:', action);
-      const now = new Date().toISOString();
-      const oneYearFromNow = new Date();
-      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-      
-      const updateData = {
-        workflowStatus: getNewStatus(action.action),
-        reviewComments: JSON.stringify({
-          ...JSON.parse(application?.reviewComments || '{}'),
-          [Date.now()]: {
-            action: action.action,
-            comments: action.comments,
-            reviewerId: action.reviewerId,
-            decision: action.decision,
-            timestamp: now
-          }
-        }),
-        ...(action.action === 'assign_reviewers' && action.reviewerId && { 
-          reviewerAssignments: JSON.stringify({ 
-            primary: action.reviewerId,
-            secondary: secondaryReviewer && secondaryReviewer !== 'none' ? parseInt(secondaryReviewer) : null,
-            reviewType: reviewType,
-            assignedDate: new Date().toISOString()
-          }),
-          protocolType: reviewType
-        })
-      };
-      
-      // Set dates based on action
-      if (action.action === 'approve') {
-        updateData.initialApprovalDate = now;
-        updateData.expirationDate = oneYearFromNow.toISOString();
-      }
-      
-      console.log('Sending update data:', updateData);
+    mutationFn: async (updateData: any) => {
+      console.log('Starting IRB office update:', updateData);
       
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
@@ -136,8 +102,9 @@ export default function IrbOfficeProtocolDetail() {
       setSecondaryReviewer("");
       setReviewType("");
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update protocol", variant: "destructive" });
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      toast({ title: "Error", description: `Failed to update protocol: ${error.message}`, variant: "destructive" });
     },
   });
 
@@ -147,6 +114,7 @@ export default function IrbOfficeProtocolDetail() {
       case 'reject': return 'rejected';
       case 'request_revisions': return 'revisions_requested';
       case 'assign_reviewer': return 'under_review';
+      case 'assign_reviewers': return 'under_review';
       default: return application?.workflowStatus;
     }
   };
@@ -670,12 +638,30 @@ export default function IrbOfficeProtocolDetail() {
                         return;
                       }
                       
-                      updateApplicationMutation.mutate({
-                        action: 'assign_reviewers',
-                        comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer && secondaryReviewer !== 'none' ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
-                        reviewerId: parseInt(assignedReviewer),
-                        decision: 'reviewers_assigned'
-                      });
+                      const now = new Date().toISOString();
+                      const timestamp = Date.now();
+                      
+                      const updateData = {
+                        workflowStatus: 'under_review',
+                        protocolType: reviewType,
+                        reviewerAssignments: JSON.stringify({
+                          primary: parseInt(assignedReviewer),
+                          secondary: secondaryReviewer && secondaryReviewer !== 'none' ? parseInt(secondaryReviewer) : null,
+                          reviewType: reviewType,
+                          assignedDate: now
+                        }),
+                        reviewComments: JSON.stringify({
+                          ...JSON.parse(application?.reviewComments || '{}'),
+                          [timestamp]: {
+                            action: 'assign_reviewers',
+                            comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer && secondaryReviewer !== 'none' ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
+                            decision: 'reviewers_assigned',
+                            timestamp: now
+                          }
+                        })
+                      };
+                      
+                      updateApplicationMutation.mutate(updateData);
                     }}
                     disabled={!assignedReviewer || !reviewType || updateApplicationMutation.isPending}
                   >
