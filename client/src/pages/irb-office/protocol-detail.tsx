@@ -15,7 +15,7 @@ import {
 import { IrbApplication, ResearchActivity, Scientist } from "@shared/schema";
 
 interface ReviewAction {
-  action: 'approve' | 'reject' | 'request_revisions' | 'assign_reviewer';
+  action: 'approve' | 'reject' | 'request_revisions' | 'assign_reviewer' | 'assign_reviewers';
   comments: string;
   reviewerId?: number;
   decision?: string;
@@ -75,7 +75,15 @@ export default function IrbOfficeProtocolDetail() {
             timestamp: now
           }
         }),
-        ...(action.reviewerId && { reviewerAssignments: JSON.stringify({ primaryReviewer: action.reviewerId }) })
+        ...(action.action === 'assign_reviewers' && action.reviewerId && { 
+          reviewerAssignments: JSON.stringify({ 
+            primary: action.reviewerId,
+            secondary: secondaryReviewer && secondaryReviewer !== 'none' ? parseInt(secondaryReviewer) : null,
+            reviewType: reviewType,
+            assignedDate: new Date().toISOString()
+          }),
+          protocolType: reviewType
+        })
       };
       
       // Set dates based on action
@@ -112,7 +120,8 @@ export default function IrbOfficeProtocolDetail() {
         approve: "Protocol approved successfully",
         reject: "Protocol rejected",
         request_revisions: "Revision request sent to PI",
-        assign_reviewer: "Reviewer assigned successfully"
+        assign_reviewer: "Reviewer assigned successfully",
+        assign_reviewers: "Reviewers assigned successfully"
       };
       
       toast({ 
@@ -655,7 +664,19 @@ export default function IrbOfficeProtocolDetail() {
 
                   <Button 
                     className="w-full" 
-                    onClick={() => handleAction('assign_reviewers')}
+                    onClick={() => {
+                      if (!assignedReviewer || !reviewType) {
+                        toast({ title: "Error", description: "Please select a primary reviewer and review type", variant: "destructive" });
+                        return;
+                      }
+                      
+                      updateApplicationMutation.mutate({
+                        action: 'assign_reviewers',
+                        comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer && secondaryReviewer !== 'none' ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
+                        reviewerId: parseInt(assignedReviewer),
+                        decision: 'reviewers_assigned'
+                      });
+                    }}
                     disabled={!assignedReviewer || !reviewType || updateApplicationMutation.isPending}
                   >
                     {updateApplicationMutation.isPending ? 'Assigning...' : 'Assign Reviewers & Start Review'}
