@@ -133,6 +133,7 @@ function Router() {
         
         {/* IRB Office - Put these BEFORE IRB Applications to avoid conflicts */}
         <Route path="/irb-office" component={IrbOfficePortal} />
+        <Route path="/irb-office/:id" component={IrbOfficeProtocolDetail} />
         <Route path="/irb-office/protocols/:id" component={IrbOfficeProtocolDetail} />
         <Route path="/irb-office/protocol/:id" component={IrbOfficeProtocolDetail} />
         
