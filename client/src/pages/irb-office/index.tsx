@@ -90,9 +90,11 @@ export default function IrbOfficePortal() {
       
       switch (status) {
         case 'submitted':
+          // Include: submitted, draft, resubmitted, triage_complete
+          // Exclude: under_review, revisions_requested, approved, rejected, closed
           return !excludeFromActive.includes(app.workflowStatus || '') && 
-                 !(app.workflowStatus === 'under_review') && 
-                 !(app.workflowStatus === 'revisions_requested') && 
+                 app.workflowStatus !== 'under_review' && 
+                 app.workflowStatus !== 'revisions_requested' && 
                  matchesSearch;
         case 'review':
           return app.workflowStatus === 'under_review' && matchesSearch;
