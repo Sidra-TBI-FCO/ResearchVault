@@ -312,7 +312,9 @@ export default function IrbOfficeProtocolDetail() {
               ...review,
               type: 'irb_review',
               actor: 'IRB Office',
-              description: actionDescriptions[review.action || review.decision] || review.comments
+              description: actionDescriptions[review.action || review.decision] || review.comments,
+              // IRB Office can see full reviewer details
+              showReviewerDetails: true
             }]);
           }
         });
@@ -394,6 +396,30 @@ export default function IrbOfficeProtocolDetail() {
                   )}
                   {entry.decision && entry.decision !== entry.action && (
                     <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
+                  )}
+                  {/* Show reviewer information only in IRB Office view */}
+                  {entry.showReviewerDetails && entry.action === 'assign_reviewers' && application.reviewerAssignments && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                      <p className="font-medium text-blue-800">Reviewer Assignment Details:</p>
+                      {(() => {
+                        try {
+                          const assignments = typeof application.reviewerAssignments === 'string' 
+                            ? JSON.parse(application.reviewerAssignments) 
+                            : application.reviewerAssignments;
+                          return (
+                            <div className="text-blue-700">
+                              <p>Primary: {reviewers.find(r => r.id === assignments.primary)?.name || 'Unknown'}</p>
+                              {assignments.secondary && (
+                                <p>Secondary: {reviewers.find(r => r.id === assignments.secondary)?.name || 'Unknown'}</p>
+                              )}
+                              <p>Review Type: {assignments.reviewType}</p>
+                            </div>
+                          );
+                        } catch (e) {
+                          return <p className="text-blue-700">Assignment details unavailable</p>;
+                        }
+                      })()}
+                    </div>
                   )}
                 </div>
               ))}

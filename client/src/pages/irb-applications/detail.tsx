@@ -86,7 +86,17 @@ export default function IrbApplicationDetail() {
         
         Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
           if (review.comments !== 'test' && review.action !== 'test') {
-            allEntries.push([timestamp, { ...review, type: 'irb_review' }]);
+            // Filter out reviewer information for PI view
+            const filteredReview = { ...review, type: 'irb_review' };
+            
+            // Hide reviewer details from PI - only show generic IRB office actions
+            if (review.action === 'assign_reviewers') {
+              filteredReview.comments = 'Reviewers assigned and review process initiated';
+              // Remove any reviewer-specific information
+              delete filteredReview.reviewerId;
+            }
+            
+            allEntries.push([timestamp, filteredReview]);
           }
         });
       }
@@ -136,7 +146,7 @@ export default function IrbApplicationDetail() {
                       }`}
                     >
                       {entry.type === 'irb_review' 
-                        ? `IRB Office - ${entry.action?.replace('_', ' ') || 'Review'}` 
+                        ? 'IRB Office' 
                         : 'PI Submission'
                       }
                     </Badge>
