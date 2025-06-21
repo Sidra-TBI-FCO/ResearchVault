@@ -70,9 +70,10 @@ export default function IrbApplicationDetail() {
     try {
       const allEntries: Array<[string, any]> = [];
       
-      // Always add initial submission
+      // Always add initial submission with earliest timestamp
+      const submissionTime = new Date(irbApplication.submissionDate).getTime();
       allEntries.push([
-        new Date(irbApplication.submissionDate).getTime().toString(),
+        (submissionTime - 100000).toString(), // Ensure it's always first
         {
           type: 'pi_submission',
           action: 'submitted',
