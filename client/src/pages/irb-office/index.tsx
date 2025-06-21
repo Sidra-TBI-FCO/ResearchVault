@@ -59,6 +59,7 @@ export default function IrbOfficePortal() {
     const colors = {
       submitted: daysSince > 14 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700",
       resubmitted: "bg-blue-100 text-blue-700",
+      triage_complete: "bg-cyan-100 text-cyan-700",
       under_review: daysSince > 21 ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700",
       revisions_requested: "bg-orange-100 text-orange-700",
       ready_for_pi: "bg-purple-100 text-purple-700",
@@ -84,13 +85,19 @@ export default function IrbOfficePortal() {
                            (app.researchActivity?.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
                            (app.principalInvestigator?.name.toLowerCase().includes(searchQuery.toLowerCase()));
       
+      // Use negative filtering - exclude completed/closed protocols from active tabs
+      const excludeFromActive = ['approved', 'rejected', 'closed'];
+      
       switch (status) {
         case 'submitted':
-          return (app.workflowStatus === 'submitted' || app.workflowStatus === 'draft' || app.workflowStatus === 'resubmitted') && matchesSearch;
+          return !excludeFromActive.includes(app.workflowStatus || '') && 
+                 !(app.workflowStatus === 'under_review') && 
+                 !(app.workflowStatus === 'revisions_requested') && 
+                 matchesSearch;
         case 'review':
           return app.workflowStatus === 'under_review' && matchesSearch;
         case 'ready_for_pi':
-          return (app.workflowStatus === 'ready_for_pi' || app.workflowStatus === 'revisions_requested') && matchesSearch;
+          return app.workflowStatus === 'revisions_requested' && matchesSearch;
         case 'approved':
           return app.workflowStatus === 'approved' && matchesSearch;
         case 'closed':
@@ -102,10 +109,16 @@ export default function IrbOfficePortal() {
   };
 
   const getTabCounts = () => {
+    const excludeFromActive = ['approved', 'rejected', 'closed'];
+    
     return {
-      submitted: applications.filter(app => app.workflowStatus === 'submitted' || app.workflowStatus === 'draft').length,
+      submitted: applications.filter(app => 
+        !excludeFromActive.includes(app.workflowStatus || '') && 
+        app.workflowStatus !== 'under_review' && 
+        app.workflowStatus !== 'revisions_requested'
+      ).length,
       review: applications.filter(app => app.workflowStatus === 'under_review').length,
-      ready_for_pi: applications.filter(app => app.workflowStatus === 'ready_for_pi' || app.workflowStatus === 'revisions_requested').length,
+      ready_for_pi: applications.filter(app => app.workflowStatus === 'revisions_requested').length,
       approved: applications.filter(app => app.workflowStatus === 'approved').length,
       closed: applications.filter(app => app.workflowStatus === 'closed' || app.workflowStatus === 'rejected').length,
     };
