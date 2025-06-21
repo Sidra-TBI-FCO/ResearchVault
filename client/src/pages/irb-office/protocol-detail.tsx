@@ -276,9 +276,10 @@ export default function IrbOfficeProtocolDetail() {
     try {
       const events: Array<[string, any]> = [];
       
-      // Add initial submission
+      // Add initial submission with guaranteed early timestamp
+      const submissionTime = new Date(application.submissionDate).getTime();
       events.push([
-        new Date(application.submissionDate).getTime().toString(),
+        (submissionTime - 100000).toString(), // Ensure it's always first
         {
           type: 'system',
           action: 'submitted',
@@ -299,24 +300,22 @@ export default function IrbOfficeProtocolDetail() {
         }
         
         Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
-          if (review.comments !== 'test' && review.action !== 'test') {
-            const actionDescriptions = {
-              'triage_complete': 'Triage completed - ready for reviewer assignment',
-              'assign_reviewers': 'Reviewers assigned and review started',
-              'approve': 'Protocol approved',
-              'reject': 'Protocol rejected',
-              'request_revisions': 'Revisions requested from PI'
-            };
-            
-            events.push([timestamp, {
-              ...review,
-              type: 'irb_review',
-              actor: 'IRB Office',
-              description: actionDescriptions[review.action || review.decision] || review.comments,
-              // IRB Office can see full reviewer details
-              showReviewerDetails: true
-            }]);
-          }
+          const actionDescriptions = {
+            'triage_complete': 'Triage completed - ready for reviewer assignment',
+            'assign_reviewers': 'Reviewers assigned and review started',
+            'approve': 'Protocol approved',
+            'reject': 'Protocol rejected',
+            'request_revisions': 'Revisions requested from PI'
+          };
+          
+          events.push([timestamp, {
+            ...review,
+            type: 'irb_review',
+            actor: 'IRB Office',
+            description: actionDescriptions[review.action || review.decision] || review.comments,
+            // IRB Office can see full reviewer details
+            showReviewerDetails: true
+          }]);
         });
       }
       
