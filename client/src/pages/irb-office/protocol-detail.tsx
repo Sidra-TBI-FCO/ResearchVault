@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, FileText, User, Calendar, Clock, CheckCircle, 
-  XCircle, Send, AlertTriangle, MessageSquare, History
+  XCircle, Send, AlertTriangle, MessageSquare, History, Users
 } from "lucide-react";
 import { IrbApplication, ResearchActivity, Scientist } from "@shared/schema";
 
@@ -561,6 +561,126 @@ export default function IrbOfficeProtocolDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Protocol Team Members */}
+          {(() => {
+            const protocolTeamMembers = application.protocolTeamMembers ? 
+              (typeof application.protocolTeamMembers === 'string' ? 
+                JSON.parse(application.protocolTeamMembers) : application.protocolTeamMembers) : [];
+            
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Protocol Team Members
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {protocolTeamMembers.length > 0 ? (
+                    <div className="space-y-3">
+                      {protocolTeamMembers.map((member: any) => (
+                        <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{member.name}</h4>
+                            <p className="text-sm text-gray-600">{member.email}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {member.roles.map((role: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {role}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={member.hasAccess ? "default" : "secondary"}>
+                              {member.hasAccess ? "Access Granted" : "No Access"}
+                            </Badge>
+                            <Badge variant={member.hasSigned ? "default" : "outline"}>
+                              {member.hasSigned ? "Signed" : "Pending Signature"}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No team members assigned yet.</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Required Documents */}
+          {(() => {
+            const documents = application.documents ? 
+              (typeof application.documents === 'string' ? 
+                JSON.parse(application.documents) : application.documents) : [];
+            
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Required Documents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {documents.length > 0 ? (
+                    <div className="space-y-3">
+                      {documents.map((doc: any) => (
+                        <div key={doc.id} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium">{doc.name}</h4>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={doc.uploaded ? "default" : "secondary"}>
+                                {doc.uploaded ? "Uploaded" : "Missing"}
+                              </Badge>
+                              {doc.required && (
+                                <Badge variant="outline" className="text-xs">Required</Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {doc.uploadedFile && (
+                            <div className="bg-gray-50 rounded p-2 mb-2">
+                              <p className="text-sm font-medium">{doc.uploadedFile.name}</p>
+                              <p className="text-xs text-gray-600">
+                                Size: {(doc.uploadedFile.size / 1024).toFixed(1)} KB | 
+                                Type: {doc.uploadedFile.type}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {doc.signatureRequired && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium mb-1">Signatures:</p>
+                              {doc.signatures && doc.signatures.length > 0 ? (
+                                <div className="space-y-1">
+                                  {doc.signatures.map((sig: any, index: number) => (
+                                    <div key={index} className="text-sm bg-green-50 border border-green-200 rounded p-2">
+                                      <span className="font-medium">{sig.signedBy}</span>
+                                      <span className="text-gray-600 ml-2">
+                                        Signed on {formatDate(sig.signedAt)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-amber-600">Signature pending</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No documents uploaded yet.</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Review History */}
           {renderReviewHistory()}
