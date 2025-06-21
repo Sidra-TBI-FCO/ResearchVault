@@ -139,16 +139,26 @@ export default function IrbBoardManager() {
   };
 
   const handleRoleChange = (memberId: number, newRole: 'member' | 'chair' | 'deputy_chair') => {
-    // Ensure only one chair and one deputy chair
+    // Check if trying to assign chair or deputy chair when one already exists
     if (newRole === 'chair') {
-      const currentChair = boardMembers.find(m => m.role === 'chair' && m.id !== memberId);
+      const currentChair = boardMembers.find(m => m.role === 'chair' && m.isActive && m.id !== memberId);
       if (currentChair) {
-        updateBoardMemberMutation.mutate({ id: currentChair.id, role: 'member' });
+        toast({ 
+          title: "Error", 
+          description: "An active Chair already exists. Please change the current Chair to member first.", 
+          variant: "destructive" 
+        });
+        return;
       }
     } else if (newRole === 'deputy_chair') {
-      const currentDeputy = boardMembers.find(m => m.role === 'deputy_chair' && m.id !== memberId);
+      const currentDeputy = boardMembers.find(m => m.role === 'deputy_chair' && m.isActive && m.id !== memberId);
       if (currentDeputy) {
-        updateBoardMemberMutation.mutate({ id: currentDeputy.id, role: 'member' });
+        toast({ 
+          title: "Error", 
+          description: "An active Deputy Chair already exists. Please change the current Deputy Chair to member first.", 
+          variant: "destructive" 
+        });
+        return;
       }
     }
     

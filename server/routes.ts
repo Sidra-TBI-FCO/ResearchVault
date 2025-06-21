@@ -1992,6 +1992,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Scientist ID and role are required" });
       }
 
+      // Check for existing chair or deputy chair if trying to assign these roles
+      if (req.body.role === 'chair' || req.body.role === 'deputy_chair') {
+        const existingMembers = await storage.getIrbBoardMembers();
+        const existingRole = existingMembers.find(m => m.role === req.body.role && m.isActive);
+        
+        if (existingRole) {
+          const roleLabel = req.body.role === 'chair' ? 'Chair' : 'Deputy Chair';
+          return res.status(400).json({ 
+            message: `An active ${roleLabel} already exists. Please deactivate the current ${roleLabel} first.` 
+          });
+        }
+      }
+
       // Set default term end date to 3 years from now if not provided
       if (!req.body.termEndDate) {
         const threeYearsFromNow = new Date();
@@ -2023,6 +2036,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Updating IRB board member with data:', req.body);
+
+      // Check for existing chair or deputy chair if trying to assign these roles
+      if (req.body.role === 'chair' || req.body.role === 'deputy_chair') {
+        const existingMembers = await storage.getIrbBoardMembers();
+        const existingRole = existingMembers.find(m => m.role === req.body.role && m.isActive && m.id !== id);
+        
+        if (existingRole) {
+          const roleLabel = req.body.role === 'chair' ? 'Chair' : 'Deputy Chair';
+          return res.status(400).json({ 
+            message: `An active ${roleLabel} already exists. Please change the current ${roleLabel} to member first.` 
+          });
+        }
+      }
 
       const member = await storage.updateIrbBoardMember(id, req.body);
       if (!member) {
