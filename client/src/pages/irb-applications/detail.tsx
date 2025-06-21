@@ -67,15 +67,23 @@ export default function IrbApplicationDetail() {
   };
 
   const renderProtocolHistory = () => {
-    const hasReviewComments = irbApplication?.reviewComments && irbApplication.reviewComments !== '{}';
-    const hasPiResponses = irbApplication?.piResponses && irbApplication.piResponses !== '{}';
-    
-    if (!hasReviewComments && !hasPiResponses) return null;
-    
     try {
       const allEntries: Array<[string, any]> = [];
       
+      // Always add initial submission
+      allEntries.push([
+        new Date(irbApplication.submissionDate).getTime().toString(),
+        {
+          type: 'pi_submission',
+          action: 'submitted',
+          comment: 'Initial protocol submission',
+          timestamp: irbApplication.submissionDate,
+          workflowStatus: 'submitted'
+        }
+      ]);
+      
       // Add IRB review comments
+      const hasReviewComments = irbApplication?.reviewComments && irbApplication.reviewComments !== '{}';
       if (hasReviewComments) {
         let reviewComments;
         if (typeof irbApplication.reviewComments === 'string') {
@@ -101,7 +109,8 @@ export default function IrbApplicationDetail() {
         });
       }
       
-      // Add PI responses
+      // Add PI responses  
+      const hasPiResponses = irbApplication?.piResponses && irbApplication.piResponses !== '{}';
       if (hasPiResponses) {
         let piResponses;
         if (typeof irbApplication.piResponses === 'string') {
@@ -115,13 +124,13 @@ export default function IrbApplicationDetail() {
         });
       }
       
-      if (allEntries.length === 0) return null;
+      if (allEntries.length <= 1) return null;
       
-      // Sort by timestamp (most recent first)
+      // Sort by timestamp (chronological order - oldest first)
       allEntries.sort(([a], [b]) => {
         const timeA = isNaN(Number(a)) ? new Date(a).getTime() : Number(a);
         const timeB = isNaN(Number(b)) ? new Date(b).getTime() : Number(b);
-        return timeB - timeA;
+        return timeA - timeB;
       });
       
       return (
