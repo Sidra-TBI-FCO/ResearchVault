@@ -16,7 +16,8 @@ import {
   irbSubmissions, IrbSubmission, InsertIrbSubmission,
   irbDocuments, IrbDocument, InsertIrbDocument,
   ibcApplications, IbcApplication, InsertIbcApplication,
-  researchContracts, ResearchContract, InsertResearchContract
+  researchContracts, ResearchContract, InsertResearchContract,
+  irbBoardMembers, IrbBoardMember, InsertIrbBoardMember
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {

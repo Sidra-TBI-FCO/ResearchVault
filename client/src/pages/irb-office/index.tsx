@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Clock, Eye, Send, CheckCircle, XCircle, 
-  FileText, Calendar, User, AlertCircle, Settings
+  FileText, Calendar, User, AlertCircle, Settings, Users
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IrbApplication } from "@shared/schema";
