@@ -280,7 +280,7 @@ export default function IrbOfficeProtocolDetail() {
       if (application.submissionDate) {
         const submissionTime = new Date(application.submissionDate).getTime();
         events.push([
-          (submissionTime - 100000).toString(), // Ensure it's always first
+          (submissionTime - 1000000).toString(), // Ensure it's always first
           {
             type: 'system',
             action: 'submitted',
@@ -370,7 +370,8 @@ export default function IrbOfficeProtocolDetail() {
               {events.map(([timestamp, entry]: [string, any], index) => (
                 <div key={`${timestamp}-${index}`} className={`border-l-2 pl-4 ${
                   entry.type === 'irb_review' ? 'border-blue-200' :
-                  entry.type === 'pi_submission' ? 'border-green-200' : 'border-gray-200'
+                  entry.type === 'pi_submission' ? 'border-green-200' : 
+                  entry.type === 'system' ? 'border-green-200' : 'border-gray-200'
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge 
