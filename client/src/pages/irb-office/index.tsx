@@ -268,6 +268,12 @@ export default function IrbOfficePortal() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/irb-office/board-manager">
+              <Users className="h-4 w-4 mr-2" />
+              Board Manager
+            </Link>
+          </Button>
           <Button variant="outline">
             <Settings className="h-4 w-4 mr-2" />
             Settings

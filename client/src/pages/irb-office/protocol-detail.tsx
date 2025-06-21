@@ -49,9 +49,12 @@ export default function IrbOfficeProtocolDetail() {
     enabled: !!application?.principalInvestigatorId,
   });
 
-  const { data: reviewers = [] } = useQuery<Scientist[]>({
-    queryKey: ['/api/scientists'],
+  const { data: boardMembers = [] } = useQuery<any[]>({
+    queryKey: ['/api/irb-board-members/active'],
   });
+
+  // Extract scientists from active board members for reviewer selection
+  const reviewers = boardMembers.map(member => member.scientist).filter(Boolean);
 
   const updateApplicationMutation = useMutation({
     mutationFn: async (action: ReviewAction) => {

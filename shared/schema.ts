@@ -402,6 +402,25 @@ export const insertResearchContractSchema = createInsertSchema(researchContracts
   updatedAt: true,
 });
 
+// IRB Board Members
+export const irbBoardMembers = pgTable("irb_board_members", {
+  id: serial("id").primaryKey(),
+  scientistId: integer("scientist_id").notNull(), // references scientists.id
+  role: text("role").notNull(), // member, chair, deputy_chair
+  expertise: text("expertise").array(), // Areas of expertise
+  appointmentDate: timestamp("appointment_date").defaultNow(),
+  termEndDate: timestamp("term_end_date").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIrbBoardMemberSchema = createInsertSchema(irbBoardMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Export types for all schemas
 export type Program = typeof programs.$inferSelect;
 export type InsertProgram = z.infer<typeof insertProgramSchema>;
@@ -448,3 +467,6 @@ export type InsertIbcApplication = z.infer<typeof insertIbcApplicationSchema>;
 
 export type ResearchContract = typeof researchContracts.$inferSelect;
 export type InsertResearchContract = z.infer<typeof insertResearchContractSchema>;
+
+export type IrbBoardMember = typeof irbBoardMembers.$inferSelect;
+export type InsertIrbBoardMember = z.infer<typeof insertIrbBoardMemberSchema>;
