@@ -273,31 +273,51 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const renderReviewHistory = () => {
+    const events: Array<[string, any]> = [];
+    
+    // Add initial submission
+    events.push([
+      new Date(application.submissionDate).getTime().toString(),
+      {
+        type: 'system',
+        action: 'submitted',
+        actor: 'System',
+        description: 'Protocol submitted for review',
+        timestamp: application.submissionDate
+      }
+    ]);
+    
+    // Add IRB review comments
     const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}';
-    const hasPiResponses = application?.piResponses && application.piResponses !== '{}';
-    
-    if (!hasReviewComments && !hasPiResponses) return null;
-    
-    try {
-      const allEntries: Array<[string, any]> = [];
-      
-      // Add IRB review comments
-      if (hasReviewComments) {
-        let reviewComments;
-        if (typeof application.reviewComments === 'string') {
-          reviewComments = JSON.parse(application.reviewComments);
-        } else {
-          reviewComments = application.reviewComments;
-        }
-        
-        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
-          if (review.comments !== 'test' && review.action !== 'test') {
-            allEntries.push([timestamp, { ...review, type: 'irb_review' }]);
-          }
-        });
+    if (hasReviewComments) {
+      let reviewComments;
+      if (typeof application.reviewComments === 'string') {
+        reviewComments = JSON.parse(application.reviewComments);
+      } else {
+        reviewComments = application.reviewComments;
       }
       
-      // Add PI responses
+      Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
+        if (review.comments !== 'test' && review.action !== 'test') {
+          const actionDescriptions = {
+            'triage_complete': 'Triage completed - ready for reviewer assignment',
+            'assign_reviewers': 'Reviewers assigned and review started',
+            'approve': 'Protocol approved',
+            'reject': 'Protocol rejected',
+            'request_revisions': 'Revisions requested from PI'
+          };
+          
+          events.push([timestamp, {
+            ...review,
+            type: 'irb_review',
+            actor: 'IRB Office',
+            description: actionDescriptions[review.action || review.decision] || review.comments
+          }]);
+        }
+      });
+    }
+    
+    // Add PI responses
       if (hasPiResponses) {
         let piResponses;
         if (typeof application.piResponses === 'string') {
@@ -748,35 +768,7 @@ export default function IrbOfficeProtocolDetail() {
             </CardContent>
           </Card>
 
-          {/* Protocol Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Timeline
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  <span>Submitted: {formatDate(application.submissionDate)}</span>
-                </div>
-                {application.initialApprovalDate && (
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                    <span>Approved: {formatDate(application.initialApprovalDate)}</span>
-                  </div>
-                )}
-                {application.expirationDate && (
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                    <span>Expires: {formatDate(application.expirationDate)}</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
       </div>
     </div>
