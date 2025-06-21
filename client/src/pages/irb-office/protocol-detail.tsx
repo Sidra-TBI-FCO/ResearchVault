@@ -189,7 +189,7 @@ export default function IrbOfficeProtocolDetail() {
     } else if (action === 'assign_reviewers') {
       const reviewerAssignments = {
         primaryReviewer: assignedReviewer,
-        secondaryReviewer: secondaryReviewer || null,
+        secondaryReviewer: secondaryReviewer && secondaryReviewer !== 'none' ? secondaryReviewer : null,
         reviewType: reviewType,
         assignedDate: new Date().toISOString()
       };
@@ -201,7 +201,7 @@ export default function IrbOfficeProtocolDetail() {
         reviewComments: JSON.stringify({
           [timestamp]: {
             action: 'assign_reviewers',
-            comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
+            comments: `Reviewers assigned. Primary: ${reviewers.find(r => r.id.toString() === assignedReviewer)?.name}${secondaryReviewer && secondaryReviewer !== 'none' ? `, Secondary: ${reviewers.find(r => r.id.toString() === secondaryReviewer)?.name}` : ''}. Review type: ${reviewType}`,
             decision: 'reviewers_assigned',
             stage: 'assignment',
             reviewerAssignments,
@@ -626,7 +626,7 @@ export default function IrbOfficeProtocolDetail() {
                         <SelectValue placeholder="Select secondary reviewer" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {reviewers.map((reviewer) => (
                           <SelectItem key={reviewer.id} value={reviewer.id.toString()}>
                             {reviewer.name}
