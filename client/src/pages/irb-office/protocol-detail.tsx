@@ -278,9 +278,8 @@ export default function IrbOfficeProtocolDetail() {
       
       // Add initial submission with guaranteed early timestamp  
       if (application.submissionDate) {
-        const submissionTime = new Date(application.submissionDate).getTime();
         events.push([
-          (submissionTime - 1000000).toString(), // Ensure it's always first
+          "1750490000000", // Fixed early timestamp to ensure it's always first
           {
             type: 'system',
             action: 'submitted',
@@ -380,6 +379,8 @@ export default function IrbOfficeProtocolDetail() {
                         entry.type === 'irb_review' 
                           ? 'bg-blue-50 text-blue-700 border-blue-200' 
                           : entry.type === 'pi_submission'
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : entry.type === 'system'
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : 'bg-gray-50 text-gray-700 border-gray-200'
                       }`}
