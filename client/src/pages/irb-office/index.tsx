@@ -34,7 +34,7 @@ interface EnhancedIrbApplication extends IrbApplication {
 
 export default function IrbOfficePortal() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("submitted");
+  const [activeTab, setActiveTab] = useState("new_submissions");
 
   const { data: applications = [], isLoading } = useQuery<EnhancedIrbApplication[]>({
     queryKey: ['/api/irb-applications'],
@@ -89,20 +89,26 @@ export default function IrbOfficePortal() {
       const excludeFromActive = ['approved', 'rejected', 'closed'];
       
       switch (status) {
-        case 'submitted':
-          // Include: submitted, draft, resubmitted, triage_complete
-          // Exclude: under_review, revisions_requested, approved, rejected, closed
-          return !excludeFromActive.includes(app.workflowStatus || '') && 
-                 app.workflowStatus !== 'under_review' && 
-                 app.workflowStatus !== 'revisions_requested' && 
-                 matchesSearch;
-        case 'review':
+        case 'new_submissions':
+          // IRB office action required: submitted, resubmitted, triage_complete
+          return (app.workflowStatus === 'submitted' || 
+                  app.workflowStatus === 'resubmitted' || 
+                  app.workflowStatus === 'triage_complete') && matchesSearch;
+        case 'under_review':
+          // Currently with reviewers
           return app.workflowStatus === 'under_review' && matchesSearch;
-        case 'ready_for_pi':
-          return app.workflowStatus === 'revisions_requested' && matchesSearch;
+        case 'ready_for_decision':
+          // Reviews completed, IRB office needs to make final decision
+          return app.workflowStatus === 'ready_for_pi' && matchesSearch;
+        case 'with_pi':
+          // With PI for revisions/responses
+          return (app.workflowStatus === 'revisions_requested' || 
+                  app.workflowStatus === 'draft') && matchesSearch;
         case 'approved':
+          // Information only - approved protocols
           return app.workflowStatus === 'approved' && matchesSearch;
         case 'closed':
+          // Information only - closed/rejected protocols
           return (app.workflowStatus === 'closed' || app.workflowStatus === 'rejected') && matchesSearch;
         default:
           return matchesSearch;
@@ -111,16 +117,18 @@ export default function IrbOfficePortal() {
   };
 
   const getTabCounts = () => {
-    const excludeFromActive = ['approved', 'rejected', 'closed'];
-    
     return {
-      submitted: applications.filter(app => 
-        !excludeFromActive.includes(app.workflowStatus || '') && 
-        app.workflowStatus !== 'under_review' && 
-        app.workflowStatus !== 'revisions_requested'
+      new_submissions: applications.filter(app => 
+        app.workflowStatus === 'submitted' || 
+        app.workflowStatus === 'resubmitted' || 
+        app.workflowStatus === 'triage_complete'
       ).length,
-      review: applications.filter(app => app.workflowStatus === 'under_review').length,
-      ready_for_pi: applications.filter(app => app.workflowStatus === 'revisions_requested').length,
+      under_review: applications.filter(app => app.workflowStatus === 'under_review').length,
+      ready_for_decision: applications.filter(app => app.workflowStatus === 'ready_for_pi').length,
+      with_pi: applications.filter(app => 
+        app.workflowStatus === 'revisions_requested' || 
+        app.workflowStatus === 'draft'
+      ).length,
       approved: applications.filter(app => app.workflowStatus === 'approved').length,
       closed: applications.filter(app => app.workflowStatus === 'closed' || app.workflowStatus === 'rejected').length,
     };
@@ -268,7 +276,7 @@ export default function IrbOfficePortal() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <Card>
           <CardContent className="flex items-center p-4">
             <div className="flex items-center gap-3">
@@ -276,7 +284,7 @@ export default function IrbOfficePortal() {
                 <Clock className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{tabCounts.submitted}</div>
+                <div className="text-2xl font-bold">{tabCounts.new_submissions}</div>
                 <div className="text-xs text-gray-500">New Submissions</div>
               </div>
             </div>
@@ -288,6 +296,48 @@ export default function IrbOfficePortal() {
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <Eye className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{tabCounts.under_review}</div>
+                <div className="text-xs text-gray-500">Under Review</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{tabCounts.ready_for_decision}</div>
+                <div className="text-xs text-gray-500">Ready for Decision</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                <Send className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{tabCounts.with_pi}</div>
+                <div className="text-xs text-gray-500">With PI</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{tabCounts.review}</div>
@@ -319,7 +369,7 @@ export default function IrbOfficePortal() {
               </div>
               <div>
                 <div className="text-2xl font-bold">{tabCounts.approved}</div>
-                <div className="text-xs text-gray-500">Active Approved</div>
+                <div className="text-xs text-gray-500">Approved</div>
               </div>
             </div>
           </CardContent>
@@ -359,34 +409,41 @@ export default function IrbOfficePortal() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="submitted">
-                New Submissions ({tabCounts.submitted})
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="new_submissions">
+                New Submissions ({tabCounts.new_submissions})
               </TabsTrigger>
-              <TabsTrigger value="review">
-                Under Review ({tabCounts.review})
+              <TabsTrigger value="under_review">
+                Under Review ({tabCounts.under_review})
               </TabsTrigger>
-              <TabsTrigger value="ready_for_pi">
-                Ready for PI ({tabCounts.ready_for_pi})
+              <TabsTrigger value="ready_for_decision">
+                Ready for Decision ({tabCounts.ready_for_decision})
+              </TabsTrigger>
+              <TabsTrigger value="with_pi">
+                With PI ({tabCounts.with_pi})
               </TabsTrigger>
               <TabsTrigger value="approved">
-                Active ({tabCounts.approved})
+                Approved ({tabCounts.approved})
               </TabsTrigger>
               <TabsTrigger value="closed">
                 Closed ({tabCounts.closed})
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="submitted" className="mt-4">
-              {renderApplicationsTable('submitted')}
+            <TabsContent value="new_submissions" className="mt-4">
+              {renderApplicationsTable('new_submissions')}
             </TabsContent>
             
-            <TabsContent value="review" className="mt-4">
-              {renderApplicationsTable('review')}
+            <TabsContent value="under_review" className="mt-4">
+              {renderApplicationsTable('under_review')}
             </TabsContent>
             
-            <TabsContent value="ready_for_pi" className="mt-4">
-              {renderApplicationsTable('ready_for_pi')}
+            <TabsContent value="ready_for_decision" className="mt-4">
+              {renderApplicationsTable('ready_for_decision')}
+            </TabsContent>
+            
+            <TabsContent value="with_pi" className="mt-4">
+              {renderApplicationsTable('with_pi')}
             </TabsContent>
             
             <TabsContent value="approved" className="mt-4">
