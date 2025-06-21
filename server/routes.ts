@@ -1943,6 +1943,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // IRB Board Members API
+  app.get('/api/irb-board-members', async (req: Request, res: Response) => {
+    try {
+      const members = await storage.getIrbBoardMembers();
+      res.json(members);
+    } catch (error) {
+      console.error('Error fetching IRB board members:', error);
+      res.status(500).json({ message: "Failed to fetch IRB board members" });
+    }
+  });
+
+  app.get('/api/irb-board-members/active', async (req: Request, res: Response) => {
+    try {
+      const members = await storage.getActiveIrbBoardMembers();
+      res.json(members);
+    } catch (error) {
+      console.error('Error fetching active IRB board members:', error);
+      res.status(500).json({ message: "Failed to fetch active IRB board members" });
+    }
+  });
+
+  app.get('/api/irb-board-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid board member ID" });
+      }
+
+      const member = await storage.getIrbBoardMember(id);
+      if (!member) {
+        return res.status(404).json({ message: "IRB board member not found" });
+      }
+
+      res.json(member);
+    } catch (error) {
+      console.error('Error fetching IRB board member:', error);
+      res.status(500).json({ message: "Failed to fetch IRB board member" });
+    }
+  });
+
+  app.post('/api/irb-board-members', async (req: Request, res: Response) => {
+    try {
+      console.log('Creating IRB board member with data:', req.body);
+      
+      // Validate required fields
+      if (!req.body.scientistId || !req.body.role) {
+        return res.status(400).json({ message: "Scientist ID and role are required" });
+      }
+
+      // Set default term end date to 3 years from now if not provided
+      if (!req.body.termEndDate) {
+        const threeYearsFromNow = new Date();
+        threeYearsFromNow.setFullYear(threeYearsFromNow.getFullYear() + 3);
+        req.body.termEndDate = threeYearsFromNow.toISOString();
+      }
+
+      // Ensure expertise is an array
+      if (typeof req.body.expertise === 'string') {
+        req.body.expertise = [req.body.expertise];
+      } else if (!req.body.expertise) {
+        req.body.expertise = [];
+      }
+
+      const member = await storage.createIrbBoardMember(req.body);
+      console.log('Successfully created IRB board member:', member);
+      res.status(201).json(member);
+    } catch (error) {
+      console.error('Error creating IRB board member:', error);
+      res.status(500).json({ message: "Failed to create IRB board member", error: error.message });
+    }
+  });
+
+  app.patch('/api/irb-board-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid board member ID" });
+      }
+
+      console.log('Updating IRB board member with data:', req.body);
+
+      const member = await storage.updateIrbBoardMember(id, req.body);
+      if (!member) {
+        return res.status(404).json({ message: "IRB board member not found" });
+      }
+
+      res.json(member);
+    } catch (error) {
+      console.error('Error updating IRB board member:', error);
+      res.status(500).json({ message: "Failed to update IRB board member", error: error.message });
+    }
+  });
+
+  app.delete('/api/irb-board-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid board member ID" });
+      }
+
+      const success = await storage.deleteIrbBoardMember(id);
+      if (!success) {
+        return res.status(404).json({ message: "IRB board member not found" });
+      }
+
+      res.json({ message: "IRB board member deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting IRB board member:', error);
+      res.status(500).json({ message: "Failed to delete IRB board member", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
