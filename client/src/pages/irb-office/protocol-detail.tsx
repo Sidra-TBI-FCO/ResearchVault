@@ -273,51 +273,53 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const renderReviewHistory = () => {
-    const events: Array<[string, any]> = [];
-    
-    // Add initial submission
-    events.push([
-      new Date(application.submissionDate).getTime().toString(),
-      {
-        type: 'system',
-        action: 'submitted',
-        actor: 'System',
-        description: 'Protocol submitted for review',
-        timestamp: application.submissionDate
-      }
-    ]);
-    
-    // Add IRB review comments
-    const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}';
-    if (hasReviewComments) {
-      let reviewComments;
-      if (typeof application.reviewComments === 'string') {
-        reviewComments = JSON.parse(application.reviewComments);
-      } else {
-        reviewComments = application.reviewComments;
+    try {
+      const events: Array<[string, any]> = [];
+      
+      // Add initial submission
+      events.push([
+        new Date(application.submissionDate).getTime().toString(),
+        {
+          type: 'system',
+          action: 'submitted',
+          actor: 'System',
+          description: 'Protocol submitted for review',
+          timestamp: application.submissionDate
+        }
+      ]);
+      
+      // Add IRB review comments
+      const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}';
+      if (hasReviewComments) {
+        let reviewComments;
+        if (typeof application.reviewComments === 'string') {
+          reviewComments = JSON.parse(application.reviewComments);
+        } else {
+          reviewComments = application.reviewComments;
+        }
+        
+        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
+          if (review.comments !== 'test' && review.action !== 'test') {
+            const actionDescriptions = {
+              'triage_complete': 'Triage completed - ready for reviewer assignment',
+              'assign_reviewers': 'Reviewers assigned and review started',
+              'approve': 'Protocol approved',
+              'reject': 'Protocol rejected',
+              'request_revisions': 'Revisions requested from PI'
+            };
+            
+            events.push([timestamp, {
+              ...review,
+              type: 'irb_review',
+              actor: 'IRB Office',
+              description: actionDescriptions[review.action || review.decision] || review.comments
+            }]);
+          }
+        });
       }
       
-      Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
-        if (review.comments !== 'test' && review.action !== 'test') {
-          const actionDescriptions = {
-            'triage_complete': 'Triage completed - ready for reviewer assignment',
-            'assign_reviewers': 'Reviewers assigned and review started',
-            'approve': 'Protocol approved',
-            'reject': 'Protocol rejected',
-            'request_revisions': 'Revisions requested from PI'
-          };
-          
-          events.push([timestamp, {
-            ...review,
-            type: 'irb_review',
-            actor: 'IRB Office',
-            description: actionDescriptions[review.action || review.decision] || review.comments
-          }]);
-        }
-      });
-    }
-    
-    // Add PI responses
+      // Add PI responses
+      const hasPiResponses = application?.piResponses && application.piResponses !== '{}';
       if (hasPiResponses) {
         let piResponses;
         if (typeof application.piResponses === 'string') {
@@ -327,17 +329,28 @@ export default function IrbOfficeProtocolDetail() {
         }
         
         Object.entries(piResponses).forEach(([timestamp, response]: [string, any]) => {
-          allEntries.push([timestamp, { ...response, type: 'pi_submission' }]);
+          const statusDescriptions = {
+            'resubmitted': 'Protocol resubmitted after revisions',
+            'withdrawn': 'Protocol withdrawn by PI',
+            'response': 'Response to IRB query'
+          };
+          
+          events.push([timestamp, {
+            ...response,
+            type: 'pi_submission',
+            actor: 'Principal Investigator',
+            description: statusDescriptions[response.workflowStatus] || 'PI response'
+          }]);
         });
       }
       
-      if (allEntries.length === 0) return null;
+      if (events.length <= 1) return null;
       
-      // Sort by timestamp (most recent first)
-      allEntries.sort(([a], [b]) => {
+      // Sort by timestamp (chronological order - oldest first)
+      events.sort(([a], [b]) => {
         const timeA = isNaN(Number(a)) ? new Date(a).getTime() : Number(a);
         const timeB = isNaN(Number(b)) ? new Date(b).getTime() : Number(b);
-        return timeB - timeA;
+        return timeA - timeB;
       });
       
       return (
@@ -345,40 +358,42 @@ export default function IrbOfficeProtocolDetail() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              Protocol History
+              Complete Workflow History
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {allEntries.map(([timestamp, entry]: [string, any], index) => (
-                <div key={`${timestamp}-${index}`} className="border-l-2 border-gray-200 pl-4">
+              {events.map(([timestamp, entry]: [string, any], index) => (
+                <div key={`${timestamp}-${index}`} className={`border-l-2 pl-4 ${
+                  entry.type === 'irb_review' ? 'border-blue-200' :
+                  entry.type === 'pi_submission' ? 'border-green-200' : 'border-gray-200'
+                }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge 
                       variant="outline" 
-                      className={`capitalize ${
+                      className={`${
                         entry.type === 'irb_review' 
                           ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                          : 'bg-green-50 text-green-700 border-green-200'
+                          : entry.type === 'pi_submission'
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : 'bg-gray-50 text-gray-700 border-gray-200'
                       }`}
                     >
-                      {entry.type === 'irb_review' 
-                        ? `IRB Office - ${entry.action?.replace('_', ' ') || 'Review'}` 
-                        : 'PI Submission'
-                      }
+                      {entry.actor}
+                    </Badge>
+                    <Badge variant="secondary" className="capitalize">
+                      {entry.action || entry.workflowStatus || 'event'}
                     </Badge>
                     <span className="text-sm text-gray-500">
-                      {formatDate(isNaN(Number(timestamp)) ? timestamp : new Date(Number(timestamp)))}
+                      {formatDate(entry.timestamp || (isNaN(Number(timestamp)) ? timestamp : new Date(Number(timestamp))))}
                     </span>
                   </div>
-                  <p className="text-sm">{entry.comment || entry.comments}</p>
-                  {entry.decision && (
-                    <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
+                  <p className="text-sm font-medium">{entry.description}</p>
+                  {(entry.comment || entry.comments) && (
+                    <p className="text-sm text-gray-600 italic mt-1">"{entry.comment || entry.comments}"</p>
                   )}
-                  {entry.changes && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium">Changes Made:</p>
-                      <p className="text-sm text-gray-600">{entry.changes}</p>
-                    </div>
+                  {entry.decision && entry.decision !== entry.action && (
+                    <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
                   )}
                 </div>
               ))}
@@ -393,7 +408,7 @@ export default function IrbOfficeProtocolDetail() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              Protocol History
+              Complete Workflow History
             </CardTitle>
           </CardHeader>
           <CardContent>
