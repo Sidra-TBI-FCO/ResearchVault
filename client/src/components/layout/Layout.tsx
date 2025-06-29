@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
         mobileSidebarOpen ? "block" : "hidden"
       )}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={toggleMobileSidebar}></div>
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white h-full">
           <Sidebar user={user} mobile={true} onClose={toggleMobileSidebar} />
         </div>
       </div>

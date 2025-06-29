@@ -93,8 +93,11 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
   ];
 
   return (
-    <div className={mobile ? "flex flex-shrink-0" : "hidden md:flex md:flex-shrink-0"}>
-      <div className="flex flex-col w-64 border-r border-sidra-teal-light/30 bg-white">
+    <div className={mobile ? "flex flex-shrink-0 h-full" : "hidden md:flex md:flex-shrink-0"}>
+      <div className={cn(
+        "flex flex-col w-64 border-r border-sidra-teal-light/30 bg-white",
+        mobile ? "h-full" : ""
+      )}>
         {/* Logo/Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
           <div className="flex items-center space-x-2">
@@ -125,7 +128,10 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 pt-2 pb-4 overflow-y-auto">
+        <nav className={cn(
+          "flex-1 pt-2 pb-4",
+          mobile ? "overflow-y-auto max-h-[calc(100vh-200px)]" : "overflow-y-auto"
+        )}>
           <div className="px-2 space-y-1">
             {navItems.map((item) => (
               <Link 
@@ -152,7 +158,10 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
         </nav>
         
         {/* Bottom Nav */}
-        <div className="border-t border-neutral-100 p-4">
+        <div className={cn(
+          "border-t border-neutral-100 p-4",
+          mobile ? "flex-shrink-0" : ""
+        )}>
           <div className="flex items-center">
             <button className="flex items-center text-sm text-neutral-300 hover:text-primary-500">
               <Settings className="w-4 h-4 mr-2" />
