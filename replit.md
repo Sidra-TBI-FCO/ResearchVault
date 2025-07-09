@@ -125,8 +125,6 @@ The Research Portal System is a full-stack web application built for managing sc
 
 ## Changelog
 - June 29, 2025. Initial setup
-- July 9, 2025. Fixed IRB number generation duplicate key issue and improved mobile menu scrolling
-- July 9, 2025. Fixed SDR-007 display to show all IRB applications grouped in one box with individual buttons
 
 ## User Preferences
 

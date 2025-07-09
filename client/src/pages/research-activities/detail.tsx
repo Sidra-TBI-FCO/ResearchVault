@@ -346,22 +346,16 @@ export default function ResearchActivityDetail() {
                       <span className="font-medium text-sm">IRB Applications</span>
                       <span className="text-xs text-gray-500">({irbApplications.length})</span>
                     </div>
-                    <div className="space-y-2">
-                      {irbApplications.map((irb, index) => (
-                        <Button 
+                    <div className="flex flex-wrap gap-2">
+                      {irbApplications.map((irb) => (
+                        <Badge 
                           key={irb.id}
                           variant="outline" 
-                          className="w-full justify-start" 
+                          className="cursor-pointer rounded-sm bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors"
                           onClick={() => navigate(`/irb-applications/${irb.id}`)}
                         >
-                          <FileCheck className="h-4 w-4 mr-2" /> 
-                          <span className="flex-1 text-left">
-                            {irbApplications.length > 1 ? `IRB Application ${index + 1}` : 'IRB Application'}
-                          </span>
-                          <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
-                            {irb.irbNumber}
-                          </Badge>
-                        </Button>
+                          {irb.irbNumber}
+                        </Badge>
                       ))}
                     </div>
                   </div>
