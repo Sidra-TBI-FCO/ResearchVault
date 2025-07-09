@@ -74,6 +74,13 @@ import CreateIbc from "@/pages/ibc/create";
 import IbcApplicationDetail from "@/pages/ibc-applications/detail";
 import EditIbcApplication from "@/pages/ibc-applications/edit";
 
+// IBC Office
+import IbcOfficePage from "@/pages/ibc-office";
+import IbcProtocolDetailPage from "@/pages/ibc-office/protocol-detail";
+
+// IBC Reviewer
+import IbcReviewerPage from "@/pages/ibc-reviewer";
+
 // Research Contracts
 import ContractsList from "@/pages/contracts";
 import CreateContract from "@/pages/contracts/create";
@@ -156,6 +163,13 @@ function Router() {
         <Route path="/irb-applications/:id/edit" component={EditIrbApplication} />
         <Route path="/irb-applications/:id" component={IrbApplicationDetail} />
         <Route path="/irb/:id" component={IrbApplicationDetail} />
+        
+        {/* IBC Office - Put these BEFORE IBC Applications to avoid conflicts */}
+        <Route path="/ibc-office" component={IbcOfficePage} />
+        <Route path="/ibc-office/protocol-detail/:id" component={IbcProtocolDetailPage} />
+        
+        {/* IBC Reviewer */}
+        <Route path="/ibc-reviewer" component={IbcReviewerPage} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />

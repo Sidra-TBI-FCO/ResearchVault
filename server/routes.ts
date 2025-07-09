@@ -13,6 +13,9 @@ import {
   insertPatentSchema,
   insertIrbApplicationSchema,
   insertIbcApplicationSchema,
+  insertIbcBoardMemberSchema,
+  insertIbcSubmissionSchema,
+  insertIbcDocumentSchema,
   insertResearchContractSchema,
   insertProgramSchema,
   insertProjectSchema
@@ -1804,6 +1807,315 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete IBC application" });
+    }
+  });
+
+  // IBC Board Members
+  app.get('/api/ibc-board-members', async (req: Request, res: Response) => {
+    try {
+      const boardMembers = await storage.getIbcBoardMembers();
+      res.json(boardMembers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch IBC board members" });
+    }
+  });
+
+  app.get('/api/ibc-board-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC board member ID" });
+      }
+
+      const boardMember = await storage.getIbcBoardMember(id);
+      if (!boardMember) {
+        return res.status(404).json({ message: "IBC board member not found" });
+      }
+
+      res.json(boardMember);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch IBC board member" });
+    }
+  });
+
+  app.post('/api/ibc-board-members', async (req: Request, res: Response) => {
+    try {
+      const validateData = insertIbcBoardMemberSchema.parse(req.body);
+      
+      // Check if scientist exists
+      const scientist = await storage.getScientist(validateData.scientistId);
+      if (!scientist) {
+        return res.status(404).json({ message: "Scientist not found" });
+      }
+      
+      const boardMember = await storage.createIbcBoardMember(validateData);
+      res.status(201).json(boardMember);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to create IBC board member" });
+    }
+  });
+
+  app.patch('/api/ibc-board-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC board member ID" });
+      }
+
+      const validateData = insertIbcBoardMemberSchema.partial().parse(req.body);
+      
+      // Check if scientist exists if scientistId is provided
+      if (validateData.scientistId) {
+        const scientist = await storage.getScientist(validateData.scientistId);
+        if (!scientist) {
+          return res.status(404).json({ message: "Scientist not found" });
+        }
+      }
+      
+      const boardMember = await storage.updateIbcBoardMember(id, validateData);
+      
+      if (!boardMember) {
+        return res.status(404).json({ message: "IBC board member not found" });
+      }
+      
+      res.json(boardMember);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to update IBC board member" });
+    }
+  });
+
+  app.delete('/api/ibc-board-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC board member ID" });
+      }
+
+      const success = await storage.deleteIbcBoardMember(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "IBC board member not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete IBC board member" });
+    }
+  });
+
+  // IBC Submissions
+  app.get('/api/ibc-submissions', async (req: Request, res: Response) => {
+    try {
+      const applicationId = req.query.applicationId ? parseInt(req.query.applicationId as string) : undefined;
+      
+      let submissions;
+      if (applicationId && !isNaN(applicationId)) {
+        submissions = await storage.getIbcSubmissionsForApplication(applicationId);
+      } else {
+        submissions = await storage.getIbcSubmissions();
+      }
+      
+      res.json(submissions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch IBC submissions" });
+    }
+  });
+
+  app.get('/api/ibc-submissions/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC submission ID" });
+      }
+
+      const submission = await storage.getIbcSubmission(id);
+      if (!submission) {
+        return res.status(404).json({ message: "IBC submission not found" });
+      }
+
+      res.json(submission);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch IBC submission" });
+    }
+  });
+
+  app.post('/api/ibc-submissions', async (req: Request, res: Response) => {
+    try {
+      const validateData = insertIbcSubmissionSchema.parse(req.body);
+      
+      // Check if application exists
+      const application = await storage.getIbcApplication(validateData.applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "IBC application not found" });
+      }
+      
+      // Check if submitted by scientist exists
+      const scientist = await storage.getScientist(validateData.submittedBy);
+      if (!scientist) {
+        return res.status(404).json({ message: "Submitting scientist not found" });
+      }
+      
+      const submission = await storage.createIbcSubmission(validateData);
+      res.status(201).json(submission);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to create IBC submission" });
+    }
+  });
+
+  app.patch('/api/ibc-submissions/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC submission ID" });
+      }
+
+      const validateData = insertIbcSubmissionSchema.partial().parse(req.body);
+      const submission = await storage.updateIbcSubmission(id, validateData);
+      
+      if (!submission) {
+        return res.status(404).json({ message: "IBC submission not found" });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to update IBC submission" });
+    }
+  });
+
+  app.delete('/api/ibc-submissions/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC submission ID" });
+      }
+
+      const success = await storage.deleteIbcSubmission(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "IBC submission not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete IBC submission" });
+    }
+  });
+
+  // IBC Documents
+  app.get('/api/ibc-documents', async (req: Request, res: Response) => {
+    try {
+      const applicationId = req.query.applicationId ? parseInt(req.query.applicationId as string) : undefined;
+      
+      let documents;
+      if (applicationId && !isNaN(applicationId)) {
+        documents = await storage.getIbcDocumentsForApplication(applicationId);
+      } else {
+        documents = await storage.getIbcDocuments();
+      }
+      
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch IBC documents" });
+    }
+  });
+
+  app.get('/api/ibc-documents/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC document ID" });
+      }
+
+      const document = await storage.getIbcDocument(id);
+      if (!document) {
+        return res.status(404).json({ message: "IBC document not found" });
+      }
+
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch IBC document" });
+    }
+  });
+
+  app.post('/api/ibc-documents', async (req: Request, res: Response) => {
+    try {
+      const validateData = insertIbcDocumentSchema.parse(req.body);
+      
+      // Check if application exists (if provided)
+      if (validateData.applicationId) {
+        const application = await storage.getIbcApplication(validateData.applicationId);
+        if (!application) {
+          return res.status(404).json({ message: "IBC application not found" });
+        }
+      }
+      
+      // Check if uploaded by scientist exists
+      const scientist = await storage.getScientist(validateData.uploadedBy);
+      if (!scientist) {
+        return res.status(404).json({ message: "Uploading scientist not found" });
+      }
+      
+      const document = await storage.createIbcDocument(validateData);
+      res.status(201).json(document);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to create IBC document" });
+    }
+  });
+
+  app.patch('/api/ibc-documents/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC document ID" });
+      }
+
+      const validateData = insertIbcDocumentSchema.partial().parse(req.body);
+      const document = await storage.updateIbcDocument(id, validateData);
+      
+      if (!document) {
+        return res.status(404).json({ message: "IBC document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to update IBC document" });
+    }
+  });
+
+  app.delete('/api/ibc-documents/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC document ID" });
+      }
+
+      const success = await storage.deleteIbcDocument(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "IBC document not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete IBC document" });
     }
   });
 
