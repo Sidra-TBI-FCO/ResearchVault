@@ -340,30 +340,44 @@ export default function ResearchActivityDetail() {
                   </Badge>
                 </Button>
                 {irbApplications && irbApplications.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start" 
-                    onClick={() => navigate(`/irb-applications/${irbApplications[0].id}`)}
-                  >
-                    <FileCheck className="h-4 w-4 mr-2" /> 
-                    <span className="flex-1 text-left">IRB Application</span>
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
-                      {irbApplications[0].irbNumber}
-                    </Badge>
-                  </Button>
+                  <>
+                    {irbApplications.map((irb, index) => (
+                      <Button 
+                        key={irb.id}
+                        variant="outline" 
+                        className="w-full justify-start" 
+                        onClick={() => navigate(`/irb-applications/${irb.id}`)}
+                      >
+                        <FileCheck className="h-4 w-4 mr-2" /> 
+                        <span className="flex-1 text-left">
+                          {irbApplications.length > 1 ? `IRB Application ${index + 1}` : 'IRB Application'}
+                        </span>
+                        <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                          {irb.irbNumber}
+                        </Badge>
+                      </Button>
+                    ))}
+                  </>
                 )}
                 {ibcApplications && ibcApplications.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start" 
-                    onClick={() => navigate(`/ibc-applications/${ibcApplications[0].id}`)}
-                  >
-                    <FileSpreadsheet className="h-4 w-4 mr-2" /> 
-                    <span className="flex-1 text-left">IBC Application</span>
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
-                      {ibcApplications[0].ibcNumber}
-                    </Badge>
-                  </Button>
+                  <>
+                    {ibcApplications.map((ibc, index) => (
+                      <Button 
+                        key={ibc.id}
+                        variant="outline" 
+                        className="w-full justify-start" 
+                        onClick={() => navigate(`/ibc-applications/${ibc.id}`)}
+                      >
+                        <FileSpreadsheet className="h-4 w-4 mr-2" /> 
+                        <span className="flex-1 text-left">
+                          {ibcApplications.length > 1 ? `IBC Application ${index + 1}` : 'IBC Application'}
+                        </span>
+                        <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
+                          {ibc.ibcNumber}
+                        </Badge>
+                      </Button>
+                    ))}
+                  </>
                 )}
               </div>
             </CardContent>
