@@ -361,24 +361,25 @@ export default function ResearchActivityDetail() {
                   </div>
                 )}
                 {ibcApplications && ibcApplications.length > 0 && (
-                  <>
-                    {ibcApplications.map((ibc, index) => (
-                      <Button 
-                        key={ibc.id}
-                        variant="outline" 
-                        className="w-full justify-start" 
-                        onClick={() => navigate(`/ibc-applications/${ibc.id}`)}
-                      >
-                        <FileSpreadsheet className="h-4 w-4 mr-2" /> 
-                        <span className="flex-1 text-left">
-                          {ibcApplications.length > 1 ? `IBC Application ${index + 1}` : 'IBC Application'}
-                        </span>
-                        <Badge variant="outline" className="ml-2 rounded-sm bg-amber-50 text-amber-700 border-amber-200">
+                  <div className="border border-gray-200 rounded-lg p-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-4 w-4 text-amber-600" />
+                      <span className="font-medium text-sm">IBC Applications</span>
+                      <span className="text-xs text-gray-500">({ibcApplications.length})</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {ibcApplications.map((ibc) => (
+                        <Badge 
+                          key={ibc.id}
+                          variant="outline" 
+                          className="cursor-pointer rounded-sm bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition-colors"
+                          onClick={() => navigate(`/ibc-applications/${ibc.id}`)}
+                        >
                           {ibc.ibcNumber}
                         </Badge>
-                      </Button>
-                    ))}
-                  </>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </CardContent>
