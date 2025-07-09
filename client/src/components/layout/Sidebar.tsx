@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 import { 
   Beaker, LayoutDashboard, Users, FlaskConical, Database, 
   BookOpen, Award, FileText, Table, Handshake, PieChart,
-  Settings, LogOut, UserPlus, X, Shield, Biohazard, Building
+  Settings, LogOut, UserPlus, X, Shield, Biohazard, Building,
+  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp
 } from "lucide-react";
 
 interface SidebarProps {
@@ -19,86 +20,116 @@ interface SidebarProps {
 export default function Sidebar({ user, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
 
-  const navItems = [
-    { 
-      href: "/",
-      label: "Dashboard",
-      icon: <LayoutDashboard className="w-4 h-4 mr-3" />
+  const navigationSections = [
+    {
+      title: "Dashboard",
+      items: [
+        { 
+          href: "/",
+          label: "Dashboard",
+          icon: <LayoutDashboard className="w-4 h-4 mr-3" />
+        }
+      ]
     },
-    { 
-      href: "/scientists",
-      label: "Scientists & Staff",
-      icon: <Users className="w-4 h-4 mr-3" />
+    {
+      title: "Research Management",
+      items: [
+        { 
+          href: "/scientists",
+          label: "Scientists & Staff",
+          icon: <Users className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/programs",
+          label: "Programs (PRM)",
+          icon: <Beaker className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/projects",
+          label: "Projects (PRJ)",
+          icon: <FlaskConical className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/research-activities",
+          label: "Research Activities (SDR)",
+          icon: <Database className="w-4 h-4 mr-3" />
+        }
+      ]
     },
-    { 
-      href: "/programs",
-      label: "Programs (PRM)",
-      icon: <Beaker className="w-4 h-4 mr-3" />
+    {
+      title: "IRB Compliance",
+      items: [
+        { 
+          href: "/irb",
+          label: "IRB Applications",
+          icon: <Shield className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/irb-office",
+          label: "IRB Office",
+          icon: <Building className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/irb-reviewer",
+          label: "IRB Reviewer",
+          icon: <FileCheck className="w-4 h-4 mr-3" />
+        }
+      ]
     },
-    { 
-      href: "/projects",
-      label: "Projects (PRJ)",
-      icon: <Table className="w-4 h-4 mr-3" />
+    {
+      title: "IBC Compliance",
+      items: [
+        { 
+          href: "/ibc",
+          label: "IBC Applications",
+          icon: <Biohazard className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/ibc-office",
+          label: "IBC Office",
+          icon: <TestTube className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/ibc-reviewer",
+          label: "IBC Reviewer",
+          icon: <ShieldCheck className="w-4 h-4 mr-3" />
+        }
+      ]
     },
-    { 
-      href: "/research-activities",
-      label: "Research Activities (SDR)",
-      icon: <FlaskConical className="w-4 h-4 mr-3" />
+    {
+      title: "Research Data Management",
+      items: [
+        { 
+          href: "/data-management",
+          label: "Data Management Plans",
+          icon: <FileText className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/contracts",
+          label: "Research Contracts",
+          icon: <Handshake className="w-4 h-4 mr-3" />
+        }
+      ]
     },
-    { 
-      href: "/data-management",
-      label: "Data Management",
-      icon: <Database className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/publications",
-      label: "Publications",
-      icon: <BookOpen className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/patents",
-      label: "Patents",
-      icon: <Award className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/irb",
-      label: "IRB Applications",
-      icon: <FileText className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/irb-office",
-      label: "IRB Office",
-      icon: <Shield className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/irb-reviewer",
-      label: "IRB Reviewer",
-      icon: <FileText className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/ibc",
-      label: "IBC Applications",
-      icon: <Biohazard className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/ibc-office",
-      label: "IBC Office",
-      icon: <Building className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/ibc-reviewer",
-      label: "IBC Reviewer",
-      icon: <Biohazard className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/contracts",
-      label: "Research Contracts",
-      icon: <Handshake className="w-4 h-4 mr-3" />
-    },
-    { 
-      href: "/reports",
-      label: "Reports",
-      icon: <PieChart className="w-4 h-4 mr-3" />
+    {
+      title: "Outcomes & Reports",
+      items: [
+        { 
+          href: "/publications",
+          label: "Publications",
+          icon: <BookOpen className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/patents",
+          label: "Patents",
+          icon: <Award className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/reports",
+          label: "Reports",
+          icon: <TrendingUp className="w-4 h-4 mr-3" />
+        }
+      ]
     }
   ];
 
@@ -142,27 +173,40 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
           "flex-1 pt-2 pb-4",
           mobile ? "overflow-y-auto max-h-[calc(100vh-200px)]" : "overflow-y-auto"
         )}>
-          <div className="px-2 space-y-1">
-            {navItems.map((item) => (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                onClick={() => {
-                  // Close mobile menu when navigation item is clicked
-                  if (mobile && onClose) {
-                    onClose();
-                  }
-                }}
-                className={cn(
-                  "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
-                  location === item.href 
-                    ? "bg-sidra-teal text-white font-medium shadow-sm" 
-                    : "text-sidra-navy hover:bg-sidra-teal-light/20 hover:text-sidra-teal-dark"
+          <div className="px-2 space-y-4">
+            {navigationSections.map((section, sectionIndex) => (
+              <div key={section.title}>
+                {sectionIndex > 0 && (
+                  <div className="px-3 py-2">
+                    <h3 className="text-xs font-semibold text-sidra-gray uppercase tracking-wider">
+                      {section.title}
+                    </h3>
+                  </div>
                 )}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
+                <div className={sectionIndex === 0 ? "space-y-1" : "space-y-1 mt-1"}>
+                  {section.items.map((item) => (
+                    <Link 
+                      key={item.href} 
+                      href={item.href}
+                      onClick={() => {
+                        // Close mobile menu when navigation item is clicked
+                        if (mobile && onClose) {
+                          onClose();
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
+                        location === item.href 
+                          ? "bg-sidra-teal text-white font-medium shadow-sm" 
+                          : "text-sidra-navy hover:bg-sidra-teal-light/20 hover:text-sidra-teal-dark"
+                      )}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </nav>
