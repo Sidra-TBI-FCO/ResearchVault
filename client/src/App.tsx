@@ -78,6 +78,9 @@ import EditIbcApplication from "@/pages/ibc-applications/edit";
 import IbcOfficePage from "@/pages/ibc-office";
 import IbcProtocolDetailPage from "@/pages/ibc-office/protocol-detail";
 
+// IBC Board Members
+import CreateIbcBoardMember from "@/pages/ibc-board-members/create";
+
 // IBC Reviewer
 import IbcReviewerPage from "@/pages/ibc-reviewer";
 
@@ -167,6 +170,9 @@ function Router() {
         {/* IBC Office - Put these BEFORE IBC Applications to avoid conflicts */}
         <Route path="/ibc-office" component={IbcOfficePage} />
         <Route path="/ibc-office/protocol-detail/:id" component={IbcProtocolDetailPage} />
+        
+        {/* IBC Board Members */}
+        <Route path="/ibc-board-members/create" component={CreateIbcBoardMember} />
         
         {/* IBC Reviewer */}
         <Route path="/ibc-reviewer" component={IbcReviewerPage} />
