@@ -16,6 +16,9 @@ import {
   irbSubmissions, IrbSubmission, InsertIrbSubmission,
   irbDocuments, IrbDocument, InsertIrbDocument,
   ibcApplications, IbcApplication, InsertIbcApplication,
+  ibcSubmissions, IbcSubmission, InsertIbcSubmission,
+  ibcDocuments, IbcDocument, InsertIbcDocument,
+  ibcBoardMembers, IbcBoardMember, InsertIbcBoardMember,
   researchContracts, ResearchContract, InsertResearchContract,
   irbBoardMembers, IrbBoardMember, InsertIrbBoardMember
 } from "@shared/schema";
@@ -853,6 +856,205 @@ export class DatabaseStorage implements IStorage {
     );
 
     return results.filter(r => r.scientist) as (IrbBoardMember & { scientist: Scientist })[];
+  }
+
+  // IBC Board Members
+  async getIbcBoardMembers(): Promise<(IbcBoardMember & { scientist: Scientist })[]> {
+    const boardMembers = await db.select().from(ibcBoardMembers).orderBy(desc(ibcBoardMembers.createdAt));
+    
+    const results = await Promise.all(
+      boardMembers.map(async (member) => {
+        const scientist = await db.select().from(scientists).where(eq(scientists.id, member.scientistId)).limit(1);
+        return {
+          ...member,
+          scientist: scientist[0] || null
+        };
+      })
+    );
+
+    return results.filter(r => r.scientist) as (IbcBoardMember & { scientist: Scientist })[];
+  }
+
+  async getIbcBoardMember(id: number): Promise<(IbcBoardMember & { scientist: Scientist }) | undefined> {
+    const [member] = await db.select().from(ibcBoardMembers).where(eq(ibcBoardMembers.id, id));
+    if (!member) return undefined;
+
+    const [scientist] = await db.select().from(scientists).where(eq(scientists.id, member.scientistId));
+    if (!scientist) return undefined;
+
+    return {
+      ...member,
+      scientist
+    };
+  }
+
+  async createIbcBoardMember(member: InsertIbcBoardMember): Promise<IbcBoardMember> {
+    // Convert date strings to Date objects
+    const memberData = {
+      ...member,
+      appointmentDate: member.appointmentDate ? new Date(member.appointmentDate) : new Date(),
+      termEndDate: new Date(member.termEndDate)
+    };
+
+    const [newMember] = await db
+      .insert(ibcBoardMembers)
+      .values(memberData)
+      .returning();
+    return newMember;
+  }
+
+  async updateIbcBoardMember(id: number, member: Partial<InsertIbcBoardMember>): Promise<IbcBoardMember | undefined> {
+    const [updatedMember] = await db
+      .update(ibcBoardMembers)
+      .set({ ...member, updatedAt: new Date() })
+      .where(eq(ibcBoardMembers.id, id))
+      .returning();
+    return updatedMember || undefined;
+  }
+
+  async deleteIbcBoardMember(id: number): Promise<boolean> {
+    const result = await db
+      .delete(ibcBoardMembers)
+      .where(eq(ibcBoardMembers.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getActiveIbcBoardMembers(): Promise<(IbcBoardMember & { scientist: Scientist })[]> {
+    const activeMembers = await db
+      .select()
+      .from(ibcBoardMembers)
+      .where(eq(ibcBoardMembers.isActive, true))
+      .orderBy(ibcBoardMembers.role);
+    
+    const results = await Promise.all(
+      activeMembers.map(async (member) => {
+        const scientist = await db.select().from(scientists).where(eq(scientists.id, member.scientistId)).limit(1);
+        return {
+          ...member,
+          scientist: scientist[0] || null
+        };
+      })
+    );
+
+    return results.filter(r => r.scientist) as (IbcBoardMember & { scientist: Scientist })[];
+  }
+
+  // IBC Submissions
+  async getIbcSubmissions(): Promise<IbcSubmission[]> {
+    return await db.select().from(ibcSubmissions).orderBy(desc(ibcSubmissions.submissionDate));
+  }
+
+  async getIbcSubmission(id: number): Promise<IbcSubmission | undefined> {
+    const [submission] = await db.select().from(ibcSubmissions).where(eq(ibcSubmissions.id, id));
+    return submission;
+  }
+
+  async getIbcSubmissionsForApplication(applicationId: number): Promise<IbcSubmission[]> {
+    return await db.select().from(ibcSubmissions)
+      .where(eq(ibcSubmissions.applicationId, applicationId))
+      .orderBy(desc(ibcSubmissions.submissionDate));
+  }
+
+  async createIbcSubmission(submission: InsertIbcSubmission): Promise<IbcSubmission> {
+    const [newSubmission] = await db.insert(ibcSubmissions).values(submission).returning();
+    return newSubmission;
+  }
+
+  async updateIbcSubmission(id: number, submission: Partial<InsertIbcSubmission>): Promise<IbcSubmission | undefined> {
+    const [updatedSubmission] = await db
+      .update(ibcSubmissions)
+      .set({ ...submission, updatedAt: new Date() })
+      .where(eq(ibcSubmissions.id, id))
+      .returning();
+    return updatedSubmission;
+  }
+
+  async deleteIbcSubmission(id: number): Promise<boolean> {
+    const result = await db.delete(ibcSubmissions).where(eq(ibcSubmissions.id, id));
+    return result.rowCount > 0;
+  }
+
+  // IBC Documents
+  async getIbcDocuments(): Promise<IbcDocument[]> {
+    return await db.select().from(ibcDocuments).orderBy(desc(ibcDocuments.uploadDate));
+  }
+
+  async getIbcDocument(id: number): Promise<IbcDocument | undefined> {
+    const [document] = await db.select().from(ibcDocuments).where(eq(ibcDocuments.id, id));
+    return document;
+  }
+
+  async getIbcDocumentsForApplication(applicationId: number): Promise<IbcDocument[]> {
+    return await db.select().from(ibcDocuments)
+      .where(eq(ibcDocuments.applicationId, applicationId))
+      .orderBy(desc(ibcDocuments.uploadDate));
+  }
+
+  async createIbcDocument(document: InsertIbcDocument): Promise<IbcDocument> {
+    const [newDocument] = await db.insert(ibcDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async updateIbcDocument(id: number, document: Partial<InsertIbcDocument>): Promise<IbcDocument | undefined> {
+    const [updatedDocument] = await db
+      .update(ibcDocuments)
+      .set({ ...document, updatedAt: new Date() })
+      .where(eq(ibcDocuments.id, id))
+      .returning();
+    return updatedDocument;
+  }
+
+  async deleteIbcDocument(id: number): Promise<boolean> {
+    const result = await db.delete(ibcDocuments).where(eq(ibcDocuments.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Enhanced IBC Application methods with workflow support
+  async getIbcApplicationByIbcNumber(ibcNumber: string): Promise<IbcApplication | undefined> {
+    const [application] = await db.select().from(ibcApplications).where(eq(ibcApplications.ibcNumber, ibcNumber));
+    return application;
+  }
+
+  async getIbcApplicationsForResearchActivity(researchActivityId: number): Promise<IbcApplication[]> {
+    return await db.select().from(ibcApplications)
+      .where(eq(ibcApplications.researchActivityId, researchActivityId))
+      .orderBy(desc(ibcApplications.createdAt));
+  }
+
+  async getIbcApplicationsByStatus(status: string): Promise<IbcApplication[]> {
+    return await db.select().from(ibcApplications)
+      .where(eq(ibcApplications.status, status))
+      .orderBy(desc(ibcApplications.createdAt));
+  }
+
+  async getIbcApplicationsByWorkflowStatus(workflowStatus: string): Promise<IbcApplication[]> {
+    return await db.select().from(ibcApplications)
+      .where(eq(ibcApplications.workflowStatus, workflowStatus))
+      .orderBy(desc(ibcApplications.createdAt));
+  }
+
+  async generateNextIbcNumber(): Promise<string> {
+    const currentYear = new Date().getFullYear();
+    const prefix = `IBC-${currentYear}-`;
+    
+    // Get the last IBC number for this year
+    const lastApplication = await db
+      .select()
+      .from(ibcApplications)
+      .where(sql`${ibcApplications.ibcNumber} LIKE ${prefix + '%'}`)
+      .orderBy(desc(ibcApplications.ibcNumber))
+      .limit(1);
+    
+    let nextNumber = 1;
+    if (lastApplication.length > 0) {
+      const lastNumber = lastApplication[0].ibcNumber;
+      const match = lastNumber.match(/-(\d+)$/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+    
+    return `${prefix}${nextNumber.toString().padStart(3, '0')}`;
   }
 }
 

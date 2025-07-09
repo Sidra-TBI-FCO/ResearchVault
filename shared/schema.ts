@@ -351,13 +351,59 @@ export const ibcApplications = pgTable("ibc_applications", {
   ibcNumber: text("ibc_number").notNull().unique(), // IBC Project Number
   cayuseProtocolNumber: text("cayuse_protocol_number"), // Cayuse Protocol Number
   title: text("title").notNull(),
+  shortTitle: text("short_title"), // Short title for recognition
   principalInvestigatorId: integer("principal_investigator_id").notNull(), // references scientists.id
+  additionalNotificationEmail: text("additional_notification_email"),
+  
+  // Enhanced biosafety-specific fields
+  biosafetyLevel: text("biosafety_level").notNull(), // BSL-1, BSL-2, BSL-3, BSL-4
+  biologicalAgents: json("biological_agents"), // List of biological agents/organisms
+  chemicalAgents: json("chemical_agents"), // Chemical hazards
+  radiologicalMaterials: json("radiological_materials"), // Radioactive materials
+  recombinantDNA: boolean("recombinant_dna").default(false),
+  humanMaterials: boolean("human_materials").default(false),
+  animalWork: boolean("animal_work").default(false),
+  fieldWork: boolean("field_work").default(false),
+  
+  // Room and facility assignments
+  approvedRooms: json("approved_rooms"), // Room numbers and their biosafety levels
+  containmentProcedures: text("containment_procedures"),
+  wasteDisposalPlan: text("waste_disposal_plan"),
+  emergencyProcedures: text("emergency_procedures"),
+  
+  // Personnel and training
+  authorizedPersonnel: json("authorized_personnel"), // Scientists authorized for this protocol
+  trainingRequirements: json("training_requirements"), // Required training courses
+  medicalSurveillance: boolean("medical_surveillance").default(false),
+  
+  // Workflow and submission tracking
   submissionDate: timestamp("submission_date"),
   approvalDate: date("approval_date"),
   expirationDate: date("expiration_date"),
-  status: text("status").notNull(), // Active, Inactive
+  lastReviewDate: date("last_review_date"),
+  nextReviewDate: date("next_review_date"),
+  
+  status: text("status").notNull(), // Active, Inactive, Expired, Under Review
+  workflowStatus: text("workflow_status").notNull().default("draft"), // draft, submitted, under_review, approved, rejected, etc.
+  submissionType: text("submission_type").notNull().default("initial"), // initial, amendment, renewal
+  version: integer("version").notNull().default(1),
+  
+  // Risk assessment and compliance
+  riskLevel: text("risk_level").notNull(), // low, moderate, high
+  requiresMonitoring: boolean("requires_monitoring").default(false),
+  monitoringFrequency: text("monitoring_frequency"), // monthly, quarterly, annually
+  reportingRequirements: text("reporting_requirements"),
+  
+  // Review and decision tracking
+  reviewerAssignments: json("reviewer_assignments"), // Assigned IBC reviewers
+  reviewComments: json("review_comments"), // IBC reviewer feedback
+  piResponses: json("pi_responses"), // PI responses to reviewer comments
+  protocolTeamMembers: json("protocol_team_members"), // Team members with roles and access
+  
+  description: text("description"),
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
-  peopleInvolved: integer("people_involved").array(), // Scientists involved in IBC
+  formData: json("form_data"), // Store form-specific data
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -421,6 +467,73 @@ export const insertIrbBoardMemberSchema = createInsertSchema(irbBoardMembers).om
   updatedAt: true,
 });
 
+// IBC Board Members (similar to IRB Board Members)
+export const ibcBoardMembers = pgTable("ibc_board_members", {
+  id: serial("id").primaryKey(),
+  scientistId: integer("scientist_id").notNull(), // references scientists.id
+  role: text("role").notNull(), // member, chair, deputy_chair
+  expertise: text("expertise").array(), // Areas of expertise (microbiology, biosafety, etc.)
+  biosafetyTraining: json("biosafety_training"), // Training certifications
+  appointmentDate: timestamp("appointment_date").defaultNow(),
+  termEndDate: timestamp("term_end_date").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIbcBoardMemberSchema = createInsertSchema(ibcBoardMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// IBC Submissions (tracking workflow submissions)
+export const ibcSubmissions = pgTable("ibc_submissions", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull(), // references ibcApplications.id
+  submissionType: text("submission_type").notNull(), // initial, amendment, renewal, continuation
+  submissionDate: timestamp("submission_date").defaultNow(),
+  submittedBy: integer("submitted_by").notNull(), // references scientists.id
+  documents: json("documents"), // Documents submitted with this submission
+  reviewStatus: text("review_status").notNull().default("pending"), // pending, in_review, approved, rejected
+  reviewDate: timestamp("review_date"),
+  reviewedBy: integer("reviewed_by"), // references scientists.id
+  reviewComments: text("review_comments"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIbcSubmissionSchema = createInsertSchema(ibcSubmissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// IBC Documents (tracking protocol documents)
+export const ibcDocuments = pgTable("ibc_documents", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id"), // references ibcApplications.id
+  submissionId: integer("submission_id"), // references ibcSubmissions.id
+  documentType: text("document_type").notNull(), // protocol, sop, training_records, etc.
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  uploadedBy: integer("uploaded_by").notNull(), // references scientists.id
+  uploadDate: timestamp("upload_date").defaultNow(),
+  version: integer("version").notNull().default(1),
+  isCurrentVersion: boolean("is_current_version").default(true),
+  reviewStatus: text("review_status").default("pending"), // pending, approved, rejected
+  reviewComments: text("review_comments"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIbcDocumentSchema = createInsertSchema(ibcDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Export types for all schemas
 export type Program = typeof programs.$inferSelect;
 export type InsertProgram = z.infer<typeof insertProgramSchema>;
@@ -433,10 +546,6 @@ export type InsertScientist = z.infer<typeof insertScientistSchema>;
 
 export type ResearchActivity = typeof researchActivities.$inferSelect;
 export type InsertResearchActivity = z.infer<typeof insertResearchActivitySchema>;
-
-// These types are now defined above, no need for compatibility aliases
-// export type Project = ResearchActivity;
-// export type InsertProject = InsertResearchActivity;
 
 export type ProjectMember = typeof projectMembers.$inferSelect;
 export type InsertProjectMember = z.infer<typeof insertProjectMemberSchema>;
@@ -464,6 +573,15 @@ export type InsertIrbDocument = z.infer<typeof insertIrbDocumentSchema>;
 
 export type IbcApplication = typeof ibcApplications.$inferSelect;
 export type InsertIbcApplication = z.infer<typeof insertIbcApplicationSchema>;
+
+export type IbcSubmission = typeof ibcSubmissions.$inferSelect;
+export type InsertIbcSubmission = z.infer<typeof insertIbcSubmissionSchema>;
+
+export type IbcDocument = typeof ibcDocuments.$inferSelect;
+export type InsertIbcDocument = z.infer<typeof insertIbcDocumentSchema>;
+
+export type IbcBoardMember = typeof ibcBoardMembers.$inferSelect;
+export type InsertIbcBoardMember = z.infer<typeof insertIbcBoardMemberSchema>;
 
 export type ResearchContract = typeof researchContracts.$inferSelect;
 export type InsertResearchContract = z.infer<typeof insertResearchContractSchema>;
