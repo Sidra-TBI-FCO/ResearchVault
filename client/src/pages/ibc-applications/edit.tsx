@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2, Beaker, User, X, Users, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Beaker, User, X, Users, Plus, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -335,6 +335,45 @@ export default function IbcApplicationEdit() {
               <Button className="mt-4" onClick={() => navigate("/ibc-applications")}>
                 Return to IBC Applications List
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Check if application can be edited (only drafts can be edited)
+  if (ibcApplication.status !== 'draft') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/ibc-applications/${id}`)}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">Cannot Edit Application</h1>
+        </div>
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center space-y-4">
+              <AlertCircle className="h-16 w-16 text-amber-500 mx-auto" />
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Application Cannot Be Edited</h2>
+                <p className="text-lg text-neutral-600 mb-4">
+                  This IBC application has status "{ibcApplication.status}" and cannot be edited.
+                </p>
+                <p className="text-neutral-500">
+                  Only applications with "draft" status can be edited.
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={() => navigate(`/ibc-applications/${id}`)}>
+                  View Application
+                </Button>
+                <Button variant="outline" onClick={() => navigate("/ibc-applications")}>
+                  Return to List
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

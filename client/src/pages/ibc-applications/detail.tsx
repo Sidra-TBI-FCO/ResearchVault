@@ -176,13 +176,15 @@ export default function IbcApplicationDetail() {
           </Button>
           <h1 className="text-2xl font-semibold text-neutral-400">{ibcApplication.title}</h1>
         </div>
-        <Button 
-          className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
-          onClick={() => navigate(`/ibc-applications/${ibcApplication.id}/edit`)}
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
+        {ibcApplication.status === 'draft' && (
+          <Button 
+            className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
+            onClick={() => navigate(`/ibc-applications/${ibcApplication.id}/edit`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -555,14 +557,16 @@ export default function IbcApplicationDetail() {
                     </Badge>
                   )}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-sm" 
-                  onClick={() => navigate(`/ibc-applications/${ibcApplication.id}/edit`)}
-                >
-                  <Edit className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Edit Application</span>
-                </Button>
+                {ibcApplication.status === 'draft' && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-sm" 
+                    onClick={() => navigate(`/ibc-applications/${ibcApplication.id}/edit`)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">Edit Application</span>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
