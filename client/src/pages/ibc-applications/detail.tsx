@@ -442,14 +442,14 @@ export default function IbcApplicationDetail() {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
-                  disabled={!researchActivity}
+                  onClick={() => associatedActivities && associatedActivities.length > 0 && navigate(`/research-activities/${associatedActivities[0].id}`)}
+                  disabled={!associatedActivities || associatedActivities.length === 0}
                 >
                   <Beaker className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Research Activity</span>
-                  {researchActivity && (
+                  {associatedActivities && associatedActivities.length > 0 && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
-                      {researchActivity.sdrNumber}
+                      {associatedActivities.length} SDR{associatedActivities.length === 1 ? '' : 's'}
                     </Badge>
                   )}
                 </Button>
@@ -474,12 +474,12 @@ export default function IbcApplicationDetail() {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => researchActivity && navigate(`/publications?researchActivityId=${researchActivity.id}`)}
-                  disabled={!researchActivity}
+                  onClick={() => associatedActivities && associatedActivities.length > 0 && navigate(`/publications?researchActivityId=${associatedActivities[0].id}`)}
+                  disabled={!associatedActivities || associatedActivities.length === 0}
                 >
                   <FileText className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Publications</span>
-                  {researchActivity && (
+                  {associatedActivities && associatedActivities.length > 0 && (
                     <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
                       {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
                     </Badge>
