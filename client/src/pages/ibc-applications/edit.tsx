@@ -88,7 +88,7 @@ export default function IbcApplicationEdit() {
   });
 
   const selectedPIId = form.watch('principalInvestigatorId');
-  const selectedSDRIds = form.watch('researchActivityIds');
+  const selectedSDRIds = form.watch('researchActivityIds') || [];
 
   // Get research activities filtered by selected PI
   const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
@@ -130,7 +130,7 @@ export default function IbcApplicationEdit() {
 
   // Update form when IBC application data loads
   React.useEffect(() => {
-    if (ibcApplication) {
+    if (ibcApplication && associatedActivities) {
       form.reset({
         researchActivityId: ibcApplication.researchActivityId || 0,
         ibcNumber: ibcApplication.ibcNumber,
@@ -156,9 +156,11 @@ export default function IbcApplicationEdit() {
         humanMaterials: ibcApplication.humanMaterials || false,
         animalWork: ibcApplication.animalWork || false,
         fieldWork: ibcApplication.fieldWork || false,
+        researchActivityIds: associatedActivities?.map(ra => ra.id) || [],
+        teamMembers: [],
       });
     }
-  }, [ibcApplication, form]);
+  }, [ibcApplication, associatedActivities, form]);
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => 
