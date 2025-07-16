@@ -27,35 +27,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-// Extend the insert schema with additional validations
-const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
+// Create form schema excluding status field and adding custom validations
+const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
+  status: true, // Remove status field from form - will be set automatically
+}).extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
   principalInvestigatorId: z.number({
     required_error: "Please select a principal investigator",
   }),
-
-  protocolNumber: z.string().optional(),
   biosafetyLevel: z.string({
     required_error: "Please select a biosafety level",
   }),
-  description: z.string().optional(),
-  agents: z.string().optional(),
-  // New methods fields
-  materialAndMethods: z.string().optional(),
-  proceduresInvolvingInfectiousAgents: z.string().optional(),
-  cellCultureProcedures: z.string().optional(),
-  nucleicAcidExtractionMethods: z.string().optional(),
-  animalProcedures: z.string().optional(),
-  laboratoryEquipment: z.string().optional(),
-  disinfectionMethods: z.string().optional(),
-  ppeRequirements: z.string().optional(),
-  wasteSterilizationProcedures: z.string().optional(),
-  riskGroupClassification: z.string().optional(),
-  containmentProcedures: z.string().optional(),
-  emergencyProcedures: z.string().optional(),
-  location: z.string().optional(),
-  buildingName: z.string().optional(),
-  roomNumbers: z.string().optional(),
   researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
   
   // Team members array with roles
@@ -145,6 +127,7 @@ export default function CreateIbc() {
       const ibcData = {
         ...ibcApplicationData,
         ibcNumber,
+        status: "Active", // Set default status for new applications
         workflowStatus: "draft",
         riskLevel: "moderate", // Default value
         // Set submission date as null for drafts - will be set when actually submitted
