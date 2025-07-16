@@ -1859,6 +1859,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get personnel data for an IBC application
+  app.get('/api/ibc-applications/:id/personnel', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      const application = await storage.getIbcApplication(id);
+      if (!application) {
+        return res.status(404).json({ message: "IBC application not found" });
+      }
+
+      // Get personnel from the application's personnel field if it exists
+      if (application.personnel && Array.isArray(application.personnel)) {
+        // Enhance personnel data with scientist details
+        const enhancedPersonnel = await Promise.all(
+          application.personnel.map(async (person: any) => {
+            if (person.scientistId) {
+              const scientist = await storage.getScientist(person.scientistId);
+              return {
+                ...person,
+                scientist: scientist ? {
+                  id: scientist.id,
+                  name: scientist.name,
+                  email: scientist.email,
+                  department: scientist.department,
+                  title: scientist.title,
+                  profileImageInitials: scientist.profileImageInitials
+                } : null
+              };
+            }
+            return person;
+          })
+        );
+        
+        res.json(enhancedPersonnel);
+      } else {
+        res.json([]);
+      }
+    } catch (error) {
+      console.error("Error fetching IBC application personnel:", error);
+      res.status(500).json({ message: "Failed to fetch personnel for IBC application" });
+    }
+  });
+
   // Add research activity to IBC application
   app.post('/api/ibc-applications/:id/research-activities', async (req: Request, res: Response) => {
     try {
