@@ -8,12 +8,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity } from "@shared/schema";
-import { ArrowLeft, Loader2, Beaker } from "lucide-react";
+import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
+import { ArrowLeft, Loader2, Beaker, User, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import React from "react";
+import { z } from "zod";
+
+// Extended schema for edit form including team management
+const editIbcApplicationSchema = insertIbcApplicationSchema.extend({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  principalInvestigatorId: z.number({
+    required_error: "Please select a principal investigator",
+  }),
+  researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
+  teamMembers: z.array(z.object({
+    scientistId: z.number(),
+    role: z.enum(["team_member", "team_leader", "safety_representative"]),
+  })).default([]),
+});
+
+type EditIbcApplicationFormValues = z.infer<typeof editIbcApplicationSchema>;
 
 export default function IbcApplicationEdit() {
   const { id } = useParams();
@@ -27,8 +44,9 @@ export default function IbcApplicationEdit() {
     enabled: !!id,
   });
 
-  const { data: researchActivities } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/research-activities'],
+  // Get all principal investigators for selection
+  const { data: principalInvestigators, isLoading: piLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/principal-investigators'],
   });
 
   // Fetch associated research activities for this IBC application
@@ -37,8 +55,8 @@ export default function IbcApplicationEdit() {
     enabled: !!id,
   });
 
-  const form = useForm<InsertIbcApplication>({
-    resolver: zodResolver(insertIbcApplicationSchema),
+  const form = useForm<EditIbcApplicationFormValues>({
+    resolver: zodResolver(editIbcApplicationSchema),
     defaultValues: {
       researchActivityId: ibcApplication?.researchActivityId || 0,
       ibcNumber: ibcApplication?.ibcNumber || "",
@@ -64,7 +82,50 @@ export default function IbcApplicationEdit() {
       humanMaterials: ibcApplication?.humanMaterials || false,
       animalWork: ibcApplication?.animalWork || false,
       fieldWork: ibcApplication?.fieldWork || false,
+      researchActivityIds: associatedActivities?.map(ra => ra.id) || [],
+      teamMembers: [],
     },
+  });
+
+  const selectedPIId = form.watch('principalInvestigatorId');
+  const selectedSDRIds = form.watch('researchActivityIds');
+
+  // Get research activities filtered by selected PI
+  const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/research-activities', selectedPIId],
+    queryFn: async () => {
+      if (!selectedPIId) return [];
+      const response = await fetch(`/api/research-activities?principalInvestigatorId=${selectedPIId}`);
+      if (!response.ok) throw new Error('Failed to fetch research activities');
+      return response.json();
+    },
+    enabled: !!selectedPIId,
+  });
+
+  // Get team members from selected SDRs
+  const { data: availableTeamMembers, isLoading: teamMembersLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/team-members', ...selectedSDRIds],
+    queryFn: async () => {
+      if (selectedSDRIds.length === 0) return [];
+      
+      const allStaff: Scientist[] = [];
+      for (const sdrId of selectedSDRIds) {
+        const response = await fetch(`/api/research-activities/${sdrId}/members`);
+        if (response.ok) {
+          const members = await response.json();
+          allStaff.push(...members.map((m: any) => m.scientist));
+        }
+      }
+      
+      // Remove duplicates and exclude the selected PI
+      const uniqueStaff = allStaff.filter((staff, index, arr) => 
+        arr.findIndex(s => s.id === staff.id) === index && 
+        staff.id !== selectedPIId
+      );
+      
+      return uniqueStaff;
+    },
+    enabled: selectedSDRIds.length > 0,
   });
 
   // Update form when IBC application data loads
@@ -100,12 +161,15 @@ export default function IbcApplicationEdit() {
   }, [ibcApplication, form]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: InsertIbcApplication) => 
+    mutationFn: (data: any) => 
       apiRequest("PATCH", `/api/ibc-applications/${id}`, {
-        ...data,
-        submissionDate: data.submissionDate ? new Date(data.submissionDate) : null,
-        approvalDate: data.approvalDate ? new Date(data.approvalDate) : null,
-        expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
+        ibcApplication: {
+          ...data.ibcApplication,
+          submissionDate: data.ibcApplication.submissionDate ? new Date(data.ibcApplication.submissionDate) : null,
+          approvalDate: data.ibcApplication.approvalDate ? new Date(data.ibcApplication.approvalDate) : null,
+          expirationDate: data.ibcApplication.expirationDate ? new Date(data.ibcApplication.expirationDate) : null,
+        },
+        researchActivityIds: data.researchActivityIds,
       }),
     onSuccess: () => {
       toast({
@@ -125,8 +189,15 @@ export default function IbcApplicationEdit() {
     },
   });
 
-  const onSubmit = (data: InsertIbcApplication) => {
-    updateMutation.mutate(data);
+  const onSubmit = (data: EditIbcApplicationFormValues) => {
+    // Remove the team members array and research activity IDs since they're handled separately
+    const { teamMembers, researchActivityIds, ...ibcData } = data;
+    
+    updateMutation.mutate({
+      ...ibcData,
+      ibcApplication: ibcData,
+      researchActivityIds,
+    } as any);
   };
 
   if (isLoading) {
@@ -196,24 +267,185 @@ export default function IbcApplicationEdit() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="researchActivityId"
+                name="principalInvestigatorId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Research Activity (SDR)</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                  <FormItem className="col-span-full">
+                    <FormLabel>Principal Investigator</FormLabel>
+                    <FormDescription>
+                      Select the PI first to filter related research activities
+                    </FormDescription>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(parseInt(value));
+                        // Clear selected research activities when PI changes
+                        form.setValue('researchActivityIds', []);
+                      }}
+                      value={field.value?.toString() || ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a research activity" />
+                          <SelectValue placeholder="Select a Principal Investigator" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {researchActivities?.map((activity) => (
-                          <SelectItem key={activity.id} value={activity.id.toString()}>
-                            {activity.sdrNumber} - {activity.title}
-                          </SelectItem>
-                        ))}
+                        {piLoading ? (
+                          <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
+                        ) : (
+                          principalInvestigators?.map((pi) => (
+                            <SelectItem key={pi.id} value={pi.id.toString()}>
+                              {pi.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="researchActivityIds"
+                render={({ field }) => (
+                  <FormItem className="col-span-full">
+                    <FormLabel>Research Activities (SDRs)</FormLabel>
+                    <FormDescription>
+                      Select one or more research activities that share biosafety protocols
+                    </FormDescription>
+                    <div className="space-y-2">
+                      {!selectedPIId ? (
+                        <div className="text-sm text-muted-foreground italic">
+                          Please select a Principal Investigator first to see available research activities
+                        </div>
+                      ) : activitiesLoading ? (
+                        <div className="text-sm text-muted-foreground">Loading research activities...</div>
+                      ) : researchActivities && researchActivities.length > 0 ? (
+                        researchActivities.map((activity) => (
+                          <div key={activity.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`sdr-${activity.id}`}
+                              checked={field.value?.includes(activity.id) || false}
+                              onChange={(e) => {
+                                const currentValues = field.value || [];
+                                if (e.target.checked) {
+                                  field.onChange([...currentValues, activity.id]);
+                                } else {
+                                  field.onChange(currentValues.filter(id => id !== activity.id));
+                                }
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <label htmlFor={`sdr-${activity.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              {activity.sdrNumber} - {activity.title}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-muted-foreground italic">
+                          No research activities available for the selected PI
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Team Members Section */}
+              <FormField
+                control={form.control}
+                name="teamMembers"
+                render={({ field }) => (
+                  <FormItem className="col-span-full">
+                    <FormLabel>Team Members</FormLabel>
+                    <FormDescription>
+                      Select team members from the research activities and assign roles
+                    </FormDescription>
+                    <div className="space-y-4">
+                      {/* Display current team members */}
+                      {field.value && field.value.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium">Current Team:</h4>
+                          {field.value.map((member, index) => {
+                            const scientist = availableTeamMembers?.find(s => s.id === member.scientistId);
+                            return (
+                              <div key={`${member.scientistId}-${index}`} className="flex items-center justify-between p-2 bg-blue-50 rounded-md">
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-blue-600" />
+                                  <span className="text-sm font-medium">{scientist?.name}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {member.role.replace('_', ' ')}
+                                  </Badge>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newMembers = field.value?.filter((_, i) => i !== index) || [];
+                                    field.onChange(newMembers);
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Add team members */}
+                      {selectedSDRIds.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium">Available Team Members:</h4>
+                          {teamMembersLoading ? (
+                            <div className="text-sm text-muted-foreground">Loading team members...</div>
+                          ) : availableTeamMembers && availableTeamMembers.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-2">
+                              {availableTeamMembers
+                                .filter(member => !field.value?.some(tm => tm.scientistId === member.id))
+                                .map((member) => (
+                                <div key={member.id} className="flex items-center justify-between p-2 border rounded-md">
+                                  <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-gray-600" />
+                                    <span className="text-sm">{member.name}</span>
+                                    {member.department && (
+                                      <span className="text-xs text-gray-500">({member.department})</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Select
+                                      onValueChange={(role) => {
+                                        const currentMembers = field.value || [];
+                                        field.onChange([
+                                          ...currentMembers,
+                                          { scientistId: member.id, role: role as any }
+                                        ]);
+                                      }}
+                                    >
+                                      <SelectTrigger className="w-32">
+                                        <SelectValue placeholder="Role" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="team_member">Team Member</SelectItem>
+                                        <SelectItem value="team_leader">Team Leader</SelectItem>
+                                        <SelectItem value="safety_representative">Safety Rep</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground italic">
+                              No additional team members available from selected research activities
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
