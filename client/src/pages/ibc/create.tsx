@@ -27,9 +27,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-// Create form schema excluding status field and adding custom validations
+// Create form schema excluding auto-generated fields and adding custom validations
 const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
-  status: true, // Remove status field from form - will be set automatically
+  ibcNumber: true, // Auto-generated
+  status: true, // Auto-generated
+  workflowStatus: true, // Auto-generated
 }).extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
   principalInvestigatorId: z.number({
@@ -114,31 +116,16 @@ export default function CreateIbc() {
     mutationFn: async (data: CreateIbcApplicationFormValues) => {
       console.log("Mutation starting with data:", data);
       
-      // Generate IBC number if not provided
-      const ibcNumber = data.protocolNumber || `IBC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-      
-      // Convert research activity IDs to the junction table format
+      // Extract research activity IDs for the junction table
       const researchActivityIds = data.researchActivityIds;
       console.log("Extracted research activity IDs:", researchActivityIds);
       
       // Prepare the main IBC application data (excluding the junction table data)
       const { researchActivityIds: _, ...ibcApplicationData } = data;
       
-      const ibcData = {
-        ...ibcApplicationData,
-        ibcNumber,
-        status: "Active", // Set default status for new applications
-        workflowStatus: "draft",
-        riskLevel: "moderate", // Default value
-        // Set submission date as null for drafts - will be set when actually submitted
-        submissionDate: null,
-      };
-
-      console.log("Final IBC data to send:", ibcData);
-      console.log("Final research activity IDs to send:", researchActivityIds);
-
+      // Send the complete request (backend handles auto-generation)
       const requestBody = {
-        ...ibcData,
+        ...ibcApplicationData,
         researchActivityIds,
       };
       
