@@ -32,6 +32,7 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   ibcNumber: true, // Auto-generated
   status: true, // Auto-generated
   workflowStatus: true, // Auto-generated
+  riskLevel: true, // Auto-generated based on biosafetyLevel
 }).extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
   principalInvestigatorId: z.number({
