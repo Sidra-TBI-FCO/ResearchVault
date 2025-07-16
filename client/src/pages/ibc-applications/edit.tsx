@@ -262,7 +262,7 @@ export default function IbcApplicationEdit() {
     },
   });
 
-  const handleSave = (data: EditIbcApplicationFormValues) => {
+  const handleSave = async (data: EditIbcApplicationFormValues) => {
     console.log('handleSave called with data:', data);
     console.log('Form validation state:', form.formState.isValid);
     console.log('Form errors:', form.formState.errors);
@@ -274,8 +274,9 @@ export default function IbcApplicationEdit() {
     const protocolTeamMembers = JSON.stringify(teamMembers);
     
     console.log('Save payload:', { ...ibcData, protocolTeamMembers });
-    console.log('About to call saveMutation.mutate');
-    saveMutation.mutate({ ...ibcData, protocolTeamMembers });
+    console.log('About to call saveMutation.mutateAsync');
+    
+    return await saveMutation.mutateAsync({ ...ibcData, protocolTeamMembers });
   };
 
   const handleSubmit = (data: EditIbcApplicationFormValues) => {
@@ -982,19 +983,30 @@ export default function IbcApplicationEdit() {
                   disabled={saveMutation.isPending || submitMutation.isPending}
                   variant="outline"
                   onClick={async () => {
+                    // Show immediate feedback
+                    toast({
+                      title: "Save clicked",
+                      description: "Processing save request...",
+                    });
+                    
                     console.log('Save button clicked');
                     console.log('Current form values:', form.getValues());
                     console.log('Form validation state:', form.formState.isValid);
                     console.log('Form errors:', form.formState.errors);
                     
-                    // Trigger validation manually
-                    const isValid = await form.trigger();
-                    console.log('Manual validation result:', isValid);
+                    // Get current form data
+                    const formData = form.getValues();
                     
-                    if (isValid) {
-                      form.handleSubmit(handleSave)();
-                    } else {
-                      console.log('Form validation failed, errors:', form.formState.errors);
+                    // Call handleSave directly with form data
+                    try {
+                      await handleSave(formData);
+                    } catch (error) {
+                      console.error('Error in handleSave:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to save: " + (error as Error).message,
+                        variant: "destructive",
+                      });
                     }
                   }}
                 >
