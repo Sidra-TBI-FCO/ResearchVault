@@ -202,7 +202,7 @@ export default function IbcApplicationDetail() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="mt-4">
                 <div>
                   <h3 className="text-sm font-medium text-neutral-400">Related Research Activity</h3>
                   <div className="flex items-center gap-1">
@@ -215,26 +215,6 @@ export default function IbcApplicationDetail() {
                           {associatedActivities.length} SDR{associatedActivities.length === 1 ? '' : 's'} linked
                         </span>
                       ) : 'No SDRs linked'}
-                    </span>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Investigator</h3>
-                  <div className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    <span>
-                      {piLoading ? (
-                        <Skeleton className="h-4 w-24 inline-block" />
-                      ) : principalInvestigator ? (
-                        <Button 
-                          variant="link" 
-                          className="p-0 h-auto text-primary-600"
-                          onClick={() => navigate(`/scientists/${principalInvestigator.id}`)}
-                        >
-                          {principalInvestigator.name}
-                        </Button>
-                      ) : 'Not assigned'}
                     </span>
                   </div>
                 </div>
