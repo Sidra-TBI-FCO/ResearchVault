@@ -1844,10 +1844,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validateData.status = 'submitted';
           // Set submission date when submitting
           if (!validateData.submissionDate) {
-            validateData.submissionDate = new Date().toISOString();
+            validateData.submissionDate = new Date();
           }
         }
         console.log('Status set to:', validateData.status);
+        console.log('Submission date set to:', validateData.submissionDate);
       }
       
       // Check if project exists if projectId is provided
