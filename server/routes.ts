@@ -1763,8 +1763,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Extracted researchActivityIds:", researchActivityIds);
       console.log("Application data after extraction:", JSON.stringify(applicationData, null, 2));
       
+      console.log("Adding auto-generated fields...");
+      // Add auto-generated fields before validation
+      const dataWithAutoFields = {
+        ...applicationData,
+        ibcNumber: applicationData.ibcNumber || await storage.generateNextIbcNumber(),
+        status: applicationData.status || "Active",
+        workflowStatus: applicationData.workflowStatus || "draft"
+      };
+      console.log("Data with auto-generated fields:", JSON.stringify(dataWithAutoFields, null, 2));
+      
       console.log("Validating with schema...");
-      const validateData = insertIbcApplicationSchema.parse(applicationData);
+      const validateData = insertIbcApplicationSchema.parse(dataWithAutoFields);
       console.log("Schema validation successful:", JSON.stringify(validateData, null, 2));
       
       // Check if principal investigator exists
