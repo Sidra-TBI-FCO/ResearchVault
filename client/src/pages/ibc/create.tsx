@@ -54,16 +54,6 @@ export default function CreateIbc() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  // Get all principal investigators for selection
-  const { data: principalInvestigators, isLoading: piLoading } = useQuery<Scientist[]>({
-    queryKey: ['/api/principal-investigators'],
-  });
-
-  // Get all research activities for selection
-  const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/research-activities'],
-  });
-
   // Default form values
   const defaultValues: Partial<CreateIbcApplicationFormValues> = {
     status: "Submitted",
@@ -72,9 +62,28 @@ export default function CreateIbc() {
     researchActivityIds: [],
   };
 
+  // Get all principal investigators for selection
+  const { data: principalInvestigators, isLoading: piLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/principal-investigators'],
+  });
+
   const form = useForm<CreateIbcApplicationFormValues>({
     resolver: zodResolver(createIbcApplicationSchema),
     defaultValues,
+  });
+
+  const selectedPIId = form.watch('principalInvestigatorId');
+
+  // Get research activities filtered by selected PI
+  const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/research-activities', selectedPIId],
+    queryFn: async () => {
+      if (!selectedPIId) return [];
+      const response = await fetch(`/api/research-activities?principalInvestigatorId=${selectedPIId}`);
+      if (!response.ok) throw new Error('Failed to fetch research activities');
+      return response.json();
+    },
+    enabled: !!selectedPIId,
   });
 
   const createIbcApplicationMutation = useMutation({
@@ -138,6 +147,45 @@ export default function CreateIbc() {
                 
                 <FormField
                   control={form.control}
+                  name="principalInvestigatorId"
+                  render={({ field }) => (
+                    <FormItem className="col-span-full">
+                      <FormLabel>Principal Investigator</FormLabel>
+                      <FormDescription>
+                        Select the PI first to filter related research activities
+                      </FormDescription>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(parseInt(value));
+                          // Clear selected research activities when PI changes
+                          form.setValue('researchActivityIds', []);
+                        }}
+                        defaultValue={field.value?.toString() || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a Principal Investigator" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {piLoading ? (
+                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
+                          ) : (
+                            principalInvestigators?.map((pi) => (
+                              <SelectItem key={pi.id} value={pi.id.toString()}>
+                                {pi.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="researchActivityIds"
                   render={({ field }) => (
                     <FormItem className="col-span-full">
@@ -146,10 +194,14 @@ export default function CreateIbc() {
                         Select one or more research activities that share biosafety protocols
                       </FormDescription>
                       <div className="space-y-2">
-                        {activitiesLoading ? (
+                        {!selectedPIId ? (
+                          <div className="text-sm text-muted-foreground italic">
+                            Please select a Principal Investigator first to see available research activities
+                          </div>
+                        ) : activitiesLoading ? (
                           <div className="text-sm text-muted-foreground">Loading research activities...</div>
-                        ) : (
-                          researchActivities?.map((activity) => (
+                        ) : researchActivities && researchActivities.length > 0 ? (
+                          researchActivities.map((activity) => (
                             <div key={activity.id} className="flex items-center space-x-2">
                               <input
                                 type="checkbox"
@@ -179,40 +231,12 @@ export default function CreateIbc() {
                               </label>
                             </div>
                           ))
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                            No research activities found for the selected Principal Investigator
+                          </div>
                         )}
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="principalInvestigatorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Principal Investigator</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a PI" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
-                          ) : (
-                            principalInvestigators?.map((pi) => (
-                              <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
