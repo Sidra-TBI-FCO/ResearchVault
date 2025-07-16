@@ -33,9 +33,7 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
   principalInvestigatorId: z.number({
     required_error: "Please select a principal investigator",
   }),
-  submissionDate: z.date().optional(),
-  approvalDate: z.date().optional(),
-  expirationDate: z.date().optional(),
+
   status: z.string({
     required_error: "Please select a status",
   }),
@@ -65,8 +63,7 @@ export default function CreateIbc() {
   
   // Default form values
   const defaultValues: Partial<CreateIbcApplicationFormValues> = {
-    status: "Submitted",
-    submissionDate: new Date(),
+    status: "Draft",
     biosafetyLevel: "BSL-2",
     researchActivityIds: [],
   };
@@ -97,14 +94,37 @@ export default function CreateIbc() {
 
   const createIbcApplicationMutation = useMutation({
     mutationFn: async (data: CreateIbcApplicationFormValues) => {
-      const response = await apiRequest("POST", "/api/ibc-applications", data);
+      // Generate IBC number if not provided
+      const ibcNumber = data.protocolNumber || `IBC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+      
+      // Convert research activity IDs to the junction table format
+      const researchActivityIds = data.researchActivityIds;
+      
+      // Prepare the main IBC application data (excluding the junction table data)
+      const { researchActivityIds: _, ...ibcApplicationData } = data;
+      
+      const ibcData = {
+        ...ibcApplicationData,
+        ibcNumber,
+        workflowStatus: "draft",
+        riskLevel: "moderate", // Default value
+        // Set submission date only if status is "Ready for Submission"
+        submissionDate: data.status === "Ready for Submission" ? new Date() : null,
+      };
+
+      const response = await apiRequest("POST", "/api/ibc-applications", {
+        ibcApplication: ibcData,
+        researchActivityIds,
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
+      const statusMessage = variables.status === "Ready for Submission" ? 
+        "submitted for review" : "saved as draft";
       toast({
         title: "IBC Application created",
-        description: "The IBC application has been successfully submitted.",
+        description: `The IBC application has been ${statusMessage}.`,
       });
       navigate("/ibc");
     },
@@ -267,12 +287,8 @@ export default function CreateIbc() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Submitted">Submitted</SelectItem>
-                          <SelectItem value="Under Review">Under Review</SelectItem>
-                          <SelectItem value="Approved">Approved</SelectItem>
-                          <SelectItem value="Rejected">Rejected</SelectItem>
-                          <SelectItem value="Revisions Required">Revisions Required</SelectItem>
-                          <SelectItem value="Expired">Expired</SelectItem>
+                          <SelectItem value="Draft">Draft</SelectItem>
+                          <SelectItem value="Ready for Submission">Ready for Submission</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -344,128 +360,11 @@ export default function CreateIbc() {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="submissionDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Submission Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="approvalDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Approval Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        Leave blank if not yet approved
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="expirationDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Expiration Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        Set expiration date if known (typically three years after approval)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="col-span-full">
+                  <div className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-md">
+                    <strong>Note:</strong> Submission, approval, and expiration dates will be automatically set by the system during the review process.
+                  </div>
+                </div>
                 
                 <FormField
                   control={form.control}
