@@ -65,7 +65,7 @@ export default function IbcApplicationEdit() {
       shortTitle: ibcApplication?.shortTitle || "",
       principalInvestigatorId: ibcApplication?.principalInvestigatorId || 0,
 
-      status: ibcApplication?.status || "Submitted",
+
       biosafetyLevel: ibcApplication?.biosafetyLevel || "BSL-2",
       riskGroupClassification: ibcApplication?.riskGroupClassification || "",
       materialAndMethods: ibcApplication?.materialAndMethods || "",
@@ -137,7 +137,7 @@ export default function IbcApplicationEdit() {
         shortTitle: ibcApplication.shortTitle || "",
         principalInvestigatorId: ibcApplication.principalInvestigatorId,
 
-        status: ibcApplication.status,
+
         biosafetyLevel: ibcApplication.biosafetyLevel || "BSL-2",
         riskGroupClassification: ibcApplication.riskGroupClassification || "",
         materialAndMethods: ibcApplication.materialAndMethods || "",
@@ -160,10 +160,7 @@ export default function IbcApplicationEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => 
-      apiRequest("PATCH", `/api/ibc-applications/${id}`, {
-        ibcApplication: data.ibcApplication,
-        researchActivityIds: data.researchActivityIds,
-      }),
+      apiRequest("PATCH", `/api/ibc-applications/${id}`, data),
     onSuccess: () => {
       toast({
         title: "Success",
@@ -188,13 +185,8 @@ export default function IbcApplicationEdit() {
     // Remove the team members array and research activity IDs since they're handled separately
     const { teamMembers, researchActivityIds, ...ibcData } = data;
     
-    const payload = {
-      ibcApplication: ibcData,
-      researchActivityIds: researchActivityIds || [],
-    };
-    
-    console.log('Mutation payload:', payload);
-    updateMutation.mutate(payload);
+    console.log('Mutation payload:', ibcData);
+    updateMutation.mutate(ibcData);
   };
 
   if (isLoading) {
@@ -821,33 +813,7 @@ export default function IbcApplicationEdit() {
 
 
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Submitted">Submitted</SelectItem>
-                        <SelectItem value="Under Review">Under Review</SelectItem>
-                        <SelectItem value="Approved">Approved</SelectItem>
-                        <SelectItem value="Conditionally Approved">Conditionally Approved</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                        <SelectItem value="Withdrawn">Withdrawn</SelectItem>
-                        <SelectItem value="Expired">Expired</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               <div className="flex gap-4">
                 <Button 
