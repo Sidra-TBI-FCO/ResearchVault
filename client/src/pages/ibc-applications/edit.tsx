@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity } from "@shared/schema";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Beaker } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -29,6 +29,12 @@ export default function IbcApplicationEdit() {
 
   const { data: researchActivities } = useQuery<ResearchActivity[]>({
     queryKey: ['/api/research-activities'],
+  });
+
+  // Fetch associated research activities for this IBC application
+  const { data: associatedActivities } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/ibc-applications', id, 'research-activities'],
+    enabled: !!id,
   });
 
   const form = useForm<InsertIbcApplication>({
@@ -423,33 +429,46 @@ export default function IbcApplicationEdit() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <FormField
-                    control={form.control}
-                    name="researchActivityId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Primary Research Activity (SDR)</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a research activity" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {researchActivities?.map((activity) => (
-                              <SelectItem key={activity.id} value={activity.id.toString()}>
-                                {activity.sdrNumber} - {activity.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select the primary research activity. Additional activities can be linked after creation.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-4">
+                    {/* Display currently associated research activities */}
+                    <div>
+                      <FormLabel>Currently Associated Research Activities (SDRs)</FormLabel>
+                      {associatedActivities && associatedActivities.length > 0 ? (
+                        <div className="mt-2 space-y-2">
+                          {associatedActivities.map((activity) => (
+                            <div key={activity.id} className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <Beaker className="h-4 w-4 text-blue-600" />
+                              <div className="flex-1">
+                                <span className="font-medium text-blue-900">{activity.sdrNumber}</span>
+                                <span className="text-blue-700 ml-2">{activity.title}</span>
+                                {activity.status && (
+                                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                                    activity.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    activity.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {activity.status}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          <p className="text-sm text-neutral-600">
+                            <span className="font-medium">Coverage:</span> This IBC application covers {associatedActivities.length} research activit{associatedActivities.length === 1 ? 'y' : 'ies'} with shared biosafety protocols.
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-sm text-neutral-500">No research activities currently linked to this IBC application</p>
+                      )}
+                    </div>
+
+                    {/* Note about research activity management */}
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-sm text-amber-800">
+                        <span className="font-medium">Note:</span> Research activity associations are managed through the shared business logic based on team overlap and biosafety protocols. Contact your research administrator to modify associated SDRs.
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 

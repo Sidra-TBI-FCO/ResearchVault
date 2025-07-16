@@ -25,17 +25,10 @@ export default function IbcApplicationDetail() {
     },
   });
 
-  const { data: researchActivity, isLoading: researchActivityLoading } = useQuery<ResearchActivity>({
-    queryKey: ['/api/research-activities', ibcApplication?.researchActivityId],
-    queryFn: async () => {
-      if (!ibcApplication?.researchActivityId) return null;
-      const response = await fetch(`/api/research-activities/${ibcApplication.researchActivityId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch research activity');
-      }
-      return response.json();
-    },
-    enabled: !!ibcApplication?.researchActivityId,
+  // Fetch associated research activities for this IBC application
+  const { data: associatedActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/ibc-applications', id, 'research-activities'],
+    enabled: !!id,
   });
 
   const { data: principalInvestigator, isLoading: piLoading } = useQuery<Scientist>({
@@ -383,26 +376,32 @@ export default function IbcApplicationDetail() {
                 
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-neutral-500">Associated Research Activities (SDRs)</h4>
-                  {researchActivity ? (
+                  {activitiesLoading ? (
                     <div className="mt-2">
-                      <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <Beaker className="h-4 w-4 text-blue-600" />
-                        <div>
-                          <span className="font-medium text-blue-900">{researchActivity.sdrNumber}</span>
-                          <span className="text-blue-700 ml-2">{researchActivity.title}</span>
-                          {researchActivity.status && (
-                            <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                              researchActivity.status === 'active' ? 'bg-green-100 text-green-800' :
-                              researchActivity.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {researchActivity.status}
-                            </span>
-                          )}
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                  ) : associatedActivities && associatedActivities.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                      {associatedActivities.map((activity) => (
+                        <div key={activity.id} className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <Beaker className="h-4 w-4 text-blue-600" />
+                          <div className="flex-1">
+                            <span className="font-medium text-blue-900">{activity.sdrNumber}</span>
+                            <span className="text-blue-700 ml-2">{activity.title}</span>
+                            {activity.status && (
+                              <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                                activity.status === 'active' ? 'bg-green-100 text-green-800' :
+                                activity.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {activity.status}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      ))}
                       <div className="mt-2 text-sm text-neutral-600">
-                        <span className="font-medium">Note:</span> This IBC application may cover multiple SDRs with shared biosafety protocols and team members.
+                        <span className="font-medium">Coverage:</span> This IBC application covers {associatedActivities.length} research activit{associatedActivities.length === 1 ? 'y' : 'ies'} with shared biosafety protocols and team members.
                       </div>
                     </div>
                   ) : (
