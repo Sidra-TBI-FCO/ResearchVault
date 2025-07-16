@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
@@ -9,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2, Beaker, User, X } from "lucide-react";
+import { ArrowLeft, Loader2, Beaker, User, X, Users, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import React from "react";
@@ -37,6 +39,10 @@ export default function IbcApplicationEdit() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // State for team member selection
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -118,22 +124,20 @@ export default function IbcApplicationEdit() {
     enabled: !!selectedPIId || !!associatedActivities,
   });
 
-  // Get team members from selected SDRs
-  const { data: availableTeamMembers, isLoading: teamMembersLoading } = useQuery<Scientist[]>({
-    queryKey: ['/api/team-members', ...selectedSDRIds],
+  // Get staff from selected SDRs for team member selection  
+  const { data: availableStaff, isLoading: staffLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/research-activities/staff', selectedSDRIds],
     queryFn: async () => {
-      if (selectedSDRIds.length === 0) return [];
+      if (!selectedSDRIds.length) return [];
+      const staffPromises = selectedSDRIds.map(async (sdrId) => {
+        const response = await fetch(`/api/research-activities/${sdrId}/staff`);
+        if (!response.ok) return [];
+        return response.json();
+      });
+      const staffArrays = await Promise.all(staffPromises);
+      const allStaff = staffArrays.flat();
       
-      const allStaff: Scientist[] = [];
-      for (const sdrId of selectedSDRIds) {
-        const response = await fetch(`/api/research-activities/${sdrId}/members`);
-        if (response.ok) {
-          const members = await response.json();
-          allStaff.push(...members.map((m: any) => m.scientist));
-        }
-      }
-      
-      // Remove duplicates and exclude the selected PI
+      // Remove duplicates and exclude the PI
       const uniqueStaff = allStaff.filter((staff, index, arr) => 
         arr.findIndex(s => s.id === staff.id) === index && 
         staff.id !== selectedPIId
@@ -370,103 +374,175 @@ export default function IbcApplicationEdit() {
                 )}
               />
 
-              {/* Team Members Section */}
-              <FormField
-                control={form.control}
-                name="teamMembers"
-                render={({ field }) => (
-                  <FormItem className="col-span-full">
-                    <FormLabel>Team Members</FormLabel>
-                    <FormDescription>
-                      Select team members from the research activities and assign roles
-                    </FormDescription>
-                    <div className="space-y-4">
-                      {/* Display current team members */}
-                      {field.value && field.value.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Current Team:</h4>
-                          {field.value.map((member, index) => {
-                            const scientist = availableTeamMembers?.find(s => s.id === member.scientistId);
-                            return (
-                              <div key={`${member.scientistId}-${index}`} className="flex items-center justify-between p-2 bg-blue-50 rounded-md">
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-blue-600" />
-                                  <span className="text-sm font-medium">{scientist?.name}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {member.role.replace('_', ' ')}
-                                  </Badge>
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    const newMembers = field.value?.filter((_, i) => i !== index) || [];
-                                    field.onChange(newMembers);
-                                  }}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            );
-                          })}
+              {/* Protocol Team Members Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Protocol Team Members
+                  </CardTitle>
+                  <CardDescription>
+                    Add team members from available SDR staff who will be involved in this protocol
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Add Team Member Section */}
+                  {selectedSDRIds.length > 0 && availableStaff?.length ? (
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">Add Protocol Team Member</h4>
                         </div>
-                      )}
-
-                      {/* Add team members */}
-                      {selectedSDRIds.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Available Team Members:</h4>
-                          {teamMembersLoading ? (
-                            <div className="text-sm text-muted-foreground">Loading team members...</div>
-                          ) : availableTeamMembers && availableTeamMembers.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-2">
-                              {availableTeamMembers
-                                .filter(member => !field.value?.some(tm => tm.scientistId === member.id))
-                                .map((member) => (
-                                <div key={member.id} className="flex items-center justify-between p-2 border rounded-md">
-                                  <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-gray-600" />
-                                    <span className="text-sm">{member.name}</span>
-                                    {member.department && (
-                                      <span className="text-xs text-gray-500">({member.department})</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Select
-                                      onValueChange={(role) => {
-                                        const currentMembers = field.value || [];
-                                        field.onChange([
-                                          ...currentMembers,
-                                          { scientistId: member.id, role: role as any }
-                                        ]);
-                                      }}
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Select SDR Team Member</label>
+                            <Select value={selectedMember} onValueChange={setSelectedMember}>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose from SDR team members..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableStaff.map((staff) => {
+                                  const currentTeamMembers = form.watch('teamMembers') || [];
+                                  const isAlreadySelected = currentTeamMembers.some(member => member.scientistId === staff.id);
+                                  return (
+                                    <SelectItem 
+                                      key={staff.id} 
+                                      value={staff.id.toString()}
+                                      disabled={isAlreadySelected}
                                     >
-                                      <SelectTrigger className="w-32">
-                                        <SelectValue placeholder="Role" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="team_member">Team Member</SelectItem>
-                                        <SelectItem value="team_leader">Team Leader</SelectItem>
-                                        <SelectItem value="safety_representative">Safety Rep</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
+                                      {staff.name} - {staff.title}
+                                      {isAlreadySelected && " (Already added)"}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 mb-2 block">
+                              Protocol Roles (Select Multiple)
+                            </label>
+                            <div className="grid grid-cols-1 gap-3 text-sm">
+                              {[
+                                "Team Member",
+                                "Team Leader", 
+                                "Safety Rep"
+                              ].map((role) => (
+                                <div key={role} className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    id={role.toLowerCase().replace(/\s+/g, '-')}
+                                    checked={selectedRoles.includes(role)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedRoles([...selectedRoles, role]);
+                                      } else {
+                                        setSelectedRoles(selectedRoles.filter(r => r !== role));
+                                      }
+                                    }}
+                                  />
+                                  <label htmlFor={role.toLowerCase().replace(/\s+/g, '-')}>{role}</label>
                                 </div>
                               ))}
                             </div>
-                          ) : (
-                            <div className="text-sm text-muted-foreground italic">
-                              No additional team members available from selected research activities
-                            </div>
-                          )}
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <Button 
+                              type="button" 
+                              size="sm" 
+                              className="bg-teal-600 hover:bg-teal-700"
+                              disabled={!selectedMember || selectedRoles.length === 0}
+                              onClick={() => {
+                                if (selectedMember && selectedRoles.length > 0) {
+                                  const currentMembers = form.getValues('teamMembers') || [];
+                                  form.setValue('teamMembers', [
+                                    ...currentMembers,
+                                    { scientistId: parseInt(selectedMember), role: 'team_member' as const }
+                                  ]);
+                                  setSelectedMember("");
+                                  setSelectedRoles([]);
+                                }
+                              }}
+                            >
+                              Add Member
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedMember("");
+                                setSelectedRoles([]);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      {selectedSDRIds.length === 0 
+                        ? "Select research activities above to add team members from their staff"
+                        : staffLoading 
+                        ? "Loading available staff..."
+                        : "No additional staff found in the selected research activities"
+                      }
+                    </div>
+                  )}
+
+                  {/* Added Team Members List */}
+                  <div className="space-y-3">
+                    {form.watch('teamMembers')?.map((member, index) => {
+                      const staff = availableStaff?.find(s => s.id === member.scientistId);
+                      if (!staff) return null;
+                      
+                      return (
+                        <div key={`${member.scientistId}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium">{staff.name}</div>
+                            <div className="text-sm text-gray-600">{staff.email} • {staff.title}</div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              <Badge variant="secondary" className="text-xs">Team Leader</Badge>
+                              <Badge variant="secondary" className="text-xs">Safety Rep</Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="text-green-700 border-green-300">
+                              Access Granted
+                            </Badge>
+                            <Badge variant="outline" className="text-orange-600 border-orange-300">
+                              Pending Signature
+                            </Badge>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                const currentMembers = form.getValues('teamMembers') || [];
+                                form.setValue('teamMembers', 
+                                  currentMembers.filter((_, i) => i !== index)
+                                );
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {(!form.watch('teamMembers') || form.watch('teamMembers')?.length === 0) && (
+                      <div className="text-center py-4 text-gray-500 text-sm">
+                        No team members added yet
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
