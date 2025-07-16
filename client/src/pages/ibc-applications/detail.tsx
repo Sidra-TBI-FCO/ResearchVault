@@ -109,7 +109,9 @@ export default function IbcApplicationDetail() {
   }
 
   // Helper function for status badge - supports IRB-style workflow progression
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null | undefined) => {
+    if (!status) return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Unknown</Badge>;
+    
     switch (status.toLowerCase()) {
       case 'draft':
         return <Badge className="bg-slate-100 text-slate-800 border-slate-200">Draft</Badge>;
