@@ -153,6 +153,19 @@ export default function IbcApplicationEdit() {
     if (ibcApplication && associatedActivities) {
       const selectedActivityIds = associatedActivities.map(ra => ra.id);
       
+      // Parse existing team members from the protocolTeamMembers field
+      let existingTeamMembers = [];
+      try {
+        if (ibcApplication.protocolTeamMembers && typeof ibcApplication.protocolTeamMembers === 'string') {
+          existingTeamMembers = JSON.parse(ibcApplication.protocolTeamMembers);
+        } else if (Array.isArray(ibcApplication.protocolTeamMembers)) {
+          existingTeamMembers = ibcApplication.protocolTeamMembers;
+        }
+      } catch (error) {
+        console.error('Error parsing existing team members:', error);
+        existingTeamMembers = [];
+      }
+      
       form.reset({
         researchActivityId: ibcApplication.researchActivityId || 0,
         ibcNumber: ibcApplication.ibcNumber,
@@ -177,7 +190,7 @@ export default function IbcApplicationEdit() {
         animalWork: ibcApplication.animalWork || false,
         fieldWork: ibcApplication.fieldWork || false,
         researchActivityIds: selectedActivityIds,
-        teamMembers: [],
+        teamMembers: existingTeamMembers,
       });
     }
   }, [ibcApplication, associatedActivities, form]);
