@@ -343,7 +343,7 @@ export default function IbcApplicationEdit() {
   }
 
   // Check if application can be edited (only drafts can be edited)
-  if (ibcApplication.status !== 'draft') {
+  if (ibcApplication.status?.toLowerCase() !== 'draft') {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">

@@ -176,7 +176,7 @@ export default function IbcApplicationDetail() {
           </Button>
           <h1 className="text-2xl font-semibold text-neutral-400">{ibcApplication.title}</h1>
         </div>
-        {ibcApplication.status === 'draft' && (
+        {ibcApplication.status?.toLowerCase() === 'draft' && (
           <Button 
             className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
             onClick={() => navigate(`/ibc-applications/${ibcApplication.id}/edit`)}
@@ -557,7 +557,7 @@ export default function IbcApplicationDetail() {
                     </Badge>
                   )}
                 </Button>
-                {ibcApplication.status === 'draft' && (
+                {ibcApplication.status?.toLowerCase() === 'draft' && (
                   <Button 
                     variant="outline" 
                     className="w-full justify-start text-sm" 
