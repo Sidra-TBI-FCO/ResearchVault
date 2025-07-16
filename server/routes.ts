@@ -1769,7 +1769,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...applicationData,
         ibcNumber: applicationData.ibcNumber || await storage.generateNextIbcNumber(),
         status: applicationData.status || "Active",
-        workflowStatus: applicationData.workflowStatus || "draft"
+        workflowStatus: applicationData.workflowStatus || "draft",
+        riskLevel: applicationData.riskLevel || "moderate"
       };
       console.log("Data with auto-generated fields:", JSON.stringify(dataWithAutoFields, null, 2));
       
