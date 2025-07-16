@@ -433,57 +433,112 @@ export default function IbcApplicationDetail() {
         </Card>
 
         <div className="space-y-6">
+          {/* Associated Research Activities */}
           <Card>
             <CardHeader>
-              <CardTitle>Related Resources</CardTitle>
+              <CardTitle>Associated Research Activities</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {activitiesLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              ) : associatedActivities && associatedActivities.length > 0 ? (
+                <div className="space-y-3">
+                  {associatedActivities.map((activity) => (
+                    <div key={activity.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                         onClick={() => navigate(`/research-activities/${activity.id}`)}>
+                      <div className="flex items-start gap-2">
+                        <Beaker className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-blue-900 text-sm">{activity.sdrNumber}</span>
+                            {activity.status && (
+                              <Badge variant="outline" className={`text-xs ${
+                                activity.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
+                                activity.status === 'completed' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                'bg-gray-100 text-gray-800 border-gray-200'
+                              }`}>
+                                {activity.status}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{activity.title}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No research activities linked</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Principal Investigator */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Principal Investigator</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {piLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : principalInvestigator ? (
+                <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                     onClick={() => navigate(`/scientists/${principalInvestigator.id}`)}>
+                  <div className="flex items-start gap-2">
+                    <User className="h-4 w-4 text-green-600 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-green-900 text-sm">{principalInvestigator.name}</span>
+                        <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-200">
+                          PI
+                        </Badge>
+                      </div>
+                      {principalInvestigator.department && (
+                        <p className="text-xs text-gray-600 mt-1">{principalInvestigator.department}</p>
+                      )}
+                      {principalInvestigator.email && (
+                        <p className="text-xs text-blue-600 mt-1">{principalInvestigator.email}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No principal investigator assigned</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => associatedActivities && associatedActivities.length > 0 && navigate(`/research-activities/${associatedActivities[0].id}`)}
-                  disabled={!associatedActivities || associatedActivities.length === 0}
-                >
-                  <Beaker className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Research Activity</span>
-                  {associatedActivities && associatedActivities.length > 0 && (
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
-                      {associatedActivities.length} SDR{associatedActivities.length === 1 ? '' : 's'}
-                    </Badge>
-                  )}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => principalInvestigator && navigate(`/scientists/${principalInvestigator.id}`)}
-                  disabled={!principalInvestigator}
-                >
-                  <User className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Principal Investigator</span>
-                  {principalInvestigator && principalInvestigator.staffId ? (
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
-                      ID: {principalInvestigator.staffId}
-                    </Badge>
-                  ) : principalInvestigator && (
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-purple-50 text-purple-700 border-purple-200">
-                      PI
-                    </Badge>
-                  )}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
+                  className="w-full justify-start text-sm" 
                   onClick={() => associatedActivities && associatedActivities.length > 0 && navigate(`/publications?researchActivityId=${associatedActivities[0].id}`)}
                   disabled={!associatedActivities || associatedActivities.length === 0}
                 >
                   <FileText className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Publications</span>
+                  <span className="flex-1 text-left">View Publications</span>
                   {associatedActivities && associatedActivities.length > 0 && (
-                    <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                      {publicationCount} {publicationCount === 1 ? 'publication' : 'publications'}
+                    <Badge variant="outline" className="ml-2 text-xs bg-green-50 text-green-700 border-green-200">
+                      {publicationCount}
                     </Badge>
                   )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-sm" 
+                  onClick={() => navigate(`/ibc-applications/${ibcApplication.id}/edit`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" /> 
+                  <span className="flex-1 text-left">Edit Application</span>
                 </Button>
               </div>
             </CardContent>
