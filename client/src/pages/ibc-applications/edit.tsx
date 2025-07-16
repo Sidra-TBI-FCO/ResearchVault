@@ -202,43 +202,81 @@ export default function IbcApplicationEdit() {
     }
   }, [ibcApplication, associatedActivities, form]);
 
-  const updateMutation = useMutation({
+  const saveMutation = useMutation({
     mutationFn: (data: any) => {
-      console.log('Sending PATCH request to:', `/api/ibc-applications/${id}`);
+      console.log('Sending PATCH request to save:', `/api/ibc-applications/${id}`);
       console.log('Request data:', data);
-      return apiRequest("PATCH", `/api/ibc-applications/${id}`, data);
+      return apiRequest("PATCH", `/api/ibc-applications/${id}`, { ...data, isDraft: true });
     },
     onSuccess: (result) => {
-      console.log('Update successful:', result);
+      console.log('Save successful:', result);
       toast({
         title: "Success",
-        description: "IBC application updated successfully",
+        description: "IBC application saved as draft",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
+    },
+    onError: (error: any) => {
+      console.error('Save error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save IBC application",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: (data: any) => {
+      console.log('Sending PATCH request to submit:', `/api/ibc-applications/${id}`);
+      console.log('Request data:', data);
+      return apiRequest("PATCH", `/api/ibc-applications/${id}`, { ...data, isDraft: false });
+    },
+    onSuccess: (result) => {
+      console.log('Submit successful:', result);
+      toast({
+        title: "Success",
+        description: "IBC application submitted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
       navigate(`/ibc-applications/${id}`);
     },
     onError: (error: any) => {
-      console.error('Update error:', error);
+      console.error('Submit error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update IBC application",
+        description: error.message || "Failed to submit IBC application",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: EditIbcApplicationFormValues) => {
-    console.log('Form submission data:', data);
-    console.log('Form errors:', form.formState.errors);
-    console.log('Form is valid:', form.formState.isValid);
+  const handleSave = (data: EditIbcApplicationFormValues) => {
+    console.log('Form save data:', data);
     
     // Remove the team members array and research activity IDs since they're handled separately
     const { teamMembers, researchActivityIds, ...ibcData } = data;
     
-    console.log('Mutation payload:', ibcData);
-    console.log('About to call updateMutation.mutate');
-    updateMutation.mutate(ibcData);
+    // Convert team members to JSON format for storage
+    const protocolTeamMembers = JSON.stringify(teamMembers);
+    
+    console.log('Save payload:', { ...ibcData, protocolTeamMembers });
+    saveMutation.mutate({ ...ibcData, protocolTeamMembers });
+  };
+
+  const handleSubmit = (data: EditIbcApplicationFormValues) => {
+    console.log('Form submit data:', data);
+    
+    // Remove the team members array and research activity IDs since they're handled separately
+    const { teamMembers, researchActivityIds, ...ibcData } = data;
+    
+    // Convert team members to JSON format for storage
+    const protocolTeamMembers = JSON.stringify(teamMembers);
+    
+    console.log('Submit payload:', { ...ibcData, protocolTeamMembers });
+    submitMutation.mutate({ ...ibcData, protocolTeamMembers });
   };
 
   if (isLoading) {
@@ -305,7 +343,7 @@ export default function IbcApplicationEdit() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               <FormField
                 control={form.control}
                 name="principalInvestigatorId"
@@ -928,17 +966,28 @@ export default function IbcApplicationEdit() {
 
               <div className="flex gap-4">
                 <Button 
-                  type="submit" 
-                  disabled={updateMutation.isPending}
-                  className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                  type="button" 
+                  disabled={saveMutation.isPending || submitMutation.isPending}
+                  variant="outline"
                   onClick={() => {
-                    console.log('Update button clicked');
-                    console.log('Form state:', form.formState);
-                    console.log('Form values:', form.getValues());
+                    console.log('Save button clicked');
+                    form.handleSubmit(handleSave)();
                   }}
                 >
-                  {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update IBC Application
+                  {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save
+                </Button>
+                <Button 
+                  type="button" 
+                  disabled={saveMutation.isPending || submitMutation.isPending}
+                  className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                  onClick={() => {
+                    console.log('Submit button clicked');
+                    form.handleSubmit(handleSubmit)();
+                  }}
+                >
+                  {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Submit
                 </Button>
                 <Button 
                   type="button" 
