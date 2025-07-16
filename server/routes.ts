@@ -1934,11 +1934,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "IBC application not found" });
       }
 
-      // Get personnel from the application's personnel field if it exists
-      if (application.personnel && Array.isArray(application.personnel)) {
+      // Get personnel from the application's protocolTeamMembers field if it exists
+      if (application.protocolTeamMembers && Array.isArray(application.protocolTeamMembers)) {
         // Enhance personnel data with scientist details
         const enhancedPersonnel = await Promise.all(
-          application.personnel.map(async (person: any) => {
+          application.protocolTeamMembers.map(async (person: any) => {
             if (person.scientistId) {
               const scientist = await storage.getScientist(person.scientistId);
               return {
