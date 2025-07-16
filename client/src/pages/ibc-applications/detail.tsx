@@ -202,10 +202,10 @@ export default function IbcApplicationDetail() {
                 </div>
               </div>
 
-              {ibcApplication.description && (
+              {ibcApplication.materialAndMethods && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-neutral-400">Description</h3>
-                  <p className="mt-1">{ibcApplication.description}</p>
+                  <p className="mt-1">{ibcApplication.materialAndMethods}</p>
                 </div>
               )}
               
@@ -237,32 +237,143 @@ export default function IbcApplicationDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Biological Agents</h3>
-                  <p className="mt-1">{ibcApplication.biologicalAgents || 'None specified'}</p>
+                  <h3 className="text-sm font-medium text-neutral-400">Biosafety Level</h3>
+                  <p className="mt-1">{ibcApplication.biosafetyLevel || 'Not specified'}</p>
                 </div>
               </div>
               
-              <div className="mt-6">
-                <h3 className="text-md font-medium border-b pb-2">Biosafety Level</h3>
-                <p className="mt-2">{ibcApplication.biosafetyLevel || 'Not specified'}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Risk Group Classification</h3>
+                  <p className="mt-1">{ibcApplication.riskGroupClassification || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Cayuse Protocol Number</h3>
+                  <p className="mt-1">{ibcApplication.cayuseProtocolNumber || 'Not assigned'}</p>
+                </div>
               </div>
-              
+
+              {/* Biological Agents and Materials Section */}
               <div className="mt-6">
-                <h3 className="text-md font-medium border-b pb-2">Recombinant DNA</h3>
-                <p className="mt-2">{ibcApplication.recombinantDna ? 'Yes' : 'No'}</p>
+                <h3 className="text-md font-medium border-b pb-2">Biological Materials</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-neutral-500">Biological Agents</h4>
+                    <p className="mt-1 text-sm">{
+                      ibcApplication.biologicalAgents ? 
+                        (Array.isArray(ibcApplication.biologicalAgents) ? 
+                          ibcApplication.biologicalAgents.join(', ') : 
+                          ibcApplication.biologicalAgents) : 
+                        'None specified'
+                    }</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-neutral-500">Chemical Agents</h4>
+                    <p className="mt-1 text-sm">{
+                      ibcApplication.chemicalAgents ? 
+                        (Array.isArray(ibcApplication.chemicalAgents) ? 
+                          ibcApplication.chemicalAgents.join(', ') : 
+                          ibcApplication.chemicalAgents) : 
+                        'None specified'
+                    }</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    {ibcApplication.recombinantDNA ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <AlertCircle className="h-4 w-4 text-gray-400" />}
+                    <span className="text-sm">Recombinant DNA</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {ibcApplication.humanMaterials ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <AlertCircle className="h-4 w-4 text-gray-400" />}
+                    <span className="text-sm">Human Materials</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {ibcApplication.animalWork ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <AlertCircle className="h-4 w-4 text-gray-400" />}
+                    <span className="text-sm">Animal Work</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {ibcApplication.fieldWork ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <AlertCircle className="h-4 w-4 text-gray-400" />}
+                    <span className="text-sm">Field Work</span>
+                  </div>
+                </div>
               </div>
-              
+
+              {/* Methods and Procedures Section */}
               <div className="mt-6">
-                <h3 className="text-md font-medium border-b pb-2">People Involved</h3>
-                {ibcApplication.peopleInvolved && ibcApplication.peopleInvolved.length > 0 ? (
-                  <ul className="mt-2 list-disc list-inside">
-                    {/* Map through peopleInvolved and display names. In a real app, you'd fetch user data */}
-                    {ibcApplication.peopleInvolved.map((personId, index) => (
-                      <li key={index}>Person ID: {personId}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-2">No additional people involved</p>
+                <h3 className="text-md font-medium border-b pb-2">Methods and Procedures</h3>
+                
+                {ibcApplication.materialAndMethods && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Materials and Methods</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.materialAndMethods}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.proceduresInvolvingInfectiousAgents && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Procedures Involving Infectious Agents</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.proceduresInvolvingInfectiousAgents}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.cellCultureProcedures && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Cell Culture Procedures</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.cellCultureProcedures}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.nucleicAcidExtractionMethods && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Nucleic Acid Extraction Methods</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.nucleicAcidExtractionMethods}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.animalProcedures && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Animal Procedures</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.animalProcedures}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Safety and Containment Section */}
+              <div className="mt-6">
+                <h3 className="text-md font-medium border-b pb-2">Safety and Containment</h3>
+                
+                {ibcApplication.containmentProcedures && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Containment Procedures</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.containmentProcedures}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.emergencyProcedures && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Emergency Procedures</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.emergencyProcedures}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.wasteDisposalPlan && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Waste Disposal Plan</h4>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{ibcApplication.wasteDisposalPlan}</p>
+                  </div>
+                )}
+                
+                {ibcApplication.approvedRooms && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-neutral-500">Approved Rooms</h4>
+                    <p className="mt-1 text-sm">{
+                      Array.isArray(ibcApplication.approvedRooms) ? 
+                        ibcApplication.approvedRooms.join(', ') : 
+                        ibcApplication.approvedRooms
+                    }</p>
+                  </div>
                 )}
               </div>
             </div>

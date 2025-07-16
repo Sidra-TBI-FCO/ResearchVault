@@ -38,11 +38,26 @@ export default function IbcApplicationEdit() {
       ibcNumber: ibcApplication?.ibcNumber || "",
       cayuseProtocolNumber: ibcApplication?.cayuseProtocolNumber || "",
       title: ibcApplication?.title || "",
+      shortTitle: ibcApplication?.shortTitle || "",
       principalInvestigatorId: ibcApplication?.principalInvestigatorId || 0,
       submissionDate: ibcApplication?.submissionDate ? new Date(ibcApplication.submissionDate).toISOString().split('T')[0] : "",
       approvalDate: ibcApplication?.approvalDate ? new Date(ibcApplication.approvalDate).toISOString().split('T')[0] : "",
       expirationDate: ibcApplication?.expirationDate ? new Date(ibcApplication.expirationDate).toISOString().split('T')[0] : "",
       status: ibcApplication?.status || "Submitted",
+      biosafetyLevel: ibcApplication?.biosafetyLevel || "BSL-2",
+      riskGroupClassification: ibcApplication?.riskGroupClassification || "",
+      materialAndMethods: ibcApplication?.materialAndMethods || "",
+      proceduresInvolvingInfectiousAgents: ibcApplication?.proceduresInvolvingInfectiousAgents || "",
+      cellCultureProcedures: ibcApplication?.cellCultureProcedures || "",
+      nucleicAcidExtractionMethods: ibcApplication?.nucleicAcidExtractionMethods || "",
+      animalProcedures: ibcApplication?.animalProcedures || "",
+      containmentProcedures: ibcApplication?.containmentProcedures || "",
+      emergencyProcedures: ibcApplication?.emergencyProcedures || "",
+      wasteDisposalPlan: ibcApplication?.wasteDisposalPlan || "",
+      recombinantDNA: ibcApplication?.recombinantDNA || false,
+      humanMaterials: ibcApplication?.humanMaterials || false,
+      animalWork: ibcApplication?.animalWork || false,
+      fieldWork: ibcApplication?.fieldWork || false,
     },
   });
 
@@ -54,11 +69,26 @@ export default function IbcApplicationEdit() {
         ibcNumber: ibcApplication.ibcNumber,
         cayuseProtocolNumber: ibcApplication.cayuseProtocolNumber || "",
         title: ibcApplication.title,
+        shortTitle: ibcApplication.shortTitle || "",
         principalInvestigatorId: ibcApplication.principalInvestigatorId,
         submissionDate: ibcApplication.submissionDate ? new Date(ibcApplication.submissionDate).toISOString().split('T')[0] : "",
         approvalDate: ibcApplication.approvalDate ? new Date(ibcApplication.approvalDate).toISOString().split('T')[0] : "",
         expirationDate: ibcApplication.expirationDate ? new Date(ibcApplication.expirationDate).toISOString().split('T')[0] : "",
         status: ibcApplication.status,
+        biosafetyLevel: ibcApplication.biosafetyLevel || "BSL-2",
+        riskGroupClassification: ibcApplication.riskGroupClassification || "",
+        materialAndMethods: ibcApplication.materialAndMethods || "",
+        proceduresInvolvingInfectiousAgents: ibcApplication.proceduresInvolvingInfectiousAgents || "",
+        cellCultureProcedures: ibcApplication.cellCultureProcedures || "",
+        nucleicAcidExtractionMethods: ibcApplication.nucleicAcidExtractionMethods || "",
+        animalProcedures: ibcApplication.animalProcedures || "",
+        containmentProcedures: ibcApplication.containmentProcedures || "",
+        emergencyProcedures: ibcApplication.emergencyProcedures || "",
+        wasteDisposalPlan: ibcApplication.wasteDisposalPlan || "",
+        recombinantDNA: ibcApplication.recombinantDNA || false,
+        humanMaterials: ibcApplication.humanMaterials || false,
+        animalWork: ibcApplication.animalWork || false,
+        fieldWork: ibcApplication.fieldWork || false,
       });
     }
   }, [ibcApplication, form]);
@@ -217,7 +247,7 @@ export default function IbcApplicationEdit() {
                 control={form.control}
                 name="title"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-full">
                     <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input placeholder="IBC application title" {...field} />
@@ -226,6 +256,139 @@ export default function IbcApplicationEdit() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="shortTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Short Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Short recognition title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="biosafetyLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Biosafety Level</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select biosafety level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="BSL-1">BSL-1</SelectItem>
+                        <SelectItem value="BSL-2">BSL-2</SelectItem>
+                        <SelectItem value="BSL-3">BSL-3</SelectItem>
+                        <SelectItem value="BSL-4">BSL-4</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="riskGroupClassification"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Risk Group Classification</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select risk group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
+                        <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
+                        <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
+                        <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormField
+                  control={form.control}
+                  name="recombinantDNA"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="rounded border-gray-300"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm">Recombinant DNA</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="humanMaterials"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="rounded border-gray-300"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm">Human Materials</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="animalWork"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="rounded border-gray-300"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm">Animal Work</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fieldWork"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="rounded border-gray-300"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm">Field Work</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -250,6 +413,174 @@ export default function IbcApplicationEdit() {
                   </FormItem>
                 )}
               />
+
+              {/* Methods and Procedures Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Methods and Procedures</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="materialAndMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Materials and Methods</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe the detailed experimental protocols, materials, and methodologies..."
+                            className="resize-none"
+                            rows={5}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="proceduresInvolvingInfectiousAgents"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Procedures Involving Infectious Agents</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe any procedures involving infectious agents..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cellCultureProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cell Culture Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe cell culture techniques, cell lines used..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nucleicAcidExtractionMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nucleic Acid Extraction Methods</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe DNA/RNA extraction and purification protocols..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="animalProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Animal Procedures (if applicable)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe any animal procedures, including routes of administration..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Safety and Containment Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Safety and Containment</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="containmentProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Containment Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe containment procedures and safety measures..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="emergencyProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Emergency Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe emergency response procedures..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="wasteDisposalPlan"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Waste Disposal Plan</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe waste sterilization and disposal procedures..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
