@@ -71,9 +71,11 @@ export default function IbcProtocolDetailPage() {
     enabled: !!applicationId,
   });
 
-  const { data: personnelData = [] } = useQuery({
+  const { data: personnelData = [], isLoading: personnelLoading } = useQuery({
     queryKey: ["/api/ibc-applications", applicationId, "personnel"],
     enabled: !!applicationId,
+    staleTime: 0, // Force fresh data
+    refetchOnMount: true,
   });
 
   const updateStatusMutation = useMutation({
