@@ -1702,16 +1702,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "IBC application not found" });
       }
 
-      // Get related details
-      const project = await storage.getProject(application.projectId);
+      // Get related research activities (SDRs)
+      const researchActivities = await storage.getResearchActivitiesForIbcApplication(id);
       const pi = await storage.getScientist(application.principalInvestigatorId);
       
       const enhancedApplication = {
         ...application,
-        project: project ? {
-          id: project.id,
-          title: project.title
-        } : null,
+        researchActivities: researchActivities.map(activity => ({
+          id: activity.id,
+          sdrNumber: activity.sdrNumber,
+          title: activity.title,
+          status: activity.status
+        })),
         principalInvestigator: pi ? {
           id: pi.id,
           name: pi.name,
@@ -1727,13 +1729,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/ibc-applications', async (req: Request, res: Response) => {
     try {
-      const validateData = insertIbcApplicationSchema.parse(req.body);
-      
-      // Check if project exists
-      const project = await storage.getProject(validateData.projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
+      const { researchActivityIds, ...applicationData } = req.body;
+      const validateData = insertIbcApplicationSchema.parse(applicationData);
       
       // Check if principal investigator exists
       const pi = await storage.getScientist(validateData.principalInvestigatorId);
@@ -1741,7 +1738,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Principal investigator not found" });
       }
       
-      const application = await storage.createIbcApplication(validateData);
+      // Validate research activities if provided
+      if (researchActivityIds && Array.isArray(researchActivityIds)) {
+        for (const activityId of researchActivityIds) {
+          const activity = await storage.getResearchActivity(activityId);
+          if (!activity) {
+            return res.status(404).json({ message: `Research activity with ID ${activityId} not found` });
+          }
+        }
+      }
+      
+      const application = await storage.createIbcApplication(validateData, researchActivityIds || []);
       res.status(201).json(application);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -1807,6 +1814,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete IBC application" });
+    }
+  });
+
+  // Get research activities for an IBC application
+  app.get('/api/ibc-applications/:id/research-activities', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      const researchActivities = await storage.getResearchActivitiesForIbcApplication(id);
+      res.json(researchActivities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch research activities for IBC application" });
+    }
+  });
+
+  // Add research activity to IBC application
+  app.post('/api/ibc-applications/:id/research-activities', async (req: Request, res: Response) => {
+    try {
+      const ibcApplicationId = parseInt(req.params.id);
+      const { researchActivityId } = req.body;
+
+      if (isNaN(ibcApplicationId)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      if (!researchActivityId || isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Valid research activity ID is required" });
+      }
+
+      // Check if IBC application exists
+      const ibcApplication = await storage.getIbcApplication(ibcApplicationId);
+      if (!ibcApplication) {
+        return res.status(404).json({ message: "IBC application not found" });
+      }
+
+      // Check if research activity exists
+      const researchActivity = await storage.getResearchActivity(researchActivityId);
+      if (!researchActivity) {
+        return res.status(404).json({ message: "Research activity not found" });
+      }
+
+      const linkage = await storage.addResearchActivityToIbcApplication(ibcApplicationId, researchActivityId);
+      res.status(201).json(linkage);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add research activity to IBC application" });
+    }
+  });
+
+  // Remove research activity from IBC application
+  app.delete('/api/ibc-applications/:id/research-activities/:activityId', async (req: Request, res: Response) => {
+    try {
+      const ibcApplicationId = parseInt(req.params.id);
+      const researchActivityId = parseInt(req.params.activityId);
+
+      if (isNaN(ibcApplicationId)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      if (isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const success = await storage.removeResearchActivityFromIbcApplication(ibcApplicationId, researchActivityId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Research activity not linked to this IBC application" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove research activity from IBC application" });
     }
   });
 

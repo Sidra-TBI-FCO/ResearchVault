@@ -347,7 +347,6 @@ export const insertIrbDocumentSchema = createInsertSchema(irbDocuments).omit({
 // IBC Applications (Institutional Biosafety Committee)
 export const ibcApplications = pgTable("ibc_applications", {
   id: serial("id").primaryKey(),
-  researchActivityId: integer("research_activity_id"), // references researchActivities.id
   ibcNumber: text("ibc_number").notNull().unique(), // IBC Project Number
   cayuseProtocolNumber: text("cayuse_protocol_number"), // Cayuse Protocol Number
   title: text("title").notNull(),
@@ -412,6 +411,21 @@ export const insertIbcApplicationSchema = createInsertSchema(ibcApplications).om
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+// Junction table for IBC Applications and Research Activities (many-to-many)
+export const ibcApplicationResearchActivities = pgTable("ibc_application_research_activities", {
+  id: serial("id").primaryKey(),
+  ibcApplicationId: integer("ibc_application_id").notNull(), // references ibcApplications.id
+  researchActivityId: integer("research_activity_id").notNull(), // references researchActivities.id
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueIbcSdr: uniqueIndex().on(table.ibcApplicationId, table.researchActivityId)
+}));
+
+export const insertIbcApplicationResearchActivitySchema = createInsertSchema(ibcApplicationResearchActivities).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Research Contracts
@@ -582,6 +596,9 @@ export type InsertIbcDocument = z.infer<typeof insertIbcDocumentSchema>;
 
 export type IbcBoardMember = typeof ibcBoardMembers.$inferSelect;
 export type InsertIbcBoardMember = z.infer<typeof insertIbcBoardMemberSchema>;
+
+export type IbcApplicationResearchActivity = typeof ibcApplicationResearchActivities.$inferSelect;
+export type InsertIbcApplicationResearchActivity = z.infer<typeof insertIbcApplicationResearchActivitySchema>;
 
 export type ResearchContract = typeof researchContracts.$inferSelect;
 export type InsertResearchContract = z.infer<typeof insertResearchContractSchema>;

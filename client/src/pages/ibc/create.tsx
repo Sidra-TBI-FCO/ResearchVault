@@ -20,7 +20,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertIbcApplicationSchema } from "@shared/schema";
-import { Scientist, Project } from "@shared/schema";
+import { Scientist, Project, ResearchActivity } from "@shared/schema";
 import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,9 +30,6 @@ import { cn } from "@/lib/utils";
 // Extend the insert schema with additional validations
 const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
-  projectId: z.number({
-    required_error: "Please select a project",
-  }),
   principalInvestigatorId: z.number({
     required_error: "Please select a principal investigator",
   }),
@@ -48,6 +45,7 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
   }),
   description: z.string().optional(),
   agents: z.string().optional(),
+  researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
 });
 
 type CreateIbcApplicationFormValues = z.infer<typeof createIbcApplicationSchema>;
@@ -61,9 +59,9 @@ export default function CreateIbc() {
     queryKey: ['/api/principal-investigators'],
   });
 
-  // Get all projects for selection
-  const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
+  // Get all research activities for selection
+  const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/research-activities'],
   });
 
   // Default form values
@@ -71,6 +69,7 @@ export default function CreateIbc() {
     status: "Submitted",
     submissionDate: new Date(),
     biosafetyLevel: "BSL-2",
+    researchActivityIds: [],
   };
 
   const form = useForm<CreateIbcApplicationFormValues>({
@@ -139,31 +138,49 @@ export default function CreateIbc() {
                 
                 <FormField
                   control={form.control}
-                  name="projectId"
+                  name="researchActivityIds"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Associated Project</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a project" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {projectsLoading ? (
-                            <SelectItem value="loading" disabled>Loading projects...</SelectItem>
-                          ) : (
-                            projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.title}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="col-span-full">
+                      <FormLabel>Research Activities (SDRs)</FormLabel>
+                      <FormDescription>
+                        Select one or more research activities that share biosafety protocols
+                      </FormDescription>
+                      <div className="space-y-2">
+                        {activitiesLoading ? (
+                          <div className="text-sm text-muted-foreground">Loading research activities...</div>
+                        ) : (
+                          researchActivities?.map((activity) => (
+                            <div key={activity.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`activity-${activity.id}`}
+                                checked={field.value?.includes(activity.id) || false}
+                                onChange={(e) => {
+                                  const currentValue = field.value || [];
+                                  if (e.target.checked) {
+                                    field.onChange([...currentValue, activity.id]);
+                                  } else {
+                                    field.onChange(currentValue.filter(id => id !== activity.id));
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <label htmlFor={`activity-${activity.id}`} className="text-sm cursor-pointer">
+                                <span className="font-medium">{activity.sdrNumber}</span> - {activity.title}
+                                {activity.status && (
+                                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                                    activity.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    activity.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {activity.status}
+                                  </span>
+                                )}
+                              </label>
+                            </div>
+                          ))
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

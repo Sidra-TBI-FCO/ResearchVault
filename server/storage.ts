@@ -10,6 +10,7 @@ import {
   patents, Patent, InsertPatent,
   irbApplications, IrbApplication, InsertIrbApplication,
   ibcApplications, IbcApplication, InsertIbcApplication,
+  ibcApplicationResearchActivities, IbcApplicationResearchActivity, InsertIbcApplicationResearchActivity,
   researchContracts, ResearchContract, InsertResearchContract
 } from "@shared/schema";
 
@@ -46,12 +47,7 @@ export interface IStorage {
   getStaff(): Promise<Scientist[]>;
   getPrincipalInvestigators(): Promise<Scientist[]>;
 
-  // Backward compatibility (Projects = Research Activities)
-  getProjects(): Promise<ResearchActivity[]>;
-  getProject(id: number): Promise<ResearchActivity | undefined>;
-  createProject(project: InsertResearchActivity): Promise<ResearchActivity>;
-  updateProject(id: number, project: Partial<InsertResearchActivity>): Promise<ResearchActivity | undefined>;
-  deleteProject(id: number): Promise<boolean>;
+
 
   // Research Activity operations
   getResearchActivities(): Promise<ResearchActivity[]>;
@@ -106,9 +102,12 @@ export interface IStorage {
   getIbcApplication(id: number): Promise<IbcApplication | undefined>;
   getIbcApplicationByIbcNumber(ibcNumber: string): Promise<IbcApplication | undefined>;
   getIbcApplicationsForResearchActivity(researchActivityId: number): Promise<IbcApplication[]>;
-  createIbcApplication(application: InsertIbcApplication): Promise<IbcApplication>;
+  createIbcApplication(application: InsertIbcApplication, researchActivityIds?: number[]): Promise<IbcApplication>;
   updateIbcApplication(id: number, application: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined>;
   deleteIbcApplication(id: number): Promise<boolean>;
+  getResearchActivitiesForIbcApplication(ibcApplicationId: number): Promise<ResearchActivity[]>;
+  addResearchActivityToIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<any>;
+  removeResearchActivityFromIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<boolean>;
 
   // Research Contract operations
   getResearchContracts(): Promise<ResearchContract[]>;
@@ -140,6 +139,7 @@ export class MemStorage implements IStorage {
   private patents: Map<number, Patent> = new Map();
   private irbApplications: Map<number, IrbApplication> = new Map();
   private ibcApplications: Map<number, IbcApplication> = new Map();
+  private ibcApplicationResearchActivities: Map<number, IbcApplicationResearchActivity> = new Map();
   private researchContracts: Map<number, ResearchContract> = new Map();
 
   private userIdCounter = 1;
@@ -151,6 +151,7 @@ export class MemStorage implements IStorage {
   private patentIdCounter = 1;
   private irbApplicationIdCounter = 1;
   private ibcApplicationIdCounter = 1;
+  private ibcApplicationResearchActivityIdCounter = 1;
   private researchContractIdCounter = 1;
 
   constructor() {
@@ -495,7 +496,7 @@ export class MemStorage implements IStorage {
       .filter(app => app.projectId === projectId);
   }
 
-  async createIbcApplication(insertApplication: InsertIbcApplication): Promise<IbcApplication> {
+  async createIbcApplication(insertApplication: InsertIbcApplication, researchActivityIds: number[] = []): Promise<IbcApplication> {
     const id = this.ibcApplicationIdCounter++;
     const now = new Date();
     const application: IbcApplication = { 
@@ -505,7 +506,58 @@ export class MemStorage implements IStorage {
       updatedAt: now 
     };
     this.ibcApplications.set(id, application);
+
+    // Link to research activities
+    for (const researchActivityId of researchActivityIds) {
+      const linkageId = this.ibcApplicationResearchActivityIdCounter++;
+      const linkage: IbcApplicationResearchActivity = {
+        id: linkageId,
+        ibcApplicationId: id,
+        researchActivityId,
+        createdAt: now
+      };
+      this.ibcApplicationResearchActivities.set(linkageId, linkage);
+    }
+
     return application;
+  }
+
+  async getResearchActivitiesForIbcApplication(ibcApplicationId: number): Promise<ResearchActivity[]> {
+    const linkages = Array.from(this.ibcApplicationResearchActivities.values())
+      .filter(linkage => linkage.ibcApplicationId === ibcApplicationId);
+    
+    const activities: ResearchActivity[] = [];
+    for (const linkage of linkages) {
+      const activity = this.projects.get(linkage.researchActivityId);
+      if (activity) {
+        activities.push(activity);
+      }
+    }
+    return activities;
+  }
+
+  async addResearchActivityToIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<IbcApplicationResearchActivity> {
+    const id = this.ibcApplicationResearchActivityIdCounter++;
+    const now = new Date();
+    const linkage: IbcApplicationResearchActivity = {
+      id,
+      ibcApplicationId,
+      researchActivityId,
+      createdAt: now
+    };
+    this.ibcApplicationResearchActivities.set(id, linkage);
+    return linkage;
+  }
+
+  async removeResearchActivityFromIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<boolean> {
+    const linkage = Array.from(this.ibcApplicationResearchActivities.values())
+      .find(l => l.ibcApplicationId === ibcApplicationId && l.researchActivityId === researchActivityId);
+    
+    if (linkage) {
+      this.ibcApplicationResearchActivities.delete(linkage.id);
+      return true;
+    }
+    return false;
   }
 
   async updateIbcApplication(id: number, updateData: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined> {

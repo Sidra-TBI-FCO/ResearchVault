@@ -16,6 +16,7 @@ import {
   irbSubmissions, IrbSubmission, InsertIrbSubmission,
   irbDocuments, IrbDocument, InsertIrbDocument,
   ibcApplications, IbcApplication, InsertIbcApplication,
+  ibcApplicationResearchActivities, IbcApplicationResearchActivity, InsertIbcApplicationResearchActivity,
   ibcSubmissions, IbcSubmission, InsertIbcSubmission,
   ibcDocuments, IbcDocument, InsertIbcDocument,
   ibcBoardMembers, IbcBoardMember, InsertIbcBoardMember,
@@ -611,12 +612,68 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getIbcApplicationsForResearchActivity(researchActivityId: number): Promise<IbcApplication[]> {
-    return await db.select().from(ibcApplications).where(eq(ibcApplications.researchActivityId, researchActivityId));
+    const results = await db
+      .select({ ibcApplication: ibcApplications })
+      .from(ibcApplications)
+      .innerJoin(
+        ibcApplicationResearchActivities,
+        eq(ibcApplications.id, ibcApplicationResearchActivities.ibcApplicationId)
+      )
+      .where(eq(ibcApplicationResearchActivities.researchActivityId, researchActivityId));
+    
+    return results.map(r => r.ibcApplication);
   }
 
-  async createIbcApplication(application: InsertIbcApplication): Promise<IbcApplication> {
+  async createIbcApplication(application: InsertIbcApplication, researchActivityIds: number[] = []): Promise<IbcApplication> {
     const [newApplication] = await db.insert(ibcApplications).values(application).returning();
+    
+    // Link the IBC application to multiple research activities
+    if (researchActivityIds.length > 0) {
+      const linkages = researchActivityIds.map(researchActivityId => ({
+        ibcApplicationId: newApplication.id,
+        researchActivityId
+      }));
+      
+      await db.insert(ibcApplicationResearchActivities).values(linkages);
+    }
+    
     return newApplication;
+  }
+
+  // Get research activities linked to an IBC application
+  async getResearchActivitiesForIbcApplication(ibcApplicationId: number): Promise<ResearchActivity[]> {
+    const results = await db
+      .select({ researchActivity: researchActivities })
+      .from(researchActivities)
+      .innerJoin(
+        ibcApplicationResearchActivities,
+        eq(researchActivities.id, ibcApplicationResearchActivities.researchActivityId)
+      )
+      .where(eq(ibcApplicationResearchActivities.ibcApplicationId, ibcApplicationId));
+    
+    return results.map(r => r.researchActivity);
+  }
+
+  // Add research activity to IBC application
+  async addResearchActivityToIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<IbcApplicationResearchActivity> {
+    const [linkage] = await db
+      .insert(ibcApplicationResearchActivities)
+      .values({ ibcApplicationId, researchActivityId })
+      .returning();
+    return linkage;
+  }
+
+  // Remove research activity from IBC application
+  async removeResearchActivityFromIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<boolean> {
+    const result = await db
+      .delete(ibcApplicationResearchActivities)
+      .where(
+        and(
+          eq(ibcApplicationResearchActivities.ibcApplicationId, ibcApplicationId),
+          eq(ibcApplicationResearchActivities.researchActivityId, researchActivityId)
+        )
+      );
+    return result.rowCount > 0;
   }
 
   async updateIbcApplication(id: number, application: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined> {
@@ -629,6 +686,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteIbcApplication(id: number): Promise<boolean> {
+    // Delete related research activity linkages first
+    await db.delete(ibcApplicationResearchActivities).where(eq(ibcApplicationResearchActivities.ibcApplicationId, id));
+    
+    // Then delete the application
     const result = await db.delete(ibcApplications).where(eq(ibcApplications.id, id));
     return result.rowCount > 0;
   }
@@ -745,8 +806,7 @@ export class DatabaseStorage implements IStorage {
         id: ibcApplications.id,
         type: sql<string>`'IBC'`,
         title: ibcApplications.title,
-        expirationDate: ibcApplications.expirationDate,
-        researchActivityId: ibcApplications.researchActivityId
+        expirationDate: ibcApplications.expirationDate
       })
       .from(ibcApplications)
       .where(
