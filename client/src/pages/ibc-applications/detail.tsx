@@ -159,17 +159,13 @@ export default function IbcApplicationDetail() {
                   <div className="flex items-center gap-1">
                     <Beaker className="h-3 w-3" />
                     <span>
-                      {researchActivityLoading ? (
+                      {activitiesLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
-                      ) : researchActivity ? (
-                        <Button 
-                          variant="link" 
-                          className="p-0 h-auto text-primary-600"
-                          onClick={() => navigate(`/research-activities/${researchActivity.id}`)}
-                        >
-                          {researchActivity.title}
-                        </Button>
-                      ) : 'Not assigned'}
+                      ) : associatedActivities && associatedActivities.length > 0 ? (
+                        <span className="text-blue-600">
+                          {associatedActivities.length} SDR{associatedActivities.length === 1 ? '' : 's'} linked
+                        </span>
+                      ) : 'No SDRs linked'}
                     </span>
                   </div>
                 </div>
