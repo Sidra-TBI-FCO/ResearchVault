@@ -131,7 +131,7 @@ export default function IbcList() {
                   <TableRow key={application.id}>
                     <TableCell>
                       <div className="font-medium">
-                        <Link href={`/ibc/${application.id}`}>
+                        <Link href={`/ibc-applications/${application.id}`}>
                           <a className="hover:text-primary-500 transition-colors">{application.title}</a>
                         </Link>
                       </div>

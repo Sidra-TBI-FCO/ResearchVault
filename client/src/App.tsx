@@ -182,7 +182,6 @@ function Router() {
         <Route path="/ibc/create" component={CreateIbc} />
         <Route path="/ibc-applications/:id/edit" component={EditIbcApplication} />
         <Route path="/ibc-applications/:id" component={IbcApplicationDetail} />
-        <Route path="/ibc/:id" component={IbcApplicationDetail} />
         
         {/* Research Contracts */}
         <Route path="/contracts" component={ContractsList} />
