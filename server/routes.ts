@@ -1824,7 +1824,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid IBC application ID" });
       }
 
-      const validateData = insertIbcApplicationSchema.partial().parse(req.body);
+      // Extract isDraft flag and remove it from validation data
+      const { isDraft, ...bodyData } = req.body;
+      const validateData = insertIbcApplicationSchema.partial().parse(bodyData);
+      
+      // Handle status based on isDraft flag
+      if (isDraft !== undefined) {
+        if (isDraft) {
+          validateData.status = 'draft';
+        } else {
+          validateData.status = 'submitted';
+          // Set submission date when submitting
+          if (!validateData.submissionDate) {
+            validateData.submissionDate = new Date().toISOString();
+          }
+        }
+      }
       
       // Check if project exists if projectId is provided
       if (validateData.projectId) {

@@ -211,8 +211,8 @@ export default function IbcApplicationEdit() {
     onSuccess: (result) => {
       console.log('Save successful:', result);
       toast({
-        title: "Success",
-        description: "IBC application saved as draft",
+        title: "Saved",
+        description: "IBC application saved as draft successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
@@ -254,7 +254,9 @@ export default function IbcApplicationEdit() {
   });
 
   const handleSave = (data: EditIbcApplicationFormValues) => {
-    console.log('Form save data:', data);
+    console.log('handleSave called with data:', data);
+    console.log('Form validation state:', form.formState.isValid);
+    console.log('Form errors:', form.formState.errors);
     
     // Remove the team members array and research activity IDs since they're handled separately
     const { teamMembers, researchActivityIds, ...ibcData } = data;
@@ -263,6 +265,7 @@ export default function IbcApplicationEdit() {
     const protocolTeamMembers = JSON.stringify(teamMembers);
     
     console.log('Save payload:', { ...ibcData, protocolTeamMembers });
+    console.log('About to call saveMutation.mutate');
     saveMutation.mutate({ ...ibcData, protocolTeamMembers });
   };
 
