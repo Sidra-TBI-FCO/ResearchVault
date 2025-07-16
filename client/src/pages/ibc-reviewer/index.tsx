@@ -66,13 +66,10 @@ export default function IbcReviewerPage() {
 
   const submitReviewMutation = useMutation({
     mutationFn: async (data: { applicationId: number; comments: string; recommendation: string }) => {
-      return apiRequest(`/api/ibc-applications/${data.applicationId}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          workflowStatus: data.recommendation === 'approve' ? 'approved' : 
-                         data.recommendation === 'reject' ? 'rejected' : 'pending_pi_response',
-          reviewComments: data.comments,
-        }),
+      return apiRequest("PATCH", `/api/ibc-applications/${data.applicationId}`, {
+        workflowStatus: data.recommendation === 'approve' ? 'approved' : 
+                       data.recommendation === 'reject' ? 'rejected' : 'pending_pi_response',
+        reviewComments: data.comments,
       });
     },
     onSuccess: () => {

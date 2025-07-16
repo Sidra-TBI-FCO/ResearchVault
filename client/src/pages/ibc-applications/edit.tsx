@@ -65,14 +65,11 @@ export default function IbcApplicationEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: InsertIbcApplication) => 
-      apiRequest(`/api/ibc-applications/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          submissionDate: data.submissionDate ? new Date(data.submissionDate) : null,
-          approvalDate: data.approvalDate ? new Date(data.approvalDate) : null,
-          expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
-        }),
+      apiRequest("PATCH", `/api/ibc-applications/${id}`, {
+        ...data,
+        submissionDate: data.submissionDate ? new Date(data.submissionDate) : null,
+        approvalDate: data.approvalDate ? new Date(data.approvalDate) : null,
+        expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
       }),
     onSuccess: () => {
       toast({

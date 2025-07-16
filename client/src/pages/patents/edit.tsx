@@ -75,14 +75,11 @@ export default function PatentEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: InsertPatent) => 
-      apiRequest(`/api/patents/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          filingDate: data.filingDate ? new Date(data.filingDate) : null,
-          publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
-          grantDate: data.grantDate ? new Date(data.grantDate) : null,
-        }),
+      apiRequest("PATCH", `/api/patents/${id}`, {
+        ...data,
+        filingDate: data.filingDate ? new Date(data.filingDate) : null,
+        publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
+        grantDate: data.grantDate ? new Date(data.grantDate) : null,
       }),
     onSuccess: () => {
       toast({

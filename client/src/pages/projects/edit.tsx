@@ -62,13 +62,10 @@ export default function ProjectEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: InsertProject) => 
-      apiRequest(`/api/projects/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: data.endDate ? new Date(data.endDate) : null,
-        }),
+      apiRequest("PATCH", `/api/projects/${id}`, {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
       }),
     onSuccess: () => {
       toast({

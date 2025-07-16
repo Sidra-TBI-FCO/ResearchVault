@@ -63,10 +63,7 @@ export default function DataManagementPlanEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: InsertDataManagementPlan) => 
-      apiRequest(`/api/data-management-plans/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      }),
+      apiRequest("PATCH", `/api/data-management-plans/${id}`, data),
     onSuccess: () => {
       toast({
         title: "Success",

@@ -88,10 +88,7 @@ export default function EditResearchActivity() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertResearchActivity) => {
-      return apiRequest(`/api/research-activities/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PATCH", `/api/research-activities/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/research-activities'] });

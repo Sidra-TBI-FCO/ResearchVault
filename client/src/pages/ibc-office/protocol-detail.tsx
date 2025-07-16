@@ -77,10 +77,7 @@ export default function IbcProtocolDetailPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async (data: { workflowStatus: string; reviewComments?: string }) => {
-      return apiRequest(`/api/ibc-applications/${applicationId}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PATCH", `/api/ibc-applications/${applicationId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ibc-applications", applicationId] });

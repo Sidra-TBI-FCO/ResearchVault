@@ -68,10 +68,7 @@ export default function ProgramEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: InsertProgram) => 
-      apiRequest(`/api/programs/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      }),
+      apiRequest("PATCH", `/api/programs/${id}`, data),
     onSuccess: () => {
       toast({
         title: "Success",

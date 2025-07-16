@@ -71,13 +71,10 @@ export default function ResearchContractEdit() {
 
   const updateMutation = useMutation({
     mutationFn: (data: InsertResearchContract) => 
-      apiRequest(`/api/research-contracts/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: data.endDate ? new Date(data.endDate) : null,
-        }),
+      apiRequest("PATCH", `/api/research-contracts/${id}`, {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
       }),
     onSuccess: () => {
       toast({
