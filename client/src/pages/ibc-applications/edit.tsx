@@ -52,6 +52,7 @@ export default function IbcApplicationEdit() {
   // Fetch associated research activities for this IBC application
   const { data: associatedActivities } = useQuery<ResearchActivity[]>({
     queryKey: ['/api/ibc-applications', id, 'research-activities'],
+    queryFn: () => fetch(`/api/ibc-applications/${id}/research-activities`).then(res => res.json()),
     enabled: !!id,
   });
 
@@ -146,6 +147,8 @@ export default function IbcApplicationEdit() {
   // Update form when IBC application data loads
   React.useEffect(() => {
     if (ibcApplication && associatedActivities) {
+      const selectedActivityIds = associatedActivities.map(ra => ra.id);
+      
       form.reset({
         researchActivityId: ibcApplication.researchActivityId || 0,
         ibcNumber: ibcApplication.ibcNumber,
@@ -169,7 +172,7 @@ export default function IbcApplicationEdit() {
         humanMaterials: ibcApplication.humanMaterials || false,
         animalWork: ibcApplication.animalWork || false,
         fieldWork: ibcApplication.fieldWork || false,
-        researchActivityIds: associatedActivities?.map(ra => ra.id) || [],
+        researchActivityIds: selectedActivityIds,
         teamMembers: [],
       });
     }
