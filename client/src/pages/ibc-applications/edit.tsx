@@ -414,6 +414,45 @@ export default function IbcApplicationEdit() {
                 )}
               />
 
+              {/* Research Activities Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Research Activities and Personnel</CardTitle>
+                  <CardDescription>
+                    Associate research activities (SDRs) that share biosafety protocols
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="researchActivityId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Primary Research Activity (SDR)</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a research activity" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {researchActivities?.map((activity) => (
+                              <SelectItem key={activity.id} value={activity.id.toString()}>
+                                {activity.sdrNumber} - {activity.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Select the primary research activity. Additional activities can be linked after creation.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Methods and Procedures Section */}
               <Card className="mt-8">
                 <CardHeader>

@@ -376,6 +376,63 @@ export default function IbcApplicationDetail() {
                   </div>
                 )}
               </div>
+
+              {/* Research Activities and Personnel Section */}
+              <div className="mt-6">
+                <h3 className="text-md font-medium border-b pb-2">Research Activities and Personnel</h3>
+                
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-neutral-500">Associated Research Activities (SDRs)</h4>
+                  {researchActivity ? (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <Beaker className="h-4 w-4 text-blue-600" />
+                        <div>
+                          <span className="font-medium text-blue-900">{researchActivity.sdrNumber}</span>
+                          <span className="text-blue-700 ml-2">{researchActivity.title}</span>
+                          {researchActivity.status && (
+                            <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                              researchActivity.status === 'active' ? 'bg-green-100 text-green-800' :
+                              researchActivity.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {researchActivity.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2 text-sm text-neutral-600">
+                        <span className="font-medium">Note:</span> This IBC application may cover multiple SDRs with shared biosafety protocols and team members.
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-sm text-neutral-500">No research activities linked</p>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-neutral-500">Research Team Personnel</h4>
+                  {principalInvestigator ? (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <User className="h-4 w-4 text-green-600" />
+                        <div>
+                          <span className="font-medium text-green-900">Principal Investigator:</span>
+                          <span className="text-green-700 ml-2">{principalInvestigator.name}</span>
+                          <Badge variant="outline" className="ml-2 rounded-sm bg-green-100 text-green-800 border-green-300">
+                            PI
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-sm text-neutral-600">
+                        <span className="font-medium">Team Members:</span> Additional team members are managed through the associated research activities (SDRs). Each SDR maintains its own team roster with overlapping members sharing this IBC protocol.
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-sm text-neutral-500">No principal investigator assigned</p>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
