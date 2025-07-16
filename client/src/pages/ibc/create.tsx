@@ -712,14 +712,14 @@ export default function CreateIbc() {
                             </label>
                             <div className="grid grid-cols-2 gap-3 text-sm">
                               {[
-                                "Research Enrollment",
-                                "Clinical Data Manager", 
-                                "Sample/Lab Manager",
-                                "Report Manager",
-                                "Metadata Manager",
-                                "PHI Data Manager",
-                                "PHI Data Reader",
-                                "PHI Reports"
+                                "Principal Investigator",
+                                "Co-Investigator",
+                                "Laboratory Manager",
+                                "Biosafety Officer",
+                                "Research Technician",
+                                "Graduate Student",
+                                "Postdoctoral Fellow",
+                                "Laboratory Staff"
                               ].map((role) => (
                                 <div key={role} className="flex items-center space-x-2">
                                   <Checkbox 
@@ -797,8 +797,8 @@ export default function CreateIbc() {
                             <div className="font-medium">{staff.name}</div>
                             <div className="text-sm text-gray-600">{staff.email} • {staff.title}</div>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              <Badge variant="secondary" className="text-xs">Sample/Lab Manager</Badge>
-                              <Badge variant="secondary" className="text-xs">PHI Data Manager</Badge>
+                              <Badge variant="secondary" className="text-xs">Laboratory Manager</Badge>
+                              <Badge variant="secondary" className="text-xs">Biosafety Officer</Badge>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
