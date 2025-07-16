@@ -1759,8 +1759,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("=== IBC Application Creation Debug ===");
       console.log("Full request body:", JSON.stringify(req.body, null, 2));
       
-      const { researchActivityIds, ...applicationData } = req.body;
+      const { researchActivityIds, isDraft, ...applicationData } = req.body;
       console.log("Extracted researchActivityIds:", researchActivityIds);
+      console.log("Is draft:", isDraft);
       console.log("Application data after extraction:", JSON.stringify(applicationData, null, 2));
       
       console.log("Adding auto-generated fields...");
@@ -1768,8 +1769,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataWithAutoFields = {
         ...applicationData,
         ibcNumber: applicationData.ibcNumber || await storage.generateNextIbcNumber(),
-        status: applicationData.status || "Active",
-        workflowStatus: applicationData.workflowStatus || "draft",
+        status: isDraft ? "Draft" : (applicationData.status || "Submitted"),
+        workflowStatus: isDraft ? "draft" : (applicationData.workflowStatus || "submitted"),
         riskLevel: applicationData.riskLevel || "moderate"
       };
       console.log("Data with auto-generated fields:", JSON.stringify(dataWithAutoFields, null, 2));

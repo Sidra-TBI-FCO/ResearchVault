@@ -108,21 +108,61 @@ export default function IbcApplicationDetail() {
     );
   }
 
-  // Helper function for status badge
+  // Helper function for status badge - supports IRB-style workflow progression
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Approved</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Rejected</Badge>;
+      case 'draft':
+        return <Badge className="bg-slate-100 text-slate-800 border-slate-200">Draft</Badge>;
+      case 'submitted':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Submitted</Badge>;
+      case 'vetted':
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Vetted</Badge>;
+      case 'under review':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Under Review</Badge>;
+      case 'active':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
       case 'expired':
         return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Expired</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Rejected</Badge>;
+      // Legacy status mappings for backwards compatibility
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Under Review</Badge>;
       case 'review':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">In Review</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Under Review</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>;
+    }
+  };
+
+  // Helper function for status descriptions
+  const getStatusDescription = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'draft':
+        return 'Application is saved as a draft and can be edited before submission';
+      case 'submitted':
+        return 'Application has been submitted and is awaiting initial review';
+      case 'vetted':
+        return 'Application has passed initial vetting and is being prepared for committee review';
+      case 'under review':
+        return 'Application is currently under review by the Institutional Biosafety Committee';
+      case 'active':
+        return `Application is approved and active${ibcApplication.approvalDate ? ` since ${format(new Date(ibcApplication.approvalDate), 'PPP')}` : ''}`;
+      case 'expired':
+        return 'Application approval has expired and requires renewal';
+      case 'rejected':
+        return 'Application has been rejected by the Institutional Biosafety Committee';
+      // Legacy status mappings for backwards compatibility
+      case 'approved':
+        return `Application is approved and active${ibcApplication.approvalDate ? ` since ${format(new Date(ibcApplication.approvalDate), 'PPP')}` : ''}`;
+      case 'pending':
+        return 'Application is awaiting review by the Institutional Biosafety Committee';
+      case 'review':
+        return 'Application is currently under review by the Institutional Biosafety Committee';
+      default:
+        return 'Application status is being processed';
     }
   };
 
@@ -499,7 +539,7 @@ export default function IbcApplicationDetail() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  {ibcApplication.status.toLowerCase() === 'approved' ? (
+                  {['active', 'approved'].includes(ibcApplication.status.toLowerCase()) ? (
                     <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                   ) : (
                     <AlertCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -507,10 +547,7 @@ export default function IbcApplicationDetail() {
                   <div>
                     <p className="font-medium">Current Status: {ibcApplication.status}</p>
                     <p className="text-sm text-neutral-500">
-                      {ibcApplication.status.toLowerCase() === 'approved' 
-                        ? `Approved on ${ibcApplication.approvalDate ? format(new Date(ibcApplication.approvalDate), 'PPP') : 'unknown date'}`
-                        : 'Awaiting approval from the Institutional Biosafety Committee'
-                      }
+                      {getStatusDescription(ibcApplication.status)}
                     </p>
                   </div>
                 </div>

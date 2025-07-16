@@ -119,9 +119,51 @@ export default function CreateIbc() {
     enabled: selectedSDRIds.length > 0,
   });
 
-  const createIbcApplicationMutation = useMutation({
+  // Save as Draft mutation
+  const saveDraftMutation = useMutation({
     mutationFn: async (data: CreateIbcApplicationFormValues) => {
-      console.log("Mutation starting with data:", data);
+      console.log("Saving as draft with data:", data);
+      
+      // Extract research activity IDs for the junction table
+      const researchActivityIds = data.researchActivityIds;
+      console.log("Extracted research activity IDs:", researchActivityIds);
+      
+      // Prepare the main IBC application data (excluding the junction table data)
+      const { researchActivityIds: _, ...ibcApplicationData } = data;
+      
+      // Send the complete request with isDraft flag
+      const requestBody = {
+        ...ibcApplicationData,
+        researchActivityIds,
+        isDraft: true,
+      };
+      
+      console.log("Full draft request body:", requestBody);
+
+      const response = await apiRequest("POST", "/api/ibc-applications", requestBody);
+      return response.json();
+    },
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
+      toast({
+        title: "Draft Saved",
+        description: "The IBC application has been saved as a draft.",
+      });
+      navigate("/ibc");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "There was an error saving the draft.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Submit Application mutation
+  const submitApplicationMutation = useMutation({
+    mutationFn: async (data: CreateIbcApplicationFormValues) => {
+      console.log("Submitting application with data:", data);
       
       // Extract research activity IDs for the junction table
       const researchActivityIds = data.researchActivityIds;
@@ -134,9 +176,10 @@ export default function CreateIbc() {
       const requestBody = {
         ...ibcApplicationData,
         researchActivityIds,
+        isDraft: false,
       };
       
-      console.log("Full request body:", requestBody);
+      console.log("Full submission request body:", requestBody);
 
       const response = await apiRequest("POST", "/api/ibc-applications", requestBody);
       return response.json();
@@ -144,25 +187,30 @@ export default function CreateIbc() {
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
       toast({
-        title: "IBC Application created",
-        description: "The IBC application has been saved as draft.",
+        title: "Application Submitted",
+        description: "The IBC application has been successfully submitted for review.",
       });
       navigate("/ibc");
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "There was an error creating the IBC application.",
+        description: error.message || "There was an error submitting the application.",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: CreateIbcApplicationFormValues) => {
-    console.log("Form submission data:", data);
-    console.log("Research Activity IDs:", data.researchActivityIds);
-    console.log("Principal Investigator ID:", data.principalInvestigatorId);
-    createIbcApplicationMutation.mutate(data);
+  // Handler for saving as draft
+  const onSaveAsDraft = (data: CreateIbcApplicationFormValues) => {
+    console.log("Saving as draft:", data);
+    saveDraftMutation.mutate(data);
+  };
+
+  // Handler for submitting application
+  const onSubmitApplication = (data: CreateIbcApplicationFormValues) => {
+    console.log("Submitting application:", data);
+    submitApplicationMutation.mutate(data);
   };
 
   return (
@@ -182,7 +230,7 @@ export default function CreateIbc() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -985,10 +1033,19 @@ export default function CreateIbc() {
                   Cancel
                 </Button>
                 <Button 
-                  type="submit"
-                  disabled={createIbcApplicationMutation.isPending}
+                  variant="secondary"
+                  type="button"
+                  disabled={saveDraftMutation.isPending || submitApplicationMutation.isPending}
+                  onClick={form.handleSubmit(onSaveAsDraft)}
                 >
-                  {createIbcApplicationMutation.isPending ? 'Submitting...' : 'Submit Application'}
+                  {saveDraftMutation.isPending ? 'Saving...' : 'Save as Draft'}
+                </Button>
+                <Button 
+                  type="button"
+                  disabled={saveDraftMutation.isPending || submitApplicationMutation.isPending}
+                  onClick={form.handleSubmit(onSubmitApplication)}
+                >
+                  {submitApplicationMutation.isPending ? 'Submitting...' : 'Submit Application'}
                 </Button>
               </CardFooter>
             </form>
