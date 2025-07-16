@@ -64,9 +64,7 @@ export default function IbcApplicationEdit() {
       title: ibcApplication?.title || "",
       shortTitle: ibcApplication?.shortTitle || "",
       principalInvestigatorId: ibcApplication?.principalInvestigatorId || 0,
-      submissionDate: ibcApplication?.submissionDate ? new Date(ibcApplication.submissionDate).toISOString().split('T')[0] : "",
-      approvalDate: ibcApplication?.approvalDate ? new Date(ibcApplication.approvalDate).toISOString().split('T')[0] : "",
-      expirationDate: ibcApplication?.expirationDate ? new Date(ibcApplication.expirationDate).toISOString().split('T')[0] : "",
+
       status: ibcApplication?.status || "Submitted",
       biosafetyLevel: ibcApplication?.biosafetyLevel || "BSL-2",
       riskGroupClassification: ibcApplication?.riskGroupClassification || "",
@@ -138,9 +136,7 @@ export default function IbcApplicationEdit() {
         title: ibcApplication.title,
         shortTitle: ibcApplication.shortTitle || "",
         principalInvestigatorId: ibcApplication.principalInvestigatorId,
-        submissionDate: ibcApplication.submissionDate ? new Date(ibcApplication.submissionDate).toISOString().split('T')[0] : "",
-        approvalDate: ibcApplication.approvalDate ? new Date(ibcApplication.approvalDate).toISOString().split('T')[0] : "",
-        expirationDate: ibcApplication.expirationDate ? new Date(ibcApplication.expirationDate).toISOString().split('T')[0] : "",
+
         status: ibcApplication.status,
         biosafetyLevel: ibcApplication.biosafetyLevel || "BSL-2",
         riskGroupClassification: ibcApplication.riskGroupClassification || "",
@@ -167,9 +163,7 @@ export default function IbcApplicationEdit() {
       apiRequest("PATCH", `/api/ibc-applications/${id}`, {
         ibcApplication: {
           ...data.ibcApplication,
-          submissionDate: data.ibcApplication.submissionDate ? new Date(data.ibcApplication.submissionDate) : null,
-          approvalDate: data.ibcApplication.approvalDate ? new Date(data.ibcApplication.approvalDate) : null,
-          expirationDate: data.ibcApplication.expirationDate ? new Date(data.ibcApplication.expirationDate) : null,
+
         },
         researchActivityIds: data.researchActivityIds,
       }),
@@ -874,49 +868,7 @@ export default function IbcApplicationEdit() {
                 </CardContent>
               </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="submissionDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Submission Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="approvalDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Approval Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expirationDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiration Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
               <FormField
                 control={form.control}
