@@ -31,9 +31,10 @@ import type { IbcApplication, Scientist, IbcBoardMember } from "@shared/schema";
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800", icon: FileText },
   { value: "submitted", label: "Submitted", color: "bg-blue-100 text-blue-800", icon: Send },
+  { value: "vetted", label: "Vetted", color: "bg-purple-100 text-purple-800", icon: Eye },
   { value: "under_review", label: "Under Review", color: "bg-yellow-100 text-yellow-800", icon: Eye },
-  { value: "approved", label: "Approved", color: "bg-green-100 text-green-800", icon: CheckCircle },
-  { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-800", icon: XCircle },
+  { value: "active", label: "Active", color: "bg-green-100 text-green-800", icon: CheckCircle },
+  { value: "expired", label: "Expired", color: "bg-red-100 text-red-800", icon: XCircle },
 ];
 
 const BIOSAFETY_LEVELS = [
@@ -76,7 +77,7 @@ export default function IbcProtocolDetailPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async (data: { workflowStatus: string; reviewComments?: string }) => {
+    mutationFn: async (data: { status: string; reviewComments?: string }) => {
       return apiRequest("PATCH", `/api/ibc-applications/${applicationId}`, data);
     },
     onSuccess: () => {
@@ -110,7 +111,7 @@ export default function IbcProtocolDetailPage() {
     );
   }
 
-  const currentStatus = IBC_WORKFLOW_STATUSES.find(s => s.value === application.workflowStatus);
+  const currentStatus = IBC_WORKFLOW_STATUSES.find(s => s.value === application.status?.toLowerCase());
   const biosafetyLevel = BIOSAFETY_LEVELS.find(l => l.value === application.biosafetyLevel);
   const StatusIcon = currentStatus?.icon || FileText;
 
@@ -118,7 +119,7 @@ export default function IbcProtocolDetailPage() {
     if (!newWorkflowStatus) return;
     
     updateStatusMutation.mutate({
-      workflowStatus: newWorkflowStatus,
+      status: newWorkflowStatus,
       reviewComments: reviewComments || undefined,
     });
   };

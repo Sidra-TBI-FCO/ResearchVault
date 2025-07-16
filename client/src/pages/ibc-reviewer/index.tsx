@@ -30,8 +30,8 @@ import type { IbcApplication, Scientist } from "@shared/schema";
 
 const IBC_WORKFLOW_STATUSES = [
   { value: "submitted", label: "New Submission", color: "bg-blue-100 text-blue-800", icon: FileText },
+  { value: "vetted", label: "Vetted", color: "bg-purple-100 text-purple-800", icon: Eye },
   { value: "under_review", label: "Under Review", color: "bg-yellow-100 text-yellow-800", icon: Eye },
-  { value: "pending_pi_response", label: "Pending PI Response", color: "bg-orange-100 text-orange-800", icon: MessageSquare },
 ];
 
 const BIOSAFETY_LEVELS = [
@@ -54,9 +54,9 @@ export default function IbcReviewerPage() {
     queryKey: ["/api/ibc-applications"],
     select: (data: IbcApplication[]) => 
       data.filter(app => 
-        app.workflowStatus === 'submitted' || 
-        app.workflowStatus === 'under_review' ||
-        app.workflowStatus === 'pending_pi_response'
+        app.status?.toLowerCase() === 'submitted' || 
+        app.status?.toLowerCase() === 'vetted' ||
+        app.status?.toLowerCase() === 'under_review'
       ),
   });
 
@@ -67,8 +67,8 @@ export default function IbcReviewerPage() {
   const submitReviewMutation = useMutation({
     mutationFn: async (data: { applicationId: number; comments: string; recommendation: string }) => {
       return apiRequest("PATCH", `/api/ibc-applications/${data.applicationId}`, {
-        workflowStatus: data.recommendation === 'approve' ? 'approved' : 
-                       data.recommendation === 'reject' ? 'rejected' : 'pending_pi_response',
+        status: data.recommendation === 'approve' ? 'active' : 
+                data.recommendation === 'reject' ? 'expired' : 'under_review',
         reviewComments: data.comments,
       });
     },
@@ -175,7 +175,7 @@ export default function IbcReviewerPage() {
 
               <div className="space-y-3">
                 {filteredApplications.map((app: IbcApplication) => {
-                  const statusConfig = IBC_WORKFLOW_STATUSES.find(s => s.value === app.workflowStatus);
+                  const statusConfig = IBC_WORKFLOW_STATUSES.find(s => s.value === app.status?.toLowerCase());
                   const biosafetyBadge = getBiosafetyLevelBadge(app.biosafetyLevel);
                   const StatusIcon = statusConfig?.icon || FileText;
 

@@ -26,10 +26,10 @@ import type { IbcApplication, IbcBoardMember, Scientist } from "@shared/schema";
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800" },
   { value: "submitted", label: "Submitted", color: "bg-blue-100 text-blue-800" },
+  { value: "vetted", label: "Vetted", color: "bg-purple-100 text-purple-800" },
   { value: "under_review", label: "Under Review", color: "bg-yellow-100 text-yellow-800" },
-  { value: "approved", label: "Approved", color: "bg-green-100 text-green-800" },
-  { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-800" },
-  { value: "pending_pi_response", label: "Pending PI Response", color: "bg-orange-100 text-orange-800" }
+  { value: "active", label: "Active", color: "bg-green-100 text-green-800" },
+  { value: "expired", label: "Expired", color: "bg-red-100 text-red-800" }
 ];
 
 const BIOSAFETY_LEVELS = [
@@ -60,7 +60,7 @@ export default function IbcOfficePage() {
   const filteredApplications = applications.filter((app: IbcApplication) => {
     const matchesSearch = app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          app.ibcNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || app.workflowStatus === statusFilter;
+    const matchesStatus = statusFilter === "all" || app.status?.toLowerCase() === statusFilter;
     const matchesBiosafetyLevel = biosafetyLevelFilter === "all" || app.biosafetyLevel === biosafetyLevelFilter;
     
     return matchesSearch && matchesStatus && matchesBiosafetyLevel;
@@ -68,7 +68,7 @@ export default function IbcOfficePage() {
 
   // Group applications by status
   const applicationsByStatus = filteredApplications.reduce((acc: Record<string, IbcApplication[]>, app: IbcApplication) => {
-    const status = app.workflowStatus || "draft";
+    const status = app.status?.toLowerCase() || "draft";
     if (!acc[status]) acc[status] = [];
     acc[status].push(app);
     return acc;
@@ -338,13 +338,13 @@ export default function IbcOfficePage() {
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {applications.filter((app: IbcApplication) => app.workflowStatus === 'approved').length}
+                    {applications.filter((app: IbcApplication) => app.status?.toLowerCase() === 'active').length}
                   </div>
-                  <div className="text-sm text-gray-500">Approved</div>
+                  <div className="text-sm text-gray-500">Active</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-yellow-600">
-                    {applications.filter((app: IbcApplication) => app.workflowStatus === 'under_review').length}
+                    {applications.filter((app: IbcApplication) => app.status?.toLowerCase() === 'under_review').length}
                   </div>
                   <div className="text-sm text-gray-500">Under Review</div>
                 </div>
