@@ -161,10 +161,7 @@ export default function IbcApplicationEdit() {
   const updateMutation = useMutation({
     mutationFn: (data: any) => 
       apiRequest("PATCH", `/api/ibc-applications/${id}`, {
-        ibcApplication: {
-          ...data.ibcApplication,
-
-        },
+        ibcApplication: data.ibcApplication,
         researchActivityIds: data.researchActivityIds,
       }),
     onSuccess: () => {
@@ -186,14 +183,18 @@ export default function IbcApplicationEdit() {
   });
 
   const onSubmit = (data: EditIbcApplicationFormValues) => {
+    console.log('Form submission data:', data);
+    
     // Remove the team members array and research activity IDs since they're handled separately
     const { teamMembers, researchActivityIds, ...ibcData } = data;
     
-    updateMutation.mutate({
-      ...ibcData,
+    const payload = {
       ibcApplication: ibcData,
-      researchActivityIds,
-    } as any);
+      researchActivityIds: researchActivityIds || [],
+    };
+    
+    console.log('Mutation payload:', payload);
+    updateMutation.mutate(payload);
   };
 
   if (isLoading) {
