@@ -279,7 +279,7 @@ export default function IbcApplicationEdit() {
     return await saveMutation.mutateAsync({ ...ibcData, protocolTeamMembers });
   };
 
-  const handleSubmit = (data: EditIbcApplicationFormValues) => {
+  const handleSubmit = async (data: EditIbcApplicationFormValues) => {
     console.log('Form submit data:', data);
     
     // Remove the team members array and research activity IDs since they're handled separately
@@ -289,7 +289,9 @@ export default function IbcApplicationEdit() {
     const protocolTeamMembers = JSON.stringify(teamMembers);
     
     console.log('Submit payload:', { ...ibcData, protocolTeamMembers });
-    submitMutation.mutate({ ...ibcData, protocolTeamMembers });
+    console.log('About to call submitMutation.mutateAsync');
+    
+    return await submitMutation.mutateAsync({ ...ibcData, protocolTeamMembers });
   };
 
   if (isLoading) {
@@ -1017,9 +1019,30 @@ export default function IbcApplicationEdit() {
                   type="button" 
                   disabled={saveMutation.isPending || submitMutation.isPending}
                   className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
-                  onClick={() => {
+                  onClick={async () => {
+                    // Show immediate feedback
+                    toast({
+                      title: "Submit clicked",
+                      description: "Processing submission...",
+                    });
+                    
                     console.log('Submit button clicked');
-                    form.handleSubmit(handleSubmit)();
+                    console.log('Current form values:', form.getValues());
+                    
+                    // Get current form data
+                    const formData = form.getValues();
+                    
+                    // Call handleSubmit directly with form data
+                    try {
+                      await handleSubmit(formData);
+                    } catch (error) {
+                      console.error('Error in handleSubmit:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to submit: " + (error as Error).message,
+                        variant: "destructive",
+                      });
+                    }
                   }}
                 >
                   {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
