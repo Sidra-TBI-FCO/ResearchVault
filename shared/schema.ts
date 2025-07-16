@@ -356,6 +356,7 @@ export const ibcApplications = pgTable("ibc_applications", {
   
   // Enhanced biosafety-specific fields
   biosafetyLevel: text("biosafety_level").notNull(), // BSL-1, BSL-2, BSL-3, BSL-4
+  riskGroupClassification: text("risk_group_classification"), // Risk Group 1, 2, 3, 4
   biologicalAgents: json("biological_agents"), // List of biological agents/organisms
   chemicalAgents: json("chemical_agents"), // Chemical hazards
   radiologicalMaterials: json("radiological_materials"), // Radioactive materials
@@ -364,15 +365,49 @@ export const ibcApplications = pgTable("ibc_applications", {
   animalWork: boolean("animal_work").default(false),
   fieldWork: boolean("field_work").default(false),
   
+  // Detailed Methods Section
+  materialAndMethods: text("material_and_methods"), // Detailed experimental protocols
+  proceduresInvolvingInfectiousAgents: text("procedures_involving_infectious_agents"),
+  nucleicAcidExtractionMethods: text("nucleic_acid_extraction_methods"),
+  cellCultureProcedures: text("cell_culture_procedures"),
+  animalProcedures: text("animal_procedures"), // If animal work is involved
+  
+  // Protocol Summary Checkboxes (from Section F)
+  usingRecombinantDNAForDetection: boolean("using_recombinant_dna_detection").default(false),
+  creatingGenomicLibraries: boolean("creating_genomic_libraries").default(false),
+  cloningVectorConstruction: boolean("cloning_vector_construction").default(false),
+  expressionInCulturedCells: boolean("expression_cultured_cells").default(false),
+  useOfHumanCellLines: boolean("use_human_cell_lines").default(false),
+  useOfAnimalCellLines: boolean("use_animal_cell_lines").default(false),
+  useOfStemCells: boolean("use_stem_cells").default(false),
+  riskGroup2Or3Genes: boolean("risk_group_2_3_genes").default(false),
+  administeringToAnimals: boolean("administering_to_animals").default(false),
+  largeCultureVolumes: boolean("large_culture_volumes").default(false),
+  infectiousVirusWork: boolean("infectious_virus_work").default(false),
+  toxinGenes: boolean("toxin_genes").default(false),
+  
   // Room and facility assignments
   approvedRooms: json("approved_rooms"), // Room numbers and their biosafety levels
   containmentProcedures: text("containment_procedures"),
   wasteDisposalPlan: text("waste_disposal_plan"),
   emergencyProcedures: text("emergency_procedures"),
   
-  // Personnel and training
-  authorizedPersonnel: json("authorized_personnel"), // Scientists authorized for this protocol
-  trainingRequirements: json("training_requirements"), // Required training courses
+  // Laboratory Policies Compliance (Section G)
+  labPoliciesCompliance: json("lab_policies_compliance"), // Yes/No answers to safety checklist
+  disinfectionMethods: json("disinfection_methods"), // Methods and contact times
+  wasteSterilizationMethods: json("waste_sterilization_methods"),
+  requiredPPE: json("required_ppe"), // Personal protective equipment per BSL
+  
+  // Risk Assessment (from paper form)
+  hazardAssessment: json("hazard_assessment"), // Risk assessment table
+  safetyControls: json("safety_controls"), // Controls in place
+  additionalRecommendedControls: text("additional_recommended_controls"),
+  
+  // Related protocol numbers
+  iacucProtocolNumber: text("iacuc_protocol_number"), // IACUC Protocol if animal work
+  irbProtocolNumber: text("irb_protocol_number"), // IRB Protocol if human subjects
+  
+  // Personnel and training (simplified)
   medicalSurveillance: boolean("medical_surveillance").default(false),
   
   // Workflow and submission tracking

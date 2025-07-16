@@ -45,6 +45,15 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
   }),
   description: z.string().optional(),
   agents: z.string().optional(),
+  // New methods fields
+  materialAndMethods: z.string().optional(),
+  proceduresInvolvingInfectiousAgents: z.string().optional(),
+  cellCultureProcedures: z.string().optional(),
+  nucleicAcidExtractionMethods: z.string().optional(),
+  animalProcedures: z.string().optional(),
+  riskGroupClassification: z.string().optional(),
+  containmentProcedures: z.string().optional(),
+  emergencyProcedures: z.string().optional(),
   researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
 });
 
@@ -466,9 +475,9 @@ export default function CreateIbc() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Detailed description of the protocol, including procedures, facilities, and safety measures" 
+                          placeholder="Brief description of the research project" 
                           className="resize-none" 
-                          rows={4}
+                          rows={3}
                           {...field} 
                         />
                       </FormControl>
@@ -477,6 +486,276 @@ export default function CreateIbc() {
                   )}
                 />
               </div>
+
+              {/* Methods and Procedures Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Methods and Procedures</CardTitle>
+                  <CardDescription>
+                    Detailed experimental protocols and biosafety methods
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="materialAndMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Materials and Methods</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe the detailed experimental protocols, materials, and methodologies to be used..."
+                            className="resize-none"
+                            rows={5}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Provide comprehensive details of all procedures involving biological materials
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="proceduresInvolvingInfectiousAgents"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Procedures Involving Infectious Agents</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe any procedures involving infectious agents, including containment measures..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cellCultureProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cell Culture Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe cell culture techniques, cell lines used, culture conditions..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nucleicAcidExtractionMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nucleic Acid Extraction Methods</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe methods for DNA/RNA extraction, purification protocols..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="animalProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Animal Procedures (if applicable)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe any animal procedures, including routes of administration, dosages..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Include IACUC protocol number if animal work is involved
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Risk Assessment and Classification */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Risk Assessment and Classification</CardTitle>
+                  <CardDescription>
+                    Biosafety level requirements and risk group classification
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="riskGroupClassification"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Risk Group Classification</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select risk group" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
+                            <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
+                            <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
+                            <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Classification based on the biological agents being used
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="containmentProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Containment Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe specific containment procedures, safety protocols, and control measures..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="emergencyProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Emergency Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe emergency response procedures, spill cleanup, exposure protocols..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Protocol Summary Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Protocol Summary</CardTitle>
+                  <CardDescription>
+                    Check all activities that apply to this research protocol
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm">Recombinant DNA Work</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="recombinant-detection" className="rounded" />
+                          <label htmlFor="recombinant-detection">Using recombinant DNA for detection/analysis</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="genomic-libraries" className="rounded" />
+                          <label htmlFor="genomic-libraries">Creating genomic libraries</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="vector-construction" className="rounded" />
+                          <label htmlFor="vector-construction">Cloning vector construction</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="expression-cells" className="rounded" />
+                          <label htmlFor="expression-cells">Expression in cultured cells</label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm">Cell Lines and Materials</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="human-cell-lines" className="rounded" />
+                          <label htmlFor="human-cell-lines">Use of human cell lines</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="animal-cell-lines" className="rounded" />
+                          <label htmlFor="animal-cell-lines">Use of animal cell lines</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="stem-cells" className="rounded" />
+                          <label htmlFor="stem-cells">Use of stem cells</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="risk-group-genes" className="rounded" />
+                          <label htmlFor="risk-group-genes">Risk Group 2 or 3 genes</label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm">Animal and Large-Scale Work</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="animal-administration" className="rounded" />
+                          <label htmlFor="animal-administration">Administering to animals</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="large-volumes" className="rounded" />
+                          <label htmlFor="large-volumes">Large culture volumes (&gt;10L)</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="infectious-virus" className="rounded" />
+                          <label htmlFor="infectious-virus">Infectious virus work</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="toxin-genes" className="rounded" />
+                          <label htmlFor="toxin-genes">Toxin genes</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               <CardFooter className="flex justify-end space-x-2 px-0">
                 <Button 
