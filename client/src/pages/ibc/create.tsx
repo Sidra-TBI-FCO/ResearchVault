@@ -710,16 +710,11 @@ export default function CreateIbc() {
                             <label className="text-sm font-medium text-gray-700 mb-2 block">
                               Protocol Roles (Select Multiple)
                             </label>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="grid grid-cols-1 gap-3 text-sm">
                               {[
-                                "Principal Investigator",
-                                "Co-Investigator",
-                                "Laboratory Manager",
-                                "Biosafety Officer",
-                                "Research Technician",
-                                "Graduate Student",
-                                "Postdoctoral Fellow",
-                                "Laboratory Staff"
+                                "Team Member",
+                                "Team Leader",
+                                "Safety Rep"
                               ].map((role) => (
                                 <div key={role} className="flex items-center space-x-2">
                                   <Checkbox 
@@ -797,8 +792,8 @@ export default function CreateIbc() {
                             <div className="font-medium">{staff.name}</div>
                             <div className="text-sm text-gray-600">{staff.email} • {staff.title}</div>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              <Badge variant="secondary" className="text-xs">Laboratory Manager</Badge>
-                              <Badge variant="secondary" className="text-xs">Biosafety Officer</Badge>
+                              <Badge variant="secondary" className="text-xs">Team Leader</Badge>
+                              <Badge variant="secondary" className="text-xs">Safety Rep</Badge>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
