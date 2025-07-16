@@ -240,6 +240,53 @@ export default function IbcApplicationDetail() {
                 </div>
               </div>
 
+              {/* Team Members Section */}
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-neutral-400">Protocol Team Members</h3>
+                <div className="mt-2">
+                  {(() => {
+                    let teamMembers = [];
+                    try {
+                      if (ibcApplication.protocolTeamMembers && typeof ibcApplication.protocolTeamMembers === 'string') {
+                        teamMembers = JSON.parse(ibcApplication.protocolTeamMembers);
+                      } else if (Array.isArray(ibcApplication.protocolTeamMembers)) {
+                        teamMembers = ibcApplication.protocolTeamMembers;
+                      }
+                    } catch (error) {
+                      console.error('Error parsing team members:', error);
+                      teamMembers = [];
+                    }
+
+                    if (teamMembers.length === 0) {
+                      return (
+                        <p className="text-sm text-neutral-500">No team members added</p>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2">
+                        {teamMembers.map((member: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-gray-500" />
+                              <span className="text-sm font-medium">{member.name}</span>
+                              {member.role && (
+                                <Badge variant="outline" className="text-xs">
+                                  {member.role}
+                                </Badge>
+                              )}
+                            </div>
+                            {member.email && (
+                              <span className="text-xs text-gray-500">{member.email}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
               {ibcApplication.materialAndMethods && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-neutral-400">Description</h3>
