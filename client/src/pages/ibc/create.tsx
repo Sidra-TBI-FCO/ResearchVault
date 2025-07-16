@@ -34,9 +34,6 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
     required_error: "Please select a principal investigator",
   }),
 
-  status: z.string({
-    required_error: "Please select a status",
-  }),
   protocolNumber: z.string().optional(),
   biosafetyLevel: z.string({
     required_error: "Please select a biosafety level",
@@ -76,7 +73,6 @@ export default function CreateIbc() {
   
   // Default form values
   const defaultValues: Partial<CreateIbcApplicationFormValues> = {
-    status: "Draft",
     biosafetyLevel: "BSL-2",
     researchActivityIds: [],
     teamMembers: [],
@@ -151,8 +147,8 @@ export default function CreateIbc() {
         ibcNumber,
         workflowStatus: "draft",
         riskLevel: "moderate", // Default value
-        // Set submission date only if status is "Ready for Submission"
-        submissionDate: data.status === "Ready for Submission" ? new Date() : null,
+        // Set submission date as null for drafts - will be set when actually submitted
+        submissionDate: null,
       };
 
       console.log("Final IBC data to send:", ibcData);
@@ -170,11 +166,9 @@ export default function CreateIbc() {
     },
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
-      const statusMessage = variables.status === "Ready for Submission" ? 
-        "submitted for review" : "saved as draft";
       toast({
         title: "IBC Application created",
-        description: `The IBC application has been ${statusMessage}.`,
+        description: "The IBC application has been saved as draft.",
       });
       navigate("/ibc");
     },
