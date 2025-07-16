@@ -88,16 +88,33 @@ export default function IbcApplicationEdit() {
   const selectedPIId = form.watch('principalInvestigatorId');
   const selectedSDRIds = form.watch('researchActivityIds') || [];
 
-  // Get research activities filtered by selected PI
+  // Get research activities filtered by selected PI, plus any already associated activities
   const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/research-activities', selectedPIId],
+    queryKey: ['/api/research-activities', selectedPIId, associatedActivities?.map(a => a.id).join(',')],
     queryFn: async () => {
-      if (!selectedPIId) return [];
+      if (!selectedPIId) return associatedActivities || [];
+      
+      // Get activities for the selected PI
       const response = await fetch(`/api/research-activities?principalInvestigatorId=${selectedPIId}`);
       if (!response.ok) throw new Error('Failed to fetch research activities');
-      return response.json();
+      const piActivities = await response.json();
+      
+      // Merge with associated activities (remove duplicates)
+      const associatedIds = associatedActivities?.map(a => a.id) || [];
+      const allActivities = [...piActivities];
+      
+      // Add associated activities that aren't already in the PI's list
+      if (associatedActivities) {
+        for (const associated of associatedActivities) {
+          if (!piActivities.some((pa: ResearchActivity) => pa.id === associated.id)) {
+            allActivities.push(associated);
+          }
+        }
+      }
+      
+      return allActivities;
     },
-    enabled: !!selectedPIId,
+    enabled: !!selectedPIId || !!associatedActivities,
   });
 
   // Get team members from selected SDRs
