@@ -49,9 +49,16 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
   cellCultureProcedures: z.string().optional(),
   nucleicAcidExtractionMethods: z.string().optional(),
   animalProcedures: z.string().optional(),
+  laboratoryEquipment: z.string().optional(),
+  disinfectionMethods: z.string().optional(),
+  ppeRequirements: z.string().optional(),
+  wasteSterilizationProcedures: z.string().optional(),
   riskGroupClassification: z.string().optional(),
   containmentProcedures: z.string().optional(),
   emergencyProcedures: z.string().optional(),
+  location: z.string().optional(),
+  buildingName: z.string().optional(),
+  roomNumbers: z.string().optional(),
   researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
   
   // Team members array with roles
@@ -528,6 +535,44 @@ export default function CreateIbc() {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="laboratoryEquipment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Laboratory Equipment</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="List specialized equipment, biosafety cabinets, centrifuges, autoclaves..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="disinfectionMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Disinfection Methods</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe disinfectants used, concentrations, contact times..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
 
@@ -600,6 +645,44 @@ export default function CreateIbc() {
                             placeholder="Describe emergency response procedures, spill cleanup, exposure protocols..."
                             className="resize-none"
                             rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ppeRequirements"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Personal Protective Equipment (PPE) Requirements</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Specify required PPE: gloves, lab coats, eye protection, respirators..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="wasteSterilizationProcedures"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Waste Sterilization Procedures</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe waste treatment methods, autoclaving, chemical disinfection..."
+                            className="resize-none"
+                            rows={3}
                             {...field}
                           />
                         </FormControl>
@@ -714,6 +797,73 @@ export default function CreateIbc() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Facility and Location Information */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Facility and Location Information</CardTitle>
+                  <CardDescription>
+                    Specify where the research activities will be conducted
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Research Location</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g. University Research Campus, Main Laboratory Building"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="buildingName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Building Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. Life Sciences Building"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="roomNumbers"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Room Numbers</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. 301, 305, 307"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            List all rooms where work will be conducted
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Protocol Summary Section */}
               <Card className="mt-8">
