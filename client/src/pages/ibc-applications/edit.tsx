@@ -159,9 +159,13 @@ export default function IbcApplicationEdit() {
   }, [ibcApplication, associatedActivities, form]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => 
-      apiRequest("PATCH", `/api/ibc-applications/${id}`, data),
-    onSuccess: () => {
+    mutationFn: (data: any) => {
+      console.log('Sending PATCH request to:', `/api/ibc-applications/${id}`);
+      console.log('Request data:', data);
+      return apiRequest("PATCH", `/api/ibc-applications/${id}`, data);
+    },
+    onSuccess: (result) => {
+      console.log('Update successful:', result);
       toast({
         title: "Success",
         description: "IBC application updated successfully",
@@ -171,6 +175,7 @@ export default function IbcApplicationEdit() {
       navigate(`/ibc-applications/${id}`);
     },
     onError: (error: any) => {
+      console.error('Update error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update IBC application",
