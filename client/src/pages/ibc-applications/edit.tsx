@@ -622,29 +622,7 @@ export default function IbcApplicationEdit() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="principalInvestigatorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Principal Investigator</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select principal investigator" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {/* Note: We'd need scientists data here, but keeping simple for now */}
-                        <SelectItem value="1">Dr. Emily Chen</SelectItem>
-                        <SelectItem value="2">Dr. Michael Johnson</SelectItem>
-                        <SelectItem value="3">Dr. Sarah Williams</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
 
 
