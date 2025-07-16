@@ -154,7 +154,7 @@ export default function IbcList() {
                     <TableCell>
                       <div className="flex items-center">
                         <FileText className="h-4 w-4 mr-1 text-neutral-200" />
-                        <span>{application.protocolNumber || "—"}</span>
+                        <span>{application.ibcNumber || "—"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
