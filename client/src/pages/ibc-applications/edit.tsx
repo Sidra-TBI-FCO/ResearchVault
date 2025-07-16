@@ -203,13 +203,22 @@ export default function IbcApplicationEdit() {
   }, [ibcApplication, associatedActivities, form]);
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: async (data: any) => {
+      console.log('saveMutation.mutationFn called');
       console.log('Sending PATCH request to save:', `/api/ibc-applications/${id}`);
       console.log('Request data:', data);
-      return apiRequest("PATCH", `/api/ibc-applications/${id}`, { ...data, isDraft: true });
+      
+      try {
+        const result = await apiRequest("PATCH", `/api/ibc-applications/${id}`, { ...data, isDraft: true });
+        console.log('API request completed successfully:', result);
+        return result;
+      } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+      }
     },
     onSuccess: (result) => {
-      console.log('Save successful:', result);
+      console.log('Save mutation onSuccess called with result:', result);
       toast({
         title: "Saved",
         description: "IBC application saved as draft successfully",
@@ -218,7 +227,7 @@ export default function IbcApplicationEdit() {
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
     },
     onError: (error: any) => {
-      console.error('Save error:', error);
+      console.error('Save mutation onError called with error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save IBC application",
@@ -972,9 +981,21 @@ export default function IbcApplicationEdit() {
                   type="button" 
                   disabled={saveMutation.isPending || submitMutation.isPending}
                   variant="outline"
-                  onClick={() => {
+                  onClick={async () => {
                     console.log('Save button clicked');
-                    form.handleSubmit(handleSave)();
+                    console.log('Current form values:', form.getValues());
+                    console.log('Form validation state:', form.formState.isValid);
+                    console.log('Form errors:', form.formState.errors);
+                    
+                    // Trigger validation manually
+                    const isValid = await form.trigger();
+                    console.log('Manual validation result:', isValid);
+                    
+                    if (isValid) {
+                      form.handleSubmit(handleSave)();
+                    } else {
+                      console.log('Form validation failed, errors:', form.formState.errors);
+                    }
                   }}
                 >
                   {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
