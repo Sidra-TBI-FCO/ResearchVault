@@ -186,11 +186,14 @@ export default function IbcApplicationEdit() {
 
   const onSubmit = (data: EditIbcApplicationFormValues) => {
     console.log('Form submission data:', data);
+    console.log('Form errors:', form.formState.errors);
+    console.log('Form is valid:', form.formState.isValid);
     
     // Remove the team members array and research activity IDs since they're handled separately
     const { teamMembers, researchActivityIds, ...ibcData } = data;
     
     console.log('Mutation payload:', ibcData);
+    console.log('About to call updateMutation.mutate');
     updateMutation.mutate(ibcData);
   };
 
@@ -803,6 +806,11 @@ export default function IbcApplicationEdit() {
                   type="submit" 
                   disabled={updateMutation.isPending}
                   className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                  onClick={() => {
+                    console.log('Update button clicked');
+                    console.log('Form state:', form.formState);
+                    console.log('Form values:', form.getValues());
+                  }}
                 >
                   {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Update IBC Application
