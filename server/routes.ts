@@ -1756,32 +1756,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/ibc-applications', async (req: Request, res: Response) => {
     try {
+      console.log("=== IBC Application Creation Debug ===");
+      console.log("Full request body:", JSON.stringify(req.body, null, 2));
+      
       const { researchActivityIds, ...applicationData } = req.body;
+      console.log("Extracted researchActivityIds:", researchActivityIds);
+      console.log("Application data after extraction:", JSON.stringify(applicationData, null, 2));
+      
+      console.log("Validating with schema...");
       const validateData = insertIbcApplicationSchema.parse(applicationData);
+      console.log("Schema validation successful:", JSON.stringify(validateData, null, 2));
       
       // Check if principal investigator exists
+      console.log("Checking principal investigator with ID:", validateData.principalInvestigatorId);
       const pi = await storage.getScientist(validateData.principalInvestigatorId);
       if (!pi) {
+        console.log("Principal investigator not found");
         return res.status(404).json({ message: "Principal investigator not found" });
       }
+      console.log("Principal investigator found:", pi.name);
       
       // Validate research activities if provided
       if (researchActivityIds && Array.isArray(researchActivityIds)) {
+        console.log("Validating research activities:", researchActivityIds);
         for (const activityId of researchActivityIds) {
           const activity = await storage.getResearchActivity(activityId);
           if (!activity) {
+            console.log(`Research activity with ID ${activityId} not found`);
             return res.status(404).json({ message: `Research activity with ID ${activityId} not found` });
           }
+          console.log(`Research activity ${activityId} found:`, activity.title);
         }
       }
       
+      console.log("Creating IBC application...");
       const application = await storage.createIbcApplication(validateData, researchActivityIds || []);
+      console.log("IBC application created successfully:", application.id);
+      
       res.status(201).json(application);
     } catch (error) {
+      console.error("Error creating IBC application:", error);
       if (error instanceof ZodError) {
+        console.log("Zod validation error:", fromZodError(error).message);
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to create IBC application" });
+      console.log("Generic error:", error.message);
+      res.status(500).json({ message: "Failed to create IBC application", error: error.message });
     }
   });
 

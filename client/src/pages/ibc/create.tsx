@@ -134,11 +134,14 @@ export default function CreateIbc() {
 
   const createIbcApplicationMutation = useMutation({
     mutationFn: async (data: CreateIbcApplicationFormValues) => {
+      console.log("Mutation starting with data:", data);
+      
       // Generate IBC number if not provided
       const ibcNumber = data.protocolNumber || `IBC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
       
       // Convert research activity IDs to the junction table format
       const researchActivityIds = data.researchActivityIds;
+      console.log("Extracted research activity IDs:", researchActivityIds);
       
       // Prepare the main IBC application data (excluding the junction table data)
       const { researchActivityIds: _, ...ibcApplicationData } = data;
@@ -152,10 +155,17 @@ export default function CreateIbc() {
         submissionDate: data.status === "Ready for Submission" ? new Date() : null,
       };
 
-      const response = await apiRequest("POST", "/api/ibc-applications", {
-        ibcApplication: ibcData,
+      console.log("Final IBC data to send:", ibcData);
+      console.log("Final research activity IDs to send:", researchActivityIds);
+
+      const requestBody = {
+        ...ibcData,
         researchActivityIds,
-      });
+      };
+      
+      console.log("Full request body:", requestBody);
+
+      const response = await apiRequest("POST", "/api/ibc-applications", requestBody);
       return response.json();
     },
     onSuccess: (response, variables) => {
@@ -178,6 +188,9 @@ export default function CreateIbc() {
   });
 
   const onSubmit = (data: CreateIbcApplicationFormValues) => {
+    console.log("Form submission data:", data);
+    console.log("Research Activity IDs:", data.researchActivityIds);
+    console.log("Principal Investigator ID:", data.principalInvestigatorId);
     createIbcApplicationMutation.mutate(data);
   };
 
