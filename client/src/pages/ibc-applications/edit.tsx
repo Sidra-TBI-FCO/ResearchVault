@@ -26,10 +26,17 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.extend({
     required_error: "Please select a principal investigator",
   }),
   researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
-  teamMembers: z.array(z.object({
-    scientistId: z.number(),
-    role: z.enum(["team_member", "team_leader", "safety_representative"]),
-  })).default([]),
+  teamMembers: z.array(z.union([
+    z.object({
+      scientistId: z.number(),
+      role: z.enum(["team_member", "team_leader", "safety_representative"]),
+    }),
+    z.object({
+      name: z.string(),
+      email: z.string().optional(),
+      role: z.string(),
+    })
+  ])).default([]),
 });
 
 type EditIbcApplicationFormValues = z.infer<typeof editIbcApplicationSchema>;
@@ -510,26 +517,35 @@ export default function IbcApplicationEdit() {
                   {/* Added Team Members List */}
                   <div className="space-y-3">
                     {form.watch('teamMembers')?.map((member, index) => {
-                      const staff = availableStaff?.find(s => s.id === member.scientistId);
-                      if (!staff) return null;
+                      // Handle both new format (with scientistId) and existing format (with name, email, role)
+                      let memberName, memberEmail, memberRole;
+                      
+                      if (member.scientistId) {
+                        // New format - look up in available staff
+                        const staff = availableStaff?.find(s => s.id === member.scientistId);
+                        if (!staff) return null;
+                        memberName = staff.name;
+                        memberEmail = staff.email;
+                        memberRole = member.role;
+                      } else if (member.name) {
+                        // Existing format - use stored values directly
+                        memberName = member.name;
+                        memberEmail = member.email;
+                        memberRole = member.role;
+                      } else {
+                        return null;
+                      }
                       
                       return (
-                        <div key={`${member.scientistId}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                        <div key={`${member.scientistId || member.name}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                           <div className="flex-1">
-                            <div className="font-medium">{staff.name}</div>
-                            <div className="text-sm text-gray-600">{staff.email} • {staff.title}</div>
+                            <div className="font-medium">{memberName}</div>
+                            <div className="text-sm text-gray-600">{memberEmail}</div>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              <Badge variant="secondary" className="text-xs">Team Leader</Badge>
-                              <Badge variant="secondary" className="text-xs">Safety Rep</Badge>
+                              <Badge variant="secondary" className="text-xs">{memberRole}</Badge>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Badge variant="outline" className="text-green-700 border-green-300">
-                              Access Granted
-                            </Badge>
-                            <Badge variant="outline" className="text-orange-600 border-orange-300">
-                              Pending Signature
-                            </Badge>
                             <Button 
                               type="button" 
                               variant="ghost" 
