@@ -503,6 +503,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/research-activities/:id/staff', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      // Get all project members for this research activity
+      const members = await storage.getProjectMembers(id);
+      
+      // Get scientist details for each member
+      const staffPromises = members.map(async (member) => {
+        const scientist = await storage.getScientist(member.scientistId);
+        return scientist;
+      });
+      
+      const staff = await Promise.all(staffPromises);
+      // Filter out any null values and return only the staff
+      const validStaff = staff.filter(scientist => scientist !== undefined);
+      
+      res.json(validStaff);
+    } catch (error) {
+      console.error("Error fetching research activity staff:", error);
+      res.status(500).json({ message: "Failed to fetch research activity staff" });
+    }
+  });
+
   // Projects
   app.get('/api/projects', async (req: Request, res: Response) => {
     try {

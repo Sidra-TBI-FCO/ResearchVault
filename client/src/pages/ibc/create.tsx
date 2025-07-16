@@ -53,6 +53,12 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.extend({
   containmentProcedures: z.string().optional(),
   emergencyProcedures: z.string().optional(),
   researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
+  
+  // Team members array with roles
+  teamMembers: z.array(z.object({
+    scientistId: z.number(),
+    role: z.enum(["team_member", "team_leader", "safety_representative"]),
+  })).default([]),
 });
 
 type CreateIbcApplicationFormValues = z.infer<typeof createIbcApplicationSchema>;
@@ -66,6 +72,7 @@ export default function CreateIbc() {
     status: "Draft",
     biosafetyLevel: "BSL-2",
     researchActivityIds: [],
+    teamMembers: [],
   };
 
   // Get all principal investigators for selection
@@ -90,6 +97,32 @@ export default function CreateIbc() {
       return response.json();
     },
     enabled: !!selectedPIId,
+  });
+
+  const selectedSDRIds = form.watch('researchActivityIds') || [];
+
+  // Get staff from selected SDRs for team member selection
+  const { data: availableStaff, isLoading: staffLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/research-activities/staff', selectedSDRIds],
+    queryFn: async () => {
+      if (!selectedSDRIds.length) return [];
+      const staffPromises = selectedSDRIds.map(async (sdrId) => {
+        const response = await fetch(`/api/research-activities/${sdrId}/staff`);
+        if (!response.ok) return [];
+        return response.json();
+      });
+      const staffArrays = await Promise.all(staffPromises);
+      const allStaff = staffArrays.flat();
+      
+      // Remove duplicates and exclude the PI
+      const uniqueStaff = allStaff.filter((staff, index, arr) => 
+        arr.findIndex(s => s.id === staff.id) === index && 
+        staff.id !== selectedPIId
+      );
+      
+      return uniqueStaff;
+    },
+    enabled: selectedSDRIds.length > 0,
   });
 
   const createIbcApplicationMutation = useMutation({
@@ -576,6 +609,97 @@ export default function CreateIbc() {
                   />
                 </CardContent>
               </Card>
+
+              {/* Team Members Section */}
+              {selectedSDRIds.length > 0 && (
+                <Card className="mt-8">
+                  <CardHeader>
+                    <CardTitle>Team Members</CardTitle>
+                    <CardDescription>
+                      Select team members from staff involved in the linked research activities
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {!availableStaff?.length ? (
+                        <div className="text-sm text-muted-foreground">
+                          {staffLoading ? "Loading staff..." : "No additional staff found in the selected research activities"}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="text-sm text-muted-foreground mb-4">
+                            <strong>Note:</strong> The Principal Investigator is automatically included and does not need to be selected again.
+                          </div>
+                          
+                          {availableStaff.map((staff) => {
+                            const currentTeamMembers = form.watch('teamMembers') || [];
+                            const isSelected = currentTeamMembers.some(member => member.scientistId === staff.id);
+                            const currentMember = currentTeamMembers.find(member => member.scientistId === staff.id);
+                            
+                            return (
+                              <div key={staff.id} className="border rounded-lg p-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h4 className="font-medium">{staff.name}</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      {staff.department} • {staff.title}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`staff-${staff.id}`}
+                                        className="rounded"
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                          const currentMembers = form.getValues('teamMembers') || [];
+                                          if (e.target.checked) {
+                                            // Add team member
+                                            form.setValue('teamMembers', [
+                                              ...currentMembers,
+                                              { scientistId: staff.id, role: 'team_member' as const }
+                                            ]);
+                                          } else {
+                                            // Remove team member
+                                            form.setValue('teamMembers', 
+                                              currentMembers.filter(member => member.scientistId !== staff.id)
+                                            );
+                                          }
+                                        }}
+                                      />
+                                      <label htmlFor={`staff-${staff.id}`} className="text-sm">Include</label>
+                                    </div>
+                                    <select 
+                                      className="text-sm border rounded px-2 py-1" 
+                                      value={currentMember?.role || ""}
+                                      disabled={!isSelected}
+                                      onChange={(e) => {
+                                        const currentMembers = form.getValues('teamMembers') || [];
+                                        const updatedMembers = currentMembers.map(member =>
+                                          member.scientistId === staff.id 
+                                            ? { ...member, role: e.target.value as 'team_member' | 'team_leader' | 'safety_representative' }
+                                            : member
+                                        );
+                                        form.setValue('teamMembers', updatedMembers);
+                                      }}
+                                    >
+                                      <option value="">Select Role</option>
+                                      <option value="team_member">Team Member</option>
+                                      <option value="team_leader">Team Leader</option>
+                                      <option value="safety_representative">Safety Representative</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Protocol Summary Section */}
               <Card className="mt-8">
