@@ -610,13 +610,27 @@ export default function CreateIbc() {
                 </CardContent>
               </Card>
 
-              {/* Team Members Section */}
-              {selectedSDRIds.length > 0 && (
+              {/* Team Members Section - Shows after selecting SDRs */}
+              {selectedSDRIds.length === 0 ? (
+                <Card className="mt-8 border-dashed border-gray-300">
+                  <CardHeader>
+                    <CardTitle className="text-gray-400">Team Members</CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Select research activities above to choose team members from their staff
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      Team member selection will appear here after selecting research activities
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
                 <Card className="mt-8">
                   <CardHeader>
                     <CardTitle>Team Members</CardTitle>
                     <CardDescription>
-                      Select team members from staff involved in the linked research activities
+                      Select team members from staff involved in the linked research activities ({selectedSDRIds.length} SDR{selectedSDRIds.length > 1 ? 's' : ''} selected)
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
