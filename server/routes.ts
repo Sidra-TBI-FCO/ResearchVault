@@ -1819,6 +1819,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/ibc-applications/:id', async (req: Request, res: Response) => {
     try {
+      console.log('PATCH /api/ibc-applications/:id called');
+      console.log('Request params:', req.params);
+      console.log('Request body:', req.body);
+      
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid IBC application ID" });
@@ -1826,7 +1830,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract isDraft flag and remove it from validation data
       const { isDraft, ...bodyData } = req.body;
+      console.log('isDraft:', isDraft);
+      console.log('bodyData:', bodyData);
+      
       const validateData = insertIbcApplicationSchema.partial().parse(bodyData);
+      console.log('Validated data after schema parsing:', validateData);
       
       // Handle status based on isDraft flag
       if (isDraft !== undefined) {
@@ -1839,6 +1847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             validateData.submissionDate = new Date().toISOString();
           }
         }
+        console.log('Status set to:', validateData.status);
       }
       
       // Check if project exists if projectId is provided
@@ -1857,7 +1866,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log('About to call storage.updateIbcApplication with:', id, validateData);
       const application = await storage.updateIbcApplication(id, validateData);
+      console.log('storage.updateIbcApplication result:', application);
       
       if (!application) {
         return res.status(404).json({ message: "IBC application not found" });
@@ -1865,10 +1876,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(application);
     } catch (error) {
+      console.error('Error in PATCH /api/ibc-applications/:id:', error);
       if (error instanceof ZodError) {
+        console.error('Zod validation error details:', fromZodError(error).message);
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to update IBC application" });
+      console.error('Non-Zod error:', error);
+      res.status(500).json({ message: "Failed to update IBC application", error: error.message });
     }
   });
 
