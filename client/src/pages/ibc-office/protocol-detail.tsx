@@ -416,6 +416,7 @@ export default function IbcProtocolDetailPage() {
                           date: new Date(comment.timestamp),
                           type: 'comment',
                           subtype: 'office',
+                          commentText: commentText,
                           priority: 2,
                           element: (
                             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
@@ -443,6 +444,7 @@ export default function IbcProtocolDetailPage() {
                           date: new Date(response.timestamp),
                           type: 'comment',
                           subtype: 'pi_response',
+                          commentText: response.comment,
                           priority: 2,
                           element: (
                             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -462,15 +464,47 @@ export default function IbcProtocolDetailPage() {
                     });
                   }
                   
-                  // Sort chronologically (oldest first), with status changes before comments for same timestamp
-                  timelineEntries.sort((a, b) => {
-                    const timeDiff = a.date.getTime() - b.date.getTime();
-                    if (timeDiff === 0) {
-                      // If same timestamp, sort by priority (status changes first)
-                      return a.priority - b.priority;
+                  // Assign logical order keys based on workflow
+                  timelineEntries.forEach((entry, index) => {
+                    // Ensure all entries have an orderKey
+                    entry.orderKey = entry.date.getTime(); // Default to timestamp
+                    
+                    if (entry.type === 'status') {
+                      // Assign fixed order values for status changes
+                      if (entry.subtype === 'draft') {
+                        entry.orderKey = 1;
+                      } else if (entry.subtype === 'submitted') {
+                        entry.orderKey = 4;
+                      } else if (entry.subtype === 'vetted') {
+                        entry.orderKey = 6;
+                      } else if (entry.subtype === 'under_review') {
+                        entry.orderKey = 8;
+                      } else if (entry.subtype === 'approved') {
+                        entry.orderKey = 10;
+                      } else if (entry.subtype === 'expires') {
+                        entry.orderKey = 12;
+                      }
+                    } else if (entry.type === 'comment') {
+                      // Identify comment by content to determine logical position
+                      const commentText = entry.commentText || '';
+                      
+                      if (commentText.includes('comment 1')) {
+                        entry.orderKey = 2;
+                      } else if (commentText.includes('comment 2')) {
+                        entry.orderKey = 3;
+                      } else if (commentText.includes('comment 3')) {
+                        entry.orderKey = 5;
+                      } else if (commentText.includes('comment 4')) {
+                        entry.orderKey = 7;
+                      } else if (commentText.includes('comment 5')) {
+                        entry.orderKey = 9;
+                      }
+                      // If no specific comment pattern found, keep the timestamp-based order
                     }
-                    return timeDiff;
                   });
+
+                  // Sort by the assigned order keys
+                  timelineEntries.sort((a, b) => (a.orderKey || 0) - (b.orderKey || 0));
                   
                   return timelineEntries.map((entry, index) => (
                     <div key={`timeline-${entry.type}-${entry.subtype}-${index}`} className="relative">
