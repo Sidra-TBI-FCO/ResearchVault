@@ -24,7 +24,9 @@ import {
   Home,
   Send,
   Eye,
-  Calendar
+  Calendar,
+  UserCheck,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -51,6 +53,7 @@ export default function IbcProtocolDetailPage() {
   const applicationId = params?.id ? parseInt(params.id) : null;
   const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
   const [reviewComments, setReviewComments] = useState("");
+  const [selectedReviewers, setSelectedReviewers] = useState<number[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -74,6 +77,30 @@ export default function IbcProtocolDetailPage() {
     queryKey: ["/api/ibc-board-members"],
   });
 
+  // Fetch board members with scientist data for display
+  const { data: boardMembersWithScientists = [] } = useQuery({
+    queryKey: ["/api/ibc-board-members-with-scientists"],
+    queryFn: async () => {
+      const boardMembersResponse = await fetch('/api/ibc-board-members');
+      const boardMembersData = await boardMembersResponse.json();
+      
+      // Fetch scientist data for each board member
+      const membersWithScientists = await Promise.all(
+        boardMembersData.map(async (member: IbcBoardMember) => {
+          try {
+            const scientistResponse = await fetch(`/api/scientists/${member.scientistId}`);
+            const scientist = await scientistResponse.json();
+            return { ...member, scientist };
+          } catch (error) {
+            return { ...member, scientist: null };
+          }
+        })
+      );
+      
+      return membersWithScientists;
+    },
+  });
+
   const { data: researchActivities = [] } = useQuery({
     queryKey: [`/api/ibc-applications/${applicationId}/research-activities`],
     enabled: !!applicationId,
@@ -89,7 +116,7 @@ export default function IbcProtocolDetailPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async (data: { status: string; reviewComments?: string }) => {
+    mutationFn: async (data: { status: string; reviewComments?: string; reviewerAssignments?: any }) => {
       return apiRequest("PATCH", `/api/ibc-applications/${applicationId}`, data);
     },
     onSuccess: () => {
@@ -101,6 +128,7 @@ export default function IbcProtocolDetailPage() {
       });
       setNewWorkflowStatus("");
       setReviewComments("");
+      setSelectedReviewers([]);
     },
     onError: () => {
       toast({
@@ -130,10 +158,32 @@ export default function IbcProtocolDetailPage() {
   const handleStatusUpdate = () => {
     if (!newWorkflowStatus) return;
     
-    updateStatusMutation.mutate({
+    // If changing to under_review and no reviewers selected, show error
+    if (newWorkflowStatus === "under_review" && selectedReviewers.length === 0) {
+      toast({
+        title: "Reviewers Required",
+        description: "Please select at least one reviewer when changing status to 'Under Review'.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const updateData: any = {
       status: newWorkflowStatus,
       reviewComments: reviewComments || undefined,
-    });
+    };
+    
+    // Add reviewer assignments if under_review
+    if (newWorkflowStatus === "under_review" && selectedReviewers.length > 0) {
+      updateData.reviewerAssignments = selectedReviewers.map(reviewerId => ({
+        reviewerId,
+        assignedDate: new Date().toISOString(),
+        status: "assigned",
+        boardMember: boardMembers.find((bm: IbcBoardMember) => bm.id === reviewerId)
+      }));
+    }
+    
+    updateStatusMutation.mutate(updateData);
   };
 
   return (
@@ -298,6 +348,49 @@ export default function IbcProtocolDetailPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Assigned Reviewers */}
+            {application.reviewerAssignments && Array.isArray(application.reviewerAssignments) && application.reviewerAssignments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <UserCheck className="h-5 w-5" />
+                    <span>Assigned Reviewers</span>
+                  </CardTitle>
+                  <CardDescription>IBC board members assigned to review this application</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {application.reviewerAssignments.map((assignment: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <UserCheck className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-blue-900">{assignment.boardMember?.scientist?.name || 'Unknown Reviewer'}</p>
+                            <p className="text-sm text-blue-700">
+                              {assignment.boardMember?.role === 'chair' ? 'Chair' : 
+                               assignment.boardMember?.role === 'deputy_chair' ? 'Deputy Chair' : 'Member'}
+                              {assignment.boardMember?.expertise && assignment.boardMember.expertise.length > 0 && 
+                                ` • ${assignment.boardMember.expertise.slice(0, 2).join(', ')}`}
+                            </p>
+                            <p className="text-xs text-blue-600">
+                              Assigned {assignment.assignedDate && format(new Date(assignment.assignedDate), 'MMM d, yyyy')}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          {assignment.status === 'assigned' ? 'Assigned' : 
+                           assignment.status === 'reviewing' ? 'Reviewing' : 
+                           assignment.status === 'completed' ? 'Completed' : 'Unknown'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {application.description && (
@@ -790,6 +883,76 @@ export default function IbcProtocolDetailPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Reviewer Selection for Under Review Status */}
+              {newWorkflowStatus === "under_review" && (
+                <div>
+                  <label className="text-sm font-medium">Select Reviewers</label>
+                  <p className="text-sm text-gray-500 mb-3">Choose IBC board members to review this application</p>
+                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
+                    {Array.isArray(boardMembersWithScientists) && boardMembersWithScientists.length > 0 ? (
+                      boardMembersWithScientists
+                        .filter((member: IbcBoardMember) => member.isActive)
+                        .map((member: IbcBoardMember) => (
+                          <div key={member.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                            <input
+                              type="checkbox"
+                              id={`reviewer-${member.id}`}
+                              checked={selectedReviewers.includes(member.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedReviewers([...selectedReviewers, member.id]);
+                                } else {
+                                  setSelectedReviewers(selectedReviewers.filter(id => id !== member.id));
+                                }
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <label htmlFor={`reviewer-${member.id}`} className="flex-1 cursor-pointer">
+                              <div className="flex items-center space-x-2">
+                                <UserCheck className="h-4 w-4 text-gray-500" />
+                                <div>
+                                  <p className="text-sm font-medium">{member.scientist?.name || 'Unknown'}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {member.role === 'chair' ? 'Chair' : 
+                                     member.role === 'deputy_chair' ? 'Deputy Chair' : 'Member'} 
+                                    {member.expertise && member.expertise.length > 0 && 
+                                      ` • ${member.expertise.slice(0, 2).join(', ')}`}
+                                  </p>
+                                </div>
+                              </div>
+                            </label>
+                          </div>
+                        ))
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No active board members available
+                      </p>
+                    )}
+                  </div>
+                  {selectedReviewers.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">Selected reviewers: {selectedReviewers.length}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedReviewers.map(reviewerId => {
+                          const member = boardMembersWithScientists.find((bm: IbcBoardMember) => bm.id === reviewerId);
+                          return member ? (
+                            <span key={reviewerId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                              {member.scientist?.name || 'Unknown'}
+                              <button
+                                onClick={() => setSelectedReviewers(selectedReviewers.filter(id => id !== reviewerId))}
+                                className="hover:text-blue-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div>
                 <label className="text-sm font-medium">Review Comments</label>
