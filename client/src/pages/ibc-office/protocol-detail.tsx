@@ -16,6 +16,7 @@ import {
   XCircle, 
   AlertTriangle,
   MessageSquare,
+  MessageCircle,
   Users,
   Building,
   Biohazard,
@@ -25,6 +26,7 @@ import {
   Eye,
   Calendar
 } from "lucide-react";
+import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import type { IbcApplication, Scientist, IbcBoardMember } from "@shared/schema";
 
@@ -218,7 +220,7 @@ export default function IbcProtocolDetailPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Timeline</CardTitle>
+                <CardTitle className="text-lg">Timeline & Comments</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {application.submissionDate && (
@@ -252,6 +254,46 @@ export default function IbcProtocolDetailPage() {
                         {new Date(application.expirationDate).toLocaleDateString()}
                       </p>
                     </div>
+                  </div>
+                )}
+
+                {/* Office Comments */}
+                {application.reviewComments && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                          <span className="text-xs text-amber-600">
+                            {application.updatedAt && format(new Date(application.updatedAt), 'MMM d, yyyy HH:mm')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-amber-700">{application.reviewComments}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* PI Responses/Submission Comments */}
+                {application.piResponses && Array.isArray(application.piResponses) && application.piResponses.length > 0 && (
+                  <div className="space-y-3">
+                    {application.piResponses.map((response: any, index: number) => (
+                      <div key={index} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <MessageCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="text-sm font-medium text-blue-800">PI Response</h4>
+                              <span className="text-xs text-blue-600">
+                                {response.timestamp && format(new Date(response.timestamp), 'MMM d, yyyy HH:mm')}
+                              </span>
+                            </div>
+                            <p className="text-sm text-blue-700">{response.comment}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>

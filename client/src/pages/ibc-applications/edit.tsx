@@ -37,6 +37,7 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.extend({
       role: z.string(),
     })
   ])).default([]),
+  submissionComment: z.string().optional(),
 });
 
 type EditIbcApplicationFormValues = z.infer<typeof editIbcApplicationSchema>;
@@ -267,31 +268,63 @@ export default function IbcApplicationEdit() {
     console.log('Form validation state:', form.formState.isValid);
     console.log('Form errors:', form.formState.errors);
     
-    // Remove the team members array and research activity IDs since they're handled separately
-    const { teamMembers, researchActivityIds, ...ibcData } = data;
+    // Remove the team members array, research activity IDs, and submission comment since they're handled separately
+    const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
     
     // Convert team members to JSON format for storage
     const protocolTeamMembers = JSON.stringify(teamMembers);
     
-    console.log('Save payload:', { ...ibcData, protocolTeamMembers });
+    // Handle PI responses - add the submission comment if provided
+    let piResponses = ibcApplication?.piResponses || [];
+    if (submissionComment && submissionComment.trim()) {
+      const newComment = {
+        comment: submissionComment.trim(),
+        timestamp: new Date().toISOString(),
+        type: 'submission_comment'
+      };
+      // Check if this is an update to an existing comment or a new one
+      if (Array.isArray(piResponses)) {
+        piResponses = [...piResponses, newComment];
+      } else {
+        piResponses = [newComment];
+      }
+    }
+    
+    console.log('Save payload:', { ...ibcData, protocolTeamMembers, piResponses });
     console.log('About to call saveMutation.mutateAsync');
     
-    return await saveMutation.mutateAsync({ ...ibcData, protocolTeamMembers });
+    return await saveMutation.mutateAsync({ ...ibcData, protocolTeamMembers, piResponses });
   };
 
   const handleSubmit = async (data: EditIbcApplicationFormValues) => {
     console.log('Form submit data:', data);
     
-    // Remove the team members array and research activity IDs since they're handled separately
-    const { teamMembers, researchActivityIds, ...ibcData } = data;
+    // Remove the team members array, research activity IDs, and submission comment since they're handled separately
+    const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
     
     // Convert team members to JSON format for storage
     const protocolTeamMembers = JSON.stringify(teamMembers);
     
-    console.log('Submit payload:', { ...ibcData, protocolTeamMembers });
+    // Handle PI responses - add the submission comment if provided
+    let piResponses = ibcApplication?.piResponses || [];
+    if (submissionComment && submissionComment.trim()) {
+      const newComment = {
+        comment: submissionComment.trim(),
+        timestamp: new Date().toISOString(),
+        type: 'submission_comment'
+      };
+      // Check if this is an update to an existing comment or a new one
+      if (Array.isArray(piResponses)) {
+        piResponses = [...piResponses, newComment];
+      } else {
+        piResponses = [newComment];
+      }
+    }
+    
+    console.log('Submit payload:', { ...ibcData, protocolTeamMembers, piResponses });
     console.log('About to call submitMutation.mutateAsync');
     
-    return await submitMutation.mutateAsync({ ...ibcData, protocolTeamMembers });
+    return await submitMutation.mutateAsync({ ...ibcData, protocolTeamMembers, piResponses });
   };
 
   if (isLoading) {
@@ -1007,6 +1040,39 @@ export default function IbcApplicationEdit() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* PI Comments Section */}
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Submission Comments</CardTitle>
+                  <CardDescription>
+                    Add any comments or responses to office feedback that you'd like to include with your submission.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="submissionComment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Comment to IBC Office</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Add any clarifications, responses to office comments, or additional information for the IBC office..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          This comment will be visible to the IBC office and will appear in the application timeline.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
