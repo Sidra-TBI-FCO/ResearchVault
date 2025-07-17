@@ -62,8 +62,10 @@ export default function IbcProtocolDetailPage() {
 
 
   const { data: scientist } = useQuery({
-    queryKey: ["/api/scientists", application?.principalInvestigatorId],
+    queryKey: [`/api/scientists/${application?.principalInvestigatorId}`],
     enabled: !!application?.principalInvestigatorId,
+    staleTime: 0, // Force fresh data
+    refetchOnMount: true,
   });
 
   const { data: boardMembers = [] } = useQuery({
@@ -71,12 +73,14 @@ export default function IbcProtocolDetailPage() {
   });
 
   const { data: researchActivities = [] } = useQuery({
-    queryKey: ["/api/ibc-applications", applicationId, "research-activities"],
+    queryKey: [`/api/ibc-applications/${applicationId}/research-activities`],
     enabled: !!applicationId,
+    staleTime: 0, // Force fresh data
+    refetchOnMount: true,
   });
 
   const { data: personnelData = [], isLoading: personnelLoading } = useQuery({
-    queryKey: ["/api/ibc-applications", applicationId, "personnel"],
+    queryKey: [`/api/ibc-applications/${applicationId}/personnel`],
     enabled: !!applicationId,
     staleTime: 0, // Force fresh data
     refetchOnMount: true,
