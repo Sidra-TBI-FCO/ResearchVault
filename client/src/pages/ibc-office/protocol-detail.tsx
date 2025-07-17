@@ -41,6 +41,19 @@ const IBC_WORKFLOW_STATUSES = [
   { value: "expired", label: "Expired", color: "bg-red-100 text-red-800", icon: XCircle },
 ];
 
+const getAvailableStatusTransitions = (currentStatus: string) => {
+  const transitions: { [key: string]: string[] } = {
+    "draft": ["submitted"],
+    "submitted": ["vetted", "draft"], // Can return to draft or move to vetted
+    "vetted": ["under_review", "submitted"], // Can return to submitted or move to under review
+    "under_review": ["active", "vetted"], // Can return to vetted or approve to active
+    "active": ["expired"], // Only transition to expired
+    "expired": [], // No transitions from expired
+  };
+  
+  return transitions[currentStatus] || [];
+};
+
 const BIOSAFETY_LEVELS = [
   { value: "BSL-1", label: "BSL-1", color: "bg-green-100 text-green-800", description: "Minimal risk" },
   { value: "BSL-2", label: "BSL-2", color: "bg-yellow-100 text-yellow-800", description: "Moderate risk" },
@@ -865,11 +878,15 @@ export default function IbcProtocolDetailPage() {
                       <SelectValue placeholder="Select new status" />
                     </SelectTrigger>
                     <SelectContent>
-                      {IBC_WORKFLOW_STATUSES.map(status => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
+                      {getAvailableStatusTransitions(application.status || "draft")
+                        .map(statusValue => {
+                          const status = IBC_WORKFLOW_STATUSES.find(s => s.value === statusValue);
+                          return status ? (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ) : null;
+                        })}
                     </SelectContent>
                   </Select>
                 </div>
