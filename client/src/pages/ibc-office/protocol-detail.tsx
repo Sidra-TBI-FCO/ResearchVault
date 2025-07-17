@@ -531,8 +531,8 @@ export default function IbcProtocolDetailPage() {
                   </div>
                 ) : personnelData && personnelData.length > 0 ? (
                   <div className="space-y-4">
-                    {personnelData.map((member: any) => (
-                      <div key={`${member.scientistId}-${member.role}`} className="flex items-center justify-between p-3 border rounded-lg">
+                    {personnelData.map((member: any, index: number) => (
+                      <div key={`${member.scientistId || 'unknown'}-${member.role || 'no-role'}-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                             <User className="h-4 w-4 text-gray-600" />
