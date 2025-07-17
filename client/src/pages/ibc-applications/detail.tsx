@@ -563,28 +563,7 @@ export default function IbcApplicationDetail() {
                 return (
                   <div className="space-y-3">
                     {teamMembersData.map((member: any, index: number) => {
-                      // Handle both old format (with name/email) and new format (with scientistId)
-                      let displayName, displayEmail, displayDepartment, displayRole;
-                      
-                      if (member.scientistId) {
-                        // New format - look up scientist data
-                        const scientist = teamMemberScientists.find(s => s.id === member.scientistId);
-                        displayName = scientist?.name || 'Unknown Scientist';
-                        displayEmail = scientist?.email;
-                        displayDepartment = scientist?.department;
-                        displayRole = member.role === 'team_leader' ? 'Team Leader' :
-                                     member.role === 'safety_representative' ? 'Safety Representative' :
-                                     'Team Member';
-                      } else {
-                        // Old format - use data directly
-                        displayName = member.name || 'Unknown';
-                        displayEmail = member.email;
-                        displayDepartment = member.department;
-                        displayRole = member.role === 'Team Leader' ? 'Team Leader' :
-                                     member.role === 'Safety Rep' ? 'Safety Representative' :
-                                     'Team Member';
-                      }
-                      
+                      const scientist = teamMemberScientists.find(s => s.id === member.scientistId);
                       return (
                         <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                           <div className="flex items-start gap-2">
@@ -592,19 +571,21 @@ export default function IbcApplicationDetail() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-blue-900 text-sm">
-                                  {displayName}
+                                  {scientist?.name || 'Unknown Scientist'}
                                 </span>
-                                {displayRole && (
+                                {member.role && (
                                   <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
-                                    {displayRole}
+                                    {member.role === 'team_leader' ? 'Team Leader' :
+                                     member.role === 'safety_representative' ? 'Safety Representative' :
+                                     'Team Member'}
                                   </Badge>
                                 )}
                               </div>
-                              {displayEmail && (
-                                <p className="text-xs text-blue-600 mt-1">{displayEmail}</p>
+                              {scientist?.email && (
+                                <p className="text-xs text-blue-600 mt-1">{scientist.email}</p>
                               )}
-                              {displayDepartment && (
-                                <p className="text-xs text-gray-600 mt-1">{displayDepartment}</p>
+                              {scientist?.department && (
+                                <p className="text-xs text-gray-600 mt-1">{scientist.department}</p>
                               )}
                             </div>
                           </div>
