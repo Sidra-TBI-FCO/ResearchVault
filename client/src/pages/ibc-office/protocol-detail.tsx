@@ -260,6 +260,31 @@ export default function IbcProtocolDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Linked Research Activities */}
+          {researchActivities && researchActivities.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Linked Research Activities</CardTitle>
+                <CardDescription>SDRs covered by this IBC protocol</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {researchActivities.map((sdr: any) => (
+                    <div key={sdr.id} className="border rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{sdr.sdrNumber}</p>
+                          <p className="text-sm text-gray-600">{sdr.title}</p>
+                        </div>
+                        <Badge variant="outline">{sdr.status}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="biosafety" className="space-y-4">
@@ -451,43 +476,32 @@ export default function IbcProtocolDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-blue-600" />
+                {scientist ? (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{scientist.name}</p>
+                      <p className="text-sm text-gray-500">{scientist.email}</p>
+                      <p className="text-sm text-gray-500">{scientist.department}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{scientist?.name}</p>
-                    <p className="text-sm text-gray-500">{scientist?.email}</p>
-                    <p className="text-sm text-gray-500">{scientist?.department}</p>
+                ) : (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-500">Loading...</p>
+                      <p className="text-sm text-gray-400">Principal Investigator information</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Research Activities */}
-            {researchActivities && researchActivities.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Linked Research Activities</CardTitle>
-                  <CardDescription>SDRs covered by this IBC protocol</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {researchActivities.map((sdr: any) => (
-                      <div key={sdr.id} className="border rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{sdr.sdrNumber}</p>
-                            <p className="text-sm text-gray-600">{sdr.title}</p>
-                          </div>
-                          <Badge variant="outline">{sdr.status}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+
 
             {/* Team Members */}
             <Card>
@@ -501,7 +515,17 @@ export default function IbcProtocolDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {personnelData && personnelData.length > 0 ? (
+                {personnelLoading ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full animate-pulse"></div>
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : personnelData && personnelData.length > 0 ? (
                   <div className="space-y-4">
                     {personnelData.map((member: any) => (
                       <div key={`${member.scientistId}-${member.role}`} className="flex items-center justify-between p-3 border rounded-lg">
@@ -512,6 +536,7 @@ export default function IbcProtocolDetailPage() {
                           <div>
                             <p className="font-medium">{member.scientist?.name || 'Unknown'}</p>
                             <p className="text-sm text-gray-500">{member.scientist?.email || ''}</p>
+                            <p className="text-sm text-gray-500">{member.scientist?.department || ''}</p>
                           </div>
                         </div>
                         <div className="text-right">
