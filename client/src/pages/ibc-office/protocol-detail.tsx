@@ -290,114 +290,156 @@ export default function IbcProtocolDetailPage() {
                   // Create timeline entries with dates and sort chronologically
                   const timelineEntries = [];
                   
+                  // Add status timeline events
                   if (application.submissionDate) {
                     timelineEntries.push({
                       date: new Date(application.submissionDate),
-                      type: 'submitted',
-                      label: 'Submitted',
-                      icon: Send,
-                      color: 'text-blue-500'
+                      type: 'status',
+                      subtype: 'submitted',
+                      element: (
+                        <div className="flex items-center space-x-2">
+                          <Send className="h-4 w-4 text-blue-500" />
+                          <div>
+                            <p className="text-sm font-medium">Submitted</p>
+                            <p className="text-sm text-gray-500">Application submitted for review</p>
+                          </div>
+                        </div>
+                      )
                     });
                   }
                   
                   if (application.vettedDate) {
                     timelineEntries.push({
                       date: new Date(application.vettedDate),
-                      type: 'vetted',
-                      label: 'Vetted',
-                      icon: Eye,
-                      color: 'text-purple-500'
+                      type: 'status',
+                      subtype: 'vetted',
+                      element: (
+                        <div className="flex items-center space-x-2">
+                          <Eye className="h-4 w-4 text-purple-500" />
+                          <div>
+                            <p className="text-sm font-medium">Vetted</p>
+                            <p className="text-sm text-gray-500">Initial review completed</p>
+                          </div>
+                        </div>
+                      )
                     });
                   }
                   
                   if (application.underReviewDate) {
                     timelineEntries.push({
                       date: new Date(application.underReviewDate),
-                      type: 'under_review',
-                      label: 'Under Review',
-                      icon: Eye,
-                      color: 'text-yellow-500'
+                      type: 'status',
+                      subtype: 'under_review',
+                      element: (
+                        <div className="flex items-center space-x-2">
+                          <Eye className="h-4 w-4 text-yellow-500" />
+                          <div>
+                            <p className="text-sm font-medium">Under Review</p>
+                            <p className="text-sm text-gray-500">Assigned to board members</p>
+                          </div>
+                        </div>
+                      )
                     });
                   }
                   
                   if (application.approvalDate) {
                     timelineEntries.push({
                       date: new Date(application.approvalDate),
-                      type: 'approved',
-                      label: 'Approved',
-                      icon: CheckCircle,
-                      color: 'text-green-500'
+                      type: 'status',
+                      subtype: 'approved',
+                      element: (
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <div>
+                            <p className="text-sm font-medium">Approved</p>
+                            <p className="text-sm text-gray-500">Protocol approved for implementation</p>
+                          </div>
+                        </div>
+                      )
                     });
                   }
                   
                   if (application.expirationDate) {
                     timelineEntries.push({
                       date: new Date(application.expirationDate),
-                      type: 'expires',
-                      label: 'Expires',
-                      icon: Clock,
-                      color: 'text-orange-500'
+                      type: 'status',
+                      subtype: 'expires',
+                      element: (
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-orange-500" />
+                          <div>
+                            <p className="text-sm font-medium">Expires</p>
+                            <p className="text-sm text-gray-500">Protocol expiration date</p>
+                          </div>
+                        </div>
+                      )
+                    });
+                  }
+                  
+                  // Add office comments
+                  if (application.reviewComments && application.updatedAt) {
+                    timelineEntries.push({
+                      date: new Date(application.updatedAt),
+                      type: 'comment',
+                      subtype: 'office',
+                      element: (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                              </div>
+                              <p className="text-sm text-amber-700">{application.reviewComments}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    });
+                  }
+                  
+                  // Add PI responses
+                  if (application.piResponses && Array.isArray(application.piResponses)) {
+                    application.piResponses.forEach((response: any, index: number) => {
+                      if (response.timestamp) {
+                        timelineEntries.push({
+                          date: new Date(response.timestamp),
+                          type: 'comment',
+                          subtype: 'pi_response',
+                          element: (
+                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <MessageCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h4 className="text-sm font-medium text-blue-800">PI Response</h4>
+                                  </div>
+                                  <p className="text-sm text-blue-700">{response.comment}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        });
+                      }
                     });
                   }
                   
                   // Sort chronologically (oldest first)
                   timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
                   
-                  return timelineEntries.map((entry, index) => {
-                    const IconComponent = entry.icon;
-                    return (
-                      <div key={`${entry.type}-${index}`} className="flex items-center space-x-2">
-                        <IconComponent className={`h-4 w-4 ${entry.color}`} />
-                        <div>
-                          <p className="text-sm font-medium">{entry.label}</p>
-                          <p className="text-sm text-gray-500">
-                            {format(entry.date, 'MMM d, yyyy HH:mm')}
-                          </p>
+                  return timelineEntries.map((entry, index) => (
+                    <div key={`timeline-${entry.type}-${entry.subtype}-${index}`} className="relative">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 text-xs text-gray-400 w-20">
+                          {format(entry.date, 'MMM d, yyyy HH:mm')}
                         </div>
-                      </div>
-                    );
-                  });
-                })()}
-
-                {/* Office Comments */}
-                {application.reviewComments && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
-                          <span className="text-xs text-amber-600">
-                            {application.updatedAt && format(new Date(application.updatedAt), 'MMM d, yyyy HH:mm')}
-                          </span>
+                        <div className="flex-1">
+                          {entry.element}
                         </div>
-                        <p className="text-sm text-amber-700">{application.reviewComments}</p>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* PI Responses/Submission Comments */}
-                {application.piResponses && Array.isArray(application.piResponses) && application.piResponses.length > 0 && (
-                  <div className="space-y-3">
-                    {application.piResponses.map((response: any, index: number) => (
-                      <div key={index} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <MessageCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <h4 className="text-sm font-medium text-blue-800">PI Response</h4>
-                              <span className="text-xs text-blue-600">
-                                {response.timestamp && format(new Date(response.timestamp), 'MMM d, yyyy HH:mm')}
-                              </span>
-                            </div>
-                            <p className="text-sm text-blue-700">{response.comment}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  ));
+                })()}
               </CardContent>
             </Card>
 
