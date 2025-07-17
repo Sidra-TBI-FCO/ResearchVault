@@ -290,12 +290,32 @@ export default function IbcProtocolDetailPage() {
                   // Create timeline entries with dates and sort chronologically
                   const timelineEntries = [];
                   
+                  // Add draft status at the very beginning
+                  if (application.createdAt) {
+                    timelineEntries.push({
+                      date: new Date(application.createdAt),
+                      type: 'status',
+                      subtype: 'draft',
+                      priority: 1,
+                      element: (
+                        <div className="flex items-center space-x-2">
+                          <FileText className="h-4 w-4 text-gray-500" />
+                          <div>
+                            <p className="text-sm font-medium">Draft Created</p>
+                            <p className="text-sm text-gray-500">Protocol saved as draft</p>
+                          </div>
+                        </div>
+                      )
+                    });
+                  }
+                  
                   // Add status timeline events
                   if (application.submissionDate) {
                     timelineEntries.push({
                       date: new Date(application.submissionDate),
                       type: 'status',
                       subtype: 'submitted',
+                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Send className="h-4 w-4 text-blue-500" />
@@ -313,6 +333,7 @@ export default function IbcProtocolDetailPage() {
                       date: new Date(application.vettedDate),
                       type: 'status',
                       subtype: 'vetted',
+                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Eye className="h-4 w-4 text-purple-500" />
@@ -330,6 +351,7 @@ export default function IbcProtocolDetailPage() {
                       date: new Date(application.underReviewDate),
                       type: 'status',
                       subtype: 'under_review',
+                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Eye className="h-4 w-4 text-yellow-500" />
@@ -347,6 +369,7 @@ export default function IbcProtocolDetailPage() {
                       date: new Date(application.approvalDate),
                       type: 'status',
                       subtype: 'approved',
+                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="h-4 w-4 text-green-500" />
@@ -364,6 +387,7 @@ export default function IbcProtocolDetailPage() {
                       date: new Date(application.expirationDate),
                       type: 'status',
                       subtype: 'expires',
+                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Clock className="h-4 w-4 text-orange-500" />
@@ -392,6 +416,7 @@ export default function IbcProtocolDetailPage() {
                           date: new Date(comment.timestamp),
                           type: 'comment',
                           subtype: 'office',
+                          priority: 2,
                           element: (
                             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                               <div className="flex items-start gap-2">
@@ -418,6 +443,7 @@ export default function IbcProtocolDetailPage() {
                           date: new Date(response.timestamp),
                           type: 'comment',
                           subtype: 'pi_response',
+                          priority: 2,
                           element: (
                             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                               <div className="flex items-start gap-2">
@@ -436,8 +462,15 @@ export default function IbcProtocolDetailPage() {
                     });
                   }
                   
-                  // Sort chronologically (oldest first)
-                  timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
+                  // Sort chronologically (oldest first), with status changes before comments for same timestamp
+                  timelineEntries.sort((a, b) => {
+                    const timeDiff = a.date.getTime() - b.date.getTime();
+                    if (timeDiff === 0) {
+                      // If same timestamp, sort by priority (status changes first)
+                      return a.priority - b.priority;
+                    }
+                    return timeDiff;
+                  });
                   
                   return timelineEntries.map((entry, index) => (
                     <div key={`timeline-${entry.type}-${entry.subtype}-${index}`} className="relative">

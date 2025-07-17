@@ -477,11 +477,35 @@ export default function IbcApplicationDetail() {
                   // Create timeline entries array for chronological sorting
                   const timelineEntries: any[] = [];
 
+                  // Add draft status at the very beginning (using creation date)
+                  if (ibcApplication.createdAt) {
+                    timelineEntries.push({
+                      date: new Date(ibcApplication.createdAt),
+                      type: 'status',
+                      priority: 1, // Status changes get priority 1
+                      element: (
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full mt-2"></div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Draft Created</span>
+                              <span className="text-xs text-gray-500">
+                                {format(new Date(ibcApplication.createdAt), 'MMM d, yyyy HH:mm')}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600">Application created as draft</p>
+                          </div>
+                        </div>
+                      )
+                    });
+                  }
+
                   // Add status changes
                   if (ibcApplication.submissionDate) {
                     timelineEntries.push({
                       date: new Date(ibcApplication.submissionDate),
                       type: 'status',
+                      priority: 1, // Status changes get priority 1
                       element: (
                         <div className="flex items-start gap-3">
                           <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
@@ -503,6 +527,7 @@ export default function IbcApplicationDetail() {
                     timelineEntries.push({
                       date: new Date(ibcApplication.vettedDate),
                       type: 'status',
+                      priority: 1, // Status changes get priority 1
                       element: (
                         <div className="flex items-start gap-3">
                           <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
@@ -524,6 +549,7 @@ export default function IbcApplicationDetail() {
                     timelineEntries.push({
                       date: new Date(ibcApplication.underReviewDate),
                       type: 'status',
+                      priority: 1, // Status changes get priority 1
                       element: (
                         <div className="flex items-start gap-3">
                           <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
@@ -545,6 +571,7 @@ export default function IbcApplicationDetail() {
                     timelineEntries.push({
                       date: new Date(ibcApplication.approvalDate),
                       type: 'status',
+                      priority: 1, // Status changes get priority 1
                       element: (
                         <div className="flex items-start gap-3">
                           <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
@@ -569,6 +596,7 @@ export default function IbcApplicationDetail() {
                         timelineEntries.push({
                           date: new Date(comment.timestamp),
                           type: 'comment',
+                          priority: 2, // Comments get priority 2 (after status changes)
                           element: (
                             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                               <div className="flex items-start gap-2">
@@ -597,6 +625,7 @@ export default function IbcApplicationDetail() {
                         timelineEntries.push({
                           date: new Date(response.timestamp),
                           type: 'comment',
+                          priority: 2, // Comments get priority 2 (after status changes)
                           element: (
                             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                               <div className="flex items-start gap-2">
@@ -618,8 +647,15 @@ export default function IbcApplicationDetail() {
                     });
                   }
 
-                  // Sort chronologically (oldest first)
-                  timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
+                  // Sort chronologically (oldest first), with status changes before comments for same timestamp
+                  timelineEntries.sort((a, b) => {
+                    const timeDiff = a.date.getTime() - b.date.getTime();
+                    if (timeDiff === 0) {
+                      // If same timestamp, sort by priority (status changes first)
+                      return a.priority - b.priority;
+                    }
+                    return timeDiff;
+                  });
 
                   return (
                     <div className="space-y-3">
