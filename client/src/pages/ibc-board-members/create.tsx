@@ -21,7 +21,7 @@ const createIbcBoardMemberSchema = z.object({
   role: z.enum(["chair", "vice_chair", "member", "alternate", "admin_reviewer"], {
     required_error: "Please select a role",
   }),
-  termStartDate: z.string().min(1, "Start date is required"),
+  appointmentDate: z.string().min(1, "Appointment date is required"),
   termEndDate: z.string().min(1, "End date is required"),
   expertise: z.array(z.string()).optional(),
   isActive: z.boolean().default(true),
@@ -76,13 +76,13 @@ export default function CreateIbcBoardMember() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateIbcBoardMemberForm) => {
-      return apiRequest("/api/ibc-board-members", {
-        method: "POST",
-        body: JSON.stringify({
-          ...data,
-          expertise: selectedExpertise,
-        }),
+      const response = await apiRequest("POST", "/api/ibc-board-members", {
+        ...data,
+        expertise: selectedExpertise,
+        appointmentDate: new Date(data.appointmentDate).toISOString(),
+        termEndDate: new Date(data.termEndDate).toISOString(),
       });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ibc-board-members"] });
@@ -213,10 +213,10 @@ export default function CreateIbcBoardMember() {
 
                 <FormField
                   control={form.control}
-                  name="termStartDate"
+                  name="appointmentDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Term Start Date</FormLabel>
+                      <FormLabel>Appointment Date</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
