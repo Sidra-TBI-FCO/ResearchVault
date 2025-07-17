@@ -523,19 +523,41 @@ export default function IbcApplicationDetail() {
 
                 {/* Office Comments */}
                 {ibcApplication.reviewComments && (
-                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
-                          <span className="text-xs text-amber-600">
-                            {ibcApplication.updatedAt && format(new Date(ibcApplication.updatedAt), 'MMM d, yyyy HH:mm')}
-                          </span>
+                  <div className="mt-4 space-y-3">
+                    {/* Handle both old format (string) and new format (array) */}
+                    {Array.isArray(ibcApplication.reviewComments) ? (
+                      ibcApplication.reviewComments.map((comment: any, index: number) => (
+                        <div key={index} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                                <span className="text-xs text-amber-600">
+                                  {comment.timestamp && format(new Date(comment.timestamp), 'MMM d, yyyy HH:mm')}
+                                </span>
+                              </div>
+                              <p className="text-sm text-amber-700">{comment.comment}</p>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-sm text-amber-700">{ibcApplication.reviewComments}</p>
+                      ))
+                    ) : (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                              <span className="text-xs text-amber-600">
+                                {ibcApplication.updatedAt && format(new Date(ibcApplication.updatedAt), 'MMM d, yyyy HH:mm')}
+                              </span>
+                            </div>
+                            <p className="text-sm text-amber-700">{String(ibcApplication.reviewComments)}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
