@@ -286,61 +286,78 @@ export default function IbcProtocolDetailPage() {
                 <CardTitle className="text-lg">Timeline & Comments</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {application.submissionDate && (
-                  <div className="flex items-center space-x-2">
-                    <Send className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <p className="text-sm font-medium">Submitted</p>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(application.submissionDate), 'MMM d, yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {application.vettedDate && (
-                  <div className="flex items-center space-x-2">
-                    <Eye className="h-4 w-4 text-purple-500" />
-                    <div>
-                      <p className="text-sm font-medium">Vetted</p>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(application.vettedDate), 'MMM d, yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {application.underReviewDate && (
-                  <div className="flex items-center space-x-2">
-                    <Eye className="h-4 w-4 text-yellow-500" />
-                    <div>
-                      <p className="text-sm font-medium">Under Review</p>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(application.underReviewDate), 'MMM d, yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {application.approvalDate && (
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <div>
-                      <p className="text-sm font-medium">Approved</p>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(application.approvalDate), 'MMM d, yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {application.expirationDate && (
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-orange-500" />
-                    <div>
-                      <p className="text-sm font-medium">Expires</p>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(application.expirationDate), 'MMM d, yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {(() => {
+                  // Create timeline entries with dates and sort chronologically
+                  const timelineEntries = [];
+                  
+                  if (application.submissionDate) {
+                    timelineEntries.push({
+                      date: new Date(application.submissionDate),
+                      type: 'submitted',
+                      label: 'Submitted',
+                      icon: Send,
+                      color: 'text-blue-500'
+                    });
+                  }
+                  
+                  if (application.vettedDate) {
+                    timelineEntries.push({
+                      date: new Date(application.vettedDate),
+                      type: 'vetted',
+                      label: 'Vetted',
+                      icon: Eye,
+                      color: 'text-purple-500'
+                    });
+                  }
+                  
+                  if (application.underReviewDate) {
+                    timelineEntries.push({
+                      date: new Date(application.underReviewDate),
+                      type: 'under_review',
+                      label: 'Under Review',
+                      icon: Eye,
+                      color: 'text-yellow-500'
+                    });
+                  }
+                  
+                  if (application.approvalDate) {
+                    timelineEntries.push({
+                      date: new Date(application.approvalDate),
+                      type: 'approved',
+                      label: 'Approved',
+                      icon: CheckCircle,
+                      color: 'text-green-500'
+                    });
+                  }
+                  
+                  if (application.expirationDate) {
+                    timelineEntries.push({
+                      date: new Date(application.expirationDate),
+                      type: 'expires',
+                      label: 'Expires',
+                      icon: Clock,
+                      color: 'text-orange-500'
+                    });
+                  }
+                  
+                  // Sort chronologically (oldest first)
+                  timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
+                  
+                  return timelineEntries.map((entry, index) => {
+                    const IconComponent = entry.icon;
+                    return (
+                      <div key={`${entry.type}-${index}`} className="flex items-center space-x-2">
+                        <IconComponent className={`h-4 w-4 ${entry.color}`} />
+                        <div>
+                          <p className="text-sm font-medium">{entry.label}</p>
+                          <p className="text-sm text-gray-500">
+                            {format(entry.date, 'MMM d, yyyy HH:mm')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
 
                 {/* Office Comments */}
                 {application.reviewComments && (
