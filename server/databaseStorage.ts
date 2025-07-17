@@ -679,7 +679,7 @@ export class DatabaseStorage implements IStorage {
   async updateIbcApplication(id: number, application: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined> {
     const [updatedApplication] = await db
       .update(ibcApplications)
-      .set(application)
+      .set({ ...application, updatedAt: new Date() })
       .where(eq(ibcApplications.id, id))
       .returning();
     return updatedApplication;
