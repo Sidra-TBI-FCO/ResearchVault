@@ -447,10 +447,10 @@ export default function IbcApplicationDetail() {
         </Card>
 
         <div className="space-y-6">
-          {/* Current Status */}
+          {/* Status Updates */}
           <Card>
             <CardHeader>
-              <CardTitle>Current Status</CardTitle>
+              <CardTitle>Status Updates</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
