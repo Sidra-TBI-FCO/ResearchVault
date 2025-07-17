@@ -427,11 +427,18 @@ export default function IbcProtocolDetailPage() {
                   // Sort chronologically (oldest first)
                   timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
                   
+                  // Debug logging
+                  console.log('Timeline entries before sorting:', timelineEntries.map(e => ({ 
+                    date: e.date.toISOString(), 
+                    type: e.type, 
+                    subtype: e.subtype 
+                  })));
+                  
                   return timelineEntries.map((entry, index) => (
                     <div key={`timeline-${entry.type}-${entry.subtype}-${index}`} className="relative">
                       <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 text-xs text-gray-400 w-20">
-                          {format(entry.date, 'MMM d, yyyy HH:mm')}
+                        <div className="flex-shrink-0 text-xs text-gray-400 w-24">
+                          {format(entry.date, 'MMM d, HH:mm')}
                         </div>
                         <div className="flex-1">
                           {entry.element}
