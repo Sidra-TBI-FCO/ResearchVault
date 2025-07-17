@@ -48,6 +48,8 @@ The Research Portal System is a full-stack web application built for managing sc
 - **Search & Filtering**: Global search across entities
 - **Responsive Design**: Mobile-first approach with adaptive layouts
 - **Form Validation**: Comprehensive client-side validation with error handling
+- **Timeline Management**: Chronological workflow progression with priority-based sorting for status changes and comments
+- **Bidirectional Commenting**: Office and Principal Investigator comment exchange with comprehensive timeline tracking
 
 ### Backend Services
 - **RESTful API**: Consistent REST endpoints for all entities
@@ -124,6 +126,9 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- July 17, 2025. Implemented comprehensive IBC timeline ordering system with content-based chronological workflow progression
+- July 17, 2025. Fixed React rendering errors and converted office comments from single text to JSON array format
+- July 17, 2025. Added draft status and priority-based timeline sorting ensuring proper workflow sequence
 - June 29, 2025. Initial setup
 
 ## User Preferences
