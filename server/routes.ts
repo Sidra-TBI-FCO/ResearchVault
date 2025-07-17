@@ -1851,6 +1851,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Submission date set to:', validateData.submissionDate);
       }
       
+      // Handle status changes for timeline tracking
+      if (validateData.status) {
+        const currentTime = new Date();
+        
+        // Set vetted date when moving to vetted status
+        if (validateData.status === 'vetted' && !validateData.vettedDate) {
+          validateData.vettedDate = currentTime;
+        }
+        
+        // Set under review date when moving to under_review status
+        if (validateData.status === 'under_review' && !validateData.underReviewDate) {
+          validateData.underReviewDate = currentTime;
+        }
+        
+        // Set approval date when moving to active status
+        if (validateData.status === 'active' && !validateData.approvalDate) {
+          validateData.approvalDate = currentTime;
+        }
+      }
+      
       // Check if project exists if projectId is provided
       if (validateData.projectId) {
         const project = await storage.getProject(validateData.projectId);

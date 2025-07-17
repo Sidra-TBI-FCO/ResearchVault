@@ -412,6 +412,8 @@ export const ibcApplications = pgTable("ibc_applications", {
   
   // Workflow and submission tracking
   submissionDate: timestamp("submission_date"),
+  vettedDate: timestamp("vetted_date"), // When moved to vetted status
+  underReviewDate: timestamp("under_review_date"), // When moved to under review status
   approvalDate: date("approval_date"),
   expirationDate: date("expiration_date"),
   lastReviewDate: date("last_review_date"),

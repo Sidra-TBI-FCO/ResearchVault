@@ -288,11 +288,33 @@ export default function IbcProtocolDetailPage() {
               <CardContent className="space-y-4">
                 {application.submissionDate && (
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <Send className="h-4 w-4 text-blue-500" />
                     <div>
                       <p className="text-sm font-medium">Submitted</p>
                       <p className="text-sm text-gray-500">
-                        {new Date(application.submissionDate).toLocaleDateString()}
+                        {format(new Date(application.submissionDate), 'MMM d, yyyy HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {application.vettedDate && (
+                  <div className="flex items-center space-x-2">
+                    <Eye className="h-4 w-4 text-purple-500" />
+                    <div>
+                      <p className="text-sm font-medium">Vetted</p>
+                      <p className="text-sm text-gray-500">
+                        {format(new Date(application.vettedDate), 'MMM d, yyyy HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {application.underReviewDate && (
+                  <div className="flex items-center space-x-2">
+                    <Eye className="h-4 w-4 text-yellow-500" />
+                    <div>
+                      <p className="text-sm font-medium">Under Review</p>
+                      <p className="text-sm text-gray-500">
+                        {format(new Date(application.underReviewDate), 'MMM d, yyyy HH:mm')}
                       </p>
                     </div>
                   </div>
@@ -303,7 +325,7 @@ export default function IbcProtocolDetailPage() {
                     <div>
                       <p className="text-sm font-medium">Approved</p>
                       <p className="text-sm text-gray-500">
-                        {new Date(application.approvalDate).toLocaleDateString()}
+                        {format(new Date(application.approvalDate), 'MMM d, yyyy HH:mm')}
                       </p>
                     </div>
                   </div>
@@ -314,7 +336,7 @@ export default function IbcProtocolDetailPage() {
                     <div>
                       <p className="text-sm font-medium">Expires</p>
                       <p className="text-sm text-gray-500">
-                        {new Date(application.expirationDate).toLocaleDateString()}
+                        {format(new Date(application.expirationDate), 'MMM d, yyyy HH:mm')}
                       </p>
                     </div>
                   </div>
