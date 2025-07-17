@@ -447,6 +447,22 @@ export default function IbcApplicationDetail() {
         </Card>
 
         <div className="space-y-6">
+          {/* Current Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Status</span>
+                {getStatusBadge(ibcApplication.status)}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {getStatusDescription(ibcApplication.status)}
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Timeline & Office Comments */}
           <Card>
             <CardHeader>
@@ -466,7 +482,7 @@ export default function IbcApplicationDetail() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">Submitted</span>
                           <span className="text-xs text-gray-500">
-                            {format(new Date(ibcApplication.submissionDate), 'MMM d, yyyy')}
+                            {format(new Date(ibcApplication.submissionDate), 'MMM d, yyyy HH:mm')}
                           </span>
                         </div>
                         <p className="text-xs text-gray-600">Application submitted for review</p>
@@ -481,7 +497,7 @@ export default function IbcApplicationDetail() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">Last Reviewed</span>
                           <span className="text-xs text-gray-500">
-                            {format(new Date(ibcApplication.lastReviewDate), 'MMM d, yyyy')}
+                            {format(new Date(ibcApplication.lastReviewDate), 'MMM d, yyyy HH:mm')}
                           </span>
                         </div>
                         <p className="text-xs text-gray-600">Application reviewed by IBC office</p>
@@ -496,7 +512,7 @@ export default function IbcApplicationDetail() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">Approved</span>
                           <span className="text-xs text-gray-500">
-                            {format(new Date(ibcApplication.approvalDate), 'MMM d, yyyy')}
+                            {format(new Date(ibcApplication.approvalDate), 'MMM d, yyyy HH:mm')}
                           </span>
                         </div>
                         <p className="text-xs text-gray-600">Application approved by IBC</p>
@@ -511,18 +527,17 @@ export default function IbcApplicationDetail() {
                     <div className="flex items-start gap-2">
                       <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
-                        <p className="text-sm text-amber-700 mt-1">{ibcApplication.reviewComments}</p>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                          <span className="text-xs text-amber-600">
+                            {ibcApplication.submissionDate && format(new Date(ibcApplication.submissionDate), 'MMM d, yyyy HH:mm')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-amber-700">{ibcApplication.reviewComments}</p>
                       </div>
                     </div>
                   </div>
                 )}
-
-                {/* Current Status */}
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <span className="text-sm font-medium">Current Status:</span>
-                  {getStatusBadge(ibcApplication.status)}
-                </div>
               </div>
             </CardContent>
           </Card>
