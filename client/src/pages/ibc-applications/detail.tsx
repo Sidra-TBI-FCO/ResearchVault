@@ -530,7 +530,7 @@ export default function IbcApplicationDetail() {
                         <div className="flex items-center justify-between mb-1">
                           <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
                           <span className="text-xs text-amber-600">
-                            {ibcApplication.submissionDate && format(new Date(ibcApplication.submissionDate), 'MMM d, yyyy HH:mm')}
+                            {ibcApplication.updatedAt && format(new Date(ibcApplication.updatedAt), 'MMM d, yyyy HH:mm')}
                           </span>
                         </div>
                         <p className="text-sm text-amber-700">{ibcApplication.reviewComments}</p>
