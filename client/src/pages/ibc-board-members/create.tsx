@@ -79,8 +79,8 @@ export default function CreateIbcBoardMember() {
       const response = await apiRequest("POST", "/api/ibc-board-members", {
         ...data,
         expertise: selectedExpertise,
-        appointmentDate: new Date(data.appointmentDate),
-        termEndDate: new Date(data.termEndDate),
+        appointmentDate: data.appointmentDate,
+        termEndDate: data.termEndDate,
       });
       return response.json();
     },

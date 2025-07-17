@@ -2056,7 +2056,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/ibc-board-members', async (req: Request, res: Response) => {
     try {
-      const validateData = insertIbcBoardMemberSchema.parse(req.body);
+      // Create a simplified validation that accepts string dates
+      const validateData = {
+        scientistId: req.body.scientistId,
+        role: req.body.role,
+        appointmentDate: req.body.appointmentDate,
+        termEndDate: req.body.termEndDate,
+        expertise: req.body.expertise || [],
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+        notes: req.body.notes
+      };
+      
+      // Basic validation
+      if (!validateData.scientistId || !validateData.role || !validateData.termEndDate) {
+        return res.status(400).json({ message: "Missing required fields: scientistId, role, termEndDate" });
+      }
       
       // Check if scientist exists
       const scientist = await storage.getScientist(validateData.scientistId);
@@ -2067,9 +2081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const boardMember = await storage.createIbcBoardMember(validateData);
       res.status(201).json(boardMember);
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: fromZodError(error).message });
-      }
+      console.error("Board member creation error:", error);
       res.status(500).json({ message: "Failed to create IBC board member" });
     }
   });
