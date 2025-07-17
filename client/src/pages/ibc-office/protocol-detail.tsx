@@ -385,6 +385,9 @@ export default function IbcProtocolDetailPage() {
                       
                     comments.forEach((comment: any, index: number) => {
                       if (comment.timestamp) {
+                        // Ensure we have a valid comment text
+                        const commentText = typeof comment === 'string' ? comment : (comment.comment || 'No comment text');
+                        
                         timelineEntries.push({
                           date: new Date(comment.timestamp),
                           type: 'comment',
@@ -397,7 +400,7 @@ export default function IbcProtocolDetailPage() {
                                   <div className="flex items-center justify-between mb-1">
                                     <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
                                   </div>
-                                  <p className="text-sm text-amber-700">{comment.comment || comment}</p>
+                                  <p className="text-sm text-amber-700">{commentText}</p>
                                 </div>
                               </div>
                             </div>
