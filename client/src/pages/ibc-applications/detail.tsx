@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, IbcApplication, Scientist } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, User, Beaker, AlertCircle, CheckCircle2, Edit } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, User, Beaker, AlertCircle, CheckCircle2, Edit, Clock, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -447,6 +447,86 @@ export default function IbcApplicationDetail() {
         </Card>
 
         <div className="space-y-6">
+          {/* Timeline & Office Comments */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Timeline & Comments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Status History */}
+                <div className="space-y-3">
+                  {ibcApplication.submissionDate && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Submitted</span>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(ibcApplication.submissionDate), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600">Application submitted for review</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {ibcApplication.lastReviewDate && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Last Reviewed</span>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(ibcApplication.lastReviewDate), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600">Application reviewed by IBC office</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {ibcApplication.approvalDate && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Approved</span>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(ibcApplication.approvalDate), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600">Application approved by IBC</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Office Comments */}
+                {ibcApplication.reviewComments && (
+                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                        <p className="text-sm text-amber-700 mt-1">{ibcApplication.reviewComments}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Status */}
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <span className="text-sm font-medium">Current Status:</span>
+                  {getStatusBadge(ibcApplication.status)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Associated Research Activities */}
           <Card>
             <CardHeader>
