@@ -55,7 +55,14 @@ export default function IbcProtocolDetailPage() {
   const { data: application, isLoading: applicationLoading } = useQuery({
     queryKey: ["/api/ibc-applications", applicationId],
     enabled: !!applicationId,
+    staleTime: 0, // Force fresh data
+    refetchOnMount: true,
   });
+
+  // Debug logging
+  console.log('Application data:', application);
+  console.log('Application loading:', applicationLoading);
+  console.log('Application ID:', applicationId);
 
   const { data: scientist } = useQuery({
     queryKey: ["/api/scientists", application?.principalInvestigatorId],
@@ -170,9 +177,9 @@ export default function IbcProtocolDetailPage() {
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Title</label>
-                  <p className="font-medium">{application.title}</p>
+                  <p className="font-medium">{application?.title || 'Loading...'}</p>
                 </div>
-                {application.shortTitle && (
+                {application?.shortTitle && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Short Title</label>
                     <p className="text-sm">{application.shortTitle}</p>
@@ -182,14 +189,14 @@ export default function IbcProtocolDetailPage() {
                   <label className="text-sm font-medium text-gray-500">Principal Investigator</label>
                   <p className="flex items-center space-x-2">
                     <User className="h-4 w-4" />
-                    <span>{scientist?.name}</span>
+                    <span>{scientist?.name || 'Loading...'}</span>
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">IBC Number</label>
-                  <p className="font-mono">{application.ibcNumber}</p>
+                  <p className="font-mono">{application?.ibcNumber || 'Loading...'}</p>
                 </div>
-                {application.cayuseProtocolNumber && (
+                {application?.cayuseProtocolNumber && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Cayuse Protocol Number</label>
                     <p className="font-mono">{application.cayuseProtocolNumber}</p>
@@ -198,11 +205,11 @@ export default function IbcProtocolDetailPage() {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Risk Level</label>
                   <Badge variant="outline" className={
-                    application.riskLevel === 'high' ? 'border-red-200 text-red-800' :
-                    application.riskLevel === 'moderate' ? 'border-yellow-200 text-yellow-800' :
+                    application?.riskLevel === 'high' ? 'border-red-200 text-red-800' :
+                    application?.riskLevel === 'moderate' ? 'border-yellow-200 text-yellow-800' :
                     'border-green-200 text-green-800'
                   }>
-                    {application.riskLevel?.toUpperCase()}
+                    {application?.riskLevel?.toUpperCase() || 'LOADING'}
                   </Badge>
                 </div>
               </CardContent>
