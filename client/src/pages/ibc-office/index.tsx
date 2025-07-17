@@ -107,19 +107,9 @@ export default function IbcOfficePage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Building className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">IBC Office Management</h1>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link href="/ibc-board-members/create">
-            <Button size="sm">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Board Member
-            </Button>
-          </Link>
-        </div>
+      <div className="flex items-center space-x-2">
+        <Building className="h-6 w-6" />
+        <h1 className="text-2xl font-bold">IBC Office Management</h1>
       </div>
 
       <Tabs defaultValue="applications" className="space-y-4">
@@ -259,10 +249,20 @@ export default function IbcOfficePage() {
         <TabsContent value="board" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">IBC Board Members</CardTitle>
-              <CardDescription>
-                Manage Institutional Biosafety Committee board members and their assignments
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">IBC Board Members</CardTitle>
+                  <CardDescription>
+                    Manage Institutional Biosafety Committee board members and their assignments
+                  </CardDescription>
+                </div>
+                <Link href="/ibc-board-members/create">
+                  <Button size="sm">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Board Member
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
