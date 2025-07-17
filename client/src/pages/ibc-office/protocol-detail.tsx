@@ -378,15 +378,22 @@ export default function IbcProtocolDetailPage() {
                   
                   // Add office comments
                   if (application.reviewComments) {
+                    console.log('Raw reviewComments:', application.reviewComments);
+                    
                     // Handle both old format (string) and new format (array)
                     const comments = Array.isArray(application.reviewComments) 
                       ? application.reviewComments 
                       : [{ comment: application.reviewComments, timestamp: application.updatedAt, type: 'office_comment' }];
+                    
+                    console.log('Processed comments:', comments);
                       
                     comments.forEach((comment: any, index: number) => {
-                      if (comment.timestamp) {
+                      console.log('Processing comment:', comment, 'Type:', typeof comment);
+                      
+                      if (comment && comment.timestamp) {
                         // Ensure we have a valid comment text
                         const commentText = typeof comment === 'string' ? comment : (comment.comment || 'No comment text');
+                        console.log('Comment text:', commentText, 'Type:', typeof commentText);
                         
                         timelineEntries.push({
                           date: new Date(comment.timestamp),
@@ -400,7 +407,7 @@ export default function IbcProtocolDetailPage() {
                                   <div className="flex items-center justify-between mb-1">
                                     <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
                                   </div>
-                                  <p className="text-sm text-amber-700">{commentText}</p>
+                                  <p className="text-sm text-amber-700">{String(commentText)}</p>
                                 </div>
                               </div>
                             </div>
