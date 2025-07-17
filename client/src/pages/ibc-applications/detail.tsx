@@ -51,6 +51,41 @@ export default function IbcApplicationDetail() {
     },
     enabled: !!ibcApplication?.principalInvestigatorId,
   });
+
+  // Parse team members data and get scientist IDs
+  const teamMemberIds = (() => {
+    let teamMembers = [];
+    try {
+      if (ibcApplication?.protocolTeamMembers && typeof ibcApplication.protocolTeamMembers === 'string') {
+        teamMembers = JSON.parse(ibcApplication.protocolTeamMembers);
+      } else if (Array.isArray(ibcApplication?.protocolTeamMembers)) {
+        teamMembers = ibcApplication.protocolTeamMembers;
+      }
+    } catch (error) {
+      console.error('Error parsing team members:', error);
+      teamMembers = [];
+    }
+    return teamMembers.map((member: any) => member.scientistId).filter(Boolean);
+  })();
+
+  // Fetch all team member scientist data
+  const { data: teamMemberScientists = [], isLoading: teamMembersLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists', 'bulk', teamMemberIds],
+    queryFn: async () => {
+      if (teamMemberIds.length === 0) return [];
+      
+      const scientists = await Promise.all(
+        teamMemberIds.map(async (scientistId: number) => {
+          const response = await fetch(`/api/scientists/${scientistId}`);
+          if (!response.ok) return null;
+          return response.json();
+        })
+      );
+      
+      return scientists.filter(Boolean);
+    },
+    enabled: teamMemberIds.length > 0,
+  });
   
   // Get the number of publications linked to the first research activity (if any)
   const firstActivityId = associatedActivities?.[0]?.id;
@@ -504,6 +539,16 @@ export default function IbcApplicationDetail() {
                   teamMembers = [];
                 }
 
+                if (teamMembersLoading) {
+                  return (
+                    <div className="space-y-3">
+                      {teamMembers.map((_, index: number) => (
+                        <Skeleton key={index} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  );
+                }
+
                 if (teamMembers.length === 0) {
                   return (
                     <p className="text-sm text-gray-500">No team members added</p>
@@ -512,26 +557,36 @@ export default function IbcApplicationDetail() {
 
                 return (
                   <div className="space-y-3">
-                    {teamMembers.map((member: any, index: number) => (
-                      <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start gap-2">
-                          <User className="h-4 w-4 text-blue-600 mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-blue-900 text-sm">{member.name}</span>
-                              {member.role && (
-                                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
-                                  {member.role}
-                                </Badge>
+                    {teamMembers.map((member: any, index: number) => {
+                      const scientist = teamMemberScientists.find(s => s.id === member.scientistId);
+                      return (
+                        <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start gap-2">
+                            <User className="h-4 w-4 text-blue-600 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-blue-900 text-sm">
+                                  {scientist?.name || 'Unknown Scientist'}
+                                </span>
+                                {member.role && (
+                                  <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                                    {member.role === 'team_leader' ? 'Team Leader' :
+                                     member.role === 'safety_representative' ? 'Safety Representative' :
+                                     'Team Member'}
+                                  </Badge>
+                                )}
+                              </div>
+                              {scientist?.email && (
+                                <p className="text-xs text-blue-600 mt-1">{scientist.email}</p>
+                              )}
+                              {scientist?.department && (
+                                <p className="text-xs text-gray-600 mt-1">{scientist.department}</p>
                               )}
                             </div>
-                            {member.email && (
-                              <p className="text-xs text-blue-600 mt-1">{member.email}</p>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}
