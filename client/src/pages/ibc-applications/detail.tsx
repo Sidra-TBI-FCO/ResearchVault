@@ -53,7 +53,7 @@ export default function IbcApplicationDetail() {
   });
 
   // Parse team members data and get scientist IDs
-  const teamMemberIds = (() => {
+  const { teamMemberIds, teamMembersData } = (() => {
     let teamMembers = [];
     try {
       if (ibcApplication?.protocolTeamMembers && typeof ibcApplication.protocolTeamMembers === 'string') {
@@ -65,7 +65,12 @@ export default function IbcApplicationDetail() {
       console.error('Error parsing team members:', error);
       teamMembers = [];
     }
-    return teamMembers.map((member: any) => member.scientistId).filter(Boolean);
+    
+    const ids = teamMembers.map((member: any) => member.scientistId).filter(Boolean);
+    return {
+      teamMemberIds: ids,
+      teamMembersData: teamMembers
+    };
   })();
 
   // Fetch all team member scientist data
@@ -542,14 +547,14 @@ export default function IbcApplicationDetail() {
                 if (teamMembersLoading) {
                   return (
                     <div className="space-y-3">
-                      {teamMembers.map((_, index: number) => (
+                      {teamMembersData.map((_, index: number) => (
                         <Skeleton key={index} className="h-16 w-full" />
                       ))}
                     </div>
                   );
                 }
 
-                if (teamMembers.length === 0) {
+                if (teamMembersData.length === 0) {
                   return (
                     <p className="text-sm text-gray-500">No team members added</p>
                   );
@@ -557,8 +562,29 @@ export default function IbcApplicationDetail() {
 
                 return (
                   <div className="space-y-3">
-                    {teamMembers.map((member: any, index: number) => {
-                      const scientist = teamMemberScientists.find(s => s.id === member.scientistId);
+                    {teamMembersData.map((member: any, index: number) => {
+                      // Handle both old format (with name/email) and new format (with scientistId)
+                      let displayName, displayEmail, displayDepartment, displayRole;
+                      
+                      if (member.scientistId) {
+                        // New format - look up scientist data
+                        const scientist = teamMemberScientists.find(s => s.id === member.scientistId);
+                        displayName = scientist?.name || 'Unknown Scientist';
+                        displayEmail = scientist?.email;
+                        displayDepartment = scientist?.department;
+                        displayRole = member.role === 'team_leader' ? 'Team Leader' :
+                                     member.role === 'safety_representative' ? 'Safety Representative' :
+                                     'Team Member';
+                      } else {
+                        // Old format - use data directly
+                        displayName = member.name || 'Unknown';
+                        displayEmail = member.email;
+                        displayDepartment = member.department;
+                        displayRole = member.role === 'Team Leader' ? 'Team Leader' :
+                                     member.role === 'Safety Rep' ? 'Safety Representative' :
+                                     'Team Member';
+                      }
+                      
                       return (
                         <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                           <div className="flex items-start gap-2">
@@ -566,21 +592,19 @@ export default function IbcApplicationDetail() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-blue-900 text-sm">
-                                  {scientist?.name || 'Unknown Scientist'}
+                                  {displayName}
                                 </span>
-                                {member.role && (
+                                {displayRole && (
                                   <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
-                                    {member.role === 'team_leader' ? 'Team Leader' :
-                                     member.role === 'safety_representative' ? 'Safety Representative' :
-                                     'Team Member'}
+                                    {displayRole}
                                   </Badge>
                                 )}
                               </div>
-                              {scientist?.email && (
-                                <p className="text-xs text-blue-600 mt-1">{scientist.email}</p>
+                              {displayEmail && (
+                                <p className="text-xs text-blue-600 mt-1">{displayEmail}</p>
                               )}
-                              {scientist?.department && (
-                                <p className="text-xs text-gray-600 mt-1">{scientist.department}</p>
+                              {displayDepartment && (
+                                <p className="text-xs text-gray-600 mt-1">{displayDepartment}</p>
                               )}
                             </div>
                           </div>
