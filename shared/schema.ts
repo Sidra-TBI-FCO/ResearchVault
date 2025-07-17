@@ -432,7 +432,7 @@ export const ibcApplications = pgTable("ibc_applications", {
   
   // Review and decision tracking
   reviewerAssignments: json("reviewer_assignments"), // Assigned IBC reviewers
-  reviewComments: json("review_comments"), // IBC reviewer feedback
+  reviewComments: json("review_comments"), // IBC reviewer feedback (array of comments with timestamps)
   piResponses: json("pi_responses"), // PI responses to reviewer comments
   protocolTeamMembers: json("protocol_team_members"), // Team members with roles and access
   

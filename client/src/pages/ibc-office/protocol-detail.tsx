@@ -377,24 +377,33 @@ export default function IbcProtocolDetailPage() {
                   }
                   
                   // Add office comments
-                  if (application.reviewComments && application.updatedAt) {
-                    timelineEntries.push({
-                      date: new Date(application.updatedAt),
-                      type: 'comment',
-                      subtype: 'office',
-                      element: (
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                          <div className="flex items-start gap-2">
-                            <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                  if (application.reviewComments) {
+                    // Handle both old format (string) and new format (array)
+                    const comments = Array.isArray(application.reviewComments) 
+                      ? application.reviewComments 
+                      : [{ comment: application.reviewComments, timestamp: application.updatedAt, type: 'office_comment' }];
+                      
+                    comments.forEach((comment: any, index: number) => {
+                      if (comment.timestamp) {
+                        timelineEntries.push({
+                          date: new Date(comment.timestamp),
+                          type: 'comment',
+                          subtype: 'office',
+                          element: (
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
+                                  </div>
+                                  <p className="text-sm text-amber-700">{comment.comment}</p>
+                                </div>
                               </div>
-                              <p className="text-sm text-amber-700">{application.reviewComments}</p>
                             </div>
-                          </div>
-                        </div>
-                      )
+                          )
+                        });
+                      }
                     });
                   }
                   
@@ -426,13 +435,6 @@ export default function IbcProtocolDetailPage() {
                   
                   // Sort chronologically (oldest first)
                   timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
-                  
-                  // Debug logging
-                  console.log('Timeline entries before sorting:', timelineEntries.map(e => ({ 
-                    date: e.date.toISOString(), 
-                    type: e.type, 
-                    subtype: e.subtype 
-                  })));
                   
                   return timelineEntries.map((entry, index) => (
                     <div key={`timeline-${entry.type}-${entry.subtype}-${index}`} className="relative">
