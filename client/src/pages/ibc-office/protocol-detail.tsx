@@ -53,16 +53,13 @@ export default function IbcProtocolDetailPage() {
   const queryClient = useQueryClient();
 
   const { data: application, isLoading: applicationLoading } = useQuery({
-    queryKey: ["/api/ibc-applications", applicationId],
+    queryKey: [`/api/ibc-applications/${applicationId}`],
     enabled: !!applicationId,
     staleTime: 0, // Force fresh data
     refetchOnMount: true,
   });
 
-  // Debug logging
-  console.log('Application data:', application);
-  console.log('Application loading:', applicationLoading);
-  console.log('Application ID:', applicationId);
+
 
   const { data: scientist } = useQuery({
     queryKey: ["/api/scientists", application?.principalInvestigatorId],
@@ -90,7 +87,7 @@ export default function IbcProtocolDetailPage() {
       return apiRequest("PATCH", `/api/ibc-applications/${applicationId}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ibc-applications", applicationId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${applicationId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/ibc-applications"] });
       toast({
         title: "Status Updated",
