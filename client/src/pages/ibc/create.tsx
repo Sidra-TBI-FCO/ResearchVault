@@ -61,12 +61,38 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   
   // Additional fields
   biologicalAgents: z.string().optional(),
+  riskGroupClassification: z.string().optional(),
+  
+  // Methods and Procedures
+  materialAndMethods: z.string().optional(),
+  proceduresInvolvingInfectiousAgents: z.string().optional(),
+  cellCultureProcedures: z.string().optional(),
+  nucleicAcidExtractionMethods: z.string().optional(),
+  animalProcedures: z.string().optional(),
+  
+  // Safety and Containment
+  containmentProcedures: z.string().optional(),
+  emergencyProcedures: z.string().optional(),
+  wasteDisposalPlan: z.string().optional(),
+  
+  // Legacy biosafety checkboxes (for compatibility)
+  recombinantDNA: z.boolean().optional(),
+  humanMaterials: z.boolean().optional(),
+  animalWork: z.boolean().optional(),
+  fieldWork: z.boolean().optional(),
   
   // Team members array with roles
-  teamMembers: z.array(z.object({
-    scientistId: z.number(),
-    role: z.enum(["team_member", "team_leader", "safety_representative"]),
-  })).default([]),
+  teamMembers: z.array(z.union([
+    z.object({
+      scientistId: z.number(),
+      role: z.enum(["team_member", "team_leader", "safety_representative"]),
+    }),
+    z.object({
+      name: z.string(),
+      email: z.string().optional(),
+      role: z.string(),
+    })
+  ])).default([]),
 });
 
 type CreateIbcApplicationFormValues = z.infer<typeof createIbcApplicationSchema>;
@@ -74,6 +100,10 @@ type CreateIbcApplicationFormValues = z.infer<typeof createIbcApplicationSchema>
 export default function CreateIbc() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // State for team member selection
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   
   // Default form values
   const defaultValues: Partial<CreateIbcApplicationFormValues> = {
@@ -92,6 +122,25 @@ export default function CreateIbc() {
     arthropods: false,
     plants: false,
     biologicalAgents: "",
+    riskGroupClassification: "",
+    
+    // Methods and Procedures defaults
+    materialAndMethods: "",
+    proceduresInvolvingInfectiousAgents: "",
+    cellCultureProcedures: "",
+    nucleicAcidExtractionMethods: "",
+    animalProcedures: "",
+    
+    // Safety and Containment defaults
+    containmentProcedures: "",
+    emergencyProcedures: "",
+    wasteDisposalPlan: "",
+    
+    // Legacy biosafety checkboxes defaults
+    recombinantDNA: false,
+    humanMaterials: false,
+    animalWork: false,
+    fieldWork: false,
   };
 
   // Get all principal investigators for selection
@@ -105,6 +154,7 @@ export default function CreateIbc() {
   });
 
   const selectedPIId = form.watch('principalInvestigatorId');
+  const selectedSDRIds = form.watch('researchActivityIds') || [];
 
   // Get research activities filtered by selected PI
   const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
@@ -118,12 +168,7 @@ export default function CreateIbc() {
     enabled: !!selectedPIId,
   });
 
-  const selectedSDRIds = form.watch('researchActivityIds') || [];
-  const [selectedMember, setSelectedMember] = useState<string>("");
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [showAddMember, setShowAddMember] = useState(false);
-
-  // Get staff from selected SDRs for team member selection
+  // Get staff from selected SDRs for team member selection  
   const { data: availableStaff, isLoading: staffLoading } = useQuery<Scientist[]>({
     queryKey: ['/api/research-activities/staff', selectedSDRIds],
     queryFn: async () => {
@@ -387,7 +432,7 @@ export default function CreateIbc() {
                     <FormItem>
                       <FormLabel>Cayuse Protocol Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. IBC-2023-021" {...field} />
+                        <Input placeholder="e.g. IBC-2023-021" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormDescription>
                         Leave blank if not yet assigned
@@ -833,6 +878,102 @@ export default function CreateIbc() {
                   </Card>
                 </div>
 
+                  <FormField
+                    control={form.control}
+                    name="riskGroupClassification"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Risk Group Classification</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select risk group" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
+                            <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
+                            <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
+                            <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Legacy Biosafety Checkboxes for compatibility */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="recombinantDNA"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">Recombinant DNA</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="humanMaterials"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">Human Materials</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="animalWork"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">Animal Work</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fieldWork"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">Field Work</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                     <FormField
                       control={form.control}
                       name="biologicalAgents"
@@ -853,9 +994,186 @@ export default function CreateIbc() {
                 </TabsContent>
 
                 <TabsContent value="staff" className="space-y-6 mt-6">
-                  <div className="text-center py-8 text-muted-foreground">
-                    Staff management section coming soon...
-                  </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Protocol Team Members
+                      </CardTitle>
+                      <CardDescription>
+                        Add team members from available SDR staff who will be involved in this protocol
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Add Team Member Section */}
+                      {form.watch('researchActivityIds')?.length > 0 && availableStaff?.length ? (
+                        <div className="border rounded-lg p-4 bg-gray-50">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium">Add Protocol Team Member</h4>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-700">Select SDR Team Member</label>
+                                <Select value={selectedMember} onValueChange={setSelectedMember}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Choose from SDR team members..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {availableStaff.map((staff) => {
+                                      const currentTeamMembers = form.watch('teamMembers') || [];
+                                      const isAlreadySelected = currentTeamMembers.some(member => 
+                                        ('scientistId' in member && member.scientistId === staff.id) || 
+                                        ('name' in member && member.name === staff.name)
+                                      );
+                                      return (
+                                        <SelectItem 
+                                          key={staff.id} 
+                                          value={staff.id.toString()}
+                                          disabled={isAlreadySelected}
+                                        >
+                                          {staff.name} - {staff.title}
+                                          {isAlreadySelected && " (Already added)"}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div>
+                                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                  Protocol Roles (Select Multiple)
+                                </label>
+                                <div className="grid grid-cols-1 gap-3 text-sm">
+                                  {[
+                                    "Team Member",
+                                    "Team Leader", 
+                                    "Safety Rep"
+                                  ].map((role) => (
+                                    <div key={role} className="flex items-center space-x-2">
+                                      <Checkbox 
+                                        id={role.toLowerCase().replace(/\s+/g, '-')}
+                                        checked={selectedRoles.includes(role)}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) {
+                                            setSelectedRoles([...selectedRoles, role]);
+                                          } else {
+                                            setSelectedRoles(selectedRoles.filter(r => r !== role));
+                                          }
+                                        }}
+                                      />
+                                      <label htmlFor={role.toLowerCase().replace(/\s+/g, '-')}>{role}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <div className="flex space-x-2">
+                                <Button 
+                                  type="button" 
+                                  size="sm" 
+                                  className="bg-teal-600 hover:bg-teal-700"
+                                  disabled={!selectedMember || selectedRoles.length === 0}
+                                  onClick={() => {
+                                    if (selectedMember && selectedRoles.length > 0) {
+                                      const currentMembers = form.getValues('teamMembers') || [];
+                                      form.setValue('teamMembers', [
+                                        ...currentMembers,
+                                        { scientistId: parseInt(selectedMember), role: 'team_member' as const }
+                                      ]);
+                                      setSelectedMember("");
+                                      setSelectedRoles([]);
+                                    }
+                                  }}
+                                >
+                                  Add Member
+                                </Button>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedMember("");
+                                    setSelectedRoles([]);
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-gray-500">
+                          {!form.watch('researchActivityIds')?.length 
+                            ? "Select research activities in the Basics tab to add team members from their staff"
+                            : staffLoading 
+                            ? "Loading available staff..."
+                            : "No additional staff found in the selected research activities"
+                          }
+                        </div>
+                      )}
+
+                      {/* Added Team Members List */}
+                      <div className="space-y-3">
+                        {form.watch('teamMembers')?.map((member, index) => {
+                          // Handle both new format (with scientistId) and existing format (with name, email, role)
+                          let memberName, memberEmail, memberRole;
+                          
+                          if ('scientistId' in member && member.scientistId) {
+                            // New format - look up in available staff
+                            const staff = availableStaff?.find(s => s.id === member.scientistId);
+                            if (!staff) return null;
+                            memberName = staff.name;
+                            memberEmail = staff.email;
+                            memberRole = member.role;
+                          } else if ('name' in member && member.name) {
+                            // Existing format - use stored values directly
+                            memberName = member.name;
+                            memberEmail = member.email;
+                            memberRole = member.role;
+                          } else {
+                            return null;
+                          }
+                          
+                          return (
+                            <div key={`${('scientistId' in member) ? member.scientistId : member.name}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                              <div className="flex-1">
+                                <div className="font-medium">{memberName}</div>
+                                <div className="text-sm text-gray-600">{memberEmail}</div>
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  <Badge variant="secondary" className="text-xs">{memberRole}</Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentMembers = form.getValues('teamMembers') || [];
+                                    form.setValue('teamMembers', 
+                                      currentMembers.filter((_, i) => i !== index)
+                                    );
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        
+                        {(!form.watch('teamMembers') || form.watch('teamMembers')?.length === 0) && (
+                          <div className="text-center py-4 text-gray-500 text-sm">
+                            No team members added yet
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="overview" className="space-y-6 mt-6">
@@ -887,9 +1205,183 @@ export default function CreateIbc() {
                 </TabsContent>
 
                 <TabsContent value="under-construction" className="space-y-6 mt-6">
-                  <div className="text-center py-8 text-muted-foreground">
-                    Additional sections under construction...
-                  </div>
+                  {/* Methods and Procedures Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Methods and Procedures</CardTitle>
+                      <CardDescription>Detailed experimental protocols and methodologies</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="materialAndMethods"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Materials and Methods</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the detailed experimental protocols, materials, and methodologies..."
+                                className="resize-none"
+                                rows={5}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="proceduresInvolvingInfectiousAgents"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Procedures Involving Infectious Agents</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe any procedures involving infectious agents..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="cellCultureProcedures"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cell Culture Procedures</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe cell culture techniques, cell lines used..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="nucleicAcidExtractionMethods"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nucleic Acid Extraction Methods</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe DNA/RNA extraction and purification protocols..."
+                                className="resize-none"
+                                rows={3}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="animalProcedures"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Animal Procedures (if applicable)</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe any animal procedures, including routes of administration..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Safety and Containment Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Safety and Containment</CardTitle>
+                      <CardDescription>Safety protocols and containment procedures</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="containmentProcedures"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Containment Procedures</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe containment procedures and safety measures..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="emergencyProcedures"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Emergency Procedures</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe emergency response procedures..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="wasteDisposalPlan"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Waste Disposal Plan</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe waste sterilization and disposal procedures..."
+                                className="resize-none"
+                                rows={3}
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
 
