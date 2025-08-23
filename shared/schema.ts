@@ -363,6 +363,17 @@ export const ibcApplications = pgTable("ibc_applications", {
   // Enhanced biosafety-specific fields
   biosafetyLevel: text("biosafety_level").notNull(), // BSL-1, BSL-2, BSL-3, BSL-4
   riskGroupClassification: text("risk_group_classification"), // Risk Group 1, 2, 3, 4
+  
+  // Biosafety Options (mandatory yes/no questions)
+  recombinantSyntheticNucleicAcid: boolean("recombinant_synthetic_nucleic_acid").default(false),
+  wholeAnimalsAnimalMaterial: boolean("whole_animals_animal_material").default(false),
+  humanNonHumanPrimateMaterial: boolean("human_non_human_primate_material").default(false),
+  microorganismsInfectiousMaterial: boolean("microorganisms_infectious_material").default(false),
+  biologicalToxins: boolean("biological_toxins").default(false),
+  nanoparticles: boolean("nanoparticles").default(false),
+  arthropods: boolean("arthropods").default(false),
+  plants: boolean("plants").default(false),
+  
   biologicalAgents: json("biological_agents"), // List of biological agents/organisms
   chemicalAgents: json("chemical_agents"), // Chemical hazards
   radiologicalMaterials: json("radiological_materials"), // Radioactive materials

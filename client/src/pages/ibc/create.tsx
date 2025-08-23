@@ -46,6 +46,16 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   }),
   researchActivityIds: z.array(z.number()).min(1, "Please select at least one research activity"),
   
+  // Biosafety Options (all required)
+  recombinantSyntheticNucleicAcid: z.boolean(),
+  wholeAnimalsAnimalMaterial: z.boolean(),
+  humanNonHumanPrimateMaterial: z.boolean(),
+  microorganismsInfectiousMaterial: z.boolean(),
+  biologicalToxins: z.boolean(),
+  nanoparticles: z.boolean(),
+  arthropods: z.boolean(),
+  plants: z.boolean(),
+  
   // Team members array with roles
   teamMembers: z.array(z.object({
     scientistId: z.number(),
@@ -390,6 +400,319 @@ export default function CreateIbc() {
                   )}
                 />
                 
+                {/* Biosafety Options Section */}
+                <div className="col-span-full">
+                  <Card className="bg-blue-50 border-blue-200">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-blue-900">Choose Biosafety Options</CardTitle>
+                      <CardDescription className="text-blue-700">
+                        Please indicate if your research involves any of the following materials or organisms (all questions are mandatory)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 gap-6">
+                        
+                        <FormField
+                          control={form.control}
+                          name="recombinantSyntheticNucleicAcid"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Recombinant and Synthetic Nucleic Acid Molecules (e.g., bacterial/mammalian expression plasmids, replication incompetent viral vectors, chemically synthesized nucleic acid molecules)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="wholeAnimalsAnimalMaterial"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Whole Animals/Animal Material (e.g., introduction of biologicals/chemicals into animals, use of animal cell lines and/or tissues)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="humanNonHumanPrimateMaterial"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Human & Non-Human Primate Material (e.g., blood, fluids, tissues, primary/established cell lines)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="microorganismsInfectiousMaterial"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Microorganisms/Potentially Infectious Material (e.g., viruses, bacteria, yeast, fungi, parasites, prions)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="biologicalToxins"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Biological Toxins (e.g., cholera toxin, pertussis toxin, diphtheria toxin, tetrodotoxin)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="nanoparticles"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Nanoparticles (e.g., use of Jet-Pei or Poly-L-Lysine to form nano-sized particles)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="arthropods"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Arthropods (e.g., insects, spiders, crabs, lobsters, shrimp)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="plants"
+                          render={({ field }) => (
+                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="space-y-3">
+                                <FormLabel className="text-base font-medium">
+                                  Plants (e.g., toxic/transgenic plants)
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === true}
+                                        onChange={() => field.onChange(true)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        checked={field.value === false}
+                                        onChange={() => field.onChange(false)}
+                                        className="w-4 h-4 text-blue-600"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="agents"
