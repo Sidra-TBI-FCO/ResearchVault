@@ -530,6 +530,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/research-activities', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertResearchActivitySchema.parse(req.body);
+      const newActivity = await storage.createResearchActivity(validatedData);
+      res.status(201).json(newActivity);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating research activity:", error);
+      res.status(500).json({ message: "Failed to create research activity" });
+    }
+  });
+
+  app.put('/api/research-activities/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const validatedData = insertResearchActivitySchema.partial().parse(req.body);
+      const updatedActivity = await storage.updateResearchActivity(id, validatedData);
+      
+      if (!updatedActivity) {
+        return res.status(404).json({ message: "Research activity not found" });
+      }
+      
+      res.json(updatedActivity);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error updating research activity:", error);
+      res.status(500).json({ message: "Failed to update research activity" });
+    }
+  });
+
+  app.delete('/api/research-activities/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      await storage.deleteResearchActivity(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting research activity:", error);
+      res.status(500).json({ message: "Failed to delete research activity" });
+    }
+  });
+
   // Projects
   app.get('/api/projects', async (req: Request, res: Response) => {
     try {
