@@ -112,6 +112,12 @@ export const insertResearchActivitySchema = createInsertSchema(researchActivitie
   id: true,
   createdAt: true,
   updatedAt: true,
+  startDate: true,
+  endDate: true,
+}).extend({
+  // Accept ISO string dates from API and transform to Date objects
+  startDate: z.string().datetime().optional().transform((val) => val ? new Date(val) : undefined),
+  endDate: z.string().datetime().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 // This is no longer needed as we have a proper Projects schema now

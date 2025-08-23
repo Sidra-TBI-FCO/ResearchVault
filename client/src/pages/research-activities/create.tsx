@@ -77,7 +77,7 @@ export default function CreateResearchActivity() {
   });
 
   const createResearchActivityMutation = useMutation({
-    mutationFn: async (data: CreateResearchActivityFormValues) => {
+    mutationFn: async (data: any) => {
       const response = await apiRequest("POST", "/api/research-activities", data);
       return response.json();
     },
@@ -99,7 +99,13 @@ export default function CreateResearchActivity() {
   });
 
   const onSubmit = (data: CreateResearchActivityFormValues) => {
-    createResearchActivityMutation.mutate(data);
+    // Convert Date objects to ISO strings for API submission
+    const apiData = {
+      ...data,
+      startDate: data.startDate ? data.startDate.toISOString() : undefined,
+      endDate: data.endDate ? data.endDate.toISOString() : undefined,
+    };
+    createResearchActivityMutation.mutate(apiData);
   };
 
   return (
