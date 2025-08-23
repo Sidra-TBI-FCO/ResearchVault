@@ -51,6 +51,7 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   wholeAnimalsAnimalMaterial: z.boolean(),
   animalMaterialSubOptions: z.array(z.string()).optional(),
   humanNonHumanPrimateMaterial: z.boolean(),
+  introducingPrimateMaterialIntoAnimals: z.boolean().optional(),
   microorganismsInfectiousMaterial: z.boolean(),
   biologicalToxins: z.boolean(),
   nanoparticles: z.boolean(),
@@ -80,6 +81,7 @@ export default function CreateIbc() {
     wholeAnimalsAnimalMaterial: false,
     animalMaterialSubOptions: [],
     humanNonHumanPrimateMaterial: false,
+    introducingPrimateMaterialIntoAnimals: false,
     microorganismsInfectiousMaterial: false,
     biologicalToxins: false,
     nanoparticles: false,
@@ -586,6 +588,46 @@ export default function CreateIbc() {
                             </FormItem>
                           )}
                         />
+
+                        {/* Conditional sub-question for Human/Non-Human Primate Material */}
+                        {form.watch('humanNonHumanPrimateMaterial') && (
+                          <FormField
+                            control={form.control}
+                            name="introducingPrimateMaterialIntoAnimals"
+                            render={({ field }) => (
+                              <FormItem className="bg-orange-50 p-4 rounded-lg border border-orange-200 ml-8">
+                                <div className="space-y-3">
+                                  <FormLabel className="text-base font-medium text-orange-800">
+                                    Will you be introducing these materials into animals?
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className="flex items-center space-x-6">
+                                      <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          checked={field.value === true}
+                                          onChange={() => field.onChange(true)}
+                                          className="w-4 h-4 text-orange-600"
+                                        />
+                                        <span>Yes</span>
+                                      </label>
+                                      <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          checked={field.value === false}
+                                          onChange={() => field.onChange(false)}
+                                          className="w-4 h-4 text-orange-600"
+                                        />
+                                        <span>No</span>
+                                      </label>
+                                    </div>
+                                  </FormControl>
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
 
                         <FormField
                           control={form.control}

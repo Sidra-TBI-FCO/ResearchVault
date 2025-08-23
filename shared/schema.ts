@@ -372,6 +372,10 @@ export const ibcApplications = pgTable("ibc_applications", {
   animalMaterialSubOptions: json("animal_material_sub_options"), // Array of selected sub-options
   
   humanNonHumanPrimateMaterial: boolean("human_non_human_primate_material").default(false),
+  
+  // Sub-option for Human/Non-Human Primate Material
+  introducingPrimateMaterialIntoAnimals: boolean("introducing_primate_material_into_animals"), // Optional field
+  
   microorganismsInfectiousMaterial: boolean("microorganisms_infectious_material").default(false),
   biologicalToxins: boolean("biological_toxins").default(false),
   nanoparticles: boolean("nanoparticles").default(false),
