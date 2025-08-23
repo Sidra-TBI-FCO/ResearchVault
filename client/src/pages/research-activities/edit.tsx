@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save, Calendar } from "lucide-react";
+import { ArrowLeft, Save, Calendar, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertResearchActivitySchema, type InsertResearchActivity, type ResearchActivity, type Project, type Scientist } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -76,19 +76,21 @@ export default function EditResearchActivity() {
         objectives: activity.objectives || "",
         status: activity.status || "planning",
         projectId: activity.projectId || undefined,
-        leadPIId: activity.leadPIId || undefined,
         leadScientistId: activity.leadScientistId || undefined,
+        budgetHolderId: activity.budgetHolderId || undefined,
+        lineManagerId: activity.lineManagerId || undefined,
         startDate: activity.startDate ? new Date(activity.startDate) : undefined,
         endDate: activity.endDate ? new Date(activity.endDate) : undefined,
         sidraBranch: activity.sidraBranch || "",
         budgetSource: activity.budgetSource || "",
+        additionalNotificationEmail: activity.additionalNotificationEmail || "",
       });
     }
   }, [activity, form]);
 
   const updateMutation = useMutation({
-    mutationFn: async (data: InsertResearchActivity) => {
-      return apiRequest("PATCH", `/api/research-activities/${id}`, data);
+    mutationFn: async (data: any) => {
+      return apiRequest("PUT", `/api/research-activities/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/research-activities'] });
@@ -245,7 +247,11 @@ export default function EditResearchActivity() {
                   <FormItem>
                     <FormLabel>Short Title (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter a short title for easier reference" {...field} />
+                      <Input 
+                        placeholder="Enter a short title for easier reference" 
+                        {...field} 
+                        value={field.value || ""} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -376,7 +382,7 @@ export default function EditResearchActivity() {
                     <FormItem>
                       <FormLabel>Sidra Branch</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Research, Clinical" {...field} />
+                        <Input placeholder="e.g., Research, Clinical" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
