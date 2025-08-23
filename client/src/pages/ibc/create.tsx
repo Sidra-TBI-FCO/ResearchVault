@@ -49,6 +49,7 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   // Biosafety Options (all required)
   recombinantSyntheticNucleicAcid: z.boolean(),
   wholeAnimalsAnimalMaterial: z.boolean(),
+  animalMaterialSubOptions: z.array(z.string()).optional(),
   humanNonHumanPrimateMaterial: z.boolean(),
   microorganismsInfectiousMaterial: z.boolean(),
   biologicalToxins: z.boolean(),
@@ -74,6 +75,16 @@ export default function CreateIbc() {
     biosafetyLevel: "BSL-2",
     researchActivityIds: [],
     teamMembers: [],
+    // Default biosafety options to false
+    recombinantSyntheticNucleicAcid: false,
+    wholeAnimalsAnimalMaterial: false,
+    animalMaterialSubOptions: [],
+    humanNonHumanPrimateMaterial: false,
+    microorganismsInfectiousMaterial: false,
+    biologicalToxins: false,
+    nanoparticles: false,
+    arthropods: false,
+    plants: false,
   };
 
   // Get all principal investigators for selection
@@ -485,6 +496,59 @@ export default function CreateIbc() {
                             </FormItem>
                           )}
                         />
+
+                        {/* Conditional sub-options for Animal Material */}
+                        {form.watch('wholeAnimalsAnimalMaterial') && (
+                          <FormField
+                            control={form.control}
+                            name="animalMaterialSubOptions"
+                            render={({ field }) => (
+                              <FormItem className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 ml-8">
+                                <div className="space-y-4">
+                                  <FormLabel className="text-base font-medium text-yellow-800">
+                                    Please select all that apply to your research:
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className="space-y-3">
+                                      {[
+                                        { id: "live_animals", label: "Live Animals" },
+                                        { id: "animal_tissues", label: "Animal Tissues" },
+                                        { id: "animal_cell_lines", label: "Animal Cell Lines" },
+                                        { id: "animal_blood_serum", label: "Animal Blood/Serum" },
+                                        { id: "animal_derived_products", label: "Animal-derived Products" },
+                                        { id: "transgenic_animals", label: "Transgenic Animals" },
+                                        { id: "animal_waste", label: "Animal Waste/Excretions" },
+                                        { id: "other_animal_materials", label: "Other Animal Materials" }
+                                      ].map((option) => (
+                                        <div key={option.id} className="flex items-center space-x-3">
+                                          <Checkbox
+                                            id={option.id}
+                                            checked={(field.value || []).includes(option.id)}
+                                            onCheckedChange={(checked) => {
+                                              const currentValues = field.value || [];
+                                              if (checked) {
+                                                field.onChange([...currentValues, option.id]);
+                                              } else {
+                                                field.onChange(currentValues.filter((value) => value !== option.id));
+                                              }
+                                            }}
+                                          />
+                                          <label
+                                            htmlFor={option.id}
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                          >
+                                            {option.label}
+                                          </label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </FormControl>
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
 
                         <FormField
                           control={form.control}

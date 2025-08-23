@@ -367,6 +367,10 @@ export const ibcApplications = pgTable("ibc_applications", {
   // Biosafety Options (mandatory yes/no questions)
   recombinantSyntheticNucleicAcid: boolean("recombinant_synthetic_nucleic_acid").default(false),
   wholeAnimalsAnimalMaterial: boolean("whole_animals_animal_material").default(false),
+  
+  // Sub-options for Whole Animals/Animal Material (shown when wholeAnimalsAnimalMaterial is true)
+  animalMaterialSubOptions: json("animal_material_sub_options"), // Array of selected sub-options
+  
   humanNonHumanPrimateMaterial: boolean("human_non_human_primate_material").default(false),
   microorganismsInfectiousMaterial: boolean("microorganisms_infectious_material").default(false),
   biologicalToxins: boolean("biological_toxins").default(false),
