@@ -466,6 +466,25 @@ export default function IbcApplicationEdit() {
         
         researchActivityIds: associatedActivities.map(ra => ra.id) || [],
         teamMembers: [],
+        
+        // Additional Details actual values
+        proposedBiosafetyLevels: ibcApplication.proposedBiosafetyLevels || {
+          absl1: false,
+          absl2a: false,
+          absl2b: false,
+          absl3: false,
+          bsl1: false,
+          bsl2a: false,
+          bsl2b: false,
+          bsl3: false,
+        },
+        hostOrganismDnaPropagation: ibcApplication.hostOrganismDnaPropagation || "",
+        purificationMeasures: ibcApplication.purificationMeasures || "",
+        providedRestrictionVectorMaps: ibcApplication.providedRestrictionVectorMaps,
+        viralGenomeRegionsAltered: ibcApplication.viralGenomeRegionsAltered || "",
+        assayingWildTypeViral: ibcApplication.assayingWildTypeViral,
+        handleMoreThan10Liters: ibcApplication.handleMoreThan10Liters,
+        geneDriveSystemCrispr: ibcApplication.geneDriveSystemCrispr,
       };
       
       form.reset(formData);
@@ -1616,10 +1635,11 @@ export default function IbcApplicationEdit() {
             <TabsContent value="nucleic-acids" className="space-y-6 mt-6">
               {/* Secondary navigation for nucleic acids sub-tabs */}
               <Tabs defaultValue="nih-guidelines" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
                   <TabsTrigger value="hazardous-procedures">Hazardous Procedures</TabsTrigger>
                   <TabsTrigger value="synthetic-experiments">Synthetic Experiments</TabsTrigger>
+                  <TabsTrigger value="additional-details">Additional Details</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="nih-guidelines" className="space-y-6 mt-6">
@@ -3529,6 +3549,299 @@ export default function IbcApplicationEdit() {
                     );
                   })}
                 </TabsContent>
+
+                <TabsContent value="additional-details" className="space-y-6 mt-6">
+                  {/* Additional Details Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Additional Details</CardTitle>
+                      <CardDescription>Additional information about biosafety level, procedures, and controls</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      
+                      {/* Proposed Biosafety Level */}
+                      <div>
+                        <FormLabel className="text-sm font-medium mb-4 block">
+                          What is the proposed Biosafety Level? <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <div className="grid grid-cols-2 gap-4">
+                          {[
+                            { key: 'absl1', label: 'ABSL 1' },
+                            { key: 'absl2a', label: 'ABSL 2A' },
+                            { key: 'absl2b', label: 'ABSL 2B' },
+                            { key: 'absl3', label: 'ABSL 3' },
+                            { key: 'bsl1', label: 'BSL 1' },
+                            { key: 'bsl2a', label: 'BSL 2A' },
+                            { key: 'bsl2b', label: 'BSL 2B' },
+                            { key: 'bsl3', label: 'BSL 3' },
+                          ].map(({ key, label }) => (
+                            <FormField
+                              key={key}
+                              control={form.control}
+                              name={`proposedBiosafetyLevels.${key}`}
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value || false}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm font-normal">{label}</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Host organism for DNA propagation */}
+                      <FormField
+                        control={form.control}
+                        name="hostOrganismDnaPropagation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              What host organism will you use for DNA propagation? List the species and strain (i.e. E.coli DH5α) <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="List the species and strain (e.g., E.coli DH5α)..."
+                                className="resize-none"
+                                rows={3}
+                                {...field}
+                                value={field.value || ""}
+                                disabled={isReadOnly}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Purification measures */}
+                      <FormField
+                        control={form.control}
+                        name="purificationMeasures"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              How will you purify the recombinants and what measures will you take to avoid aerosol production during purification? <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe purification methods and aerosol prevention measures..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                                disabled={isReadOnly}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Provided restriction/vector maps */}
+                      <FormField
+                        control={form.control}
+                        name="providedRestrictionVectorMaps"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              Have you provided restriction/vector maps for each vector listed above to the Biosafety Office? <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="providedRestrictionVectorMaps"
+                                    value="true"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="providedRestrictionVectorMaps"
+                                    value="false"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Viral genome regions altered */}
+                      <FormField
+                        control={form.control}
+                        name="viralGenomeRegionsAltered"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              What regions/genes of the viral genome are deleted or altered (if any) to produce the viral vector? (i.e. what is the basis of vector attenuation or replication incompetence, if any) <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe deleted or altered viral genome regions and basis of attenuation..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                                disabled={isReadOnly}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Assaying for wild-type viral particles */}
+                      <FormField
+                        control={form.control}
+                        name="assayingWildTypeViral"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              Will you be assaying for the production of wild-type/helper/replication competent viral particles? <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="assayingWildTypeViral"
+                                    value="true"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="assayingWildTypeViral"
+                                    value="false"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Handle more than 10 liters */}
+                      <FormField
+                        control={form.control}
+                        name="handleMoreThan10Liters"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              Will you handle more than 10 liters of culture of this agent(s) at any one time? <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="handleMoreThan10Liters"
+                                    value="true"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="handleMoreThan10Liters"
+                                    value="false"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Gene drive system */}
+                      <FormField
+                        control={form.control}
+                        name="geneDriveSystemCrispr"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              Will this be used to create a gene drive system (then describe the types of systems we mean is CRISPR)? <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="geneDriveSystemCrispr"
+                                    value="true"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name="geneDriveSystemCrispr"
+                                    value="false"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    disabled={isReadOnly}
+                                    className="rounded-full"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
               </Tabs>
             </TabsContent>
 

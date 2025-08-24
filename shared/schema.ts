@@ -493,6 +493,16 @@ export const ibcApplications = pgTable("ibc_applications", {
   // Synthetic Experiments
   syntheticExperiments: json("synthetic_experiments"), // Synthetic experiments data including vectors, inserts, and exposures
   
+  // Additional Details (fourth sub-tab under recombinant RNA)
+  proposedBiosafetyLevels: json("proposed_biosafety_levels"), // Array of selected biosafety levels (ABSL 1, ABSL 2A, etc.)
+  hostOrganismDnaPropagation: text("host_organism_dna_propagation"), // Host organism for DNA propagation
+  purificationMeasures: text("purification_measures"), // Measures to avoid aerosol production during purification
+  providedRestrictionVectorMaps: boolean("provided_restriction_vector_maps"), // Yes/No - provided maps to biosafety office
+  viralGenomeRegionsAltered: text("viral_genome_regions_altered"), // Viral genome regions deleted/altered
+  assayingWildTypeViral: boolean("assaying_wild_type_viral"), // Yes/No - assaying for wild-type viral particles
+  handleMoreThan10Liters: boolean("handle_more_than_10_liters"), // Yes/No - handling >10L culture
+  geneDriveSystemCrispr: boolean("gene_drive_system_crispr"), // Yes/No - gene drive system creation
+  
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
   formData: json("form_data"), // Store form-specific data
   
