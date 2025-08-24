@@ -2239,6 +2239,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit PI comment for IBC application
+  app.post('/api/ibc-applications/:id/pi-comment', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      const { comment } = req.body;
+      
+      if (!comment || !comment.trim()) {
+        return res.status(400).json({ message: "Comment is required" });
+      }
+
+      // Get the current application to get PI info
+      const application = await storage.getIbcApplication(id);
+      if (!application) {
+        return res.status(404).json({ message: "IBC application not found" });
+      }
+
+      // Get PI details for the comment
+      const pi = await storage.getScientist(application.principalInvestigatorId);
+      const piName = pi ? pi.name : 'Principal Investigator';
+
+      // Create the PI comment in the comments table
+      await storage.createIbcApplicationComment({
+        applicationId: id,
+        commentType: 'pi_response',
+        authorType: 'pi',
+        authorName: piName,
+        authorId: application.principalInvestigatorId,
+        comment: comment.trim(),
+        isInternal: false
+      });
+
+      res.json({ 
+        message: "Comment submitted successfully"
+      });
+    } catch (error) {
+      console.error("Error submitting PI comment:", error);
+      res.status(500).json({ message: "Failed to submit comment" });
+    }
+  });
+
   // IBC Board Members
   app.get('/api/ibc-board-members', async (req: Request, res: Response) => {
     try {
