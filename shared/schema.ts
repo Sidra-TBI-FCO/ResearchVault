@@ -470,6 +470,7 @@ export const ibcApplications = pgTable("ibc_applications", {
   protocolTeamMembers: json("protocol_team_members"), // Team members with roles and access
   
   description: text("description"),
+  protocolSummary: text("protocol_summary"), // Key protocols/methods summary
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
   formData: json("form_data"), // Store form-specific data
   

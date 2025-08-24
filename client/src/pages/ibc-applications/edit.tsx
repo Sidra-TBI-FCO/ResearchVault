@@ -51,6 +51,7 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   
   // Additional fields
   riskGroupClassification: z.string().optional(),
+  protocolSummary: z.string().optional(),
   
   // Methods and Procedures
   materialAndMethods: z.string().optional(),
@@ -149,6 +150,7 @@ export default function IbcApplicationEdit() {
       arthropods: false,
       plants: false,
       riskGroupClassification: "",
+      protocolSummary: "",
       
       // Methods and Procedures defaults
       materialAndMethods: "",
@@ -196,6 +198,7 @@ export default function IbcApplicationEdit() {
         arthropods: ibcApplication.arthropods || false,
         plants: ibcApplication.plants || false,
         riskGroupClassification: ibcApplication.riskGroupClassification || "",
+        protocolSummary: ibcApplication.protocolSummary || "",
         
         // Methods and Procedures actual values
         materialAndMethods: ibcApplication.materialAndMethods || "",
@@ -1319,13 +1322,41 @@ export default function IbcApplicationEdit() {
                       <FormLabel>Project Description</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Brief description of the research project" 
+                          placeholder="Provide a general overview of your research - describe what your research will be about, the scientific objectives, and the broader goals of the study" 
                           className="resize-none" 
                           rows={4}
                           {...field}
-                          value={field.value || ""} 
+                          value={field.value || ""}
+                          disabled={isReadOnly}
                         />
                       </FormControl>
+                      <FormDescription>
+                        Describe the general overview of what your research will be about
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="protocolSummary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Protocol Summary</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe the key protocols or methods being used in this research - include specific experimental procedures, techniques, equipment, and methodological approaches that will be employed" 
+                          className="resize-none" 
+                          rows={6}
+                          {...field}
+                          value={field.value || ""}
+                          disabled={isReadOnly}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Provide details about the key protocols or methods being used in your research
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
