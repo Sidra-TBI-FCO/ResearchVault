@@ -2696,22 +2696,49 @@ export default function IbcApplicationEdit() {
                           <FormField
                             control={form.control}
                             name={`hazardousProcedures.${index}.backboneVector`}
-                            render={({ field }) => (
+                            render={({ field }) => {
+                              const syntheticExperiments = form.watch('syntheticExperiments') || [];
+                              const availableBackbones = syntheticExperiments
+                                .filter(exp => exp.backboneSource && exp.vectorInsert)
+                                .map((exp, expIndex) => ({
+                                  value: `${exp.backboneSource}-${expIndex + 1}`,
+                                  label: `${exp.backboneSource} - ${exp.vectorInsert || 'Experiment ' + (expIndex + 1)}`
+                                }));
+                              
+                              return (
                               <FormItem>
                                 <FormLabel className="text-sm font-medium">
                                   Select Backbone/Vector that Procedure Applies to <span className="text-red-500">*</span>
                                 </FormLabel>
+                                <FormDescription className="text-xs text-blue-600 mb-2">
+                                  Note: Options are populated from the Synthetic Experiments tab. Please add synthetic experiments first if no options are available.
+                                </FormDescription>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Enter backbone/vector information"
-                                    {...field}
-                                    value={field.value || ""}
-                                    disabled={isReadOnly}
-                                  />
+                                  {availableBackbones.length > 0 ? (
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select backbone/vector from synthetic experiments" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {availableBackbones.map((backbone) => (
+                                          <SelectItem key={backbone.value} value={backbone.value}>
+                                            {backbone.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  ) : (
+                                    <div className="p-3 border border-dashed border-gray-300 rounded-md bg-gray-50">
+                                      <p className="text-sm text-gray-600">
+                                        No synthetic experiments available. Please add synthetic experiments in the "Synthetic Experiments" tab first.
+                                      </p>
+                                    </div>
+                                  )}
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
-                            )}
+                              );
+                            }}
                           />
 
                           {/* Engineering Controls */}
