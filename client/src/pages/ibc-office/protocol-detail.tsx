@@ -1031,89 +1031,16 @@ export default function IbcProtocolDetailPage() {
         </TabsContent>
 
         <TabsContent value="workflow" className="space-y-4">
-          {/* Workflow Process Guide */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">IBC Review Process Guide</CardTitle>
-              <CardDescription>
-                Understanding the biosafety review workflow steps
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                  <FileText className="h-5 w-5 text-gray-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm">1. Draft</h4>
-                    <p className="text-sm text-gray-600">Application is being prepared by the Principal Investigator. No action required from IBC office.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Send className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm">2. Submitted</h4>
-                    <p className="text-sm text-gray-600">Application submitted for review. IBC office should conduct initial screening and move to "Vetted" if complete.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-                  <Eye className="h-5 w-5 text-purple-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm">3. Vetted</h4>
-                    <p className="text-sm text-gray-600">Initial screening complete. Application is ready for detailed board review. Move to "Under Review" and assign board members.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
-                  <Users className="h-5 w-5 text-yellow-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm">4. Under Review</h4>
-                    <p className="text-sm text-gray-600">Assigned to board members for detailed biosafety review. Board members will evaluate protocols and provide recommendations.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm">5. Active</h4>
-                    <p className="text-sm text-gray-600">Protocol approved and active. Research can proceed with approved biosafety measures. Monitor for compliance.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg">
-                  <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm">6. Expired</h4>
-                    <p className="text-sm text-gray-600">Protocol has reached expiration date. Research activities must cease unless renewal is submitted.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-sm text-amber-800">Important Notes</h4>
-                    <ul className="text-sm text-amber-700 mt-1 space-y-1">
-                      <li>• Always add review comments when changing status</li>
-                      <li>• Assign appropriate board members for expertise areas</li>
-                      <li>• Monitor biosafety compliance for active protocols</li>
-                      <li>• Ensure all personnel have required training</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Workflow Management</CardTitle>
-              <CardDescription>
-                Update the application status and add review comments
-              </CardDescription>
-            </CardHeader>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Workflow Management */}
+            <div className="lg:col-span-2 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Workflow Management</CardTitle>
+                  <CardDescription>
+                    Update the application status and add review comments
+                  </CardDescription>
+                </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1236,25 +1163,105 @@ export default function IbcProtocolDetailPage() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="documents" className="space-y-4">
-          <Card>
+        </div>
+        
+        {/* Right Column - Process Guide */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-4">
             <CardHeader>
-              <CardTitle className="text-lg">Documents</CardTitle>
+              <CardTitle className="text-lg">Review Process Guide</CardTitle>
               <CardDescription>
-                Protocol documents and supporting materials
+                IBC workflow steps & guidelines
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Document Management</h3>
-                <p className="text-gray-500">Document management system will be available in a future update.</p>
+            <CardContent className="space-y-3">
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
+                  <FileText className="h-4 w-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs">1. Draft</h4>
+                    <p className="text-xs text-gray-600">PI preparing application</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
+                  <Send className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs">2. Submitted</h4>
+                    <p className="text-xs text-gray-600">Conduct initial screening</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2 p-2 bg-purple-50 rounded-lg">
+                  <Eye className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs">3. Vetted</h4>
+                    <p className="text-xs text-gray-600">Ready for board review</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2 p-2 bg-yellow-50 rounded-lg">
+                  <Users className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs">4. Under Review</h4>
+                    <p className="text-xs text-gray-600">Board evaluation in progress</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2 p-2 bg-green-50 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs">5. Active</h4>
+                    <p className="text-xs text-gray-600">Approved & monitored</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2 p-2 bg-red-50 rounded-lg">
+                  <XCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs">6. Expired</h4>
+                    <p className="text-xs text-gray-600">Research must cease</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-3 w-3 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-xs text-amber-800">Key Reminders</h4>
+                    <ul className="text-xs text-amber-700 mt-1 space-y-0.5">
+                      <li>• Add comments for status changes</li>
+                      <li>• Assign relevant board experts</li>
+                      <li>• Monitor active protocols</li>
+                      <li>• Verify training requirements</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      </div>
+    </TabsContent>
+
+    <TabsContent value="documents" className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Documents</CardTitle>
+          <CardDescription>
+            Protocol documents and supporting materials
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Document Management</h3>
+            <p className="text-gray-500">Document management system will be available in a future update.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </TabsContent>
       </Tabs>
     </div>
   );
