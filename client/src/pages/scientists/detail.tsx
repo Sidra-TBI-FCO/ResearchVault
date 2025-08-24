@@ -299,11 +299,6 @@ export default function ScientistDetail() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      {scientist.title === "Management" ? (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Staff</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Principal Investigator</Badge>
-                      )}
                       {scientist.department && (
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{scientist.department}</Badge>
                       )}
