@@ -1031,6 +1031,82 @@ export default function IbcProtocolDetailPage() {
         </TabsContent>
 
         <TabsContent value="workflow" className="space-y-4">
+          {/* Workflow Process Guide */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">IBC Review Process Guide</CardTitle>
+              <CardDescription>
+                Understanding the biosafety review workflow steps
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <FileText className="h-5 w-5 text-gray-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm">1. Draft</h4>
+                    <p className="text-sm text-gray-600">Application is being prepared by the Principal Investigator. No action required from IBC office.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                  <Send className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm">2. Submitted</h4>
+                    <p className="text-sm text-gray-600">Application submitted for review. IBC office should conduct initial screening and move to "Vetted" if complete.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                  <Eye className="h-5 w-5 text-purple-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm">3. Vetted</h4>
+                    <p className="text-sm text-gray-600">Initial screening complete. Application is ready for detailed board review. Move to "Under Review" and assign board members.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
+                  <Users className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm">4. Under Review</h4>
+                    <p className="text-sm text-gray-600">Assigned to board members for detailed biosafety review. Board members will evaluate protocols and provide recommendations.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm">5. Active</h4>
+                    <p className="text-sm text-gray-600">Protocol approved and active. Research can proceed with approved biosafety measures. Monitor for compliance.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg">
+                  <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm">6. Expired</h4>
+                    <p className="text-sm text-gray-600">Protocol has reached expiration date. Research activities must cease unless renewal is submitted.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm text-amber-800">Important Notes</h4>
+                    <ul className="text-sm text-amber-700 mt-1 space-y-1">
+                      <li>• Always add review comments when changing status</li>
+                      <li>• Assign appropriate board members for expertise areas</li>
+                      <li>• Monitor biosafety compliance for active protocols</li>
+                      <li>• Ensure all personnel have required training</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Workflow Management</CardTitle>
