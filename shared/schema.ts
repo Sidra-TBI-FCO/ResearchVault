@@ -33,7 +33,6 @@ export const scientists = pgTable("scientists", {
   email: text("email").notNull().unique(),
   staffId: text("staff_id").unique(), // 5-digit staff ID for badges
   department: text("department"),
-  role: text("role"),
   bio: text("bio"),
   profileImageInitials: text("profile_image_initials"), // Storing initials for avatar
   isStaff: boolean("is_staff").default(false), // True for staff, false for principal investigators

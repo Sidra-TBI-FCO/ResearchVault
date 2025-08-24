@@ -16,11 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertProgramSchema } from "@shared/schema";
 import { ArrowLeft } from "lucide-react";
+import type { Scientist } from "@shared/schema";
 
 // Extend the insert schema with additional validations
 const createProgramSchema = insertProgramSchema.extend({
@@ -29,10 +30,6 @@ const createProgramSchema = insertProgramSchema.extend({
   category: z.string({
     required_error: "Please select a program category",
   }),
-  programDirector: z.string().min(2, "Program Director is required"),
-  researchCoLead: z.string().min(2, "Research Co-Lead is required"),
-  clinicalCoLead1: z.string().min(2, "Clinical Co-Lead 1 is required"),
-  clinicalCoLead2: z.string().min(2, "Clinical Co-Lead 2 is required"),
 });
 
 type CreateProgramFormValues = z.infer<typeof createProgramSchema>;
@@ -40,6 +37,12 @@ type CreateProgramFormValues = z.infer<typeof createProgramSchema>;
 export default function CreateProgram() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+
+  // Fetch scientists for dropdowns
+  const { data: scientists = [] } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+    queryFn: () => fetch('/api/scientists').then(res => res.json()),
+  });
 
   // Default form values
   const defaultValues: Partial<CreateProgramFormValues> = {
@@ -161,13 +164,27 @@ export default function CreateProgram() {
                 
                 <FormField
                   control={form.control}
-                  name="programDirector"
+                  name="programDirectorId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Program Director</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Dr. Sarah Johnson" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Program Director" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -175,13 +192,27 @@ export default function CreateProgram() {
                 
                 <FormField
                   control={form.control}
-                  name="researchCoLead"
+                  name="researchCoLeadId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Research Co-Lead</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Dr. Michael Chen" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Research Co-Lead" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -189,13 +220,27 @@ export default function CreateProgram() {
                 
                 <FormField
                   control={form.control}
-                  name="clinicalCoLead1"
+                  name="clinicalCoLead1Id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Clinical Co-Lead 1</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Dr. Emily Rodriguez" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Clinical Co-Lead 1" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -203,13 +248,27 @@ export default function CreateProgram() {
                 
                 <FormField
                   control={form.control}
-                  name="clinicalCoLead2"
+                  name="clinicalCoLead2Id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Clinical Co-Lead 2</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Dr. Ahmed Hassan" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Clinical Co-Lead 2" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -162,6 +162,7 @@ export default function CreateScientist() {
                         <SelectContent>
                           <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
                           <SelectItem value="Investigator">Investigator</SelectItem>
+                          <SelectItem value="Physician">Physician</SelectItem>
                           <SelectItem value="Research Specialist">Research Specialist</SelectItem>
                           <SelectItem value="Research Assistant">Research Assistant</SelectItem>
                           <SelectItem value="Research Associate">Research Associate</SelectItem>
@@ -185,27 +186,14 @@ export default function CreateScientist() {
                     <FormItem>
                       <FormLabel>Department</FormLabel>
                       <FormControl>
-                        <Input placeholder="Molecular Biology" {...field} />
+                        <Input placeholder="Molecular Biology" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Lead Scientist" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+
                 <FormField
                   control={form.control}
                   name="profileImageInitials"
@@ -213,7 +201,7 @@ export default function CreateScientist() {
                     <FormItem>
                       <FormLabel>Initials</FormLabel>
                       <FormControl>
-                        <Input placeholder="JD" maxLength={2} {...field} />
+                        <Input placeholder="JD" maxLength={2} {...field} value={field.value || ""} />
                       </FormControl>
                       <FormDescription>
                         Initials shown in profile avatar (max 2 characters)
@@ -236,7 +224,7 @@ export default function CreateScientist() {
                       </div>
                       <FormControl>
                         <Switch
-                          checked={field.value}
+                          checked={field.value || false}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
@@ -288,7 +276,8 @@ export default function CreateScientist() {
                           placeholder="Brief biography or research interests" 
                           className="resize-none" 
                           rows={4}
-                          {...field} 
+                          {...field}
+                          value={field.value || ""} 
                         />
                       </FormControl>
                       <FormMessage />

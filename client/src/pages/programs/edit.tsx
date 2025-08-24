@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProgramSchema, type InsertProgram, type Program } from "@shared/schema";
+import { insertProgramSchema, type InsertProgram, type Program, type Scientist } from "@shared/schema";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +35,12 @@ export default function ProgramEdit() {
     queryKey: ['/api/programs', id],
     queryFn: () => fetch(`/api/programs/${id}`).then(res => res.json()),
     enabled: !!id,
+  });
+
+  // Fetch scientists for dropdowns
+  const { data: scientists = [] } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+    queryFn: () => fetch('/api/scientists').then(res => res.json()),
   });
 
   const form = useForm<InsertProgram>({
@@ -194,7 +200,7 @@ export default function ProgramEdit() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Program description" {...field} />
+                      <Textarea placeholder="Program description" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -204,13 +210,27 @@ export default function ProgramEdit() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="programDirector"
+                  name="programDirectorId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Program Director</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Program Director name" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Program Director" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -218,13 +238,27 @@ export default function ProgramEdit() {
 
                 <FormField
                   control={form.control}
-                  name="researchCoLead"
+                  name="researchCoLeadId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Research Co-Lead</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Research Co-Lead name" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Research Co-Lead" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -234,13 +268,27 @@ export default function ProgramEdit() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="clinicalCoLead1"
+                  name="clinicalCoLead1Id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Clinical Co-Lead 1 (Physician)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="First Clinical Co-Lead name" {...field} />
-                      </FormControl>
+                      <FormLabel>Clinical Co-Lead 1</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Clinical Co-Lead 1" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -248,78 +296,34 @@ export default function ProgramEdit() {
 
                 <FormField
                   control={form.control}
-                  name="clinicalCoLead2"
+                  name="clinicalCoLead2Id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Clinical Co-Lead 2 (Physician)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Second Clinical Co-Lead name" {...field} />
-                      </FormControl>
+                      <FormLabel>Clinical Co-Lead 2</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Clinical Co-Lead 2" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Suspended">Suspended</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Program description..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="objectives"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Objectives</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Program objectives..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="flex gap-4">
                 <Button 
