@@ -67,6 +67,7 @@ export default function IbcProtocolDetailPage() {
   const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
   const [reviewComments, setReviewComments] = useState("");
   const [selectedReviewers, setSelectedReviewers] = useState<number[]>([]);
+  const [showReviewerSelection, setShowReviewerSelection] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -1042,42 +1043,164 @@ export default function IbcProtocolDetailPage() {
                   </CardDescription>
                 </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Update Status</label>
-                  <Select value={newWorkflowStatus} onValueChange={setNewWorkflowStatus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select new status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getAvailableStatusTransitions(application.status || "draft")
-                        .map(statusValue => {
-                          const status = IBC_WORKFLOW_STATUSES.find(s => s.value === statusValue);
-                          return status ? (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ) : null;
-                        })}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={handleStatusUpdate}
-                    disabled={!newWorkflowStatus || updateStatusMutation.isPending}
-                    className="w-full"
-                  >
-                    {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
-                  </Button>
+              {/* Current Status Display */}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-sm">Current Status</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      {(() => {
+                        const status = IBC_WORKFLOW_STATUSES.find(s => s.value === application?.status);
+                        const Icon = status?.icon || FileText;
+                        return (
+                          <>
+                            <Icon className="h-4 w-4" />
+                            <Badge variant="outline" className={status?.color}>
+                              {status?.label || application?.status}
+                            </Badge>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Last Updated</p>
+                    <p className="text-sm">{application?.updatedAt ? format(new Date(application.updatedAt), 'MMM d, yyyy') : 'Unknown'}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Reviewer Selection for Under Review Status */}
-              {newWorkflowStatus === "under_review" && (
-                <div>
-                  <label className="text-sm font-medium">Select Reviewers</label>
-                  <p className="text-sm text-gray-500 mb-3">Choose IBC board members to review this application</p>
+              {/* Action Buttons Based on Current Status */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Available Actions</h4>
+                <div className="flex flex-wrap gap-2">
+                  {application?.status === 'submitted' && (
+                    <>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('vetted');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Accept as Vetted
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('draft');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        variant="outline"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Return to Applicant
+                      </Button>
+                    </>
+                  )}
+
+                  {application?.status === 'vetted' && (
+                    <>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('under_review');
+                          setShowReviewerSelection(true);
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-yellow-600 hover:bg-yellow-700"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Assign Reviewers
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('submitted');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        variant="outline"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Withdraw Vetting
+                      </Button>
+                    </>
+                  )}
+
+                  {application?.status === 'under_review' && (
+                    <>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('active');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve Protocol
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('vetted');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        variant="outline"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Return for Re-vetting
+                      </Button>
+                    </>
+                  )}
+
+                  {application?.status === 'active' && (
+                    <>
+                      <Button 
+                        onClick={() => {
+                          setNewWorkflowStatus('expired');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        variant="destructive"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Mark as Expired
+                      </Button>
+                    </>
+                  )}
+
+                  {application?.status === 'draft' && (
+                    <div className="text-sm text-gray-500 italic">
+                      Waiting for Principal Investigator to submit application
+                    </div>
+                  )}
+
+                  {application?.status === 'expired' && (
+                    <div className="text-sm text-gray-500 italic">
+                      Protocol has expired. No actions available.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reviewer Selection */}
+              {showReviewerSelection && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <label className="text-sm font-medium">Select Reviewers</label>
+                      <p className="text-xs text-gray-500">Choose IBC board members to review this application</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowReviewerSelection(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
                     {Array.isArray(boardMembersWithScientists) && boardMembersWithScientists.length > 0 ? (
                       boardMembersWithScientists
@@ -1140,6 +1263,25 @@ export default function IbcProtocolDetailPage() {
                       </div>
                     </div>
                   )}
+                  
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      onClick={() => {
+                        handleStatusUpdate();
+                        setShowReviewerSelection(false);
+                      }}
+                      disabled={updateStatusMutation.isPending || selectedReviewers.length === 0}
+                      className="bg-yellow-600 hover:bg-yellow-700"
+                    >
+                      {updateStatusMutation.isPending ? "Assigning..." : "Assign Selected Reviewers"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowReviewerSelection(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
               
