@@ -100,7 +100,7 @@ export const researchActivities = pgTable("research_activities", {
   lineManagerId: integer("line_manager_id"), // references scientists.id
   additionalNotificationEmail: text("additional_notification_email"),
   sidraBranch: text("sidra_branch"), // Research, Clinical, External
-  budgetSource: text("budget_source"), // IRF, PI Budget, QNRF, etc.
+  budgetSource: text("budget_source").array(), // IRF, PI Budget, QNRF, etc.
   objectives: text("objectives"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

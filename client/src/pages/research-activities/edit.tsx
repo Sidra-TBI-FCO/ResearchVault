@@ -5,9 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Save, Calendar, Loader2 } from "lucide-react";
@@ -61,7 +63,7 @@ export default function EditResearchActivity() {
       startDate: undefined,
       endDate: undefined,
       sidraBranch: "",
-      budgetSource: "",
+      budgetSource: [],
     }
   });
 
@@ -82,7 +84,7 @@ export default function EditResearchActivity() {
         startDate: activity.startDate ? new Date(activity.startDate) : undefined,
         endDate: activity.endDate ? new Date(activity.endDate) : undefined,
         sidraBranch: activity.sidraBranch || "",
-        budgetSource: activity.budgetSource || "",
+        budgetSource: Array.isArray(activity.budgetSource) ? activity.budgetSource : activity.budgetSource ? [activity.budgetSource] : [],
         additionalNotificationEmail: activity.additionalNotificationEmail || "",
       });
     }
@@ -389,10 +391,27 @@ export default function EditResearchActivity() {
                   control={form.control}
                   name="sidraBranch"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-3">
                       <FormLabel>Sidra Branch</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Research, Clinical" {...field} value={field.value || ""} />
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                          className="flex flex-col space-y-1"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Research" id="edit-research" />
+                            <label htmlFor="edit-research">Research</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Clinical" id="edit-clinical" />
+                            <label htmlFor="edit-clinical">Clinical</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="External" id="edit-external" />
+                            <label htmlFor="edit-external">External</label>
+                          </div>
+                        </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -402,12 +421,46 @@ export default function EditResearchActivity() {
                 <FormField
                   control={form.control}
                   name="budgetSource"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem>
                       <FormLabel>Budget Source</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., QNRF, Internal, External Grant" {...field} />
-                      </FormControl>
+                      <div className="space-y-2">
+                        {["IRF", "PI Fund", "QNRF", "External Grant", "Institutional", "Other"].map((source) => (
+                          <FormField
+                            key={source}
+                            control={form.control}
+                            name="budgetSource"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={source}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={(field.value || []).includes(source)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValues = field.value || [];
+                                        if (checked) {
+                                          field.onChange([...currentValues, source]);
+                                        } else {
+                                          field.onChange(currentValues.filter((value: string) => value !== source));
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {source}
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <FormDescription>
+                        Select all applicable funding sources
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

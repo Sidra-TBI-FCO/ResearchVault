@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -45,7 +47,7 @@ const createResearchActivitySchema = insertResearchActivitySchema.extend({
     required_error: "Please select a status",
   }),
   sidraBranch: z.string().optional(),
-  budgetSource: z.string().optional(),
+  budgetSource: z.array(z.string()).optional(),
   objectives: z.string().optional(),
 });
 
@@ -429,24 +431,28 @@ export default function CreateResearchActivity() {
                   control={form.control}
                   name="sidraBranch"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-3">
                       <FormLabel>Sidra Branch</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select branch" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Research">Research</SelectItem>
-                          <SelectItem value="Clinical">Clinical</SelectItem>
-                          <SelectItem value="External">External</SelectItem>
-                          <SelectItem value="Administrative">Administrative</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-1"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Research" id="research" />
+                            <label htmlFor="research">Research</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Clinical" id="clinical" />
+                            <label htmlFor="clinical">Clinical</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="External" id="external" />
+                            <label htmlFor="external">External</label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
                       <FormDescription>
                         Branch or department within Sidra
                       </FormDescription>
@@ -458,29 +464,45 @@ export default function CreateResearchActivity() {
                 <FormField
                   control={form.control}
                   name="budgetSource"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem>
                       <FormLabel>Budget Source</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select budget source" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="IRF">IRF</SelectItem>
-                          <SelectItem value="PI Fund">PI Fund</SelectItem>
-                          <SelectItem value="QNRF">QNRF</SelectItem>
-                          <SelectItem value="External Grant">External Grant</SelectItem>
-                          <SelectItem value="Institutional">Institutional</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2">
+                        {["IRF", "PI Fund", "QNRF", "External Grant", "Institutional", "Other"].map((source) => (
+                          <FormField
+                            key={source}
+                            control={form.control}
+                            name="budgetSource"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={source}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={(field.value || []).includes(source)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValues = field.value || [];
+                                        if (checked) {
+                                          field.onChange([...currentValues, source]);
+                                        } else {
+                                          field.onChange(currentValues.filter((value: string) => value !== source));
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {source}
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
                       <FormDescription>
-                        Source of funding for this activity
+                        Select all applicable funding sources
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
