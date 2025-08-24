@@ -151,6 +151,11 @@ export default function TimelineComments({
     // Add comments from the separate comments table
     if (comments && comments.length > 0) {
       comments.forEach((comment: Comment) => {
+        // Skip status_change comments as they're redundant with the status timeline events above
+        if (comment.commentType === 'status_change') {
+          return;
+        }
+        
         const commentDate = new Date(comment.createdAt);
         let bgClass = 'bg-amber-50 border-amber-200';
         let iconClass = 'text-amber-600';
@@ -184,14 +189,6 @@ export default function TimelineComments({
             textClass = 'text-blue-700';
             authorClass = 'text-blue-600';
             commentTitle = 'PI Response';
-            break;
-          case 'status_change':
-            bgClass = 'bg-green-50 border-green-200';
-            iconClass = 'text-green-600';
-            titleClass = 'text-green-800';
-            textClass = 'text-green-700';
-            authorClass = 'text-green-600';
-            commentTitle = 'Status Update';
             break;
           default:
             bgClass = 'bg-gray-50 border-gray-200';
