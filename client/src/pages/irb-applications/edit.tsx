@@ -37,7 +37,7 @@ export default function IrbApplicationEdit() {
       researchActivityId: irbApplication?.researchActivityId || 0,
       irbNumber: irbApplication?.irbNumber || "",
       title: irbApplication?.title || "",
-      principalInvestigatorId: irbApplication?.principalInvestigatorId || 0,
+      principalInvestigatorId: irbApplication?.principalInvestigatorId ?? 0,
       workflowStatus: irbApplication?.workflowStatus || "draft",
     },
   });

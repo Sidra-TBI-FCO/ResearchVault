@@ -95,7 +95,7 @@ export default function IbcApplicationEdit() {
       cayuseProtocolNumber: ibcApplication?.cayuseProtocolNumber || "",
       title: ibcApplication?.title || "",
       shortTitle: ibcApplication?.shortTitle || "",
-      principalInvestigatorId: ibcApplication?.principalInvestigatorId || 0,
+      principalInvestigatorId: ibcApplication?.principalInvestigatorId ?? 0,
       biosafetyLevel: ibcApplication?.biosafetyLevel || "BSL-2",
       description: ibcApplication?.description || "",
       
