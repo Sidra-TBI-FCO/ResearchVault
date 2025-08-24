@@ -447,7 +447,7 @@ export const ibcApplications = pgTable("ibc_applications", {
   submissionDate: timestamp("submission_date"),
   vettedDate: timestamp("vetted_date"), // When moved to vetted status
   underReviewDate: timestamp("under_review_date"), // When moved to under review status
-  approvalDate: date("approval_date"),
+  approvalDate: timestamp("approval_date"),
   expirationDate: date("expiration_date"),
   lastReviewDate: date("last_review_date"),
   nextReviewDate: date("next_review_date"),
