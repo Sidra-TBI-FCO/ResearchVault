@@ -39,8 +39,10 @@ export default function ScientistsList() {
     if (activeTab === "all") return matchesSearch;
     
     // Filter by job title
-    if (activeTab === "staff-scientist") return matchesSearch && scientist.title === "Staff Scientist";
+    if (activeTab === "management") return matchesSearch && scientist.title === "Management";
+    if (activeTab === "physician") return matchesSearch && scientist.title === "Physician";
     if (activeTab === "investigator") return matchesSearch && scientist.title === "Investigator";
+    if (activeTab === "staff-scientist") return matchesSearch && scientist.title === "Staff Scientist";
     if (activeTab === "research-specialist") return matchesSearch && scientist.title === "Research Specialist";
     if (activeTab === "research-assistant") return matchesSearch && scientist.title === "Research Assistant";
     if (activeTab === "phd-student") return matchesSearch && scientist.title === "PhD Student";
@@ -162,8 +164,10 @@ export default function ScientistsList() {
           <Tabs defaultValue="all" onValueChange={setActiveTab}>
             <TabsList className="mb-4 flex flex-wrap gap-1">
               <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="staff-scientist">Staff Scientist</TabsTrigger>
+              <TabsTrigger value="management">Management</TabsTrigger>
+              <TabsTrigger value="physician">Physician</TabsTrigger>
               <TabsTrigger value="investigator">Investigator</TabsTrigger>
+              <TabsTrigger value="staff-scientist">Staff Scientist</TabsTrigger>
               <TabsTrigger value="research-specialist">Research Specialist</TabsTrigger>
               <TabsTrigger value="research-assistant">Research Assistant</TabsTrigger>
               <TabsTrigger value="phd-student">PhD Student</TabsTrigger>
