@@ -477,11 +477,38 @@ export const ibcApplications = pgTable("ibc_applications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// IBC Application Comments - separate table for tracking communication history
+export const ibcApplicationComments = pgTable("ibc_application_comments", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull(), // references ibcApplications.id
+  commentType: text("comment_type").notNull(), // 'office_comment', 'reviewer_feedback', 'pi_response', 'status_change'
+  authorType: text("author_type").notNull(), // 'office', 'reviewer', 'pi', 'system'
+  authorId: integer("author_id"), // references scientists.id (optional for system comments)
+  authorName: text("author_name").notNull(), // Display name for the comment author
+  comment: text("comment").notNull(),
+  recommendation: text("recommendation"), // For reviewer feedback: 'approve', 'reject', 'minor_revisions', 'major_revisions'
+  statusFrom: text("status_from"), // Previous status for status change comments
+  statusTo: text("status_to"), // New status for status change comments
+  isInternal: boolean("is_internal").default(false), // True for office-only comments
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIbcApplicationCommentSchema = createInsertSchema(ibcApplicationComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertIbcApplicationComment = z.infer<typeof insertIbcApplicationCommentSchema>;
+export type IbcApplicationComment = typeof ibcApplicationComments.$inferSelect;
+
 export const insertIbcApplicationSchema = createInsertSchema(ibcApplications).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
+
+export type InsertIbcApplication = z.infer<typeof insertIbcApplicationSchema>;
+export type IbcApplication = typeof ibcApplications.$inferSelect;
 
 // Junction table for IBC Applications and Research Activities (many-to-many)
 export const ibcApplicationResearchActivities = pgTable("ibc_application_research_activities", {

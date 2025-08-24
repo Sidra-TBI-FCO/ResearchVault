@@ -16,6 +16,7 @@ import {
   irbSubmissions, IrbSubmission, InsertIrbSubmission,
   irbDocuments, IrbDocument, InsertIrbDocument,
   ibcApplications, IbcApplication, InsertIbcApplication,
+  ibcApplicationComments, IbcApplicationComment, InsertIbcApplicationComment,
   ibcApplicationResearchActivities, IbcApplicationResearchActivity, InsertIbcApplicationResearchActivity,
   ibcSubmissions, IbcSubmission, InsertIbcSubmission,
   ibcDocuments, IbcDocument, InsertIbcDocument,
@@ -692,6 +693,20 @@ export class DatabaseStorage implements IStorage {
     // Then delete the application
     const result = await db.delete(ibcApplications).where(eq(ibcApplications.id, id));
     return result.rowCount > 0;
+  }
+
+  // IBC Application Comment operations
+  async getIbcApplicationComments(applicationId: number): Promise<IbcApplicationComment[]> {
+    return await db
+      .select()
+      .from(ibcApplicationComments)
+      .where(eq(ibcApplicationComments.applicationId, applicationId))
+      .orderBy(ibcApplicationComments.createdAt);
+  }
+
+  async createIbcApplicationComment(comment: InsertIbcApplicationComment): Promise<IbcApplicationComment> {
+    const [newComment] = await db.insert(ibcApplicationComments).values(comment).returning();
+    return newComment;
   }
 
   // Research Contract operations

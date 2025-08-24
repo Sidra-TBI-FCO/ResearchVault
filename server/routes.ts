@@ -13,6 +13,7 @@ import {
   insertPatentSchema,
   insertIrbApplicationSchema,
   insertIbcApplicationSchema,
+  insertIbcApplicationCommentSchema,
   insertIbcBoardMemberSchema,
   insertIbcSubmissionSchema,
   insertIbcDocumentSchema,
@@ -1942,12 +1943,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Get the current application for status change tracking
+      const currentApplication = await storage.getIbcApplication(id);
+      if (!currentApplication) {
+        return res.status(404).json({ message: "IBC application not found" });
+      }
+
       console.log('About to call storage.updateIbcApplication with:', id, validateData);
       const application = await storage.updateIbcApplication(id, validateData);
       console.log('storage.updateIbcApplication result:', application);
       
       if (!application) {
         return res.status(404).json({ message: "IBC application not found" });
+      }
+
+      // Create office comment if reviewComments are provided
+      if (req.body.reviewComments) {
+        await storage.createIbcApplicationComment({
+          applicationId: id,
+          commentType: 'office_comment',
+          authorType: 'office',
+          authorName: 'IBC Office',
+          comment: req.body.reviewComments,
+          isInternal: false
+        });
+      }
+
+      // Create status change comment if status changed
+      if (validateData.status && validateData.status !== currentApplication.status) {
+        const statusLabels = {
+          'draft': 'Draft',
+          'submitted': 'Submitted',
+          'vetted': 'Vetted',
+          'under_review': 'Under Review',
+          'active': 'Active',
+          'expired': 'Expired'
+        };
+        
+        await storage.createIbcApplicationComment({
+          applicationId: id,
+          commentType: 'status_change',
+          authorType: 'system',
+          authorName: 'System',
+          comment: `Status changed from ${statusLabels[currentApplication.status] || currentApplication.status} to ${statusLabels[validateData.status] || validateData.status}`,
+          statusFrom: currentApplication.status,
+          statusTo: validateData.status,
+          isInternal: false
+        });
       }
       
       res.json(application);
@@ -2121,49 +2163,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "IBC application not found" });
       }
 
-      // Handle reviewer feedback as part of reviewComments array structure
-      let currentReviewComments = [];
-      
-      // Handle both string and array formats for existing reviewComments
-      if (application.reviewComments) {
-        if (typeof application.reviewComments === 'string') {
-          // Convert existing string comment to proper format
-          currentReviewComments = [{
-            type: 'office_comment',
-            author: 'IBC Office',
-            date: application.underReviewDate || new Date().toISOString(),
-            comment: application.reviewComments
-          }];
-        } else if (Array.isArray(application.reviewComments)) {
-          currentReviewComments = application.reviewComments;
-        }
-      }
-      
-      // Add the new reviewer comment
-      const newReviewComment = {
-        type: 'reviewer_feedback',
-        author: 'IBC Reviewer',
-        date: new Date().toISOString(),
+      // Create the reviewer feedback comment in the comments table
+      await storage.createIbcApplicationComment({
+        applicationId: id,
+        commentType: 'reviewer_feedback',
+        authorType: 'reviewer',
+        authorName: 'IBC Reviewer',
+        comment: comments,
         recommendation: recommendation,
-        comment: comments
-      };
-      
-      const updatedReviewComments = [...currentReviewComments, newReviewComment];
+        isInternal: false
+      });
 
       // Update status based on recommendation
       let newStatus = application.status;
+      let statusChangeComment = '';
+      
       if (recommendation === 'approve') {
         newStatus = 'active';
+        statusChangeComment = 'Application approved by reviewer';
       } else if (recommendation === 'reject') {
         newStatus = 'expired';
+        statusChangeComment = 'Application rejected by reviewer';
       } else if (recommendation === 'minor_revisions' || recommendation === 'major_revisions') {
         newStatus = 'vetted'; // Return to office for revision handling
+        statusChangeComment = `Application returned to office for ${recommendation.replace('_', ' ')}`;
       } else {
         newStatus = 'under_review'; // Stay under review for other cases
+        statusChangeComment = 'Application remains under review';
+      }
+
+      // Create status change comment if status changed
+      if (newStatus !== application.status) {
+        await storage.createIbcApplicationComment({
+          applicationId: id,
+          commentType: 'status_change',
+          authorType: 'system',
+          authorName: 'System',
+          comment: statusChangeComment,
+          statusFrom: application.status,
+          statusTo: newStatus,
+          isInternal: false
+        });
       }
 
       const updatedApplication = await storage.updateIbcApplication(id, {
-        reviewComments: updatedReviewComments,
         status: newStatus,
         underReviewDate: newStatus === 'under_review' ? new Date() : application.underReviewDate,
         approvalDate: newStatus === 'active' ? new Date() : application.approvalDate,
@@ -2177,6 +2220,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error submitting reviewer feedback:", error);
       res.status(500).json({ message: "Failed to submit reviewer feedback" });
+    }
+  });
+
+  // Get comments for IBC application
+  app.get('/api/ibc-applications/:id/comments', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      const comments = await storage.getIbcApplicationComments(id);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching IBC application comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
     }
   });
 

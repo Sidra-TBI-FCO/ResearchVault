@@ -10,6 +10,7 @@ import {
   patents, Patent, InsertPatent,
   irbApplications, IrbApplication, InsertIrbApplication,
   ibcApplications, IbcApplication, InsertIbcApplication,
+  ibcApplicationComments, IbcApplicationComment, InsertIbcApplicationComment,
   ibcApplicationResearchActivities, IbcApplicationResearchActivity, InsertIbcApplicationResearchActivity,
   researchContracts, ResearchContract, InsertResearchContract
 } from "@shared/schema";
@@ -108,6 +109,10 @@ export interface IStorage {
   getResearchActivitiesForIbcApplication(ibcApplicationId: number): Promise<ResearchActivity[]>;
   addResearchActivityToIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<any>;
   removeResearchActivityFromIbcApplication(ibcApplicationId: number, researchActivityId: number): Promise<boolean>;
+
+  // IBC Application Comment operations
+  getIbcApplicationComments(applicationId: number): Promise<IbcApplicationComment[]>;
+  createIbcApplicationComment(comment: InsertIbcApplicationComment): Promise<IbcApplicationComment>;
 
   // Research Contract operations
   getResearchContracts(): Promise<ResearchContract[]>;
