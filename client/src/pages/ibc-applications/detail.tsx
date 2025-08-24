@@ -742,6 +742,15 @@ export default function IbcApplicationDetail() {
                             )}
                           </div>
                           <p className="text-xs text-gray-600 mt-1 line-clamp-2">{activity.title}</p>
+                          {activity.budgetSource && activity.budgetSource.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {activity.budgetSource.map((source, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                  {source}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
