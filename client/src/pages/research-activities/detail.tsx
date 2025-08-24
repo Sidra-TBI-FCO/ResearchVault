@@ -220,6 +220,55 @@ export default function ResearchActivityDetail() {
                     </span>
                   </div>
                 </div>
+
+                {activity.shortTitle && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Short Title</h3>
+                    <p className="text-sm">{activity.shortTitle}</p>
+                  </div>
+                )}
+
+                {activity.leadScientistId && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Lead Scientist</h3>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      <span className="text-sm">Lead Scientist ID: {activity.leadScientistId}</span>
+                    </div>
+                  </div>
+                )}
+
+                {activity.budgetHolderId && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Budget Holder</h3>
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      <span className="text-sm">Budget Holder ID: {activity.budgetHolderId}</span>
+                    </div>
+                  </div>
+                )}
+
+                {activity.lineManagerId && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Line Manager</h3>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      <span className="text-sm">Line Manager ID: {activity.lineManagerId}</span>
+                    </div>
+                  </div>
+                )}
+
+                {activity.sidraBranch && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Sidra Branch</h3>
+                    <div className="flex items-center gap-1">
+                      <Beaker className="h-3 w-3" />
+                      <Badge variant="outline" className="rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                        {activity.sidraBranch}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
                 
                 <div>
                   <h3 className="text-sm font-medium text-neutral-400">Principal Investigator</h3>
@@ -251,21 +300,48 @@ export default function ResearchActivityDetail() {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Branch</h3>
-                  <div className="flex items-center gap-1">
-                    <Building className="h-3 w-3" />
-                    <span>{activity.sidraBranch || 'Not specified'}</span>
+                {activity.additionalNotificationEmail && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Additional Notification Email</h3>
+                    <div className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      <span className="text-sm">{activity.additionalNotificationEmail}</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Budget Source</h3>
-                  <div className="flex items-center gap-1">
-                    <Beaker className="h-3 w-3" />
-                    <span>{activity.budgetSource || 'Not specified'}</span>
+                {activity.budgetSource && activity.budgetSource.length > 0 && (
+                  <div className="col-span-full">
+                    <h3 className="text-sm font-medium text-neutral-400">Budget Sources</h3>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {activity.budgetSource.map((source, index) => (
+                        <Badge key={index} variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                          {source}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {activity.grantCodes && activity.grantCodes.length > 0 && (
+                  <div className="col-span-full">
+                    <h3 className="text-sm font-medium text-neutral-400">Grant Codes</h3>
+                    <div className="space-y-2 mt-1">
+                      {activity.budgetSource?.map((source, index) => {
+                        const grantCode = activity.grantCodes?.[index];
+                        if (!grantCode) return null;
+                        return (
+                          <div key={index} className="flex items-center space-x-2">
+                            <Badge variant="outline" className="text-xs bg-gray-50">
+                              {source}
+                            </Badge>
+                            <span className="text-sm font-mono">{grantCode}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {activity.description && (
