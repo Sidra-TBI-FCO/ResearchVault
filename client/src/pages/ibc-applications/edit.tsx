@@ -2813,9 +2813,8 @@ export default function IbcApplicationEdit() {
                           )}
                         </div>
                       </CardContent>
-                      )}
-                  );
-                  })}
+                    </Card>
+                  )}
                 </TabsContent>
               </Tabs>
             </TabsContent>
