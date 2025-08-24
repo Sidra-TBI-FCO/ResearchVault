@@ -178,7 +178,7 @@ export default function CreateProgram() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {scientists.map((scientist) => (
+                          {scientists.filter(scientist => scientist.title === 'Investigator').map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
                               {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
@@ -206,7 +206,7 @@ export default function CreateProgram() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {scientists.map((scientist) => (
+                          {scientists.filter(scientist => scientist.title === 'Investigator' || scientist.title === 'Staff Scientist').map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
                               {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
@@ -234,7 +234,7 @@ export default function CreateProgram() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {scientists.map((scientist) => (
+                          {scientists.filter(scientist => scientist.title === 'Physician').map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
                               {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
@@ -262,7 +262,7 @@ export default function CreateProgram() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {scientists.map((scientist) => (
+                          {scientists.filter(scientist => scientist.title === 'Physician').map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
                               {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
