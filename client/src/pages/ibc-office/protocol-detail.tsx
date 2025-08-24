@@ -1088,16 +1088,22 @@ export default function IbcProtocolDetailPage() {
                   {application?.status === 'submitted' && (
                     <>
                       <Button 
-                        onClick={() => setNewWorkflowStatus('vetted')}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => {
+                          setNewWorkflowStatus('vetted');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         className="bg-purple-600 hover:bg-purple-700"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         Accept as Vetted
                       </Button>
                       <Button 
-                        onClick={() => setNewWorkflowStatus('draft')}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => {
+                          setNewWorkflowStatus('draft');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         variant="outline"
                       >
                         <FileText className="h-4 w-4 mr-2" />
@@ -1113,15 +1119,18 @@ export default function IbcProtocolDetailPage() {
                           setNewWorkflowStatus('under_review');
                           setShowReviewerSelection(true);
                         }}
-                        disabled={updateStatusMutation.isPending}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         className="bg-yellow-600 hover:bg-yellow-700"
                       >
                         <Users className="h-4 w-4 mr-2" />
                         Assign Reviewers
                       </Button>
                       <Button 
-                        onClick={() => setNewWorkflowStatus('submitted')}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => {
+                          setNewWorkflowStatus('submitted');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         variant="outline"
                       >
                         <Send className="h-4 w-4 mr-2" />
@@ -1133,16 +1142,22 @@ export default function IbcProtocolDetailPage() {
                   {application?.status === 'under_review' && (
                     <>
                       <Button 
-                        onClick={() => setNewWorkflowStatus('active')}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => {
+                          setNewWorkflowStatus('active');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         className="bg-green-600 hover:bg-green-700"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Approve Protocol
                       </Button>
                       <Button 
-                        onClick={() => setNewWorkflowStatus('vetted')}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => {
+                          setNewWorkflowStatus('vetted');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         variant="outline"
                       >
                         <Eye className="h-4 w-4 mr-2" />
@@ -1154,8 +1169,11 @@ export default function IbcProtocolDetailPage() {
                   {application?.status === 'active' && (
                     <>
                       <Button 
-                        onClick={() => setNewWorkflowStatus('expired')}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => {
+                          setNewWorkflowStatus('expired');
+                          handleStatusUpdate();
+                        }}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         variant="destructive"
                       >
                         <XCircle className="h-4 w-4 mr-2" />
@@ -1288,40 +1306,12 @@ export default function IbcProtocolDetailPage() {
                 />
               </div>
 
-              {/* Submit Button for selected workflow action */}
-              {newWorkflowStatus && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-sm">Ready to Submit</h4>
-                      <p className="text-xs text-gray-600">
-                        Action: {IBC_WORKFLOW_STATUSES.find(s => s.value === newWorkflowStatus)?.label}
-                        {newWorkflowStatus === 'under_review' && selectedReviewers.length > 0 && 
-                          ` with ${selectedReviewers.length} reviewer(s)`}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setNewWorkflowStatus('');
-                          setSelectedReviewers([]);
-                          setShowReviewerSelection(false);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={handleStatusUpdate}
-                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        {updateStatusMutation.isPending ? "Submitting..." : "Submit Action"}
-                      </Button>
-                    </div>
-                  </div>
+              {/* Helper text when no comment provided */}
+              {!reviewComments.trim() && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    Please provide a comment to enable workflow actions
+                  </p>
                 </div>
               )}
 
