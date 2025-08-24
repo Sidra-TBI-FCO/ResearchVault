@@ -311,16 +311,14 @@ export default function IbcProtocolDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {(() => {
-                  // Create timeline entries with dates and sort chronologically
-                  const timelineEntries = [];
+                  // Create unified timeline entries from both status changes and comments
+                  const timelineEntries: any[] = [];
                   
-                  // Add draft status at the very beginning
+                  // Add status timeline events based on application dates
                   if (application.createdAt) {
                     timelineEntries.push({
                       date: new Date(application.createdAt),
                       type: 'status',
-                      subtype: 'draft',
-                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <FileText className="h-4 w-4 text-gray-500" />
@@ -333,13 +331,10 @@ export default function IbcProtocolDetailPage() {
                     });
                   }
                   
-                  // Add status timeline events
                   if (application.submissionDate) {
                     timelineEntries.push({
                       date: new Date(application.submissionDate),
                       type: 'status',
-                      subtype: 'submitted',
-                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Send className="h-4 w-4 text-blue-500" />
@@ -356,8 +351,6 @@ export default function IbcProtocolDetailPage() {
                     timelineEntries.push({
                       date: new Date(application.vettedDate),
                       type: 'status',
-                      subtype: 'vetted',
-                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Eye className="h-4 w-4 text-purple-500" />
@@ -374,8 +367,6 @@ export default function IbcProtocolDetailPage() {
                     timelineEntries.push({
                       date: new Date(application.underReviewDate),
                       type: 'status',
-                      subtype: 'under_review',
-                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Eye className="h-4 w-4 text-yellow-500" />
@@ -392,8 +383,6 @@ export default function IbcProtocolDetailPage() {
                     timelineEntries.push({
                       date: new Date(application.approvalDate),
                       type: 'status',
-                      subtype: 'approved',
-                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="h-4 w-4 text-green-500" />
@@ -410,8 +399,6 @@ export default function IbcProtocolDetailPage() {
                     timelineEntries.push({
                       date: new Date(application.expirationDate),
                       type: 'status',
-                      subtype: 'expires',
-                      priority: 1,
                       element: (
                         <div className="flex items-center space-x-2">
                           <Clock className="h-4 w-4 text-orange-500" />
@@ -424,124 +411,102 @@ export default function IbcProtocolDetailPage() {
                     });
                   }
                   
-                  // Add office comments
-                  if (application.reviewComments) {
-                    // Handle both old format (string) and new format (array)
-                    const comments = Array.isArray(application.reviewComments) 
-                      ? application.reviewComments 
-                      : [{ comment: application.reviewComments, timestamp: application.updatedAt, type: 'office_comment' }];
+                  // Add comments from the separate comments table
+                  if (comments && comments.length > 0) {
+                    comments.forEach((comment: any) => {
+                      const commentDate = new Date(comment.createdAt);
+                      let bgClass = 'bg-amber-50 border-amber-200';
+                      let iconClass = 'text-amber-600';
+                      let titleClass = 'text-amber-800';
+                      let textClass = 'text-amber-700';
+                      let authorClass = 'text-amber-600';
+                      let commentTitle = 'Comment';
                       
-                    comments.forEach((comment: any, index: number) => {
-                      if (comment && comment.timestamp) {
-                        // Ensure we have a valid comment text
-                        const commentText = typeof comment === 'string' ? comment : (comment.comment || 'No comment text');
-                        
-                        timelineEntries.push({
-                          date: new Date(comment.timestamp),
-                          type: 'comment',
-                          subtype: 'office',
-                          commentText: commentText,
-                          priority: 2,
-                          element: (
-                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                              <div className="flex items-start gap-2">
-                                <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
-                                  </div>
-                                  <p className="text-sm text-amber-700">{String(commentText)}</p>
+                      // Style based on comment type
+                      switch (comment.type) {
+                        case 'office_comment':
+                          bgClass = 'bg-amber-50 border-amber-200';
+                          iconClass = 'text-amber-600';
+                          titleClass = 'text-amber-800';
+                          textClass = 'text-amber-700';
+                          authorClass = 'text-amber-600';
+                          commentTitle = 'Office Comment';
+                          break;
+                        case 'reviewer_feedback':
+                          bgClass = 'bg-orange-50 border-orange-200';
+                          iconClass = 'text-orange-600';
+                          titleClass = 'text-orange-800';
+                          textClass = 'text-orange-700';
+                          authorClass = 'text-orange-600';
+                          commentTitle = 'Reviewer Feedback';
+                          break;
+                        case 'pi_response':
+                          bgClass = 'bg-blue-50 border-blue-200';
+                          iconClass = 'text-blue-600';
+                          titleClass = 'text-blue-800';
+                          textClass = 'text-blue-700';
+                          authorClass = 'text-blue-600';
+                          commentTitle = 'PI Response';
+                          break;
+                        case 'status_change':
+                          bgClass = 'bg-green-50 border-green-200';
+                          iconClass = 'text-green-600';
+                          titleClass = 'text-green-800';
+                          textClass = 'text-green-700';
+                          authorClass = 'text-green-600';
+                          commentTitle = 'Status Update';
+                          break;
+                        default:
+                          bgClass = 'bg-gray-50 border-gray-200';
+                          iconClass = 'text-gray-600';
+                          titleClass = 'text-gray-800';
+                          textClass = 'text-gray-700';
+                          authorClass = 'text-gray-600';
+                          commentTitle = 'Comment';
+                      }
+                      
+                      timelineEntries.push({
+                        date: commentDate,
+                        type: 'comment',
+                        element: (
+                          <div className={`p-3 ${bgClass} border rounded-lg`}>
+                            <div className="flex items-start gap-2">
+                              <MessageCircle className={`h-4 w-4 ${iconClass} mt-0.5`} />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className={`text-sm font-medium ${titleClass}`}>{commentTitle}</h4>
+                                  <span className={`text-xs ${authorClass}`}>
+                                    {comment.authorName || 'Unknown'}
+                                  </span>
                                 </div>
+                                <p className={`text-sm ${textClass}`}>{comment.content}</p>
                               </div>
                             </div>
-                          )
-                        });
-                      }
+                          </div>
+                        )
+                      });
                     });
                   }
                   
-                  // Add PI responses
-                  if (application.piResponses && Array.isArray(application.piResponses)) {
-                    application.piResponses.forEach((response: any, index: number) => {
-                      if (response.timestamp) {
-                        timelineEntries.push({
-                          date: new Date(response.timestamp),
-                          type: 'comment',
-                          subtype: 'pi_response',
-                          commentText: response.comment,
-                          priority: 2,
-                          element: (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <div className="flex items-start gap-2">
-                                <MessageCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <h4 className="text-sm font-medium text-blue-800">PI Response</h4>
-                                  </div>
-                                  <p className="text-sm text-blue-700">{response.comment}</p>
-                                </div>
-                              </div>
+                  // Sort all entries chronologically
+                  timelineEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
+                  
+                  return (
+                    <div className="space-y-3">
+                      {timelineEntries.map((entry, index) => (
+                        <div key={`timeline-${entry.type}-${index}`} className="relative">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 text-xs text-gray-400 w-20">
+                              {format(entry.date, 'MMM d, HH:mm')}
                             </div>
-                          )
-                        });
-                      }
-                    });
-                  }
-                  
-                  // Assign logical order keys based on workflow
-                  timelineEntries.forEach((entry, index) => {
-                    // Ensure all entries have an orderKey
-                    entry.orderKey = entry.date.getTime(); // Default to timestamp
-                    
-                    if (entry.type === 'status') {
-                      // Assign fixed order values for status changes
-                      if (entry.subtype === 'draft') {
-                        entry.orderKey = 1;
-                      } else if (entry.subtype === 'submitted') {
-                        entry.orderKey = 4;
-                      } else if (entry.subtype === 'vetted') {
-                        entry.orderKey = 6;
-                      } else if (entry.subtype === 'under_review') {
-                        entry.orderKey = 8;
-                      } else if (entry.subtype === 'approved') {
-                        entry.orderKey = 10;
-                      } else if (entry.subtype === 'expires') {
-                        entry.orderKey = 12;
-                      }
-                    } else if (entry.type === 'comment') {
-                      // Identify comment by content to determine logical position
-                      const commentText = entry.commentText || '';
-                      
-                      if (commentText.includes('comment 1')) {
-                        entry.orderKey = 2;
-                      } else if (commentText.includes('comment 2')) {
-                        entry.orderKey = 3;
-                      } else if (commentText.includes('comment 3')) {
-                        entry.orderKey = 5;
-                      } else if (commentText.includes('comment 4')) {
-                        entry.orderKey = 7;
-                      } else if (commentText.includes('comment 5')) {
-                        entry.orderKey = 9;
-                      }
-                      // If no specific comment pattern found, keep the timestamp-based order
-                    }
-                  });
-
-                  // Sort by the assigned order keys
-                  timelineEntries.sort((a, b) => (a.orderKey || 0) - (b.orderKey || 0));
-                  
-                  return timelineEntries.map((entry, index) => (
-                    <div key={`timeline-${entry.type}-${entry.subtype}-${index}`} className="relative">
-                      <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 text-xs text-gray-400 w-24">
-                          {format(entry.date, 'MMM d, HH:mm')}
+                            <div className="flex-1">
+                              {entry.element}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          {entry.element}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ));
+                  );
                 })()}
               </CardContent>
             </Card>
