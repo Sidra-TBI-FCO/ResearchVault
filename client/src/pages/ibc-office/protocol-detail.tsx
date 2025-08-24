@@ -143,6 +143,7 @@ export default function IbcProtocolDetailPage() {
       setNewWorkflowStatus("");
       setReviewComments("");
       setSelectedReviewers([]);
+      setShowReviewerSelection(false);
     },
     onError: () => {
       toast({
@@ -171,6 +172,16 @@ export default function IbcProtocolDetailPage() {
 
   const handleStatusUpdate = () => {
     if (!newWorkflowStatus) return;
+    
+    // Require comments for all workflow actions
+    if (!reviewComments.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please provide a comment explaining this workflow action before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // If changing to under_review and no reviewers selected, show error
     if (newWorkflowStatus === "under_review" && selectedReviewers.length === 0) {
@@ -1077,10 +1088,7 @@ export default function IbcProtocolDetailPage() {
                   {application?.status === 'submitted' && (
                     <>
                       <Button 
-                        onClick={() => {
-                          setNewWorkflowStatus('vetted');
-                          handleStatusUpdate();
-                        }}
+                        onClick={() => setNewWorkflowStatus('vetted')}
                         disabled={updateStatusMutation.isPending}
                         className="bg-purple-600 hover:bg-purple-700"
                       >
@@ -1088,10 +1096,7 @@ export default function IbcProtocolDetailPage() {
                         Accept as Vetted
                       </Button>
                       <Button 
-                        onClick={() => {
-                          setNewWorkflowStatus('draft');
-                          handleStatusUpdate();
-                        }}
+                        onClick={() => setNewWorkflowStatus('draft')}
                         disabled={updateStatusMutation.isPending}
                         variant="outline"
                       >
@@ -1115,10 +1120,7 @@ export default function IbcProtocolDetailPage() {
                         Assign Reviewers
                       </Button>
                       <Button 
-                        onClick={() => {
-                          setNewWorkflowStatus('submitted');
-                          handleStatusUpdate();
-                        }}
+                        onClick={() => setNewWorkflowStatus('submitted')}
                         disabled={updateStatusMutation.isPending}
                         variant="outline"
                       >
@@ -1131,10 +1133,7 @@ export default function IbcProtocolDetailPage() {
                   {application?.status === 'under_review' && (
                     <>
                       <Button 
-                        onClick={() => {
-                          setNewWorkflowStatus('active');
-                          handleStatusUpdate();
-                        }}
+                        onClick={() => setNewWorkflowStatus('active')}
                         disabled={updateStatusMutation.isPending}
                         className="bg-green-600 hover:bg-green-700"
                       >
@@ -1142,10 +1141,7 @@ export default function IbcProtocolDetailPage() {
                         Approve Protocol
                       </Button>
                       <Button 
-                        onClick={() => {
-                          setNewWorkflowStatus('vetted');
-                          handleStatusUpdate();
-                        }}
+                        onClick={() => setNewWorkflowStatus('vetted')}
                         disabled={updateStatusMutation.isPending}
                         variant="outline"
                       >
@@ -1158,10 +1154,7 @@ export default function IbcProtocolDetailPage() {
                   {application?.status === 'active' && (
                     <>
                       <Button 
-                        onClick={() => {
-                          setNewWorkflowStatus('expired');
-                          handleStatusUpdate();
-                        }}
+                        onClick={() => setNewWorkflowStatus('expired')}
                         disabled={updateStatusMutation.isPending}
                         variant="destructive"
                       >
@@ -1294,6 +1287,43 @@ export default function IbcProtocolDetailPage() {
                   rows={4}
                 />
               </div>
+
+              {/* Submit Button for selected workflow action */}
+              {newWorkflowStatus && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-sm">Ready to Submit</h4>
+                      <p className="text-xs text-gray-600">
+                        Action: {IBC_WORKFLOW_STATUSES.find(s => s.value === newWorkflowStatus)?.label}
+                        {newWorkflowStatus === 'under_review' && selectedReviewers.length > 0 && 
+                          ` with ${selectedReviewers.length} reviewer(s)`}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setNewWorkflowStatus('');
+                          setSelectedReviewers([]);
+                          setShowReviewerSelection(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleStatusUpdate}
+                        disabled={updateStatusMutation.isPending || !reviewComments.trim()}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {updateStatusMutation.isPending ? "Submitting..." : "Submit Action"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {application.reviewComments && (
                 <div>
