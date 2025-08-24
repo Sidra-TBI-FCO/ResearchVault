@@ -160,6 +160,7 @@ export default function CreateScientist() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="Management">Management</SelectItem>
                           <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
                           <SelectItem value="Investigator">Investigator</SelectItem>
                           <SelectItem value="Physician">Physician</SelectItem>
