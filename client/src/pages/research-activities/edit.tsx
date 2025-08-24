@@ -59,6 +59,7 @@ export default function EditResearchActivity() {
       status: "planning",
       projectId: undefined,
 
+      principalInvestigatorId: undefined,
       leadScientistId: undefined,
       startDate: undefined,
       endDate: undefined,

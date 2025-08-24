@@ -38,8 +38,9 @@ const createResearchActivitySchema = insertResearchActivitySchema.extend({
   projectId: z.number({
     required_error: "Please select a project",
   }),
+  principalInvestigatorId: z.number().optional(),
+  leadScientistId: z.number().optional(),
   budgetHolderId: z.number().optional(),
-  lineManagerId: z.number().optional(),
   additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
@@ -236,6 +237,45 @@ export default function CreateResearchActivity() {
 
                 <FormField
                   control={form.control}
+                  name="principalInvestigatorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Principal Investigator</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString() || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select principal investigator" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientistsLoading ? (
+                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                          ) : (
+                            scientists?.filter(scientist => 
+                              scientist.title === 'Investigator' || 
+                              scientist.title === 'Staff Scientist' || 
+                              scientist.title === 'Physician'
+                            ).map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {scientist.name} ({scientist.title})
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Must be an Investigator, Staff Scientist, or Physician
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="budgetHolderId"
                   render={({ field }) => (
                     <FormItem>
@@ -253,16 +293,20 @@ export default function CreateResearchActivity() {
                           {scientistsLoading ? (
                             <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
                           ) : (
-                            scientists?.map((scientist) => (
+                            scientists?.filter(scientist => 
+                              scientist.title === 'Investigator' || 
+                              scientist.title === 'Staff Scientist' || 
+                              scientist.title === 'Physician'
+                            ).map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name}
+                                {scientist.name} ({scientist.title})
                               </SelectItem>
                             ))
                           )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Person responsible for budget management
+                        Must be an Investigator, Staff Scientist, or Physician
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -271,17 +315,17 @@ export default function CreateResearchActivity() {
 
                 <FormField
                   control={form.control}
-                  name="lineManagerId"
+                  name="leadScientistId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Line Manager</FormLabel>
+                      <FormLabel>Lead Scientist</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select line manager" />
+                            <SelectValue placeholder="Select lead scientist" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -290,14 +334,14 @@ export default function CreateResearchActivity() {
                           ) : (
                             scientists?.map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name}
+                                {scientist.name} ({scientist.title || 'No title'})
                               </SelectItem>
                             ))
                           )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Supervisor or administrative manager
+                        Can be any type of scientist
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -394,7 +438,7 @@ export default function CreateResearchActivity() {
                   name="endDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>End Date</FormLabel>
+                      <FormLabel>End Date (Optional)</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
