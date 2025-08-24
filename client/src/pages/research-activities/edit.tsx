@@ -111,11 +111,15 @@ export default function EditResearchActivity() {
   });
 
   const onSubmit = (data: InsertResearchActivity) => {
-    // Convert Date objects to ISO strings for API
+    // Convert Date objects to ISO strings for API, handle null values properly  
     const formattedData = {
       ...data,
-      startDate: data.startDate ? data.startDate.toISOString() : undefined,
-      endDate: data.endDate ? data.endDate.toISOString() : undefined,
+      startDate: data.startDate ? data.startDate.toISOString() : null,
+      endDate: data.endDate ? data.endDate.toISOString() : null,
+      description: data.description || null,
+      objectives: data.objectives || null,
+      budgetSource: data.budgetSource || null,
+      additionalNotificationEmail: data.additionalNotificationEmail || null,
     };
     updateMutation.mutate(formattedData);
   };
