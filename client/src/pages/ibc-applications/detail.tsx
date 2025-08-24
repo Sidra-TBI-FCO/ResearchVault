@@ -30,7 +30,10 @@ export default function IbcApplicationDetail() {
   const { id } = useParams();
   const [, navigate] = useLocation();
 
-  const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
+  const { data: ibcApplication, isLoading } = useQuery<IbcApplication & {
+    principalInvestigator?: { id: number; name: string; profileImageInitials: string };
+    researchActivities?: ResearchActivity[];
+  }>({
     queryKey: [`/api/ibc-applications/${id}`],
     enabled: !!id,
   });
@@ -38,7 +41,7 @@ export default function IbcApplicationDetail() {
   // Principal investigator data is embedded in the application response
   const scientist = ibcApplication?.principalInvestigator;
 
-  // Research activities data is embedded in the application response
+  // Research activities data is embedded in the application response  
   const researchActivities = ibcApplication?.researchActivities;
 
   const { data: comments = [] } = useQuery({
@@ -219,7 +222,7 @@ export default function IbcApplicationDetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {researchActivities.map((activity) => (
+                  {researchActivities.map((activity: any) => (
                     <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
