@@ -96,12 +96,16 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   }).optional(),
   
   nihAppendixC: z.object({
-    biologicalAgents: z.array(z.object({
-      agentName: z.string(),
-      riskGroup: z.enum(["1", "2", "3", "4"]),
-      containmentRequired: z.string(),
-    })).default([]),
-    additionalAgents: z.string().optional(),
+    cI: z.boolean().default(false),
+    cII: z.boolean().default(false),
+    cIII: z.boolean().default(false),
+    cIV: z.boolean().default(false),
+    cV: z.boolean().default(false),
+    cVI: z.boolean().default(false),
+    cVII: z.boolean().default(false),
+    cVIII: z.boolean().default(false),
+    cIX: z.boolean().default(false),
+    additionalConsiderations: z.string().optional(),
   }).optional(),
   
   // Methods and Procedures
@@ -237,7 +241,15 @@ export default function IbcApplicationEdit() {
         f8TransgenicBreeding: false,
       },
       nihAppendixC: {
-        biologicalAgents: [],
+        cI: false,
+        cII: false,
+        cIII: false,
+        cIV: false,
+        cV: false,
+        cVI: false,
+        cVII: false,
+        cVIII: false,
+        cIX: false,
       },
       
       // Methods and Procedures defaults
@@ -322,7 +334,15 @@ export default function IbcApplicationEdit() {
           f8TransgenicBreeding: false,
         },
         nihAppendixC: ibcApplication.nihAppendixC || {
-          biologicalAgents: [],
+          cI: false,
+          cII: false,
+          cIII: false,
+          cIV: false,
+          cV: false,
+          cVI: false,
+          cVII: false,
+          cVIII: false,
+          cIX: false,
         },
         
         // Methods and Procedures actual values
@@ -2148,34 +2168,267 @@ export default function IbcApplicationEdit() {
                 </CardContent>
               </Card>
 
-              {/* NIH Appendix B & C - Biological Agent Classification */}
+              {/* NIH Appendix C - Exemptions */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl text-blue-800">Appendix B/C - Agent Classification & Exemptions</CardTitle>
+                  <CardTitle className="text-xl text-blue-800">Appendix C - Exemptions Under Section III-F-8</CardTitle>
                   <CardDescription className="text-blue-600">
-                    Biological agent risk group classification and exemption criteria (see Appendix B for complete agent lists)
+                    Specific exemption categories and containment conditions for certified host-vector systems
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cI"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-I: Recombinant/synthetic nucleic acid molecules in tissue culture
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Specific containment conditions for tissue culture systems (see C-I-A for exceptions)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cII"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-II: Escherichia coli K-12 host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Certified E. coli K-12 systems and containment requirements (see C-II-A for exceptions)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cIII"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-III: Saccharomyces host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Saccharomyces cerevisiae and S. uvarum systems (see C-III-A for exceptions)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cIV"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-IV: Kluyveromyces host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Kluyveromyces lactis systems and containment conditions (see C-IV-A for exceptions)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cV"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-V: Bacillus subtilis or B. licheniformis host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Certified Bacillus systems and safety requirements (see C-V-A for exceptions)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cVI"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-VI: Extrachromosomal elements of gram-positive organisms
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Natural exchangers and plasmid systems (see C-VI-A for exceptions)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cVII"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-VII: Purchase or transfer of transgenic rodents
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Acquisition and transfer conditions for existing transgenic rodents
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cVIII"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-VIII: Generation of BL1 transgenic rodents via breeding
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Breeding protocols for transgenic rodents requiring only BL1 containment
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihAppendixC.cIX"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              C-IX: Footnotes and references of Appendix C
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Additional clarifications and references for exemption categories
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
                   <FormField
                     control={form.control}
-                    name="nihAppendixC.additionalAgents"
+                    name="nihAppendixC.additionalConsiderations"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Risk Group Classification and Special Considerations</FormLabel>
+                        <FormLabel>Additional Containment Considerations</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Identify any biological agents used in this research. Classify by Risk Group (RG1-RG4) based on NIH Guidelines Appendix B. Note any host-vector systems or special containment considerations..."
+                            placeholder="Describe any specific containment conditions, host-vector certifications, or special considerations relevant to the exemption categories selected above..."
                             className="resize-none"
-                            rows={5}
+                            rows={3}
                             {...field}
                             value={field.value || ""}
                             disabled={isReadOnly}
                           />
                         </FormControl>
-                        <FormDescription>
-                          RG1: No/low risk • RG2: Moderate individual risk, limited community risk • RG3: High individual risk, low community risk • RG4: High individual and community risk
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
