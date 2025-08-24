@@ -84,6 +84,7 @@ import CreateIbcBoardMember from "@/pages/ibc-board-members/create";
 
 // IBC Reviewer
 import IbcReviewerPage from "@/pages/ibc-reviewer";
+import IbcReviewPage from "@/pages/ibc-reviewer/review";
 
 // Research Contracts
 import ContractsList from "@/pages/contracts";
@@ -178,6 +179,7 @@ function Router() {
         
         {/* IBC Reviewer */}
         <Route path="/ibc-reviewer" component={IbcReviewerPage} />
+        <Route path="/ibc-reviewer/review/:id" component={IbcReviewPage} />
         
         {/* IBC Applications */}
         <Route path="/ibc" component={IbcList} />
