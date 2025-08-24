@@ -862,7 +862,7 @@ export default function IbcProtocolDetailPage() {
               <div className="space-y-3">
                 <h4 className="font-medium text-sm">Available Actions</h4>
                 <div className="flex flex-wrap gap-2">
-                  {application?.status === 'submitted' && (
+                  {application?.status?.toLowerCase() === 'submitted' && (
                     <>
                       <Button 
                         onClick={() => {
@@ -889,7 +889,7 @@ export default function IbcProtocolDetailPage() {
                     </>
                   )}
 
-                  {application?.status === 'vetted' && (
+                  {application?.status?.toLowerCase() === 'vetted' && (
                     <>
                       <Button 
                         onClick={() => {
@@ -916,7 +916,7 @@ export default function IbcProtocolDetailPage() {
                     </>
                   )}
 
-                  {application?.status === 'under_review' && (
+                  {application?.status?.toLowerCase() === 'under_review' && (
                     <>
                       <Button 
                         onClick={() => {
@@ -943,7 +943,7 @@ export default function IbcProtocolDetailPage() {
                     </>
                   )}
 
-                  {application?.status === 'active' && (
+                  {application?.status?.toLowerCase() === 'active' && (
                     <>
                       <Button 
                         onClick={() => {
@@ -959,7 +959,7 @@ export default function IbcProtocolDetailPage() {
                     </>
                   )}
 
-                  {application?.status === 'draft' && (
+                  {application?.status?.toLowerCase() === 'draft' && (
                     <div className="text-sm text-gray-500 italic">
                       Waiting for Principal Investigator to submit application
                     </div>
