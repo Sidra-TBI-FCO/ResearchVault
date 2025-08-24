@@ -39,11 +39,11 @@ export default function ProjectEdit() {
   const form = useForm<InsertProject>({
     resolver: zodResolver(insertProjectSchema),
     defaultValues: {
-      projectId: project?.projectId || "",
-      name: project?.name || "",
-      description: project?.description || "",
-      programId: project?.programId || 0,
-      principalInvestigatorId: project?.principalInvestigatorId || 0,
+      projectId: "",
+      name: "",
+      description: "",
+      programId: undefined,
+      principalInvestigatorId: undefined,
     },
   });
 
@@ -55,7 +55,7 @@ export default function ProjectEdit() {
         name: project.name,
         description: project.description || "",
         programId: project.programId,
-        principalInvestigatorId: project.principalInvestigatorId || 0,
+        principalInvestigatorId: project.principalInvestigatorId || undefined,
       });
     }
   }, [project, form]);
@@ -184,7 +184,7 @@ export default function ProjectEdit() {
                         <SelectContent>
                           {programs?.map((program) => (
                             <SelectItem key={program.id} value={program.id.toString()}>
-                              {program.programId} - {program.title}
+                              {program.programId} - {program.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -197,26 +197,12 @@ export default function ProjectEdit() {
 
               <FormField
                 control={form.control}
-                name="title"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Project Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Project title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="shortTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Short Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Short title or abbreviation" {...field} />
+                      <Input placeholder="Project name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
