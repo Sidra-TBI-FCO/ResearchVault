@@ -182,7 +182,7 @@ export default function IbcReviewerPage() {
                   return (
                     <div 
                       key={app.id} 
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => setSelectedApplication(app)}
                     >
                       <div className="flex-1">
@@ -214,10 +214,7 @@ export default function IbcReviewerPage() {
                           <StatusIcon className="h-3 w-3 mr-1" />
                           {statusConfig?.label}
                         </Badge>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Review
-                        </Button>
+                        <Eye className="h-4 w-4 text-gray-400" />
                       </div>
                     </div>
                   );

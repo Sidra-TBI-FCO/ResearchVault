@@ -197,36 +197,33 @@ export default function IbcOfficePage() {
                   <CardContent>
                     <div className="space-y-3">
                       {statusApplications.map((app: IbcApplication) => (
-                        <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <div>
-                                <h4 className="font-medium">{app.title}</h4>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                                  <span>{app.ibcNumber}</span>
-                                  <span>PI: {getScientistName(app.principalInvestigatorId)}</span>
-                                  <Badge className={getBiosafetyLevelBadge(app.biosafetyLevel).color} variant="outline">
-                                    {app.biosafetyLevel}
-                                  </Badge>
-                                  {app.submissionDate && (
-                                    <span className="flex items-center space-x-1">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>Submitted: {new Date(app.submissionDate).toLocaleDateString()}</span>
-                                    </span>
-                                  )}
+                        <Link key={app.id} href={`/ibc-office/protocol-detail/${app.id}`}>
+                          <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  <h4 className="font-medium">{app.title}</h4>
+                                  <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                                    <span>{app.ibcNumber}</span>
+                                    <span>PI: {getScientistName(app.principalInvestigatorId)}</span>
+                                    <Badge className={getBiosafetyLevelBadge(app.biosafetyLevel).color} variant="outline">
+                                      {app.biosafetyLevel}
+                                    </Badge>
+                                    {app.submissionDate && (
+                                      <span className="flex items-center space-x-1">
+                                        <Calendar className="h-3 w-3" />
+                                        <span>Submitted: {new Date(app.submissionDate).toLocaleDateString()}</span>
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
+                            <div className="flex items-center space-x-2">
+                              <Eye className="h-4 w-4 text-gray-400" />
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Link href={`/ibc-office/protocol-detail/${app.id}`}>
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4 mr-2" />
-                                Review
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </CardContent>

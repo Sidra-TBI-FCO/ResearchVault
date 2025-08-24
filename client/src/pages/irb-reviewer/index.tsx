@@ -158,7 +158,11 @@ export default function IrbReviewerDashboard() {
           {reviewerApplications.length > 0 ? (
             <div className="space-y-3">
               {reviewerApplications.map((application) => (
-                <div key={application.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div 
+                  key={application.id} 
+                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/irb-reviewer/${application.id}`)}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -199,15 +203,7 @@ export default function IrbReviewerDashboard() {
                     </div>
                     
                     <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/irb-reviewer/${application.id}`)}
-                        className="flex items-center gap-1"
-                      >
-                        <Eye className="h-3 w-3" />
-                        Review
-                      </Button>
+                      <Eye className="h-4 w-4 text-gray-400" />
                     </div>
                   </div>
                 </div>
