@@ -46,6 +46,15 @@ export default function CreateScientist() {
 
   // Default form values
   const defaultValues: Partial<CreateScientistFormValues> = {
+    name: "",
+    firstName: "",
+    lastName: "",
+    title: "",
+    email: "",
+    staffId: "",
+    department: "",
+    bio: "",
+    profileImageInitials: "",
     supervisorId: null,
   };
 
@@ -115,10 +124,38 @@ export default function CreateScientist() {
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="col-span-full">
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Dr. Jane Doe" {...field} />
+                        <Input placeholder="e.g. Dr. Sarah Johnson" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Sarah" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Johnson" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -132,8 +169,25 @@ export default function CreateScientist() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="jane.doe@example.com" {...field} />
+                        <Input type="email" placeholder="sarah.johnson@example.com" {...field} value={field.value || ""} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="staffId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Staff ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12345" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormDescription>
+                        5-digit staff ID for badge access
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -147,7 +201,7 @@ export default function CreateScientist() {
                       <FormLabel>Job Title</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value || undefined}
+                        value={field.value || ""}
                       >
                         <FormControl>
                           <SelectTrigger>
