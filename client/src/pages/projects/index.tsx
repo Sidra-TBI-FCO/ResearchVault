@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +55,7 @@ interface Project {
 export default function ProjectsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [, setLocation] = useLocation();
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
@@ -176,7 +177,7 @@ export default function ProjectsList() {
                   <TableRow 
                     key={project.id}
                     className="cursor-pointer hover:bg-neutral-50/50 transition-colors"
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                    onClick={() => setLocation(`/projects/${project.id}`)}
                   >
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
@@ -198,7 +199,7 @@ export default function ProjectsList() {
                           className="text-sm hover:text-primary-500 transition-colors cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/programs/${project.program.id}`);
+                            setLocation(`/programs/${project.program!.id}`);
                           }}
                         >
                           {project.program.name}
