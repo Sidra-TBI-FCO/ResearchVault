@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -186,6 +186,7 @@ export default function IbcApplicationEdit() {
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [submissionComment, setSubmissionComment] = useState("");
+  const [collapsedProcedures, setCollapsedProcedures] = useState<Set<number>>(new Set());
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -2538,28 +2539,61 @@ export default function IbcApplicationEdit() {
                     )}
                   </div>
 
-                  {form.watch('hazardousProcedures')?.map((_, index) => (
+                  {form.watch('hazardousProcedures')?.map((procedure, index) => {
+                    const isCollapsed = collapsedProcedures.has(index);
+                    const procedureType = form.watch(`hazardousProcedures.${index}.procedure`) || "Not selected";
+                    
+                    return (
                     <Card key={index} className="relative">
-                      <CardHeader>
+                      <CardHeader 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => {
+                          const newCollapsed = new Set(collapsedProcedures);
+                          if (isCollapsed) {
+                            newCollapsed.delete(index);
+                          } else {
+                            newCollapsed.add(index);
+                          }
+                          setCollapsedProcedures(newCollapsed);
+                        }}
+                      >
                         <div className="flex justify-between items-center">
-                          <CardTitle className="text-lg">Hazardous Procedure #{index + 1}</CardTitle>
-                          {!isReadOnly && form.watch('hazardousProcedures')?.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const currentProcedures = form.getValues('hazardousProcedures') || [];
-                                const newProcedures = currentProcedures.filter((_, i) => i !== index);
-                                form.setValue('hazardousProcedures', newProcedures);
-                              }}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <div className="flex items-center space-x-3">
+                            <CardTitle className="text-lg">Hazardous Procedure #{index + 1}</CardTitle>
+                            <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                              {procedureType}
+                            </span>
+                            {isCollapsed ? (
+                              <ChevronDown className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4 text-gray-500" />
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {!isReadOnly && form.watch('hazardousProcedures')?.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent triggering collapse
+                                  const currentProcedures = form.getValues('hazardousProcedures') || [];
+                                  const newProcedures = currentProcedures.filter((_, i) => i !== index);
+                                  form.setValue('hazardousProcedures', newProcedures);
+                                  // Update collapsed state after removal
+                                  const newCollapsed = new Set(collapsedProcedures);
+                                  newCollapsed.delete(index);
+                                  setCollapsedProcedures(newCollapsed);
+                                }}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
+                      {!isCollapsed && (
                       <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 gap-6">
                           {/* Procedure Dropdown */}
@@ -2724,8 +2758,10 @@ export default function IbcApplicationEdit() {
                           />
                         </div>
                       </CardContent>
+                      )}
                     </Card>
-                  ))}
+                  );
+                  })}
 
                   {(!form.watch('hazardousProcedures') || form.watch('hazardousProcedures')?.length === 0) && (
                     <Card>
@@ -2777,8 +2813,9 @@ export default function IbcApplicationEdit() {
                           )}
                         </div>
                       </CardContent>
-                    </Card>
-                  )}
+                      )}
+                  );
+                  })}
                 </TabsContent>
               </Tabs>
             </TabsContent>
