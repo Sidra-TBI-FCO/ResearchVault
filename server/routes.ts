@@ -2121,8 +2121,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "IBC application not found" });
       }
 
-      // Update the application with reviewer feedback
-      // For now, we'll store this in the reviewComments field and update status based on recommendation
+      // Handle reviewer feedback as part of reviewComments array structure
+      const currentReviewComments = application.reviewComments as any[] || [];
+      
+      // Add the new reviewer comment
+      const newReviewComment = {
+        type: 'reviewer_feedback',
+        author: 'IBC Reviewer', // In a real system, this would be the logged-in reviewer's name
+        date: new Date().toISOString(),
+        recommendation: recommendation,
+        comment: comments
+      };
+      
+      const updatedReviewComments = [...currentReviewComments, newReviewComment];
+
+      // Update status based on recommendation
       let newStatus = application.status;
       if (recommendation === 'approve') {
         newStatus = 'active';
@@ -2133,7 +2146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedApplication = await storage.updateIbcApplication(id, {
-        reviewComments: comments,
+        reviewComments: updatedReviewComments,
         status: newStatus,
         underReviewDate: newStatus === 'under_review' ? new Date() : application.underReviewDate,
         approvalDate: newStatus === 'active' ? new Date() : application.approvalDate,
