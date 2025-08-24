@@ -41,8 +41,28 @@ export default function IbcApplicationDetail() {
   // Principal investigator data is embedded in the application response
   const scientist = ibcApplication?.principalInvestigator;
 
-  // Research activities data is embedded in the application response  
-  const researchActivities = ibcApplication?.researchActivities;
+  // Get full research activity data with budget sources
+  const { data: fullResearchActivities } = useQuery<ResearchActivity[]>({
+    queryKey: [`/api/ibc-applications/${id}/research-activities-full`],
+    queryFn: async () => {
+      // Get basic activities from embedded data
+      const basicActivities = ibcApplication?.researchActivities || [];
+      
+      // Fetch full data for each activity
+      const fullActivities = await Promise.all(
+        basicActivities.map(async (activity: any) => {
+          const response = await fetch(`/api/research-activities/${activity.id}`);
+          return response.json();
+        })
+      );
+      
+      return fullActivities;
+    },
+    enabled: !!ibcApplication?.researchActivities?.length,
+  });
+
+  // Use full activities if available, otherwise fall back to basic embedded data
+  const researchActivities = fullResearchActivities || ibcApplication?.researchActivities;
 
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/ibc-applications/${id}/comments`],
