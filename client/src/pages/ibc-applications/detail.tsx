@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { usePublicationCount } from "@/hooks/use-publication-count";
+import TimelineComments from "@/components/TimelineComments";
 
 export default function IbcApplicationDetail() {
   const params = useParams<{ id: string }>();
@@ -37,6 +38,14 @@ export default function IbcApplicationDetail() {
       return response.json();
     },
     enabled: !!id,
+  });
+
+  // Fetch comments for this IBC application
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: [`/api/ibc-applications/${id}/comments`],
+    enabled: !!id,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const { data: principalInvestigator, isLoading: piLoading } = useQuery<Scientist>({
@@ -464,251 +473,10 @@ export default function IbcApplicationDetail() {
           </Card>
 
           {/* Timeline & Office Comments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Timeline & Comments
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {(() => {
-                  // Create timeline entries array for chronological sorting
-                  const timelineEntries: any[] = [];
-
-                  // Add draft status at the very beginning (using creation date)
-                  if (ibcApplication.createdAt) {
-                    timelineEntries.push({
-                      date: new Date(ibcApplication.createdAt),
-                      type: 'status',
-                      statusType: 'draft',
-                      priority: 1, // Status changes get priority 1
-                      element: (
-                        <div className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-gray-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Draft Created</span>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(ibcApplication.createdAt), 'MMM d, yyyy HH:mm')}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600">Application created as draft</p>
-                          </div>
-                        </div>
-                      )
-                    });
-                  }
-
-                  // Add status changes
-                  if (ibcApplication.submissionDate) {
-                    timelineEntries.push({
-                      date: new Date(ibcApplication.submissionDate),
-                      type: 'status',
-                      statusType: 'submitted',
-                      priority: 1, // Status changes get priority 1
-                      element: (
-                        <div className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Submitted</span>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(ibcApplication.submissionDate), 'MMM d, yyyy HH:mm')}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600">Application submitted for review</p>
-                          </div>
-                        </div>
-                      )
-                    });
-                  }
-
-                  if (ibcApplication.vettedDate) {
-                    timelineEntries.push({
-                      date: new Date(ibcApplication.vettedDate),
-                      type: 'status',
-                      statusType: 'vetted',
-                      priority: 1, // Status changes get priority 1
-                      element: (
-                        <div className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Vetted</span>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(ibcApplication.vettedDate), 'MMM d, yyyy HH:mm')}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600">Application passed initial vetting</p>
-                          </div>
-                        </div>
-                      )
-                    });
-                  }
-
-                  if (ibcApplication.underReviewDate) {
-                    timelineEntries.push({
-                      date: new Date(ibcApplication.underReviewDate),
-                      type: 'status',
-                      statusType: 'under_review',
-                      priority: 1, // Status changes get priority 1
-                      element: (
-                        <div className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Under Review</span>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(ibcApplication.underReviewDate), 'MMM d, yyyy HH:mm')}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600">Application under committee review</p>
-                          </div>
-                        </div>
-                      )
-                    });
-                  }
-
-                  if (ibcApplication.approvalDate) {
-                    timelineEntries.push({
-                      date: new Date(ibcApplication.approvalDate),
-                      type: 'status',
-                      statusType: 'approved',
-                      priority: 1, // Status changes get priority 1
-                      element: (
-                        <div className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Approved</span>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(ibcApplication.approvalDate), 'MMM d, yyyy HH:mm')}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600">Application approved by IBC</p>
-                          </div>
-                        </div>
-                      )
-                    });
-                  }
-
-                  // Add office comments
-                  if (ibcApplication.reviewComments && Array.isArray(ibcApplication.reviewComments)) {
-                    ibcApplication.reviewComments.forEach((comment: any, index: number) => {
-                      if (comment.timestamp) {
-                        timelineEntries.push({
-                          date: new Date(comment.timestamp),
-                          type: 'comment',
-                          commentType: 'office',
-                          commentText: comment.comment,
-                          priority: 2, // Comments get priority 2 (after status changes)
-                          element: (
-                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                              <div className="flex items-start gap-2">
-                                <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <h4 className="text-sm font-medium text-amber-800">Office Comments</h4>
-                                    <span className="text-xs text-amber-600">
-                                      {format(new Date(comment.timestamp), 'MMM d, yyyy HH:mm')}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-amber-700">{comment.comment}</p>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        });
-                      }
-                    });
-                  }
-
-                  // Add PI responses
-                  if (ibcApplication.piResponses && Array.isArray(ibcApplication.piResponses)) {
-                    ibcApplication.piResponses.forEach((response: any, index: number) => {
-                      if (response.timestamp) {
-                        timelineEntries.push({
-                          date: new Date(response.timestamp),
-                          type: 'comment',
-                          commentType: 'pi',
-                          commentText: response.comment,
-                          priority: 2, // Comments get priority 2 (after status changes)
-                          element: (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <div className="flex items-start gap-2">
-                                <MessageCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <h4 className="text-sm font-medium text-blue-800">PI Response</h4>
-                                    <span className="text-xs text-blue-600">
-                                      {format(new Date(response.timestamp), 'MMM d, yyyy HH:mm')}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-blue-700">{response.comment}</p>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        });
-                      }
-                    });
-                  }
-
-                  // Assign logical order keys based on workflow
-                  timelineEntries.forEach((entry, index) => {
-                    // Ensure all entries have an orderKey
-                    entry.orderKey = entry.date.getTime(); // Default to timestamp
-                    
-                    if (entry.type === 'status') {
-                      // Assign fixed order values for status changes
-                      if (entry.statusType === 'draft') {
-                        entry.orderKey = 1;
-                      } else if (entry.statusType === 'submitted') {
-                        entry.orderKey = 4;
-                      } else if (entry.statusType === 'vetted') {
-                        entry.orderKey = 6;
-                      } else if (entry.statusType === 'under_review') {
-                        entry.orderKey = 8;
-                      } else if (entry.statusType === 'approved') {
-                        entry.orderKey = 10;
-                      }
-                    } else if (entry.type === 'comment') {
-                      // Identify comment by content to determine logical position
-                      const commentText = entry.commentText || '';
-                      
-                      if (commentText.includes('comment 1')) {
-                        entry.orderKey = 2;
-                      } else if (commentText.includes('comment 2')) {
-                        entry.orderKey = 3;
-                      } else if (commentText.includes('comment 3')) {
-                        entry.orderKey = 5;
-                      } else if (commentText.includes('comment 4')) {
-                        entry.orderKey = 7;
-                      } else if (commentText.includes('comment 5')) {
-                        entry.orderKey = 9;
-                      }
-                      // If no specific comment pattern found, keep the timestamp-based order
-                    }
-                  });
-
-                  // Sort by the assigned order keys
-                  timelineEntries.sort((a, b) => (a.orderKey || 0) - (b.orderKey || 0));
-
-                  return (
-                    <div className="space-y-3">
-                      {timelineEntries.map((entry, index) => (
-                        <div key={`timeline-${entry.type}-${index}`}>
-                          {entry.element}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
+          <TimelineComments 
+            application={ibcApplication} 
+            comments={comments} 
+          />
 
           {/* Associated Research Activities */}
           <Card>

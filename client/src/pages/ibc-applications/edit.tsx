@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import React from "react";
 import { z } from "zod";
+import TimelineComments from "@/components/TimelineComments";
 
 // Extended schema for edit form with biosafety options
 const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
@@ -1497,53 +1498,13 @@ export default function IbcApplicationEdit() {
 
           {/* Communication History */}
           {comments.length > 0 && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Communication History
-                </CardTitle>
-                <CardDescription>
-                  Review feedback and comments from the IBC office and reviewers
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {commentsLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {comments.map((comment: any) => (
-                      <div key={comment.id} className="border-l-2 border-gray-200 pl-4 py-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={
-                            comment.commentType === 'office_comment' ? 'destructive' :
-                            comment.commentType === 'reviewer_feedback' ? 'default' :
-                            comment.commentType === 'pi_response' ? 'secondary' :
-                            'outline'
-                          }>
-                            {comment.commentType === 'office_comment' ? 'IBC Office' :
-                             comment.commentType === 'reviewer_feedback' ? 'Reviewer' :
-                             comment.commentType === 'pi_response' ? 'PI Response' :
-                             'System'}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            {new Date(comment.createdAt).toLocaleDateString()} at {new Date(comment.createdAt).toLocaleTimeString()}
-                          </span>
-                        </div>
-                        <p className="text-sm">{comment.comment}</p>
-                        {comment.authorName && (
-                          <p className="text-xs text-gray-500 mt-1">— {comment.authorName}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <div className="mt-6">
+              <TimelineComments 
+                application={ibcApplication} 
+                comments={comments} 
+                title="Communication History"
+              />
+            </div>
           )}
 
           {/* Submission Comment - Required when submitting */}
