@@ -44,7 +44,19 @@ export default function ResearchActivityDetail() {
     enabled: !!activity?.projectId,
   });
 
-  // Fetch team members to get Principal Investigator from membership
+  // Fetch scientists to resolve scientist names
+  const { data: scientists, isLoading: scientistsLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+    queryFn: async () => {
+      const response = await fetch('/api/scientists');
+      if (!response.ok) {
+        throw new Error('Failed to fetch scientists');
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch team members for additional context
   const { data: teamMembers, isLoading: teamMembersLoading } = useQuery({
     queryKey: ['/api/research-activities', id, 'members'],
     queryFn: async () => {
@@ -57,10 +69,9 @@ export default function ResearchActivityDetail() {
     enabled: !!id,
   });
 
-  // Find Principal Investigator from team members
-  const principalInvestigator = teamMembers?.find((member: any) => 
-    member.role === 'Principal Investigator' || member.role === 'PI'
-  );
+  // Find scientists by ID
+  const budgetHolder = scientists?.find(s => s.id === activity?.budgetHolderId);
+  const leadScientist = scientists?.find(s => s.id === activity?.leadScientistId);
   
   // Get the count of publications for this research activity
   const { count: publicationCount } = usePublicationCount(activity?.id);
@@ -103,7 +114,7 @@ export default function ResearchActivityDetail() {
       }
       return response.json();
     },
-    select: (data) => data.filter(ibc => ibc.researchActivityId === activity?.id),
+    select: (data) => data.filter(ibc => ibc.research_activity_id === activity?.id),
     enabled: !!activity?.id,
   });
 
@@ -228,32 +239,34 @@ export default function ResearchActivityDetail() {
                   </div>
                 )}
 
+                {activity.budgetHolderId && (
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-400">Principal Investigator/Budget Holder</h3>
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      {scientistsLoading ? (
+                        <Skeleton className="h-4 w-32 inline-block" />
+                      ) : budgetHolder ? (
+                        <span className="text-sm">{budgetHolder.name} ({budgetHolder.title || 'No title'})</span>
+                      ) : (
+                        <span className="text-sm text-orange-600">Not assigned</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {activity.leadScientistId && (
                   <div>
                     <h3 className="text-sm font-medium text-neutral-400">Lead Scientist</h3>
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      <span className="text-sm">Lead Scientist ID: {activity.leadScientistId}</span>
-                    </div>
-                  </div>
-                )}
-
-                {activity.budgetHolderId && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Budget Holder</h3>
-                    <div className="flex items-center gap-1">
-                      <Building className="h-3 w-3" />
-                      <span className="text-sm">Budget Holder ID: {activity.budgetHolderId}</span>
-                    </div>
-                  </div>
-                )}
-
-                {activity.lineManagerId && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Line Manager</h3>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span className="text-sm">Line Manager ID: {activity.lineManagerId}</span>
+                      {scientistsLoading ? (
+                        <Skeleton className="h-4 w-32 inline-block" />
+                      ) : leadScientist ? (
+                        <span className="text-sm">{leadScientist.name} ({leadScientist.title || 'No title'})</span>
+                      ) : (
+                        <span className="text-sm text-orange-600">Not assigned</span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -269,29 +282,6 @@ export default function ResearchActivityDetail() {
                     </div>
                   </div>
                 )}
-                
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Principal Investigator</h3>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {teamMembersLoading ? (
-                      <Skeleton className="h-4 w-24 inline-block" />
-                    ) : principalInvestigator?.scientist ? (
-                      <span>{principalInvestigator.scientist.name}</span>
-                    ) : (
-                      <span className="text-orange-600 font-medium">
-                        Not assigned - 
-                        <Button 
-                          variant="link" 
-                          className="p-0 h-auto ml-1 text-orange-600 underline"
-                          onClick={() => navigate(`/research-activities/${activity.id}/team`)}
-                        >
-                          Add PI
-                        </Button>
-                      </span>
-                    )}
-                  </div>
-                </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-neutral-400">Start Date</h3>
