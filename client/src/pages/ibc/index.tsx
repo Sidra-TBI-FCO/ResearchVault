@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function IbcList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, navigate] = useLocation();
 
   const { data: applications, isLoading } = useQuery<EnhancedIbcApplication[]>({
     queryKey: ['/api/ibc-applications'],
@@ -128,17 +129,22 @@ export default function IbcList() {
               </TableHeader>
               <TableBody>
                 {filteredApplications?.map((application) => (
-                  <TableRow key={application.id}>
+                  <TableRow 
+                    key={application.id}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate(`/ibc-applications/${application.id}`)}
+                  >
                     <TableCell>
                       <div className="font-medium">
-                        <Link href={`/ibc-applications/${application.id}`}>
-                          <a className="hover:text-primary-500 transition-colors">{application.title}</a>
-                        </Link>
+                        {application.title}
                       </div>
                       {application.project && (
                         <div className="text-sm text-neutral-200 mt-1">
                           Project: <Link href={`/projects/${application.project.id}`}>
-                            <a className="text-primary-500 hover:text-primary-600 transition-colors">
+                            <a 
+                              className="text-primary-500 hover:text-primary-600 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {application.project.title}
                             </a>
                           </Link>
@@ -206,7 +212,14 @@ export default function IbcList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Handle actions menu here
+                        }}
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </TableCell>
