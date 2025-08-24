@@ -234,7 +234,7 @@ export default function IbcList() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/ibc-applications/edit/${application.id}`);
+                            navigate(`/ibc-applications/${application.id}`);
                           }}
                         >
                           <Eye className="h-4 w-4 mr-1" />

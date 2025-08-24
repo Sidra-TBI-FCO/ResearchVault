@@ -126,6 +126,8 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- August 24, 2025. Implemented unified read-only view functionality for IBC applications using single edit page with conditional form disabling based on application status
+- August 24, 2025. Added View/Edit button logic to IBC application list - Edit button for drafts only, View button for all applications
 - August 24, 2025. Fixed data integrity bug where principalInvestigatorId was reset to 0 during form submissions due to || operator instead of ?? nullish coalescing
 - August 24, 2025. Standardized timeline displays across all application views using unified TimelineComments component with proper comment content display and removal of redundant status change entries
 - August 24, 2025. Implemented separate IBC comments table for reliable communication tracking with proper timestamps and author information
