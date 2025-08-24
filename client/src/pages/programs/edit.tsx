@@ -226,7 +226,7 @@ export default function ProgramEdit() {
                         <SelectContent>
                           {scientists.map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name}
+                              {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -254,7 +254,7 @@ export default function ProgramEdit() {
                         <SelectContent>
                           {scientists.map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name}
+                              {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -284,7 +284,7 @@ export default function ProgramEdit() {
                         <SelectContent>
                           {scientists.map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name}
+                              {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -312,7 +312,7 @@ export default function ProgramEdit() {
                         <SelectContent>
                           {scientists.map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name}
+                              {scientist.name} - {scientist.title || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>
