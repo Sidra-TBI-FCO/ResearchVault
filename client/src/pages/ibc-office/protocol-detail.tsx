@@ -589,9 +589,18 @@ export default function IbcProtocolDetailPage() {
                   {researchActivities.map((sdr: any) => (
                     <div key={sdr.id} className="border rounded-lg p-3">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{sdr.sdrNumber}</p>
                           <p className="text-sm text-gray-600">{sdr.title}</p>
+                          {sdr.budgetSource && sdr.budgetSource.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {sdr.budgetSource.map((source: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                  {source}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <Badge variant="outline">{sdr.status}</Badge>
                       </div>
