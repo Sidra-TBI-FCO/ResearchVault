@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PublicationsList } from "@/components/PublicationsList";
 import { PublicationCharts } from "@/components/PublicationCharts";
+import { OrgChart } from "@/components/OrgChart";
 
 // Tree structure component for research activities
 interface ResearchActivitiesTreeProps {
@@ -341,8 +342,14 @@ export default function ScientistDetail() {
         <PublicationsList scientistId={id} yearsSince={5} />
         </div>
 
-        {/* Right Column - Research Activities and Publication Charts */}
+        {/* Right Column - Org Chart, Research Activities and Publication Charts */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Organization Chart */}
+          <OrgChart 
+            scientistId={id} 
+            onNavigate={(scientistId) => navigate(`/scientists/${scientistId}`)}
+          />
+          
           <Card>
             <CardHeader>
               <CardTitle>Research Activities</CardTitle>
