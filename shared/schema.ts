@@ -490,6 +490,9 @@ export const ibcApplications = pgTable("ibc_applications", {
   // Hazardous Procedures
   hazardousProcedures: json("hazardous_procedures"), // Array of hazardous procedures with controls and PPE
   
+  // Synthetic Experiments
+  syntheticExperiments: json("synthetic_experiments"), // Synthetic experiments data including vectors, inserts, and exposures
+  
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
   formData: json("form_data"), // Store form-specific data
   
