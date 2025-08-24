@@ -152,7 +152,7 @@ export default function IbcApplicationDetail() {
         
         {/* Action buttons based on status */}
         <div className="flex items-center space-x-2">
-          {ibcApplication.status === 'draft' ? (
+          {ibcApplication.status?.toLowerCase() === 'draft' ? (
             <Button onClick={() => navigate(`/ibc-applications/${id}/edit`)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Application
