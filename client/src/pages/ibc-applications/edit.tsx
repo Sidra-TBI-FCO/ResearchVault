@@ -84,8 +84,14 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   }).optional(),
   
   nihSectionF: z.object({
-    exemptExperiments: z.boolean().default(false),
-    exemptionCategories: z.array(z.string()).default([]),
+    f1TissueCulture: z.boolean().default(false),
+    f2EcoliK12: z.boolean().default(false),
+    f3Saccharomyces: z.boolean().default(false),
+    f4Kluyveromyces: z.boolean().default(false),
+    f5Bacillus: z.boolean().default(false),
+    f6GramPositive: z.boolean().default(false),
+    f7TransgenicRodents: z.boolean().default(false),
+    f8TransgenicBreeding: z.boolean().default(false),
     exemptionJustification: z.string().optional(),
   }).optional(),
   
@@ -221,8 +227,14 @@ export default function IbcApplicationEdit() {
         transgenicRodents: false,
       },
       nihSectionF: {
-        exemptExperiments: false,
-        exemptionCategories: [],
+        f1TissueCulture: false,
+        f2EcoliK12: false,
+        f3Saccharomyces: false,
+        f4Kluyveromyces: false,
+        f5Bacillus: false,
+        f6GramPositive: false,
+        f7TransgenicRodents: false,
+        f8TransgenicBreeding: false,
       },
       nihAppendixC: {
         biologicalAgents: [],
@@ -300,8 +312,14 @@ export default function IbcApplicationEdit() {
           transgenicRodents: false,
         },
         nihSectionF: ibcApplication.nihSectionF || {
-          exemptExperiments: false,
-          exemptionCategories: [],
+          f1TissueCulture: false,
+          f2EcoliK12: false,
+          f3Saccharomyces: false,
+          f4Kluyveromyces: false,
+          f5Bacillus: false,
+          f6GramPositive: false,
+          f7TransgenicRodents: false,
+          f8TransgenicBreeding: false,
         },
         nihAppendixC: ibcApplication.nihAppendixC || {
           biologicalAgents: [],
@@ -1890,7 +1908,7 @@ export default function IbcApplicationEdit() {
                   <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={form.control}
-                      name="nihSectionF.exemptExperiments"
+                      name="nihSectionF.f1TissueCulture"
                       render={({ field }) => (
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
@@ -1904,41 +1922,228 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Research qualifies for exemption under Section III-F
+                              III-F-1: Recombinant/synthetic nucleic acid molecules in tissue culture
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Examples: E. coli K-12 systems, Saccharomyces systems, tissue culture, certain transgenic rodent breeding
+                              Tissue culture experiments (with specific exceptions listed in Appendix C-I-A)
                             </FormDescription>
                           </div>
                         </FormItem>
                       )}
                     />
                     
-                    {form.watch('nihSectionF.exemptExperiments') && (
-                      <FormField
-                        control={form.control}
-                        name="nihSectionF.exemptionJustification"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Exemption Category and Justification</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Specify which exemption category (III-F-1 through III-F-8) applies and provide justification for why this research qualifies for exemption..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                                disabled={isReadOnly}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Note: Exemptions do not apply to experiments involving large-scale activities (&gt;10 liters), Risk Groups 3-4 agents, or toxin genes
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f2EcoliK12"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-2: E. coli K-12 host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Using certified E. coli K-12 systems (with specific exceptions listed in Appendix C-II-A)
                             </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f3Saccharomyces"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-3: Saccharomyces cerevisiae and S. uvarum host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Using certified Saccharomyces systems (with specific exceptions listed in Appendix C-III-A)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f4Kluyveromyces"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-4: Kluyveromyces lactis host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Using certified Kluyveromyces lactis systems (with specific exceptions listed in Appendix C-IV-A)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f5Bacillus"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-5: Bacillus subtilis or B. licheniformis host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Using certified Bacillus systems (with specific exceptions listed in Appendix C-V-A)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f6GramPositive"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-6: Extrachromosomal elements of gram-positive organisms
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Natural exchangers from Appendix A sublists (with specific exceptions listed in Appendix C-VI-A)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f7TransgenicRodents"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-7: Purchase or transfer of transgenic rodents
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Acquisition of existing transgenic rodents (see Appendix C-VII for details)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.f8TransgenicBreeding"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-F-8: Generation of BL1 transgenic rodents via breeding
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Breeding transgenic rodents that require only BL1 containment (see Appendix C-VIII)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h4 className="text-sm font-medium text-yellow-800 mb-2">Important Exemption Limitations</h4>
+                      <p className="text-xs text-yellow-700">
+                        These exemptions do NOT apply to: (1) experiments involving &gt;10 liters of culture, 
+                        (2) experiments with DNA from Risk Groups 3, 4, or restricted organisms, 
+                        (3) deliberate cloning of toxin genes with LD50 &lt; 100 ng/kg, or 
+                        (4) experiments involving gene drive modified organisms.
+                      </p>
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.exemptionJustification"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Exemption Justification</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="If any exemptions apply, provide specific justification and reference the relevant appendix (C-I through C-VIII)..."
+                              className="resize-none"
+                              rows={3}
+                              {...field}
+                              value={field.value || ""}
+                              disabled={isReadOnly}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </CardContent>
               </Card>
