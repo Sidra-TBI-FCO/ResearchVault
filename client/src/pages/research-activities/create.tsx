@@ -38,7 +38,6 @@ const createResearchActivitySchema = insertResearchActivitySchema.extend({
   projectId: z.number({
     required_error: "Please select a project",
   }),
-  principalInvestigatorId: z.number().optional(),
   leadScientistId: z.number().optional(),
   budgetHolderId: z.number().optional(),
   additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
@@ -237,56 +236,17 @@ export default function CreateResearchActivity() {
 
                 <FormField
                   control={form.control}
-                  name="principalInvestigatorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Principal Investigator</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select principal investigator" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {scientistsLoading ? (
-                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
-                          ) : (
-                            scientists?.filter(scientist => 
-                              scientist.title === 'Investigator' || 
-                              scientist.title === 'Staff Scientist' || 
-                              scientist.title === 'Physician'
-                            ).map((scientist) => (
-                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name} ({scientist.title})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Must be an Investigator, Staff Scientist, or Physician
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="budgetHolderId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget Holder</FormLabel>
+                      <FormLabel>Principal Investigator/Budget Holder</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={field.value?.toString() || undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select budget holder" />
+                            <SelectValue placeholder="Select principal investigator/budget holder" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
