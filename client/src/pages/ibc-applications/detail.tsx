@@ -223,23 +223,55 @@ export default function IbcApplicationDetail() {
               <CardContent>
                 <div className="space-y-3">
                   {researchActivities.map((activity: any) => (
-                    <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Beaker className="h-4 w-4 text-blue-600" />
+                    <div key={activity.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-3 flex-1">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Beaker className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className="font-medium text-blue-900">{activity.title}</p>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                                {activity.sdrNumber}
+                              </Badge>
+                              <Badge className={
+                                activity.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
+                                activity.status === 'planning' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                activity.status === 'completed' ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                                'bg-yellow-100 text-yellow-800 border-yellow-200'
+                              }>
+                                {activity.status?.charAt(0).toUpperCase() + activity.status?.slice(1)}
+                              </Badge>
+                            </div>
+                            {activity.budgetSource && activity.budgetSource.length > 0 && (
+                              <div className="mb-2">
+                                <span className="text-xs text-gray-500 mb-1 block">Funding Sources:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {activity.budgetSource.map((source: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                                      {source}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {activity.shortTitle && (
+                              <p className="text-sm text-gray-600">{activity.shortTitle}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-blue-900">{activity.title}</p>
-                          <p className="text-sm text-blue-700">{activity.sdrNumber}</p>
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => navigate(`/research-activities/${activity.id}`)}
+                          className="flex-shrink-0 ml-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => navigate(`/research-activities/${activity.id}`)}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
                     </div>
                   ))}
                 </div>
