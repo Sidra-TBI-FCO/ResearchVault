@@ -58,8 +58,8 @@ export default function EditResearchActivity() {
       objectives: "",
       status: "planning",
       projectId: undefined,
-
       leadScientistId: undefined,
+      budgetHolderId: undefined,
       startDate: undefined,
       endDate: undefined,
       sidraBranch: "",
@@ -81,7 +81,6 @@ export default function EditResearchActivity() {
         projectId: activity.projectId || undefined,
         leadScientistId: activity.leadScientistId || undefined,
         budgetHolderId: activity.budgetHolderId || undefined,
-        lineManagerId: activity.lineManagerId || undefined,
         startDate: activity.startDate ? new Date(activity.startDate) : undefined,
         endDate: activity.endDate ? new Date(activity.endDate) : undefined,
         sidraBranch: activity.sidraBranch || "",

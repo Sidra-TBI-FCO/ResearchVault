@@ -95,16 +95,17 @@ export const researchActivities = pgTable("research_activities", {
   status: text("status").notNull().default("planning"), // planning, active, completed, on_hold
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
-  leadScientistId: integer("lead_scientist_id"), // Lead Scientist (references scientists.id)
-  budgetHolderId: integer("budget_holder_id"), // references scientists.id
-  lineManagerId: integer("line_manager_id"), // references scientists.id
+  budgetHolderId: integer("budget_holder_id"), // references scientists.id (Principal Investigator/Budget Holder)
+  lineManagerId: integer("line_manager_id"), // references scientists.id (legacy field, not used in forms)
   additionalNotificationEmail: text("additional_notification_email"),
   sidraBranch: text("sidra_branch"), // Research, Clinical, External
   budgetSource: text("budget_source").array(), // IRF, PI Budget, QNRF, etc.
-  grantCodes: text("grant_codes").array(), // Grant codes corresponding to budget sources
   objectives: text("objectives"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  staffScientistId: integer("staff_scientist_id"), // references scientists.id (legacy field)
+  leadScientistId: integer("lead_scientist_id"), // Lead Scientist (references scientists.id)
+  grantCodes: text("grant_codes").array(), // Grant codes corresponding to budget sources
 });
 
 export const insertResearchActivitySchema = createInsertSchema(researchActivities).omit({
