@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +25,7 @@ export default function ScientistsList() {
   const [activeTab, setActiveTab] = useState("all");
   const [sortField, setSortField] = useState<"name" | "department" | "title" | "activeResearchActivities">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [, navigate] = useLocation();
 
   const { data: scientists, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
     queryKey: ['/api/scientists', { includeActivityCount: true }],
@@ -265,16 +266,18 @@ export default function ScientistsList() {
                   </TableHeader>
                   <TableBody>
                     {filteredScientists?.map((scientist) => (
-                      <TableRow key={scientist.id}>
+                      <TableRow 
+                        key={scientist.id}
+                        className="cursor-pointer hover:bg-neutral-50/50 transition-colors"
+                        onClick={() => navigate(`/scientists/${scientist.id}`)}
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-3">
                             <div className="h-8 w-8 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium">
                               {scientist.profileImageInitials || scientist.name.substring(0, 2)}
                             </div>
                             <div>
-                              <Link href={`/scientists/${scientist.id}`}>
-                                <span className="hover:text-primary-500 transition-colors cursor-pointer">{scientist.name}</span>
-                              </Link>
+                              <span className="font-medium">{scientist.name}</span>
                               {scientist.staffId && (
                                 <span className="ml-2">
                                   <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
@@ -290,7 +293,11 @@ export default function ScientistsList() {
                         <TableCell>
                           <div className="flex items-center space-x-2 text-neutral-200">
                             {scientist.email && (
-                              <a href={`mailto:${scientist.email}`} className="hover:text-primary-500">
+                              <a 
+                                href={`mailto:${scientist.email}`} 
+                                className="hover:text-primary-500"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <Mail className="h-4 w-4" />
                               </a>
                             )}
@@ -304,7 +311,11 @@ export default function ScientistsList() {
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>

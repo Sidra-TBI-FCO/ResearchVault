@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,7 @@ interface Program {
 
 export default function ProgramsList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, navigate] = useLocation();
 
   const { data: programs, isLoading } = useQuery<Program[]>({
     queryKey: ['/api/programs'],
@@ -110,7 +111,11 @@ export default function ProgramsList() {
               </TableHeader>
               <TableBody>
                 {filteredPrograms?.map((program) => (
-                  <TableRow key={program.id}>
+                  <TableRow 
+                    key={program.id} 
+                    className="cursor-pointer hover:bg-neutral-50/50 transition-colors"
+                    onClick={() => navigate(`/programs/${program.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <Beaker className="h-4 w-4 text-primary-500" />
@@ -118,9 +123,7 @@ export default function ProgramsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/programs/${program.id}`}>
-                        <span className="hover:text-primary-500 transition-colors cursor-pointer">{program.name}</span>
-                      </Link>
+                      <span className="font-medium">{program.name}</span>
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="text-sm text-neutral-200 truncate">
@@ -130,7 +133,11 @@ export default function ProgramsList() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>

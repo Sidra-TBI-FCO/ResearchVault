@@ -236,7 +236,11 @@ export default function ResearchActivitiesList() {
               </TableHeader>
               <TableBody>
                 {filteredActivities?.map((activity) => (
-                  <TableRow key={activity.id}>
+                  <TableRow 
+                    key={activity.id}
+                    className="cursor-pointer hover:bg-neutral-50/50 transition-colors"
+                    onClick={() => navigate(`/research-activities/${activity.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <TableIcon className="h-4 w-4 text-primary-500" />
@@ -244,12 +248,7 @@ export default function ResearchActivitiesList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div
-                        className="cursor-pointer hover:text-primary-500 transition-colors"
-                        onClick={() => navigate(`/research-activities/${activity.id}`)}
-                      >
-                        {activity.title}
-                      </div>
+                      <div className="font-medium">{activity.title}</div>
                       {activity.description && (
                         <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
                           {activity.description}
@@ -258,12 +257,15 @@ export default function ResearchActivitiesList() {
                     </TableCell>
                     <TableCell>
                       {activity.project ? (
-                        <div 
+                        <span 
                           className="text-sm hover:text-primary-500 transition-colors cursor-pointer"
-                          onClick={() => navigate(`/projects/${activity.project.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/projects/${activity.project.id}`);
+                          }}
                         >
                           {activity.project.name}
-                        </div>
+                        </span>
                       ) : (
                         <span className="text-sm text-neutral-200">Not assigned</span>
                       )}

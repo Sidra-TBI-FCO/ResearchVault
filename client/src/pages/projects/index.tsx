@@ -173,7 +173,11 @@ export default function ProjectsList() {
               </TableHeader>
               <TableBody>
                 {filteredProjects?.map((project) => (
-                  <TableRow key={project.id}>
+                  <TableRow 
+                    key={project.id}
+                    className="cursor-pointer hover:bg-neutral-50/50 transition-colors"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <TableIcon className="h-4 w-4 text-primary-500" />
@@ -181,9 +185,7 @@ export default function ProjectsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/projects/${project.id}`}>
-                        <a className="hover:text-primary-500 transition-colors">{project.name}</a>
-                      </Link>
+                      <div className="font-medium">{project.name}</div>
                       {project.description && (
                         <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
                           {project.description}
@@ -192,11 +194,15 @@ export default function ProjectsList() {
                     </TableCell>
                     <TableCell>
                       {project.program ? (
-                        <Link href={`/programs/${project.program.id}`}>
-                          <span className="text-sm hover:text-primary-500 transition-colors cursor-pointer">
-                            {project.program.name}
-                          </span>
-                        </Link>
+                        <span 
+                          className="text-sm hover:text-primary-500 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/programs/${project.program.id}`);
+                          }}
+                        >
+                          {project.program.name}
+                        </span>
                       ) : (
                         <span className="text-sm text-neutral-200">Not assigned</span>
                       )}
@@ -216,7 +222,11 @@ export default function ProjectsList() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
