@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2, Users, X } from "lucide-react";
+import { ArrowLeft, Loader2, Users, X, MessageSquare, Send } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -96,6 +96,7 @@ export default function IbcApplicationEdit() {
   // State for team member selection
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [piComment, setPiComment] = useState("");
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -113,6 +114,14 @@ export default function IbcApplicationEdit() {
     queryKey: ['/api/ibc-applications', id, 'research-activities'],
     queryFn: () => fetch(`/api/ibc-applications/${id}/research-activities`).then(res => res.json()),
     enabled: !!id,
+  });
+
+  // Fetch comments for this application
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: [`/api/ibc-applications/${id}/comments`],
+    enabled: !!id,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const form = useForm<EditIbcApplicationFormValues>({
@@ -259,6 +268,43 @@ export default function IbcApplicationEdit() {
       });
     },
   });
+
+  // PI comment submission mutation
+  const submitPiCommentMutation = useMutation({
+    mutationFn: async (commentData: { comment: string }) => {
+      return await apiRequest("POST", `/api/ibc-applications/${id}/pi-comment`, commentData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Comment Submitted",
+        description: "Your comment has been submitted successfully",
+      });
+      setPiComment("");
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${id}/comments`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit comment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePiCommentSubmit = () => {
+    if (!piComment.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please enter a comment before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    submitPiCommentMutation.mutate({
+      comment: piComment.trim()
+    });
+  };
 
   const handleSave = async (data: EditIbcApplicationFormValues) => {
     const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
@@ -1468,6 +1514,98 @@ export default function IbcApplicationEdit() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* PI Comments Section */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Communication History & Comments
+              </CardTitle>
+              <CardDescription>
+                View past comments and submit new responses to the IBC office
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Comments Timeline */}
+              {commentsLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : comments.length > 0 ? (
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Comment History</h4>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {comments.map((comment: any) => (
+                      <div key={comment.id} className="border-l-2 border-gray-200 pl-4 py-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={
+                            comment.commentType === 'office_comment' ? 'destructive' :
+                            comment.commentType === 'reviewer_feedback' ? 'default' :
+                            comment.commentType === 'pi_response' ? 'secondary' :
+                            'outline'
+                          }>
+                            {comment.commentType === 'office_comment' ? 'IBC Office' :
+                             comment.commentType === 'reviewer_feedback' ? 'Reviewer' :
+                             comment.commentType === 'pi_response' ? 'PI Response' :
+                             'System'}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {new Date(comment.createdAt).toLocaleDateString()} at {new Date(comment.createdAt).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <p className="text-sm">{comment.comment}</p>
+                        {comment.authorName && (
+                          <p className="text-xs text-gray-500 mt-1">— {comment.authorName}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No comments yet</p>
+              )}
+
+              {/* PI Comment Submission */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Submit New Comment</h4>
+                <div className="space-y-3">
+                  <Textarea
+                    placeholder="Provide your response, clarifications, or additional information to the IBC office..."
+                    value={piComment}
+                    onChange={(e) => setPiComment(e.target.value)}
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Your comment will be visible to the IBC office and reviewers
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button"
+                      onClick={handlePiCommentSubmit}
+                      disabled={submitPiCommentMutation.isPending || !piComment.trim()}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {submitPiCommentMutation.isPending ? "Submitting..." : "Submit Comment"}
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      onClick={() => setPiComment("")}
+                      disabled={submitPiCommentMutation.isPending}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="flex gap-4 pt-6">
             <Button 
