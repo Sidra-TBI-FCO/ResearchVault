@@ -487,6 +487,9 @@ export const ibcApplications = pgTable("ibc_applications", {
   // NIH Guidelines Appendix C (Biological Agents)
   nihAppendixC: json("nih_appendix_c"), // Biological agent classifications
   
+  // Hazardous Procedures
+  hazardousProcedures: json("hazardous_procedures"), // Array of hazardous procedures with controls and PPE
+  
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
   formData: json("form_data"), // Store form-specific data
   
