@@ -1474,7 +1474,7 @@ export default function IbcApplicationEdit() {
                 <CardHeader>
                   <CardTitle className="text-xl text-red-800">NIH Section III-A/B/C</CardTitle>
                   <CardDescription className="text-red-600">
-                    Experiments requiring NIH Director approval and/or IBC approval before initiation
+                    Experiments requiring additional federal approvals and IBC approval before initiation
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -1498,7 +1498,7 @@ export default function IbcApplicationEdit() {
                               III-A: Deliberate transfer of drug resistance traits to microorganisms
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Requires NIH Director approval + IBC approval
+                              Requires federal approval process + IBC approval (contact institution's biosafety office)
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1521,10 +1521,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              III-B: Cloning toxin molecules with LD50 &lt; 100 ng/kg
+                              III-B: Cloning toxin molecules with LD50 &lt; 100 ng/kg body weight
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Requires NIH OSP + IBC approval
+                              Requires NIH Office of Science Policy review + IBC approval
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1547,10 +1547,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              III-C: Human gene transfer experiments
+                              III-C: Human gene transfer experiments (clinical trials)
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Requires IBC + IRB + RAC approval
+                              Requires IBC approval + IRB approval + regulatory compliance
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1565,7 +1565,7 @@ export default function IbcApplicationEdit() {
                 <CardHeader>
                   <CardTitle className="text-xl text-orange-800">NIH Section III-D</CardTitle>
                   <CardDescription className="text-orange-600">
-                    Experiments requiring IBC approval before initiation
+                    Experiments that require Institutional Biosafety Committee approval before initiation
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -1586,10 +1586,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Risk Group 2+ pathogen host-vector systems
+                              III-D-1: Using Risk Group 2, 3, 4, or restricted agents as host-vector systems
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Using Risk Group 2, 3, 4, or restricted agents as hosts
+                              Risk assessment determines appropriate biosafety level
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1612,10 +1612,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Pathogen DNA/RNA in non-pathogenic hosts
+                              III-D-2: DNA from Risk Group 2, 3, 4, or restricted agents in nonpathogenic hosts
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              DNA/RNA from Risk Group 2+ pathogens in non-pathogenic systems
+                              Cloning pathogen DNA into nonpathogenic prokaryotic or lower eukaryotic systems
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1638,10 +1638,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Infectious viral vectors in tissue culture
+                              III-D-3: Infectious DNA or RNA viruses in tissue culture systems
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Infectious DNA/RNA viruses or defective viruses with helper
+                              Including defective DNA or RNA viruses in presence of helper virus
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1664,10 +1664,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Whole animal experiments
+                              III-D-4: Experiments involving whole animals
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Recombinant/synthetic nucleic acids in whole animals (including transgenic)
+                              All experiments with recombinant/synthetic nucleic acids in whole animals
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1690,10 +1690,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Large-scale experiments (&gt;10 liters)
+                              III-D-6: Experiments involving more than 10 liters of culture
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Culture volumes exceeding 10 liters
+                              Large-scale research or production activities
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1716,10 +1716,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Gene drive modified organisms
+                              III-D-8: Experiments involving gene drive modified organisms
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Minimum BL2, BL2-N, or BL2-P containment required
+                              Minimum BL2 (microbes), BL2-N (animals), or BL2-P (plants) containment
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1734,7 +1734,7 @@ export default function IbcApplicationEdit() {
                 <CardHeader>
                   <CardTitle className="text-xl text-yellow-800">NIH Section III-E</CardTitle>
                   <CardDescription className="text-yellow-600">
-                    Experiments requiring registration simultaneous with initiation
+                    Experiments that require Institutional Biosafety Committee notice simultaneous with initiation
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -1755,10 +1755,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Limited viral genome experiments
+                              III-E-1: Recombinant nucleic acids containing no more than 2/3 of eukaryotic virus genome
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Recombinant nucleic acids containing ≤2/3 of eukaryotic virus genome
+                              Must demonstrate that cells lack helper virus and cannot produce infectious virus
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1781,10 +1781,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Plant experiments
+                              III-E-2: Experiments involving whole plants
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Experiments involving whole plants with specific conditions
+                              Plant experiments not covered under Section III-D-5 (IBC approval required)
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1807,10 +1807,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Transgenic rodents (BL1 containment)
+                              III-E-3: Experiments involving transgenic rodents
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Generation/use of transgenic rodents requiring only BL1 containment
+                              Generation and use of transgenic rodents that require BL1 containment only
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1825,7 +1825,7 @@ export default function IbcApplicationEdit() {
                 <CardHeader>
                   <CardTitle className="text-xl text-green-800">NIH Section III-F</CardTitle>
                   <CardDescription className="text-green-600">
-                    Exempt experiments (may still require institutional oversight)
+                    Exempt experiments (not subject to NIH Guidelines but may require institutional oversight)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -1846,10 +1846,10 @@ export default function IbcApplicationEdit() {
                           </FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium">
-                              Research qualifies for NIH exemption
+                              Research qualifies for exemption under Section III-F
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Experiments exempt from NIH Guidelines requirements
+                              Examples: E. coli K-12 systems, Saccharomyces systems, tissue culture, certain transgenic rodent breeding
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -1862,17 +1862,20 @@ export default function IbcApplicationEdit() {
                         name="nihSectionF.exemptionJustification"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Exemption Justification</FormLabel>
+                            <FormLabel>Exemption Category and Justification</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Explain why this research qualifies for exemption under Section III-F..."
+                                placeholder="Specify which exemption category (III-F-1 through III-F-8) applies and provide justification for why this research qualifies for exemption..."
                                 className="resize-none"
-                                rows={3}
+                                rows={4}
                                 {...field}
                                 value={field.value || ""}
                                 disabled={isReadOnly}
                               />
                             </FormControl>
+                            <FormDescription>
+                              Note: Exemptions do not apply to experiments involving large-scale activities (&gt;10 liters), Risk Groups 3-4 agents, or toxin genes
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1882,12 +1885,12 @@ export default function IbcApplicationEdit() {
                 </CardContent>
               </Card>
 
-              {/* NIH Appendix C - Biological Agents */}
+              {/* NIH Appendix B & C - Biological Agent Classification */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl text-blue-800">Appendix C - Biological Agent Classification</CardTitle>
+                  <CardTitle className="text-xl text-blue-800">Appendix B/C - Agent Classification & Exemptions</CardTitle>
                   <CardDescription className="text-blue-600">
-                    Classification of biological agents based on risk groups
+                    Biological agent risk group classification and exemption criteria (see Appendix B for complete agent lists)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -1896,19 +1899,19 @@ export default function IbcApplicationEdit() {
                     name="nihAppendixC.additionalAgents"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Additional Biological Agents</FormLabel>
+                        <FormLabel>Risk Group Classification and Special Considerations</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="List any biological agents not covered above, including their risk group classifications..."
+                            placeholder="Identify any biological agents used in this research. Classify by Risk Group (RG1-RG4) based on NIH Guidelines Appendix B. Note any host-vector systems or special containment considerations..."
                             className="resize-none"
-                            rows={4}
+                            rows={5}
                             {...field}
                             value={field.value || ""}
                             disabled={isReadOnly}
                           />
                         </FormControl>
                         <FormDescription>
-                          Include agent names, risk group classifications (1-4), and required containment levels
+                          RG1: No/low risk • RG2: Moderate individual risk, limited community risk • RG3: High individual risk, low community risk • RG4: High individual and community risk
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
