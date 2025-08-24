@@ -2156,8 +2156,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newStatus = 'active';
       } else if (recommendation === 'reject') {
         newStatus = 'expired';
+      } else if (recommendation === 'minor_revisions' || recommendation === 'major_revisions') {
+        newStatus = 'vetted'; // Return to office for revision handling
       } else {
-        newStatus = 'under_review'; // For revision requests
+        newStatus = 'under_review'; // Stay under review for other cases
       }
 
       const updatedApplication = await storage.updateIbcApplication(id, {
@@ -2165,6 +2167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: newStatus,
         underReviewDate: newStatus === 'under_review' ? new Date() : application.underReviewDate,
         approvalDate: newStatus === 'active' ? new Date() : application.approvalDate,
+        vettedDate: newStatus === 'vetted' ? new Date() : application.vettedDate,
       });
 
       res.json({ 
