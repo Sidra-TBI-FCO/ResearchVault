@@ -32,6 +32,18 @@ export default function ScientistsList() {
     queryFn: () => fetch('/api/scientists?includeActivityCount=true').then(res => res.json()),
   });
 
+  // Fetch IRB board members
+  const { data: irbMembers } = useQuery({
+    queryKey: ['/api/irb-board-members'],
+    queryFn: () => fetch('/api/irb-board-members').then(res => res.json()),
+  });
+
+  // Fetch IBC board members
+  const { data: ibcMembers } = useQuery({
+    queryKey: ['/api/ibc-board-members'],
+    queryFn: () => fetch('/api/ibc-board-members').then(res => res.json()),
+  });
+
   const filteredScientists = scientists?.filter(scientist => {
     const matchesSearch = scientist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (scientist.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -277,14 +289,25 @@ export default function ScientistsList() {
                               {scientist.profileImageInitials || scientist.name.substring(0, 2)}
                             </div>
                             <div>
-                              <span className="font-medium">{scientist.name}</span>
-                              {scientist.staffId && (
-                                <span className="ml-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{scientist.name}</span>
+                                {scientist.staffId && (
                                   <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
                                     ID: {scientist.staffId}
                                   </Badge>
-                                </span>
-                              )}
+                                )}
+                                {irbMembers?.find((member: any) => member.scientistId === scientist.id && member.isActive) && (
+                                  <Badge variant="outline" className="rounded-sm bg-green-50 text-green-700 border-green-200">
+                                    IRB {irbMembers.find((member: any) => member.scientistId === scientist.id)?.role === 'chair' ? 'Chair' : 
+                                         irbMembers.find((member: any) => member.scientistId === scientist.id)?.role === 'deputy_chair' ? 'Deputy' : 'Member'}
+                                  </Badge>
+                                )}
+                                {ibcMembers?.find((member: any) => member.scientistId === scientist.id && member.isActive) && (
+                                  <Badge variant="outline" className="rounded-sm bg-purple-50 text-purple-700 border-purple-200">
+                                    IBC {ibcMembers.find((member: any) => member.scientistId === scientist.id)?.role === 'chair' ? 'Chair' : 'Member'}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
