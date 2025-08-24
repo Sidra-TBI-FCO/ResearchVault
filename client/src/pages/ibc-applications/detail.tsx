@@ -99,8 +99,9 @@ export default function IbcApplicationDetail() {
   }
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = IBC_WORKFLOW_STATUSES.find(s => s.value === status);
-    if (!statusConfig) return <Badge variant="outline">Unknown</Badge>;
+    if (!status) return <Badge variant="outline">Unknown</Badge>;
+    const statusConfig = IBC_WORKFLOW_STATUSES.find(s => s.value === status.toLowerCase());
+    if (!statusConfig) return <Badge variant="outline">{status}</Badge>;
     
     return (
       <Badge className={statusConfig.color}>
@@ -111,8 +112,9 @@ export default function IbcApplicationDetail() {
   };
 
   const getBiosafetyLevelBadge = (level: string) => {
+    if (!level) return <Badge variant="outline">Unknown</Badge>;
     const levelConfig = BIOSAFETY_LEVELS.find(l => l.value === level);
-    if (!levelConfig) return <Badge variant="outline">Unknown</Badge>;
+    if (!levelConfig) return <Badge variant="outline">{level}</Badge>;
     
     return (
       <Badge className={levelConfig.color}>
@@ -131,7 +133,7 @@ export default function IbcApplicationDetail() {
       active: "Application has been approved and is currently active.",
       expired: "Application approval has expired and requires renewal."
     };
-    return descriptions[status as keyof typeof descriptions] || "Status unknown";
+    return descriptions[status?.toLowerCase() as keyof typeof descriptions] || "Status unknown";
   };
 
   return (
@@ -325,8 +327,15 @@ export default function IbcApplicationDetail() {
 
           {/* Timeline & Comments */}
           <TimelineComments 
-            application={ibcApplication} 
-            comments={comments} 
+            application={{
+              createdAt: typeof ibcApplication.createdAt === 'string' ? ibcApplication.createdAt : ibcApplication.createdAt?.toISOString(),
+              submissionDate: typeof ibcApplication.submissionDate === 'string' ? ibcApplication.submissionDate : ibcApplication.submissionDate?.toISOString(),
+              vettedDate: typeof ibcApplication.vettedDate === 'string' ? ibcApplication.vettedDate : ibcApplication.vettedDate?.toISOString(),
+              underReviewDate: typeof ibcApplication.underReviewDate === 'string' ? ibcApplication.underReviewDate : ibcApplication.underReviewDate?.toISOString(),
+              approvalDate: typeof ibcApplication.approvalDate === 'string' ? ibcApplication.approvalDate : ibcApplication.approvalDate?.toISOString(),
+              expirationDate: typeof ibcApplication.expirationDate === 'string' ? ibcApplication.expirationDate : ibcApplication.expirationDate?.toISOString(),
+            }} 
+            comments={comments as any} 
           />
 
           {/* Important Dates */}
