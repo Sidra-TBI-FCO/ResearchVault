@@ -126,6 +126,9 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- August 24, 2025. Updated scientist management: removed role field and isStaff toggle, added "Management" job title, replaced with line manager field
+- August 24, 2025. Enhanced program forms: replaced text fields with scientist dropdown selections for director and co-lead positions
+- August 24, 2025. Created scientist edit form with full CRUD functionality including line manager selection
 - July 17, 2025. Implemented comprehensive IBC timeline ordering system with content-based chronological workflow progression
 - July 17, 2025. Fixed React rendering errors and converted office comments from single text to JSON array format
 - July 17, 2025. Added draft status and priority-based timeline sorting ensuring proper workflow sequence

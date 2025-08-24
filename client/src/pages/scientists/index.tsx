@@ -282,7 +282,7 @@ export default function ScientistsList() {
                           </div>
                         </TableCell>
                         <TableCell>{scientist.department || "—"}</TableCell>
-                        <TableCell>{scientist.title || (scientist.isStaff ? "Staff" : "Principal Investigator")}</TableCell>
+                        <TableCell>{scientist.title || "No title"}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2 text-neutral-200">
                             {scientist.email && (

@@ -12,6 +12,7 @@ import Dashboard from "@/pages/dashboard";
 // Scientists
 import ScientistsList from "@/pages/scientists";
 import CreateScientist from "@/pages/scientists/create";
+import EditScientist from "@/pages/scientists/edit";
 import ScientistDetail from "@/pages/scientists/detail";
 
 // Programs (PRM)
@@ -107,6 +108,7 @@ function Router() {
         {/* Scientists & Staff */}
         <Route path="/scientists" component={ScientistsList} />
         <Route path="/scientists/create" component={CreateScientist} />
+        <Route path="/scientists/:id/edit" component={EditScientist} />
         <Route path="/scientists/:id" component={ScientistDetail} />
 
         {/* Programs */}
