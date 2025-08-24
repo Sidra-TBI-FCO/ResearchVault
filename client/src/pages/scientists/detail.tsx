@@ -1,21 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Scientist, insertScientistSchema, ResearchActivity, Project, Program, ProjectMember } from "@shared/schema";
-import { ArrowLeft, Mail, Phone, Building, Calendar, User, Pencil, Save, X, ChevronRight, ChevronDown, Folder, FileText, Users } from "lucide-react";
+import { Scientist, ResearchActivity, Project, Program } from "@shared/schema";
+import { ArrowLeft, Mail, Building, User, Pencil, ChevronRight, ChevronDown, Folder, FileText, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { format } from "date-fns";
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PublicationsList } from "@/components/PublicationsList";
 import { PublicationCharts } from "@/components/PublicationCharts";
@@ -167,9 +159,8 @@ export default function ScientistDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
-  const [editMode, setEditMode] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+
+
 
   const { data: scientist, isLoading } = useQuery<Scientist>({
     queryKey: ['/api/scientists', id],
@@ -195,70 +186,7 @@ export default function ScientistDetail() {
     enabled: !!id,
   });
   
-  const updateMutation = useMutation({
-    mutationFn: async (updateData: Partial<Scientist>) => {
-      const response = await fetch(`/api/scientists/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update scientist');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/scientists', id] });
-      setEditMode(false);
-      toast({
-        title: "Success",
-        description: "Scientist details updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred during update",
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const form = useForm<Partial<Scientist>>({
-    resolver: zodResolver(insertScientistSchema.partial()),
-    defaultValues: {
-      name: scientist?.name || '',
-      title: scientist?.title || '',
-      email: scientist?.email || '',
-      phoneNumber: scientist?.phoneNumber || '',
-      department: scientist?.department || '',
-      expertise: scientist?.expertise || '',
-      staffId: scientist?.staffId || '',
-      bio: scientist?.bio || '',
-      isStaff: scientist?.isStaff || false,
-    },
-  });
-  
-  // Update form values when scientist data changes
-  React.useEffect(() => {
-    if (scientist) {
-      form.reset({
-        name: scientist.name,
-        title: scientist.title,
-        email: scientist.email,
-        phoneNumber: scientist.phoneNumber,
-        department: scientist.department,
-        expertise: scientist.expertise,
-        staffId: scientist.staffId,
-        bio: scientist.bio,
-        isStaff: scientist.isStaff,
-      });
-    }
-  }, [scientist, form]);
+
 
   if (isLoading) {
     return (
@@ -337,169 +265,14 @@ export default function ScientistDetail() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => setEditMode(!editMode)}
+              onClick={() => navigate(`/scientists/${id}/edit`)}
               className="ml-auto"
             >
-              {editMode ? (
-                <>
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </>
-              ) : (
-                <>
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit
-                </>
-              )}
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
             </Button>
           </CardHeader>
           <CardContent>
-            {editMode ? (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(data => updateMutation.mutate(data))} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Full name" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Job Title</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value || undefined}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select job title" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
-                              <SelectItem value="Investigator">Investigator</SelectItem>
-                              <SelectItem value="Research Specialist">Research Specialist</SelectItem>
-                              <SelectItem value="Research Assistant">Research Assistant</SelectItem>
-                              <SelectItem value="Research Associate">Research Associate</SelectItem>
-                              <SelectItem value="PhD Student">PhD Student</SelectItem>
-                              <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
-                              <SelectItem value="Lab Manager">Lab Manager</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Select the job title for this scientist or staff member
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" placeholder="Email address" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Phone number" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="department"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Department</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Department" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="staffId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Staff ID</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Staff ID" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Biography</FormLabel>
-                        <FormControl>
-                          <textarea
-                            className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            {...field}
-                            placeholder="Professional biography"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setEditMode(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={updateMutation.isPending}
-                    >
-                      {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            ) : (
-              <>
                 <div className="flex items-start gap-6">
                   <Avatar className="h-24 w-24 text-lg">
                     <AvatarFallback className="bg-primary-100 text-primary-700">
@@ -519,13 +292,13 @@ export default function ScientistDetail() {
                       <div className="flex items-center">
                         <div className="text-sm font-medium text-neutral-500 mr-2">Job Title:</div>
                         <p className="text-neutral-700">
-                          {scientist.title || (scientist.isStaff ? "Research Staff" : "Investigator")}
+                          {scientist.title || "No title"}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      {scientist.isStaff ? (
+                      {scientist.title === "Management" ? (
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Staff</Badge>
                       ) : (
                         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Principal Investigator</Badge>
@@ -544,18 +317,11 @@ export default function ScientistDetail() {
                           </a>
                         </div>
                       )}
-                      {scientist.phoneNumber && (
+
+                      {scientist.staffId && (
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-neutral-400" />
-                          <a href={`tel:${scientist.phoneNumber}`} className="text-primary-600 hover:underline">
-                            {scientist.phoneNumber}
-                          </a>
-                        </div>
-                      )}
-                      {scientist.department && (
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-neutral-400" />
-                          <span>{scientist.department}</span>
+                          <User className="h-4 w-4 text-neutral-400" />
+                          <span>Staff ID: {scientist.staffId}</span>
                         </div>
                       )}
                     </div>
@@ -568,8 +334,6 @@ export default function ScientistDetail() {
                     <p className="text-neutral-600">{scientist.bio}</p>
                   </div>
                 )}
-              </>
-            )}
           </CardContent>
         </Card>
 
