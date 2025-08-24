@@ -64,6 +64,7 @@ export default function EditResearchActivity() {
       endDate: undefined,
       sidraBranch: "",
       budgetSource: [],
+      grantCodes: [],
     }
   });
 
@@ -85,6 +86,7 @@ export default function EditResearchActivity() {
         endDate: activity.endDate ? new Date(activity.endDate) : undefined,
         sidraBranch: activity.sidraBranch || "",
         budgetSource: Array.isArray(activity.budgetSource) ? activity.budgetSource : activity.budgetSource ? [activity.budgetSource] : [],
+        grantCodes: Array.isArray(activity.grantCodes) ? activity.grantCodes : activity.grantCodes ? [activity.grantCodes] : [],
         additionalNotificationEmail: activity.additionalNotificationEmail || "",
       });
     }
@@ -467,6 +469,50 @@ export default function EditResearchActivity() {
                 />
               </div>
 
+              {/* Grant Codes - Show input fields for selected budget sources */}
+              {(() => {
+                const selectedBudgetSources = form.watch("budgetSource") || [];
+                
+                if (selectedBudgetSources.length === 0) {
+                  return null;
+                }
+
+                return (
+                  <FormField
+                    control={form.control}
+                    name="grantCodes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grant Codes</FormLabel>
+                        <div className="space-y-3">
+                          {selectedBudgetSources.map((source, index) => (
+                            <div key={source} className="flex items-center space-x-3">
+                              <div className="w-24 text-sm font-medium text-gray-600">
+                                {source}:
+                              </div>
+                              <Input
+                                placeholder={`Enter ${source} grant code`}
+                                value={(field.value || [])[index] || ""}
+                                onChange={(e) => {
+                                  const newCodes = [...(field.value || [])];
+                                  newCodes[index] = e.target.value;
+                                  field.onChange(newCodes);
+                                }}
+                                className="flex-1"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <FormDescription>
+                          Enter grant codes for each selected funding source
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                );
+              })()}
+
               <FormField
                 control={form.control}
                 name="description"
@@ -478,6 +524,7 @@ export default function EditResearchActivity() {
                         placeholder="Describe the research activity, methodology, and expected outcomes"
                         className="min-h-[100px]"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -496,6 +543,7 @@ export default function EditResearchActivity() {
                         placeholder="List the main objectives and goals of this research activity"
                         className="min-h-[100px]"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />

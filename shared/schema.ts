@@ -101,6 +101,7 @@ export const researchActivities = pgTable("research_activities", {
   additionalNotificationEmail: text("additional_notification_email"),
   sidraBranch: text("sidra_branch"), // Research, Clinical, External
   budgetSource: text("budget_source").array(), // IRF, PI Budget, QNRF, etc.
+  grantCodes: text("grant_codes").array(), // Grant codes corresponding to budget sources
   objectives: text("objectives"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
