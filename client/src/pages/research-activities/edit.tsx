@@ -56,7 +56,7 @@ export default function EditResearchActivity() {
       objectives: "",
       status: "planning",
       projectId: undefined,
-      leadPIId: undefined,
+
       leadScientistId: undefined,
       startDate: undefined,
       endDate: undefined,
@@ -111,7 +111,13 @@ export default function EditResearchActivity() {
   });
 
   const onSubmit = (data: InsertResearchActivity) => {
-    updateMutation.mutate(data);
+    // Convert Date objects to ISO strings for API
+    const formattedData = {
+      ...data,
+      startDate: data.startDate ? data.startDate.toISOString() : undefined,
+      endDate: data.endDate ? data.endDate.toISOString() : undefined,
+    };
+    updateMutation.mutate(formattedData);
   };
 
   if (activityLoading) {
