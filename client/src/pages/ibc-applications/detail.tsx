@@ -31,19 +31,15 @@ export default function IbcApplicationDetail() {
   const [, navigate] = useLocation();
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
-    queryKey: ['/api/ibc-applications', id],
+    queryKey: [`/api/ibc-applications/${id}`],
     enabled: !!id,
   });
 
-  const { data: scientist } = useQuery<Scientist>({
-    queryKey: [`/api/scientists/${ibcApplication?.principalInvestigatorId}`],
-    enabled: !!ibcApplication?.principalInvestigatorId,
-  });
+  // Principal investigator data is embedded in the application response
+  const scientist = ibcApplication?.principalInvestigator;
 
-  const { data: researchActivities } = useQuery<ResearchActivity[]>({
-    queryKey: ['/api/ibc-applications', id, 'research-activities'],
-    enabled: !!id,
-  });
+  // Research activities data is embedded in the application response
+  const researchActivities = ibcApplication?.researchActivities;
 
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/ibc-applications/${id}/comments`],
