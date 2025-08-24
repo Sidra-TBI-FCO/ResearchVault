@@ -278,9 +278,6 @@ export default function IbcApplicationDetail() {
                                 </div>
                               </div>
                             )}
-                            {activity.shortTitle && (
-                              <p className="text-sm text-gray-600">{activity.shortTitle}</p>
-                            )}
                           </div>
                         </div>
                         <Button 
