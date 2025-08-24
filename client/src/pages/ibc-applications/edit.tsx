@@ -126,54 +126,105 @@ export default function IbcApplicationEdit() {
   });
 
   // Determine if this is read-only mode (non-draft applications)
-  const isReadOnly = ibcApplication?.status !== 'draft';
+  const isReadOnly = ibcApplication?.status?.toLowerCase() !== 'draft';
 
   const form = useForm<EditIbcApplicationFormValues>({
     resolver: zodResolver(editIbcApplicationSchema),
     defaultValues: {
-      cayuseProtocolNumber: ibcApplication?.cayuseProtocolNumber || "",
-      title: ibcApplication?.title || "",
-      shortTitle: ibcApplication?.shortTitle || "",
-      principalInvestigatorId: ibcApplication?.principalInvestigatorId ?? 0,
-      biosafetyLevel: ibcApplication?.biosafetyLevel || "BSL-2",
-      description: ibcApplication?.description || "",
+      cayuseProtocolNumber: "",
+      title: "",
+      shortTitle: "",
+      principalInvestigatorId: 0,
+      biosafetyLevel: "BSL-2",
+      description: "",
       
       // Biosafety options with default values
-      recombinantSyntheticNucleicAcid: ibcApplication?.recombinantSyntheticNucleicAcid || false,
-      wholeAnimalsAnimalMaterial: ibcApplication?.wholeAnimalsAnimalMaterial || false,
-      animalMaterialSubOptions: ibcApplication?.animalMaterialSubOptions || [],
-      humanNonHumanPrimateMaterial: ibcApplication?.humanNonHumanPrimateMaterial || false,
-      introducingPrimateMaterialIntoAnimals: ibcApplication?.introducingPrimateMaterialIntoAnimals || false,
-      microorganismsInfectiousMaterial: ibcApplication?.microorganismsInfectiousMaterial || false,
-      biologicalToxins: ibcApplication?.biologicalToxins || false,
-      nanoparticles: ibcApplication?.nanoparticles || false,
-      arthropods: ibcApplication?.arthropods || false,
-      plants: ibcApplication?.plants || false,
-      biologicalAgents: ibcApplication?.biologicalAgents || "",
-      riskGroupClassification: ibcApplication?.riskGroupClassification || "",
+      recombinantSyntheticNucleicAcid: false,
+      wholeAnimalsAnimalMaterial: false,
+      animalMaterialSubOptions: [],
+      humanNonHumanPrimateMaterial: false,
+      introducingPrimateMaterialIntoAnimals: false,
+      microorganismsInfectiousMaterial: false,
+      biologicalToxins: false,
+      nanoparticles: false,
+      arthropods: false,
+      plants: false,
+      biologicalAgents: "",
+      riskGroupClassification: "",
       
       // Methods and Procedures defaults
-      materialAndMethods: ibcApplication?.materialAndMethods || "",
-      proceduresInvolvingInfectiousAgents: ibcApplication?.proceduresInvolvingInfectiousAgents || "",
-      cellCultureProcedures: ibcApplication?.cellCultureProcedures || "",
-      nucleicAcidExtractionMethods: ibcApplication?.nucleicAcidExtractionMethods || "",
-      animalProcedures: ibcApplication?.animalProcedures || "",
+      materialAndMethods: "",
+      proceduresInvolvingInfectiousAgents: "",
+      cellCultureProcedures: "",
+      nucleicAcidExtractionMethods: "",
+      animalProcedures: "",
       
       // Safety and Containment defaults
-      containmentProcedures: ibcApplication?.containmentProcedures || "",
-      emergencyProcedures: ibcApplication?.emergencyProcedures || "",
-      wasteDisposalPlan: ibcApplication?.wasteDisposalPlan || "",
+      containmentProcedures: "",
+      emergencyProcedures: "",
+      wasteDisposalPlan: "",
       
       // Legacy biosafety checkboxes defaults
-      recombinantDNA: ibcApplication?.recombinantDNA || false,
-      humanMaterials: ibcApplication?.humanMaterials || false,
-      animalWork: ibcApplication?.animalWork || false,
-      fieldWork: ibcApplication?.fieldWork || false,
+      recombinantDNA: false,
+      humanMaterials: false,
+      animalWork: false,
+      fieldWork: false,
       
-      researchActivityIds: associatedActivities?.map(ra => ra.id) || [],
+      researchActivityIds: [],
       teamMembers: [],
     },
   });
+
+  // Update form when data loads
+  React.useEffect(() => {
+    if (ibcApplication && associatedActivities) {
+      const formData = {
+        cayuseProtocolNumber: ibcApplication.cayuseProtocolNumber || "",
+        title: ibcApplication.title || "",
+        shortTitle: ibcApplication.shortTitle || "",
+        principalInvestigatorId: ibcApplication.principalInvestigatorId ?? 0,
+        biosafetyLevel: ibcApplication.biosafetyLevel || "BSL-2",
+        description: ibcApplication.description || "",
+        
+        // Biosafety options with actual values
+        recombinantSyntheticNucleicAcid: ibcApplication.recombinantSyntheticNucleicAcid || false,
+        wholeAnimalsAnimalMaterial: ibcApplication.wholeAnimalsAnimalMaterial || false,
+        animalMaterialSubOptions: ibcApplication.animalMaterialSubOptions || [],
+        humanNonHumanPrimateMaterial: ibcApplication.humanNonHumanPrimateMaterial || false,
+        introducingPrimateMaterialIntoAnimals: ibcApplication.introducingPrimateMaterialIntoAnimals || false,
+        microorganismsInfectiousMaterial: ibcApplication.microorganismsInfectiousMaterial || false,
+        biologicalToxins: ibcApplication.biologicalToxins || false,
+        nanoparticles: ibcApplication.nanoparticles || false,
+        arthropods: ibcApplication.arthropods || false,
+        plants: ibcApplication.plants || false,
+        biologicalAgents: ibcApplication.biologicalAgents || "",
+        riskGroupClassification: ibcApplication.riskGroupClassification || "",
+        
+        // Methods and Procedures actual values
+        materialAndMethods: ibcApplication.materialAndMethods || "",
+        proceduresInvolvingInfectiousAgents: ibcApplication.proceduresInvolvingInfectiousAgents || "",
+        cellCultureProcedures: ibcApplication.cellCultureProcedures || "",
+        nucleicAcidExtractionMethods: ibcApplication.nucleicAcidExtractionMethods || "",
+        animalProcedures: ibcApplication.animalProcedures || "",
+        
+        // Safety and Containment actual values
+        containmentProcedures: ibcApplication.containmentProcedures || "",
+        emergencyProcedures: ibcApplication.emergencyProcedures || "",
+        wasteDisposalPlan: ibcApplication.wasteDisposalPlan || "",
+        
+        // Legacy biosafety checkboxes actual values
+        recombinantDNA: ibcApplication.recombinantDNA || false,
+        humanMaterials: ibcApplication.humanMaterials || false,
+        animalWork: ibcApplication.animalWork || false,
+        fieldWork: ibcApplication.fieldWork || false,
+        
+        researchActivityIds: associatedActivities.map(ra => ra.id) || [],
+        teamMembers: [],
+      };
+      
+      form.reset(formData);
+    }
+  }, [ibcApplication, associatedActivities, form]);
 
   const selectedPIId = form.watch('principalInvestigatorId');
   const selectedSDRIds = form.watch('researchActivityIds') || [];
