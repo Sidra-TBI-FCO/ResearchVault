@@ -1362,28 +1362,7 @@ export default function IbcApplicationEdit() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="submissionComment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Submission Comments</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Add any comments or responses to office feedback that you'd like to include with your submission..." 
-                          className="resize-none" 
-                          rows={4}
-                          {...field}
-                          value={field.value || ""} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        This comment will be visible to the IBC office and will appear in the application timeline.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
               </div>
             </TabsContent>
 
