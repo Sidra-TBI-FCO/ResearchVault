@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import type { IbcApplication } from "@shared/schema";
+import TimelineComments from "@/components/TimelineComments";
 
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800", icon: FileText },
@@ -282,6 +283,13 @@ export default function IbcReviewPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Timeline & Comments */}
+      <TimelineComments 
+        application={application} 
+        comments={comments} 
+        title="Communication History"
+      />
 
       {/* Protocol Details */}
       <Card>
