@@ -63,10 +63,7 @@ export default function IbcReviewPage() {
 
   const submitReviewMutation = useMutation({
     mutationFn: async (data: { comments: string; recommendation: string }) => {
-      return apiRequest(`/api/ibc-applications/${applicationId}/reviewer-feedback`, {
-        method: "POST",
-        body: data,
-      });
+      return apiRequest("POST", `/api/ibc-applications/${applicationId}/reviewer-feedback`, data);
     },
     onSuccess: () => {
       toast({

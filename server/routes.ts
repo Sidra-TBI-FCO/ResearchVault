@@ -2101,6 +2101,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit reviewer feedback for IBC application
+  app.post('/api/ibc-applications/:id/reviewer-feedback', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid IBC application ID" });
+      }
+
+      const { comments, recommendation } = req.body;
+      
+      if (!comments || !recommendation) {
+        return res.status(400).json({ message: "Comments and recommendation are required" });
+      }
+
+      // Get the current application
+      const application = await storage.getIbcApplication(id);
+      if (!application) {
+        return res.status(404).json({ message: "IBC application not found" });
+      }
+
+      // Update the application with reviewer feedback
+      // For now, we'll store this in the reviewComments field and update status based on recommendation
+      let newStatus = application.status;
+      if (recommendation === 'approve') {
+        newStatus = 'active';
+      } else if (recommendation === 'reject') {
+        newStatus = 'expired';
+      } else {
+        newStatus = 'under_review'; // For revision requests
+      }
+
+      const updatedApplication = await storage.updateIbcApplication(id, {
+        reviewComments: comments,
+        status: newStatus,
+        underReviewDate: newStatus === 'under_review' ? new Date() : application.underReviewDate,
+        approvalDate: newStatus === 'active' ? new Date() : application.approvalDate,
+      });
+
+      res.json({ 
+        message: "Review submitted successfully",
+        application: updatedApplication 
+      });
+    } catch (error) {
+      console.error("Error submitting reviewer feedback:", error);
+      res.status(500).json({ message: "Failed to submit reviewer feedback" });
+    }
+  });
+
   // IBC Board Members
   app.get('/api/ibc-board-members', async (req: Request, res: Response) => {
     try {
