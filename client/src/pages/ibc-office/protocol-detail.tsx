@@ -74,6 +74,12 @@ export default function IbcProtocolDetailPage() {
   const { data: application, isLoading: applicationLoading } = useQuery({
     queryKey: [`/api/ibc-applications/${applicationId}`],
     enabled: !!applicationId,
+  });
+
+  // Fetch comments from the new comments table
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: [`/api/ibc-applications/${applicationId}/comments`],
+    enabled: !!applicationId,
     staleTime: 0, // Force fresh data
     refetchOnMount: true,
   });
@@ -135,6 +141,7 @@ export default function IbcProtocolDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${applicationId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${applicationId}/comments`] });
       queryClient.invalidateQueries({ queryKey: ["/api/ibc-applications"] });
       toast({
         title: "Status Updated",
@@ -1315,11 +1322,56 @@ export default function IbcProtocolDetailPage() {
                 </div>
               )}
 
-              {application.reviewComments && (
+              {/* New structured comments timeline */}
+              {comments && comments.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Previous Comments</label>
-                  <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm whitespace-pre-wrap">{JSON.stringify(application.reviewComments)}</p>
+                  <label className="text-sm font-medium text-gray-500">Communication History</label>
+                  <div className="mt-3 space-y-3 max-h-64 overflow-y-auto">
+                    {comments
+                      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .map((comment: any, index: number) => (
+                      <div key={index} className="p-3 border rounded-lg bg-white">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-md ${
+                              comment.commentType === 'office_comment' ? 'bg-blue-100 text-blue-800' :
+                              comment.commentType === 'reviewer_feedback' ? 'bg-purple-100 text-purple-800' :
+                              comment.commentType === 'status_change' ? 'bg-gray-100 text-gray-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {comment.commentType === 'office_comment' ? 'Office' :
+                               comment.commentType === 'reviewer_feedback' ? 'Reviewer' :
+                               comment.commentType === 'status_change' ? 'Status' : 'PI'}
+                            </span>
+                            <span className="text-sm font-medium text-gray-900">{comment.authorName}</span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(comment.createdAt), 'MMM d, h:mm a')}
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-700">{comment.comment}</p>
+                          {comment.recommendation && (
+                            <div className="mt-1">
+                              <span className={`text-xs px-2 py-1 rounded-md font-medium ${
+                                comment.recommendation === 'approve' ? 'bg-green-100 text-green-800' :
+                                comment.recommendation === 'reject' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                Recommendation: {comment.recommendation.replace('_', ' ')}
+                              </span>
+                            </div>
+                          )}
+                          {comment.statusFrom && comment.statusTo && (
+                            <div className="mt-1">
+                              <span className="text-xs text-gray-600">
+                                {comment.statusFrom} → {comment.statusTo}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

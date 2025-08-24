@@ -56,6 +56,14 @@ export default function IbcReviewPage() {
     enabled: !!applicationId,
   });
 
+  // Fetch comments from the new comments table
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: [`/api/ibc-applications/${applicationId}/comments`],
+    enabled: !!applicationId,
+    staleTime: 0, // Force fresh data
+    refetchOnMount: true,
+  });
+
   const { data: scientist } = useQuery({
     queryKey: [`/api/scientists/${application?.principalInvestigatorId}`],
     enabled: !!application?.principalInvestigatorId,
@@ -71,6 +79,7 @@ export default function IbcReviewPage() {
         description: "Your review has been sent to the IBC office.",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${applicationId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${applicationId}/comments`] });
       setReviewComments("");
       setRecommendation("");
       setLocation("/ibc-reviewer");
