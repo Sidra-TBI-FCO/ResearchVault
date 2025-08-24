@@ -141,6 +141,59 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
     hazardousProcedureDescription: z.string().optional(),
   })).default([]),
   
+  syntheticExperiments: z.array(z.object({
+    backboneSource: z.string().optional(),
+    vectorInsertName: z.string().optional(),
+    vectorInsert: z.string().optional(),
+    insertedDnaSource: z.string().optional(),
+    dnaSequenceNature: z.object({
+      anonymousMarker: z.boolean().default(false),
+      genomicDNA: z.boolean().default(false),
+      toxinGene: z.boolean().default(false),
+      cDNA: z.boolean().default(false),
+      snRNAsiRNA: z.boolean().default(false),
+      other: z.boolean().default(false),
+    }).optional(),
+    anticipatedEffect: z.object({
+      antiApoptotic: z.boolean().default(false),
+      cytokineInducer: z.boolean().default(false),
+      cytokineInhibitor: z.boolean().default(false),
+      growthFactor: z.boolean().default(false),
+      oncogene: z.boolean().default(false),
+      toxic: z.boolean().default(false),
+      tumorInducer: z.boolean().default(false),
+      tumorInhibitor: z.boolean().default(false),
+      otherSpecify: z.string().optional(),
+    }).optional(),
+    viralGenomeFraction: z.string().optional(),
+    replicationCompetent: z.string().optional(),
+    packagingCellLines: z.string().optional(),
+    tropism: z.string().optional(),
+    exposedTo: z.object({
+      arthropods: z.boolean().default(false),
+      cellCulture: z.boolean().default(false),
+      humans: z.boolean().default(false),
+      invertebrateAnimals: z.boolean().default(false),
+      microOrganism: z.boolean().default(false),
+      none: z.boolean().default(false),
+      plantsTransgenicPlants: z.boolean().default(false),
+      vertebrateAnimals: z.boolean().default(false),
+    }).optional(),
+    vectorSource: z.object({
+      researchCollaborator: z.boolean().default(false),
+      commercialVendor: z.boolean().default(false),
+      institutionLab: z.boolean().default(false),
+      otherSource: z.boolean().default(false),
+    }).optional(),
+    organismName: z.string().optional(),
+    organismSource: z.object({
+      library: z.boolean().default(false),
+      pcr: z.boolean().default(false),
+      syntheticOligo: z.boolean().default(false),
+      other: z.boolean().default(false),
+    }).optional(),
+  })).default([]),
+  
   // Methods and Procedures
   materialAndMethods: z.string().optional(),
   proceduresInvolvingInfectiousAgents: z.string().optional(),
@@ -187,6 +240,7 @@ export default function IbcApplicationEdit() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [submissionComment, setSubmissionComment] = useState("");
   const [collapsedProcedures, setCollapsedProcedures] = useState<Set<number>>(new Set());
+  const [collapsedSyntheticExperiments, setCollapsedSyntheticExperiments] = useState<Set<number>>(new Set());
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -313,6 +367,16 @@ export default function IbcApplicationEdit() {
   // Update form when data loads
   React.useEffect(() => {
     if (ibcApplication && associatedActivities) {
+      // Set default collapsed state for hazardous procedures and synthetic experiments
+      if (ibcApplication.hazardousProcedures && ibcApplication.hazardousProcedures.length > 0) {
+        const collapsedIndices = new Set(ibcApplication.hazardousProcedures.map((_, index) => index));
+        setCollapsedProcedures(collapsedIndices);
+      }
+      
+      if (ibcApplication.syntheticExperiments && ibcApplication.syntheticExperiments.length > 0) {
+        const collapsedIndices = new Set(ibcApplication.syntheticExperiments.map((_, index) => index));
+        setCollapsedSyntheticExperiments(collapsedIndices);
+      }
       const formData = {
         cayuseProtocolNumber: ibcApplication.cayuseProtocolNumber || "",
         title: ibcApplication.title || "",
@@ -380,58 +444,7 @@ export default function IbcApplicationEdit() {
           cIX: false,
         },
         hazardousProcedures: ibcApplication.hazardousProcedures || [],
-        syntheticExperiments: ibcApplication.syntheticExperiments || {
-          backboneSource: "",
-          vectorInsertName: "",
-          vectorInsert: "",
-          insertedDnaSource: "",
-          dnaSequenceNature: {
-            anonymousMarker: false,
-            genomicDNA: false,
-            toxinGene: false,
-            cDNA: false,
-            snRNAsiRNA: false,
-            other: false,
-          },
-          anticipatedEffect: {
-            antiApoptotic: false,
-            cytokineInducer: false,
-            cytokineInhibitor: false,
-            growthFactor: false,
-            oncogene: false,
-            toxic: false,
-            tumorInducer: false,
-            tumorInhibitor: false,
-            otherSpecify: "",
-          },
-          viralGenomeFraction: "",
-          replicationCompetent: "",
-          packagingCellLines: "",
-          tropism: "",
-          exposedTo: {
-            arthropods: false,
-            cellCulture: false,
-            humans: false,
-            invertebrateAnimals: false,
-            microOrganism: false,
-            none: false,
-            plantsTransgenicPlants: false,
-            vertebrateAnimals: false,
-          },
-          vectorSource: {
-            researchCollaborator: false,
-            commercialVendor: false,
-            institutionLab: false,
-            otherSource: false,
-          },
-          organismName: "",
-          organismSource: {
-            library: false,
-            pcr: false,
-            syntheticOligo: false,
-            other: false,
-          },
-        },
+        syntheticExperiments: ibcApplication.syntheticExperiments || [],
         
         // Methods and Procedures actual values
         materialAndMethods: ibcApplication.materialAndMethods || "",
@@ -2871,390 +2884,266 @@ export default function IbcApplicationEdit() {
                 </TabsContent>
 
                 <TabsContent value="synthetic-experiments" className="space-y-6 mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Synthetic Experiments</CardTitle>
-                      <CardDescription>
-                        Details about synthetic nucleic acid constructs, vectors, and experimental parameters
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      
-                      {/* Vector Information Section */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="syntheticExperiments.backboneSource"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Backbone Source <span className="text-red-500">*</span></FormLabel>
-                              <FormControl>
-                                <select
-                                  {...field}
-                                  disabled={isReadOnly}
-                                  className="w-full p-2 border border-gray-300 rounded-md"
-                                >
-                                  <option value="">Select backbone source...</option>
-                                  <option value="adenoviral">Adenoviral</option>
-                                  <option value="bacteria">Bacteria</option>
-                                  <option value="ecoli">E.coli</option>
-                                  <option value="fiv">FIV</option>
-                                  <option value="hiv">HIV</option>
-                                  <option value="lentivirus">Lentivirus</option>
-                                  <option value="mlv">MLV</option>
-                                  <option value="plasmids">Plasmids</option>
-                                  <option value="retrovirus">Retrovirus</option>
-                                  <option value="rotavirus">Rotavirus</option>
-                                  <option value="vaccinia">Vaccinia</option>
-                                  <option value="yeast">Yeast</option>
-                                </select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  {/* Synthetic Experiments Section */}
+                  {!isReadOnly && form.watch('syntheticExperiments')?.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-4">No synthetic experiments added yet.</p>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          form.setValue('syntheticExperiments', [{
+                            backboneSource: "",
+                            vectorInsertName: "",
+                            vectorInsert: "",
+                            insertedDnaSource: "",
+                            dnaSequenceNature: {
+                              anonymousMarker: false,
+                              genomicDNA: false,
+                              toxinGene: false,
+                              cDNA: false,
+                              snRNAsiRNA: false,
+                              other: false,
+                            },
+                            anticipatedEffect: {
+                              antiApoptotic: false,
+                              cytokineInducer: false,
+                              cytokineInhibitor: false,
+                              growthFactor: false,
+                              oncogene: false,
+                              toxic: false,
+                              tumorInducer: false,
+                              tumorInhibitor: false,
+                              otherSpecify: "",
+                            },
+                            viralGenomeFraction: "",
+                            replicationCompetent: "",
+                            packagingCellLines: "",
+                            tropism: "",
+                            exposedTo: {
+                              arthropods: false,
+                              cellCulture: false,
+                              humans: false,
+                              invertebrateAnimals: false,
+                              microOrganism: false,
+                              none: false,
+                              plantsTransgenicPlants: false,
+                              vertebrateAnimals: false,
+                            },
+                            vectorSource: {
+                              researchCollaborator: false,
+                              commercialVendor: false,
+                              institutionLab: false,
+                              otherSource: false,
+                            },
+                            organismName: "",
+                            organismSource: {
+                              library: false,
+                              pcr: false,
+                              syntheticOligo: false,
+                              other: false,
+                            },
+                          }]);
+                          // Set to collapsed by default
+                          setCollapsedSyntheticExperiments(new Set([0]));
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add First Synthetic Experiment
+                      </Button>
+                    </div>
+                  )}
 
-                        <FormField
-                          control={form.control}
-                          name="syntheticExperiments.vectorInsertName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Vector/Insert Name <span className="text-red-500">*</span></FormLabel>
-                              <FormControl>
-                                <select
-                                  {...field}
-                                  disabled={isReadOnly}
-                                  className="w-full p-2 border border-gray-300 rounded-md"
-                                >
-                                  <option value="">Select vector/insert name...</option>
-                                </select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="syntheticExperiments.vectorInsert"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Vector/Insert <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter vector/insert details..."
-                                {...field}
-                                disabled={isReadOnly}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="syntheticExperiments.insertedDnaSource"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name of Inserted DNA and Source (species/strain) <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe the inserted DNA and its source, including species and strain information..."
-                                className="resize-none"
-                                rows={3}
-                                {...field}
-                                disabled={isReadOnly}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Nature of DNA Sequences */}
-                      <div>
-                        <FormLabel className="text-base font-semibold mb-3 block">Nature of DNA Sequences <span className="text-red-500">*</span></FormLabel>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {[
-                            { key: 'anonymousMarker', label: 'Anonymous Marker' },
-                            { key: 'genomicDNA', label: 'Genomic DNA' },
-                            { key: 'toxinGene', label: 'Toxin Gene' },
-                            { key: 'cDNA', label: 'cDNA' },
-                            { key: 'snRNAsiRNA', label: 'snRNA/siRNA' },
-                            { key: 'other', label: 'Other' },
-                          ].map(({ key, label }) => (
-                            <FormField
-                              key={key}
-                              control={form.control}
-                              name={`syntheticExperiments.dnaSequenceNature.${key}`}
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      disabled={isReadOnly}
-                                      className="rounded border-gray-300"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal">{label}</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Anticipated Effect of the Insert */}
-                      <div>
-                        <FormLabel className="text-base font-semibold mb-3 block">Anticipated Effect of the Insert <span className="text-red-500">*</span></FormLabel>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {[
-                            { key: 'antiApoptotic', label: 'Anti-apoptotic' },
-                            { key: 'cytokineInducer', label: 'Cytokine Inducer' },
-                            { key: 'cytokineInhibitor', label: 'Cytokine Inhibitor' },
-                            { key: 'growthFactor', label: 'Growth Factor' },
-                            { key: 'oncogene', label: 'Oncogene' },
-                            { key: 'toxic', label: 'Toxic' },
-                            { key: 'tumorInducer', label: 'Tumor Inducer' },
-                            { key: 'tumorInhibitor', label: 'Tumor Inhibitor' },
-                          ].map(({ key, label }) => (
-                            <FormField
-                              key={key}
-                              control={form.control}
-                              name={`syntheticExperiments.anticipatedEffect.${key}`}
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      disabled={isReadOnly}
-                                      className="rounded border-gray-300"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal">{label}</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
-                        </div>
-                        
-                        <FormField
-                          control={form.control}
-                          name="syntheticExperiments.anticipatedEffect.otherSpecify"
-                          render={({ field }) => (
-                            <FormItem className="mt-3">
-                              <FormLabel>Other (specify)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Specify other anticipated effects..."
-                                  {...field}
-                                  disabled={isReadOnly}
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Viral Genome and Replication */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="syntheticExperiments.viralGenomeFraction"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>What is the Largest Fraction of the Eukaryotic Viral Genome Contained in the rDNA Molecules?</FormLabel>
-                              <FormControl>
-                                <select
-                                  {...field}
-                                  disabled={isReadOnly}
-                                  className="w-full p-2 border border-gray-300 rounded-md"
-                                >
-                                  <option value="">Select fraction...</option>
-                                  <option value="<1/2">&lt; 1/2</option>
-                                  <option value=">1/2 but <2/3">&gt; 1/2 but &lt; 2/3</option>
-                                  <option value=">2/3">&gt; 2/3</option>
-                                  <option value="n/a">n/a</option>
-                                </select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="syntheticExperiments.replicationCompetent"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Is the Vector Designed to be Replication Competent?</FormLabel>
-                              <FormControl>
-                                <div className="flex items-center space-x-4">
-                                  <label className="flex items-center space-x-2">
-                                    <input
-                                      type="radio"
-                                      value="yes"
-                                      checked={field.value === "yes"}
-                                      onChange={() => field.onChange("yes")}
-                                      disabled={isReadOnly}
-                                      className="form-radio"
-                                    />
-                                    <span>Yes</span>
-                                  </label>
-                                  <label className="flex items-center space-x-2">
-                                    <input
-                                      type="radio"
-                                      value="no"
-                                      checked={field.value === "no"}
-                                      onChange={() => field.onChange("no")}
-                                      disabled={isReadOnly}
-                                      className="form-radio"
-                                    />
-                                    <span>No</span>
-                                  </label>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="syntheticExperiments.packagingCellLines"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name of Packaging Cell Line(s) or Helper Plasmids used in Co-transfection to Produce Viral Particles</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Enter packaging cell lines or helper plasmids information..."
-                                className="resize-none"
-                                rows={3}
-                                {...field}
-                                disabled={isReadOnly}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="syntheticExperiments.tropism"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tropism (i.e. what species of cells can the virus infect?)</FormLabel>
-                            <FormControl>
-                              <select
-                                {...field}
-                                disabled={isReadOnly}
-                                className="w-full p-2 border border-gray-300 rounded-md"
+                  {form.watch('syntheticExperiments')?.map((experiment, index) => {
+                    const isCollapsed = collapsedSyntheticExperiments.has(index);
+                    const backboneSource = form.watch(`syntheticExperiments.${index}.backboneSource`) || "Not selected";
+                    
+                    return (
+                    <Card key={index} className="relative">
+                      <CardHeader 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => {
+                          const newCollapsed = new Set(collapsedSyntheticExperiments);
+                          if (isCollapsed) {
+                            newCollapsed.delete(index);
+                          } else {
+                            newCollapsed.add(index);
+                          }
+                          setCollapsedSyntheticExperiments(newCollapsed);
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-3">
+                            <CardTitle className="text-lg">Synthetic Experiment #{index + 1}</CardTitle>
+                            <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                              {backboneSource}
+                            </span>
+                            {isCollapsed ? (
+                              <ChevronDown className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4 text-gray-500" />
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {!isReadOnly && form.watch('syntheticExperiments')?.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const currentExperiments = form.getValues('syntheticExperiments') || [];
+                                  const newExperiments = currentExperiments.filter((_, i) => i !== index);
+                                  form.setValue('syntheticExperiments', newExperiments);
+                                  const newCollapsed = new Set(collapsedSyntheticExperiments);
+                                  newCollapsed.delete(index);
+                                  setCollapsedSyntheticExperiments(newCollapsed);
+                                }}
+                                className="text-red-600 hover:text-red-800"
                               >
-                                <option value="">Select tropism...</option>
-                                <option value="ecotropic">Ecotropic (Rodents)</option>
-                                <option value="anthropic">Anthropic (mammals)</option>
-                                <option value="pantropic">Pantropic (all animals including insects, birds, fish)</option>
-                              </select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* What will be Exposed to the rDNA */}
-                      <div>
-                        <FormLabel className="text-base font-semibold mb-3 block">What will be Exposed to the rDNA (check all applicable)? <span className="text-red-500">*</span></FormLabel>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {[
-                            { key: 'arthropods', label: 'Arthropods' },
-                            { key: 'cellCulture', label: 'Cell Culture' },
-                            { key: 'humans', label: 'Humans' },
-                            { key: 'invertebrateAnimals', label: 'Invertebrate Animals' },
-                            { key: 'microOrganism', label: 'Micro Organism' },
-                            { key: 'none', label: 'None' },
-                            { key: 'plantsTransgenicPlants', label: 'Plants or Transgenic Plants' },
-                            { key: 'vertebrateAnimals', label: 'Vertebrate Animals' },
-                          ].map(({ key, label }) => (
-                            <FormField
-                              key={key}
-                              control={form.control}
-                              name={`syntheticExperiments.exposedTo.${key}`}
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      disabled={isReadOnly}
-                                      className="rounded border-gray-300"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal">{label}</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {!isReadOnly && index === form.watch('syntheticExperiments')?.length - 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const currentExperiments = form.getValues('syntheticExperiments') || [];
+                                  const newExperiment = {
+                                    backboneSource: "",
+                                    vectorInsertName: "",
+                                    vectorInsert: "",
+                                    insertedDnaSource: "",
+                                    dnaSequenceNature: {
+                                      anonymousMarker: false,
+                                      genomicDNA: false,
+                                      toxinGene: false,
+                                      cDNA: false,
+                                      snRNAsiRNA: false,
+                                      other: false,
+                                    },
+                                    anticipatedEffect: {
+                                      antiApoptotic: false,
+                                      cytokineInducer: false,
+                                      cytokineInhibitor: false,
+                                      growthFactor: false,
+                                      oncogene: false,
+                                      toxic: false,
+                                      tumorInducer: false,
+                                      tumorInhibitor: false,
+                                      otherSpecify: "",
+                                    },
+                                    viralGenomeFraction: "",
+                                    replicationCompetent: "",
+                                    packagingCellLines: "",
+                                    tropism: "",
+                                    exposedTo: {
+                                      arthropods: false,
+                                      cellCulture: false,
+                                      humans: false,
+                                      invertebrateAnimals: false,
+                                      microOrganism: false,
+                                      none: false,
+                                      plantsTransgenicPlants: false,
+                                      vertebrateAnimals: false,
+                                    },
+                                    vectorSource: {
+                                      researchCollaborator: false,
+                                      commercialVendor: false,
+                                      institutionLab: false,
+                                      otherSource: false,
+                                    },
+                                    organismName: "",
+                                    organismSource: {
+                                      library: false,
+                                      pcr: false,
+                                      syntheticOligo: false,
+                                      other: false,
+                                    },
+                                  };
+                                  form.setValue('syntheticExperiments', [...currentExperiments, newExperiment]);
+                                  // Set new experiment to collapsed by default
+                                  const newCollapsed = new Set(collapsedSyntheticExperiments);
+                                  newCollapsed.add(currentExperiments.length);
+                                  setCollapsedSyntheticExperiments(newCollapsed);
+                                }}
+                                className="text-green-600 hover:text-green-800"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      </CardHeader>
+                      {!isCollapsed && (
+                      <CardContent className="space-y-6">
+                        
+                        {/* Vector Information Section */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name={`syntheticExperiments.${index}.backboneSource`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Backbone Source <span className="text-red-500">*</span></FormLabel>
+                                <FormControl>
+                                  <select
+                                    {...field}
+                                    disabled={isReadOnly}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                  >
+                                    <option value="">Select backbone source...</option>
+                                    <option value="adenoviral">Adenoviral</option>
+                                    <option value="bacteria">Bacteria</option>
+                                    <option value="ecoli">E.coli</option>
+                                    <option value="fiv">FIV</option>
+                                    <option value="hiv">HIV</option>
+                                    <option value="lentivirus">Lentivirus</option>
+                                    <option value="mlv">MLV</option>
+                                    <option value="plasmids">Plasmids</option>
+                                    <option value="retrovirus">Retrovirus</option>
+                                    <option value="rotavirus">Rotavirus</option>
+                                    <option value="vaccinia">Vaccinia</option>
+                                    <option value="yeast">Yeast</option>
+                                  </select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-                      {/* Vector Source */}
-                      <div>
-                        <FormLabel className="text-base font-semibold mb-3 block">Who will the Vector/Insert be Acquired from?</FormLabel>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {[
-                            { key: 'researchCollaborator', label: 'Acquired from a Research Collaborator' },
-                            { key: 'commercialVendor', label: 'Commercial Vendor' },
-                            { key: 'institutionLab', label: 'Developed/Created in my Institution Lab' },
-                            { key: 'otherSource', label: 'Other Source' },
-                          ].map(({ key, label }) => (
-                            <FormField
-                              key={key}
-                              control={form.control}
-                              name={`syntheticExperiments.vectorSource.${key}`}
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      disabled={isReadOnly}
-                                      className="rounded border-gray-300"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal">{label}</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
+                          <FormField
+                            control={form.control}
+                            name={`syntheticExperiments.${index}.vectorInsertName`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Vector/Insert Name <span className="text-red-500">*</span></FormLabel>
+                                <FormControl>
+                                  <select
+                                    {...field}
+                                    disabled={isReadOnly}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                  >
+                                    <option value="">Select vector/insert name...</option>
+                                  </select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                      </div>
 
-                      {/* Organism Information */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
-                          name="syntheticExperiments.organismName"
+                          name={`syntheticExperiments.${index}.vectorInsert`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Organism Name</FormLabel>
+                              <FormLabel>Vector/Insert <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter organism name..."
+                                  placeholder="Enter vector/insert details..."
                                   {...field}
                                   disabled={isReadOnly}
                                   value={field.value || ""}
@@ -3265,19 +3154,43 @@ export default function IbcApplicationEdit() {
                           )}
                         />
 
+                        <FormField
+                          control={form.control}
+                          name={`syntheticExperiments.${index}.insertedDnaSource`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name of Inserted DNA and Source (species/strain) <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Describe the inserted DNA and its source, including species and strain information..."
+                                  className="resize-none"
+                                  rows={3}
+                                  {...field}
+                                  disabled={isReadOnly}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Nature of DNA Sequences */}
                         <div>
-                          <FormLabel className="text-base font-semibold mb-3 block">Organism Source <span className="text-red-500">*</span></FormLabel>
-                          <div className="grid grid-cols-2 gap-3">
+                          <FormLabel className="text-base font-semibold mb-3 block">Nature of DNA Sequences <span className="text-red-500">*</span></FormLabel>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                             {[
-                              { key: 'library', label: 'Library' },
-                              { key: 'pcr', label: 'PCR' },
-                              { key: 'syntheticOligo', label: 'Synthetic Oligo' },
+                              { key: 'anonymousMarker', label: 'Anonymous Marker' },
+                              { key: 'genomicDNA', label: 'Genomic DNA' },
+                              { key: 'toxinGene', label: 'Toxin Gene' },
+                              { key: 'cDNA', label: 'cDNA' },
+                              { key: 'snRNAsiRNA', label: 'snRNA/siRNA' },
                               { key: 'other', label: 'Other' },
                             ].map(({ key, label }) => (
                               <FormField
                                 key={key}
                                 control={form.control}
-                                name={`syntheticExperiments.organismSource.${key}`}
+                                name={`syntheticExperiments.${index}.dnaSequenceNature.${key}`}
                                 render={({ field }) => (
                                   <FormItem className="flex items-center space-x-2">
                                     <FormControl>
@@ -3296,10 +3209,300 @@ export default function IbcApplicationEdit() {
                             ))}
                           </div>
                         </div>
-                      </div>
 
-                    </CardContent>
-                  </Card>
+                        {/* Anticipated Effect of the Insert */}
+                        <div>
+                          <FormLabel className="text-base font-semibold mb-3 block">Anticipated Effect of the Insert <span className="text-red-500">*</span></FormLabel>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {[
+                              { key: 'antiApoptotic', label: 'Anti-apoptotic' },
+                              { key: 'cytokineInducer', label: 'Cytokine Inducer' },
+                              { key: 'cytokineInhibitor', label: 'Cytokine Inhibitor' },
+                              { key: 'growthFactor', label: 'Growth Factor' },
+                              { key: 'oncogene', label: 'Oncogene' },
+                              { key: 'toxic', label: 'Toxic' },
+                              { key: 'tumorInducer', label: 'Tumor Inducer' },
+                              { key: 'tumorInhibitor', label: 'Tumor Inhibitor' },
+                            ].map(({ key, label }) => (
+                              <FormField
+                                key={key}
+                                control={form.control}
+                                name={`syntheticExperiments.${index}.anticipatedEffect.${key}`}
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2">
+                                    <FormControl>
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        disabled={isReadOnly}
+                                        className="rounded border-gray-300"
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">{label}</FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                          
+                          <FormField
+                            control={form.control}
+                            name={`syntheticExperiments.${index}.anticipatedEffect.otherSpecify`}
+                            render={({ field }) => (
+                              <FormItem className="mt-3">
+                                <FormLabel>Other (specify)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Specify other anticipated effects..."
+                                    {...field}
+                                    disabled={isReadOnly}
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Viral Genome and Replication */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name={`syntheticExperiments.${index}.viralGenomeFraction`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What is the Largest Fraction of the Eukaryotic Viral Genome Contained in the rDNA Molecules?</FormLabel>
+                                <FormControl>
+                                  <select
+                                    {...field}
+                                    disabled={isReadOnly}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                  >
+                                    <option value="">Select fraction...</option>
+                                    <option value="<1/2">&lt; 1/2</option>
+                                    <option value=">1/2 but <2/3">&gt; 1/2 but &lt; 2/3</option>
+                                    <option value=">2/3">&gt; 2/3</option>
+                                    <option value="n/a">n/a</option>
+                                  </select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`syntheticExperiments.${index}.replicationCompetent`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Is the Vector Designed to be Replication Competent?</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center space-x-4">
+                                    <label className="flex items-center space-x-2">
+                                      <input
+                                        type="radio"
+                                        value="yes"
+                                        checked={field.value === "yes"}
+                                        onChange={() => field.onChange("yes")}
+                                        disabled={isReadOnly}
+                                        className="form-radio"
+                                      />
+                                      <span>Yes</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2">
+                                      <input
+                                        type="radio"
+                                        value="no"
+                                        checked={field.value === "no"}
+                                        onChange={() => field.onChange("no")}
+                                        disabled={isReadOnly}
+                                        className="form-radio"
+                                      />
+                                      <span>No</span>
+                                    </label>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name={`syntheticExperiments.${index}.packagingCellLines`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name of Packaging Cell Line(s) or Helper Plasmids used in Co-transfection to Produce Viral Particles</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Enter packaging cell lines or helper plasmids information..."
+                                  className="resize-none"
+                                  rows={3}
+                                  {...field}
+                                  disabled={isReadOnly}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name={`syntheticExperiments.${index}.tropism`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tropism (i.e. what species of cells can the virus infect?)</FormLabel>
+                              <FormControl>
+                                <select
+                                  {...field}
+                                  disabled={isReadOnly}
+                                  className="w-full p-2 border border-gray-300 rounded-md"
+                                >
+                                  <option value="">Select tropism...</option>
+                                  <option value="ecotropic">Ecotropic (Rodents)</option>
+                                  <option value="anthropic">Anthropic (mammals)</option>
+                                  <option value="pantropic">Pantropic (all animals including insects, birds, fish)</option>
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* What will be Exposed to the rDNA */}
+                        <div>
+                          <FormLabel className="text-base font-semibold mb-3 block">What will be Exposed to the rDNA (check all applicable)? <span className="text-red-500">*</span></FormLabel>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                              { key: 'arthropods', label: 'Arthropods' },
+                              { key: 'cellCulture', label: 'Cell Culture' },
+                              { key: 'humans', label: 'Humans' },
+                              { key: 'invertebrateAnimals', label: 'Invertebrate Animals' },
+                              { key: 'microOrganism', label: 'Micro Organism' },
+                              { key: 'none', label: 'None' },
+                              { key: 'plantsTransgenicPlants', label: 'Plants or Transgenic Plants' },
+                              { key: 'vertebrateAnimals', label: 'Vertebrate Animals' },
+                            ].map(({ key, label }) => (
+                              <FormField
+                                key={key}
+                                control={form.control}
+                                name={`syntheticExperiments.${index}.exposedTo.${key}`}
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2">
+                                    <FormControl>
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        disabled={isReadOnly}
+                                        className="rounded border-gray-300"
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">{label}</FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Vector Source */}
+                        <div>
+                          <FormLabel className="text-base font-semibold mb-3 block">Who will the Vector/Insert be Acquired from?</FormLabel>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {[
+                              { key: 'researchCollaborator', label: 'Acquired from a Research Collaborator' },
+                              { key: 'commercialVendor', label: 'Commercial Vendor' },
+                              { key: 'institutionLab', label: 'Developed/Created in my Institution Lab' },
+                              { key: 'otherSource', label: 'Other Source' },
+                            ].map(({ key, label }) => (
+                              <FormField
+                                key={key}
+                                control={form.control}
+                                name={`syntheticExperiments.${index}.vectorSource.${key}`}
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2">
+                                    <FormControl>
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        disabled={isReadOnly}
+                                        className="rounded border-gray-300"
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">{label}</FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Organism Information */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name={`syntheticExperiments.${index}.organismName`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Organism Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter organism name..."
+                                    {...field}
+                                    disabled={isReadOnly}
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div>
+                            <FormLabel className="text-base font-semibold mb-3 block">Organism Source <span className="text-red-500">*</span></FormLabel>
+                            <div className="grid grid-cols-2 gap-3">
+                              {[
+                                { key: 'library', label: 'Library' },
+                                { key: 'pcr', label: 'PCR' },
+                                { key: 'syntheticOligo', label: 'Synthetic Oligo' },
+                                { key: 'other', label: 'Other' },
+                              ].map(({ key, label }) => (
+                                <FormField
+                                  key={key}
+                                  control={form.control}
+                                  name={`syntheticExperiments.${index}.organismSource.${key}`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex items-center space-x-2">
+                                      <FormControl>
+                                        <input
+                                          type="checkbox"
+                                          checked={field.value}
+                                          onChange={field.onChange}
+                                          disabled={isReadOnly}
+                                          className="rounded border-gray-300"
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="text-sm font-normal">{label}</FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                      </CardContent>
+                      )}
+                    </Card>
+                    );
+                  })}
                 </TabsContent>
               </Tabs>
             </TabsContent>
