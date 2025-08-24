@@ -19,8 +19,8 @@ interface TimelineEntry {
 
 interface Comment {
   id: number;
-  content: string;
-  type: 'office_comment' | 'reviewer_feedback' | 'pi_response' | 'status_change';
+  comment: string;
+  commentType: 'office_comment' | 'reviewer_feedback' | 'pi_response' | 'status_change';
   authorName?: string;
   createdAt: string;
 }
@@ -160,7 +160,7 @@ export default function TimelineComments({
         let commentTitle = 'Comment';
         
         // Style based on comment type
-        switch (comment.type) {
+        switch (comment.commentType) {
           case 'office_comment':
             bgClass = 'bg-amber-50 border-amber-200';
             iconClass = 'text-amber-600';
@@ -216,7 +216,7 @@ export default function TimelineComments({
                       {comment.authorName || 'Unknown'}
                     </span>
                   </div>
-                  <p className={`text-sm ${textClass}`}>{comment.content}</p>
+                  <p className={`text-sm ${textClass}`}>{comment.comment}</p>
                 </div>
               </div>
             </div>

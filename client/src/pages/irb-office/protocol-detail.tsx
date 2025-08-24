@@ -13,6 +13,7 @@ import {
   XCircle, Send, AlertTriangle, MessageSquare, History, Users
 } from "lucide-react";
 import { IrbApplication, ResearchActivity, Scientist } from "@shared/schema";
+import TimelineComments from "@/components/TimelineComments";
 
 interface ReviewAction {
   action: 'approve' | 'reject' | 'request_revisions' | 'assign_reviewer' | 'assign_reviewers';
@@ -51,6 +52,14 @@ export default function IrbOfficeProtocolDetail() {
 
   const { data: boardMembers = [] } = useQuery<any[]>({
     queryKey: ['/api/irb-board-members/active'],
+  });
+
+  // Fetch comments for timeline display
+  const { data: comments = [] } = useQuery({
+    queryKey: [`/api/irb-applications/${applicationId}/comments`],
+    enabled: !!applicationId,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Extract scientists from active board members for reviewer selection
@@ -273,180 +282,20 @@ export default function IrbOfficeProtocolDetail() {
   };
 
   const renderReviewHistory = () => {
-    try {
-      const events: Array<[string, any]> = [];
-      
-      // Add initial submission with guaranteed early timestamp  
-      if (application.submissionDate) {
-        events.push([
-          "1750490000000", // Fixed early timestamp to ensure it's always first
-          {
-            type: 'system',
-            action: 'submitted',
-            actor: 'Principal Investigator',
-            description: 'Initial protocol submission',
-            timestamp: application.submissionDate,
-            comments: 'Protocol submitted for IRB review'
-          }
-        ]);
-      }
-      
-      // Add IRB review comments
-      const hasReviewComments = application?.reviewComments && application.reviewComments !== '{}';
-      if (hasReviewComments) {
-        let reviewComments;
-        if (typeof application.reviewComments === 'string') {
-          reviewComments = JSON.parse(application.reviewComments);
-        } else {
-          reviewComments = application.reviewComments;
-        }
-        
-        Object.entries(reviewComments).forEach(([timestamp, review]: [string, any]) => {
-          const actionDescriptions = {
-            'triage_complete': 'Triage completed - ready for reviewer assignment',
-            'assign_reviewers': 'Reviewers assigned and review started',
-            'approve': 'Protocol approved',
-            'reject': 'Protocol rejected',
-            'request_revisions': 'Revisions requested from PI'
-          };
-          
-          events.push([timestamp, {
-            ...review,
-            type: 'irb_review',
-            actor: 'IRB Office',
-            description: actionDescriptions[review.action || review.decision] || review.comments,
-            // IRB Office can see full reviewer details
-            showReviewerDetails: true
-          }]);
-        });
-      }
-      
-      // Add PI responses
-      const hasPiResponses = application?.piResponses && application.piResponses !== '{}';
-      if (hasPiResponses) {
-        let piResponses;
-        if (typeof application.piResponses === 'string') {
-          piResponses = JSON.parse(application.piResponses);
-        } else {
-          piResponses = application.piResponses;
-        }
-        
-        Object.entries(piResponses).forEach(([timestamp, response]: [string, any]) => {
-          const statusDescriptions = {
-            'resubmitted': 'Protocol resubmitted after revisions',
-            'withdrawn': 'Protocol withdrawn by PI',
-            'response': 'Response to IRB query'
-          };
-          
-          events.push([timestamp, {
-            ...response,
-            type: 'pi_submission',
-            actor: 'Principal Investigator',
-            description: statusDescriptions[response.workflowStatus] || 'PI response'
-          }]);
-        });
-      }
-      
-      if (events.length === 0) return null;
-      
-      // Sort by timestamp (chronological order - oldest first)
-      events.sort(([a], [b]) => {
-        const timeA = isNaN(Number(a)) ? new Date(a).getTime() : Number(a);
-        const timeB = isNaN(Number(b)) ? new Date(b).getTime() : Number(b);
-        return timeA - timeB;
-      });
-      
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Complete Workflow History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {events.map(([timestamp, entry]: [string, any], index) => (
-                <div key={`${timestamp}-${index}`} className={`border-l-2 pl-4 ${
-                  entry.type === 'irb_review' ? 'border-blue-200' :
-                  entry.type === 'pi_submission' ? 'border-green-200' : 
-                  entry.type === 'system' ? 'border-green-200' : 'border-gray-200'
-                }`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        entry.type === 'irb_review' 
-                          ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                          : entry.type === 'pi_submission'
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : entry.type === 'system'
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-gray-50 text-gray-700 border-gray-200'
-                      }`}
-                    >
-                      {entry.actor}
-                    </Badge>
-                    <Badge variant="secondary" className="capitalize">
-                      {entry.action || entry.workflowStatus || 'event'}
-                    </Badge>
-                    <span className="text-sm text-gray-500">
-                      {formatDate(entry.timestamp || (isNaN(Number(timestamp)) ? timestamp : new Date(Number(timestamp))))}
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium">{entry.description}</p>
-                  {(entry.comment || entry.comments) && (
-                    <p className="text-sm text-gray-600 italic mt-1">"{entry.comment || entry.comments}"</p>
-                  )}
-                  {entry.decision && entry.decision !== entry.action && (
-                    <p className="text-sm font-medium mt-1">Decision: {entry.decision}</p>
-                  )}
-                  {/* Show reviewer information only in IRB Office view */}
-                  {entry.showReviewerDetails && entry.action === 'assign_reviewers' && application.reviewerAssignments && (
-                    <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                      <p className="font-medium text-blue-800">Reviewer Assignment Details:</p>
-                      {(() => {
-                        try {
-                          const assignments = typeof application.reviewerAssignments === 'string' 
-                            ? JSON.parse(application.reviewerAssignments) 
-                            : application.reviewerAssignments;
-                          return (
-                            <div className="text-blue-700">
-                              <p>Primary: {reviewers.find(r => r.id === assignments.primary)?.name || 'Unknown'}</p>
-                              {assignments.secondary && (
-                                <p>Secondary: {reviewers.find(r => r.id === assignments.secondary)?.name || 'Unknown'}</p>
-                              )}
-                              <p>Review Type: {assignments.reviewType}</p>
-                            </div>
-                          );
-                        } catch (e) {
-                          return <p className="text-blue-700">Assignment details unavailable</p>;
-                        }
-                      })()}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      );
-    } catch (error) {
-      console.error('Error parsing review history:', error);
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Complete Workflow History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">Unable to load history</p>
-          </CardContent>
-        </Card>
-      );
-    }
+    return (
+      <TimelineComments 
+        application={{
+          createdAt: application.createdAt,
+          submissionDate: application.submissionDate,
+          vettedDate: application.vettedDate,
+          underReviewDate: application.underReviewDate,
+          approvalDate: application.approvalDate,
+          expirationDate: application.expirationDate,
+        }}
+        comments={comments}
+        title="Complete Workflow History"
+      />
+    );
   };
 
   if (isLoading) {
