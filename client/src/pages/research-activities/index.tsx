@@ -74,7 +74,7 @@ interface ResearchActivity {
 export default function ResearchActivitiesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [selectedProjectTab, setSelectedProjectTab] = useState<string>("all");
   const [, navigate] = useLocation();
 
   const { data: researchActivities, isLoading: isLoadingActivities } = useQuery<ResearchActivity[]>({
@@ -108,6 +108,15 @@ export default function ResearchActivitiesList() {
     };
   });
 
+  // Get projects for the selected program
+  const projectsForSelectedProgram = projects?.filter(project => {
+    if (activeTab === "all") return true;
+    if (activeTab === "cancer-genomics") return project.programId === 1;
+    if (activeTab === "neurological-disorders") return project.programId === 2;
+    if (activeTab === "immune-dysregulations") return project.programId === 3;
+    return false;
+  });
+
   const filteredActivities = enhancedActivities?.filter(activity => {
     const matchesSearch = 
       activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -115,17 +124,22 @@ export default function ResearchActivitiesList() {
       activity.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (activity.project?.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    if (activeTab === "all") return matchesSearch;
+    // If "All" is selected, show all activities
+    if (activeTab === "all" && selectedProjectTab === "all") return matchesSearch;
     
     // Filter by program first
-    if (activeTab === "cancer-genomics") return matchesSearch && activity.project?.program?.name === "Cancer Genomics Program";
-    if (activeTab === "neurological-disorders") return matchesSearch && activity.project?.program?.name === "Neurological Disorders Program";
-    if (activeTab === "immune-dysregulations") return matchesSearch && activity.project?.program?.name === "Immune Dysregulations Program";
+    let matchesProgram = true;
+    if (activeTab === "cancer-genomics") matchesProgram = activity.project?.program?.name === "Cancer Genomics Program";
+    if (activeTab === "neurological-disorders") matchesProgram = activity.project?.program?.name === "Neurological Disorders Program";
+    if (activeTab === "immune-dysregulations") matchesProgram = activity.project?.program?.name === "Immune Dysregulations Program";
     
-    // Filter by specific project if a project filter is selected
-    const matchesProject = projectFilter === "all" || (activity.projectId && activity.projectId === parseInt(projectFilter));
+    // Then filter by specific project if a project tab is selected
+    let matchesProject = true;
+    if (selectedProjectTab !== "all") {
+      matchesProject = activity.projectId && activity.projectId === parseInt(selectedProjectTab);
+    }
     
-    return matchesSearch && matchesProject;
+    return matchesSearch && matchesProgram && matchesProject;
   });
 
   return (
@@ -154,45 +168,43 @@ export default function ResearchActivitiesList() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle>All Research Activities</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Search research activities..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              <Select 
-                value={projectFilter}
-                onValueChange={setProjectFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  {projects?.map(project => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Search research activities..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="all" onValueChange={setActiveTab}>
+          <Tabs defaultValue="all" onValueChange={(value) => {
+            setActiveTab(value);
+            setSelectedProjectTab("all"); // Reset project filter when program changes
+          }}>
             <TabsList className="mb-4 flex flex-wrap gap-1">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="cancer-genomics">Cancer Genomics</TabsTrigger>
               <TabsTrigger value="neurological-disorders">Neurological Disorders</TabsTrigger>
               <TabsTrigger value="immune-dysregulations">Immune Dysregulations</TabsTrigger>
             </TabsList>
+            
+            {/* Project-level tabs - only show when a specific program is selected */}
+            {activeTab !== "all" && projectsForSelectedProgram && projectsForSelectedProgram.length > 0 && (
+              <Tabs defaultValue="all" onValueChange={setSelectedProjectTab} className="mb-4">
+                <TabsList className="flex flex-wrap gap-1">
+                  <TabsTrigger value="all">All Projects</TabsTrigger>
+                  {projectsForSelectedProgram.map(project => (
+                    <TabsTrigger key={project.id} value={project.id.toString()}>
+                      {project.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
             
             <TabsContent value={activeTab}>
           {isLoadingActivities ? (
