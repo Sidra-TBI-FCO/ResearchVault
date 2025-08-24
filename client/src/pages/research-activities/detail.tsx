@@ -71,7 +71,12 @@ export default function ResearchActivityDetail() {
 
   // Find scientists by ID
   const budgetHolder = scientists?.find(s => s.id === activity?.budgetHolderId);
-  const leadScientist = scientists?.find(s => s.id === activity?.leadScientistId);
+  
+  // Find Lead Scientist from team members (not from SDR definition)
+  const leadScientistMember = teamMembers?.find((member: any) => 
+    member.role === 'Lead Scientist'
+  );
+  const leadScientist = leadScientistMember ? scientists?.find(s => s.id === leadScientistMember.scientistId) : null;
   
   // Get the count of publications for this research activity
   const { count: publicationCount } = usePublicationCount(activity?.id);
@@ -255,21 +260,28 @@ export default function ResearchActivityDetail() {
                   </div>
                 )}
 
-                {activity.leadScientistId && (
-                  <div>
-                    <h3 className="text-sm font-medium text-neutral-400">Lead Scientist</h3>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {scientistsLoading ? (
-                        <Skeleton className="h-4 w-32 inline-block" />
-                      ) : leadScientist ? (
-                        <span className="text-sm">{leadScientist.name} ({leadScientist.title || 'No title'})</span>
-                      ) : (
-                        <span className="text-sm text-orange-600">Not assigned</span>
-                      )}
-                    </div>
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Lead Scientist</h3>
+                  <div className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {teamMembersLoading || scientistsLoading ? (
+                      <Skeleton className="h-4 w-32 inline-block" />
+                    ) : leadScientist ? (
+                      <span className="text-sm">{leadScientist.name} ({leadScientist.title || 'No title'})</span>
+                    ) : (
+                      <span className="text-sm text-orange-600 font-medium">
+                        Not assigned - 
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto ml-1 text-orange-600 underline"
+                          onClick={() => navigate(`/research-activities/${activity.id}/team`)}
+                        >
+                          Add Lead Scientist
+                        </Button>
+                      </span>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {activity.sidraBranch && (
                   <div>

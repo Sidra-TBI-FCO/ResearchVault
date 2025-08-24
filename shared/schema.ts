@@ -104,8 +104,8 @@ export const researchActivities = pgTable("research_activities", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   staffScientistId: integer("staff_scientist_id"), // references scientists.id (legacy field)
-  leadScientistId: integer("lead_scientist_id"), // Lead Scientist (references scientists.id)
   grantCodes: text("grant_codes").array(), // Grant codes corresponding to budget sources
+  // NOTE: leadScientistId removed - Lead Scientist is now managed through projectMembers table only
 });
 
 export const insertResearchActivitySchema = createInsertSchema(researchActivities).omit({

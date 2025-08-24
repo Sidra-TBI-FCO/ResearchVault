@@ -63,7 +63,6 @@ export default function EditResearchActivity() {
       objectives: "",
       status: "planning",
       projectId: undefined,
-      leadScientistId: undefined,
       budgetHolderId: undefined,
       startDate: undefined,
       endDate: undefined,
@@ -84,7 +83,6 @@ export default function EditResearchActivity() {
         objectives: activity.objectives || "",
         status: activity.status || "planning",
         projectId: activity.projectId || undefined,
-        leadScientistId: activity.leadScientistId || undefined,
         budgetHolderId: activity.budgetHolderId || undefined,
         startDate: activity.startDate ? new Date(activity.startDate) : undefined,
         endDate: activity.endDate ? new Date(activity.endDate) : undefined,
@@ -348,40 +346,7 @@ export default function EditResearchActivity() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="leadScientistId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lead Scientist</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString() || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select lead scientist" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {scientistsLoading ? (
-                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
-                          ) : (
-                            scientists?.map((scientist) => (
-                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name} ({scientist.title || 'No title'})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Can be any type of scientist
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -38,7 +38,6 @@ const createResearchActivitySchema = insertResearchActivitySchema.extend({
   projectId: z.number({
     required_error: "Please select a project",
   }),
-  leadScientistId: z.number().optional(),
   budgetHolderId: z.number().optional(),
   additionalNotificationEmail: z.string().email().optional().or(z.literal("")),
   startDate: z.date().optional(),
@@ -273,40 +272,7 @@ export default function CreateResearchActivity() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="leadScientistId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lead Scientist</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select lead scientist" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {scientistsLoading ? (
-                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
-                          ) : (
-                            scientists?.map((scientist) => (
-                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name} ({scientist.title || 'No title'})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Can be any type of scientist
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 
                 <FormField
                   control={form.control}
