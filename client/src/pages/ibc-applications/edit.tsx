@@ -50,7 +50,6 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   plants: z.boolean(),
   
   // Additional fields
-  biologicalAgents: z.string().optional(),
   riskGroupClassification: z.string().optional(),
   
   // Methods and Procedures
@@ -149,7 +148,6 @@ export default function IbcApplicationEdit() {
       nanoparticles: false,
       arthropods: false,
       plants: false,
-      biologicalAgents: "",
       riskGroupClassification: "",
       
       // Methods and Procedures defaults
@@ -197,7 +195,6 @@ export default function IbcApplicationEdit() {
         nanoparticles: ibcApplication.nanoparticles || false,
         arthropods: ibcApplication.arthropods || false,
         plants: ibcApplication.plants || false,
-        biologicalAgents: ibcApplication.biologicalAgents || "",
         riskGroupClassification: ibcApplication.riskGroupClassification || "",
         
         // Methods and Procedures actual values
@@ -1127,22 +1124,7 @@ export default function IbcApplicationEdit() {
                 </Card>
               </div>
 
-              <FormField
-                control={form.control}
-                name="biologicalAgents"
-                render={({ field }) => (
-                  <FormItem className="col-span-full">
-                    <FormLabel>Biological Agents</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Human gut bacterial isolates, recombinant DNA, viral vectors" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      List the biological agents that will be used in this protocol
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
             </TabsContent>
 
             <TabsContent value="staff" className="space-y-6 mt-6">
