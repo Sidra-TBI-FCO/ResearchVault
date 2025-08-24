@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -53,7 +54,7 @@ interface Project {
 
 export default function ProjectsList() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [programFilter, setProgramFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("all");
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
@@ -86,9 +87,14 @@ export default function ProjectsList() {
       project.projectId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (project.program?.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesProgram = programFilter === "all" || project.programId === parseInt(programFilter);
+    if (activeTab === "all") return matchesSearch;
     
-    return matchesSearch && matchesProgram;
+    // Filter by program
+    if (activeTab === "cancer-genomics") return matchesSearch && project.program?.name === "Cancer Genomics Program";
+    if (activeTab === "neurological-disorders") return matchesSearch && project.program?.name === "Neurological Disorders Program";
+    if (activeTab === "immune-dysregulations") return matchesSearch && project.program?.name === "Immune Dysregulations Program";
+    
+    return matchesSearch;
   });
 
   return (
@@ -115,40 +121,30 @@ export default function ProjectsList() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle>All Projects</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Search projects..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              <Select 
-                value={programFilter}
-                onValueChange={setProgramFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Program" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Programs</SelectItem>
-                  {programs?.map(program => (
-                    <SelectItem key={program.id} value={program.id.toString()}>
-                      {program.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Search projects..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
         <CardContent>
+          <Tabs defaultValue="all" onValueChange={setActiveTab}>
+            <TabsList className="mb-4 flex flex-wrap gap-1">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="cancer-genomics">Cancer Genomics</TabsTrigger>
+              <TabsTrigger value="neurological-disorders">Neurological Disorders</TabsTrigger>
+              <TabsTrigger value="immune-dysregulations">Immune Dysregulations</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={activeTab}>
           {isLoadingProjects ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -252,6 +248,8 @@ export default function ProjectsList() {
               </TableBody>
             </Table>
           )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

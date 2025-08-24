@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -72,6 +73,7 @@ interface ResearchActivity {
 
 export default function ResearchActivitiesList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [, navigate] = useLocation();
 
@@ -81,6 +83,10 @@ export default function ResearchActivitiesList() {
 
   const { data: projects } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
+  });
+  
+  const { data: programs } = useQuery<Program[]>({
+    queryKey: ['/api/programs'],
   });
 
   const { data: scientists } = useQuery<Scientist[]>({
@@ -94,7 +100,10 @@ export default function ResearchActivitiesList() {
       scientists?.find(s => s.id === activity.leadPIId) : undefined;
     return {
       ...activity,
-      project,
+      project: project ? {
+        ...project,
+        program: programs?.find(prog => prog.id === project.programId)
+      } : undefined,
       leadPI
     };
   });
@@ -106,6 +115,14 @@ export default function ResearchActivitiesList() {
       activity.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (activity.project?.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
+    if (activeTab === "all") return matchesSearch;
+    
+    // Filter by program first
+    if (activeTab === "cancer-genomics") return matchesSearch && activity.project?.program?.name === "Cancer Genomics Program";
+    if (activeTab === "neurological-disorders") return matchesSearch && activity.project?.program?.name === "Neurological Disorders Program";
+    if (activeTab === "immune-dysregulations") return matchesSearch && activity.project?.program?.name === "Immune Dysregulations Program";
+    
+    // Filter by specific project if a project filter is selected
     const matchesProject = projectFilter === "all" || (activity.projectId && activity.projectId === parseInt(projectFilter));
     
     return matchesSearch && matchesProject;
@@ -135,7 +152,7 @@ export default function ResearchActivitiesList() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle>All Research Activities</CardTitle>
             <div className="flex items-center space-x-2">
               <div className="relative w-64">
@@ -169,6 +186,15 @@ export default function ResearchActivitiesList() {
           </div>
         </CardHeader>
         <CardContent>
+          <Tabs defaultValue="all" onValueChange={setActiveTab}>
+            <TabsList className="mb-4 flex flex-wrap gap-1">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="cancer-genomics">Cancer Genomics</TabsTrigger>
+              <TabsTrigger value="neurological-disorders">Neurological Disorders</TabsTrigger>
+              <TabsTrigger value="immune-dysregulations">Immune Dysregulations</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={activeTab}>
           {isLoadingActivities ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -287,6 +313,8 @@ export default function ResearchActivitiesList() {
               </TableBody>
             </Table>
           )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
