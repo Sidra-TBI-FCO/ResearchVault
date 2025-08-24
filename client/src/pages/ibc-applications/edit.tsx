@@ -2699,11 +2699,9 @@ export default function IbcApplicationEdit() {
                             render={({ field }) => {
                               const syntheticExperiments = form.watch('syntheticExperiments') || [];
                               const availableBackbones = syntheticExperiments
-                                .filter(exp => exp.backboneSource && exp.vectorInsert)
-                                .map((exp, expIndex) => ({
-                                  value: `${exp.backboneSource}-${expIndex + 1}`,
-                                  label: `${exp.backboneSource} - ${exp.vectorInsert || 'Experiment ' + (expIndex + 1)}`
-                                }));
+                                .filter(exp => exp.backboneSource)
+                                .map(exp => exp.backboneSource)
+                                .filter((source, index, arr) => arr.indexOf(source) === index); // Remove duplicates
                               
                               return (
                               <FormItem>
@@ -2717,12 +2715,12 @@ export default function IbcApplicationEdit() {
                                   {availableBackbones.length > 0 ? (
                                     <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                       <SelectTrigger>
-                                        <SelectValue placeholder="Select backbone/vector from synthetic experiments" />
+                                        <SelectValue placeholder="Select backbone source from synthetic experiments" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        {availableBackbones.map((backbone) => (
-                                          <SelectItem key={backbone.value} value={backbone.value}>
-                                            {backbone.label}
+                                        {availableBackbones.map((backboneSource) => (
+                                          <SelectItem key={backboneSource} value={backboneSource}>
+                                            {backboneSource}
                                           </SelectItem>
                                         ))}
                                       </SelectContent>
