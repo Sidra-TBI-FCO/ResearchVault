@@ -251,23 +251,7 @@ export default function ProjectEdit() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="objectives"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Objectives</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Project objectives..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               <div className="flex gap-4">
                 <Button 
