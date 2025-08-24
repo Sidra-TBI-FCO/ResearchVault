@@ -68,7 +68,9 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
     pathogenDnaRna: z.boolean().default(false),
     infectiousViral: z.boolean().default(false),
     wholeAnimalExperiments: z.boolean().default(false),
+    wholePlants: z.boolean().default(false),
     largeScaleExperiments: z.boolean().default(false),
+    influenzaViruses: z.boolean().default(false),
     geneDriveOrganisms: z.boolean().default(false),
     containmentLevel: z.string().optional(),
     ibcApprovalDate: z.string().optional(),
@@ -208,7 +210,9 @@ export default function IbcApplicationEdit() {
         pathogenDnaRna: false,
         infectiousViral: false,
         wholeAnimalExperiments: false,
+        wholePlants: false,
         largeScaleExperiments: false,
+        influenzaViruses: false,
         geneDriveOrganisms: false,
       },
       nihSectionE: {
@@ -285,7 +289,9 @@ export default function IbcApplicationEdit() {
           pathogenDnaRna: false,
           infectiousViral: false,
           wholeAnimalExperiments: false,
+          wholePlants: false,
           largeScaleExperiments: false,
+          influenzaViruses: false,
           geneDriveOrganisms: false,
         },
         nihSectionE: ibcApplication.nihSectionE || {
@@ -1676,6 +1682,32 @@ export default function IbcApplicationEdit() {
                     
                     <FormField
                       control={form.control}
+                      name="nihSectionD.wholePlants"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-D-5: Experiments involving whole plants
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Recombinant/synthetic nucleic acids in whole plants (requires BL1-P, BL2-P, BL3-P, or BL4-P containment)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
                       name="nihSectionD.largeScaleExperiments"
                       render={({ field }) => (
                         <FormItem className="flex items-center space-x-3">
@@ -1694,6 +1726,32 @@ export default function IbcApplicationEdit() {
                             </FormLabel>
                             <FormDescription className="text-xs">
                               Large-scale research or production activities
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.influenzaViruses"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-D-7: Experiments involving influenza viruses
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Research with influenza viruses (specific containment requirements apply)
                             </FormDescription>
                           </div>
                         </FormItem>
