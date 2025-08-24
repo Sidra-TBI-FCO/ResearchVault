@@ -2122,12 +2122,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Handle reviewer feedback as part of reviewComments array structure
-      const currentReviewComments = application.reviewComments as any[] || [];
+      let currentReviewComments = [];
+      
+      // Handle both string and array formats for existing reviewComments
+      if (application.reviewComments) {
+        if (typeof application.reviewComments === 'string') {
+          // Convert existing string comment to proper format
+          currentReviewComments = [{
+            type: 'office_comment',
+            author: 'IBC Office',
+            date: application.underReviewDate || new Date().toISOString(),
+            comment: application.reviewComments
+          }];
+        } else if (Array.isArray(application.reviewComments)) {
+          currentReviewComments = application.reviewComments;
+        }
+      }
       
       // Add the new reviewer comment
       const newReviewComment = {
         type: 'reviewer_feedback',
-        author: 'IBC Reviewer', // In a real system, this would be the logged-in reviewer's name
+        author: 'IBC Reviewer',
         date: new Date().toISOString(),
         recommendation: recommendation,
         comment: comments
