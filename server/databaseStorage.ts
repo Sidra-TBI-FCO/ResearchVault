@@ -166,11 +166,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStaff(): Promise<Scientist[]> {
-    return await db.select().from(scientists).where(eq(scientists.isStaff, true)).orderBy(scientists.lastName, scientists.firstName);
+    // Since isStaff field was removed, return scientists with management/staff job titles
+    return await db.select().from(scientists).where(eq(scientists.title, "Management")).orderBy(scientists.lastName, scientists.firstName);
   }
 
   async getPrincipalInvestigators(): Promise<Scientist[]> {
-    return await db.select().from(scientists).where(eq(scientists.isStaff, false)).orderBy(scientists.lastName, scientists.firstName);
+    // Since isStaff field was removed, return all scientists as potential PIs
+    return await db.select().from(scientists).orderBy(scientists.lastName, scientists.firstName);
   }
 
   // Research Activity operations
@@ -1085,16 +1087,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Enhanced IBC Application methods with workflow support
-  async getIbcApplicationByIbcNumber(ibcNumber: string): Promise<IbcApplication | undefined> {
-    const [application] = await db.select().from(ibcApplications).where(eq(ibcApplications.ibcNumber, ibcNumber));
-    return application;
-  }
-
-  async getIbcApplicationsForResearchActivity(researchActivityId: number): Promise<IbcApplication[]> {
-    return await db.select().from(ibcApplications)
-      .where(eq(ibcApplications.researchActivityId, researchActivityId))
-      .orderBy(desc(ibcApplications.createdAt));
-  }
 
   async getIbcApplicationsByStatus(status: string): Promise<IbcApplication[]> {
     return await db.select().from(ibcApplications)
