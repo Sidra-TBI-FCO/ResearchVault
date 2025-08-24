@@ -274,13 +274,22 @@ export default function ResearchActivityDetail() {
                   <h3 className="text-sm font-medium text-neutral-400">Principal Investigator</h3>
                   <div className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    <span>
-                      {teamMembersLoading ? (
-                        <Skeleton className="h-4 w-24 inline-block" />
-                      ) : principalInvestigator?.scientist ? (
-                        principalInvestigator.scientist.name
-                      ) : 'Not assigned'}
-                    </span>
+                    {teamMembersLoading ? (
+                      <Skeleton className="h-4 w-24 inline-block" />
+                    ) : principalInvestigator?.scientist ? (
+                      <span>{principalInvestigator.scientist.name}</span>
+                    ) : (
+                      <span className="text-orange-600 font-medium">
+                        Not assigned - 
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto ml-1 text-orange-600 underline"
+                          onClick={() => navigate(`/research-activities/${activity.id}/team`)}
+                        >
+                          Add PI
+                        </Button>
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -393,17 +402,31 @@ export default function ResearchActivityDetail() {
                     </Badge>
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start bg-blue-50 hover:bg-blue-100 border-blue-200" 
-                  onClick={() => navigate(`/research-activities/${activity.id}/team`)}
-                >
-                  <Users className="h-4 w-4 mr-2 text-blue-600" /> 
-                  <span className="flex-1 text-left font-medium">Project Team</span>
-                  <Badge variant="outline" className="ml-2 rounded-sm bg-blue-100 text-blue-700 border-blue-300">
-                    Manage
-                  </Badge>
-                </Button>
+{teamMembers && teamMembers.length > 0 ? (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start bg-blue-50 hover:bg-blue-100 border-blue-200" 
+                    onClick={() => navigate(`/research-activities/${activity.id}/team`)}
+                  >
+                    <Users className="h-4 w-4 mr-2 text-blue-600" /> 
+                    <span className="flex-1 text-left font-medium">Project Team</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-blue-100 text-blue-700 border-blue-300">
+                      {teamMembers.length} member{teamMembers.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start bg-orange-50 hover:bg-orange-100 border-orange-200 border-2 border-dashed" 
+                    onClick={() => navigate(`/research-activities/${activity.id}/team`)}
+                  >
+                    <Users className="h-4 w-4 mr-2 text-orange-600" /> 
+                    <span className="flex-1 text-left font-medium text-orange-700">Project Team - No Members</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-orange-100 text-orange-700 border-orange-300">
+                      Add Team
+                    </Badge>
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
