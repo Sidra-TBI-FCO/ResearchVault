@@ -108,6 +108,16 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
     additionalConsiderations: z.string().optional(),
   }).optional(),
   
+  hazardousProcedures: z.object({
+    radioactiveMaterials: z.boolean().default(false),
+    chemicalHazards: z.boolean().default(false),
+    highPressure: z.boolean().default(false),
+    cryogenicMaterials: z.boolean().default(false),
+    laserEquipment: z.boolean().default(false),
+    electromagneticFields: z.boolean().default(false),
+    additionalHazards: z.string().optional(),
+  }).optional(),
+  
   // Methods and Procedures
   materialAndMethods: z.string().optional(),
   proceduresInvolvingInfectiousAgents: z.string().optional(),
@@ -251,6 +261,14 @@ export default function IbcApplicationEdit() {
         cVIII: false,
         cIX: false,
       },
+      hazardousProcedures: {
+        radioactiveMaterials: false,
+        chemicalHazards: false,
+        highPressure: false,
+        cryogenicMaterials: false,
+        laserEquipment: false,
+        electromagneticFields: false,
+      },
       
       // Methods and Procedures defaults
       materialAndMethods: "",
@@ -343,6 +361,14 @@ export default function IbcApplicationEdit() {
           cVII: false,
           cVIII: false,
           cIX: false,
+        },
+        hazardousProcedures: ibcApplication.hazardousProcedures || {
+          radioactiveMaterials: false,
+          chemicalHazards: false,
+          highPressure: false,
+          cryogenicMaterials: false,
+          laserEquipment: false,
+          electromagneticFields: false,
         },
         
         // Methods and Procedures actual values
@@ -595,7 +621,7 @@ export default function IbcApplicationEdit() {
               <TabsTrigger value="basics">Basics</TabsTrigger>
               <TabsTrigger value="staff">Staff</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
+              <TabsTrigger value="nucleic-acids">Recombinant or Synthetic Nucleic Acids</TabsTrigger>
               <TabsTrigger value="construction">Under Construction</TabsTrigger>
             </TabsList>
 
@@ -1512,8 +1538,16 @@ export default function IbcApplicationEdit() {
               </div>
             </TabsContent>
 
-            <TabsContent value="nih-guidelines" className="space-y-6 mt-6">
-              {/* NIH Section III-A/B/C - High Risk Experiments */}
+            <TabsContent value="nucleic-acids" className="space-y-6 mt-6">
+              {/* Secondary navigation for nucleic acids sub-tabs */}
+              <Tabs defaultValue="nih-guidelines" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
+                  <TabsTrigger value="hazardous-procedures">Hazardous Procedures</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="nih-guidelines" className="space-y-6 mt-6">
+                  {/* NIH Section III-A/B/C - High Risk Experiments */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-xl text-red-800">NIH Section III-A/B/C</CardTitle>
@@ -2435,6 +2469,69 @@ export default function IbcApplicationEdit() {
                   />
                 </CardContent>
               </Card>
+                </TabsContent>
+
+                <TabsContent value="hazardous-procedures" className="space-y-6 mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Hazardous Procedures</CardTitle>
+                      <CardDescription>
+                        Procedures involving potentially hazardous materials, methods, or conditions
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="hazardousProcedures.radioactiveMaterials"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value || false}
+                                  onChange={field.onChange}
+                                  disabled={isReadOnly}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  Use of radioactive materials
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Procedures involving radioisotopes or radioactive compounds
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="hazardousProcedures.additionalHazards"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Additional Hazardous Procedures</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe any other hazardous procedures, materials, or conditions not covered above..."
+                                className="resize-none"
+                                rows={4}
+                                {...field}
+                                value={field.value || ""}
+                                disabled={isReadOnly}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </TabsContent>
 
             <TabsContent value="construction" className="space-y-6 mt-6">
