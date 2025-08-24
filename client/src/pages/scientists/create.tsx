@@ -38,14 +38,14 @@ export default function CreateScientist() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  // Get all principal investigators for supervisor selection
-  const { data: principalInvestigators } = useQuery<Scientist[]>({
-    queryKey: ['/api/principal-investigators'],
+  // Fetch all scientists for line manager selection
+  const { data: allScientists = [] } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+    queryFn: () => fetch('/api/scientists').then(res => res.json()),
   });
 
   // Default form values
   const defaultValues: Partial<CreateScientistFormValues> = {
-    isStaff: false,
     supervisorId: null,
   };
 
@@ -53,8 +53,6 @@ export default function CreateScientist() {
     resolver: zodResolver(createScientistSchema),
     defaultValues,
   });
-  
-  const { isStaff } = form.watch();
 
   const createScientistMutation = useMutation({
     mutationFn: async (data: CreateScientistFormValues) => {
@@ -89,10 +87,7 @@ export default function CreateScientist() {
       }
     }
     
-    // Convert supervisorId to null if not provided (for staff)
-    if (!isStaff) {
-      data.supervisorId = null;
-    }
+    // supervisorId can be null if no line manager is selected
 
     createScientistMutation.mutate(data);
   };
@@ -161,12 +156,12 @@ export default function CreateScientist() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="Management">Management</SelectItem>
-                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
                           <SelectItem value="Investigator">Investigator</SelectItem>
                           <SelectItem value="Physician">Physician</SelectItem>
+                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
                           <SelectItem value="Research Specialist">Research Specialist</SelectItem>
-                          <SelectItem value="Research Assistant">Research Assistant</SelectItem>
                           <SelectItem value="Research Associate">Research Associate</SelectItem>
+                          <SelectItem value="Research Assistant">Research Assistant</SelectItem>
                           <SelectItem value="PhD Student">PhD Student</SelectItem>
                           <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
                           <SelectItem value="Lab Manager">Lab Manager</SelectItem>
@@ -214,57 +209,34 @@ export default function CreateScientist() {
                 
                 <FormField
                   control={form.control}
-                  name="isStaff"
+                  name="supervisorId"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Staff Member</FormLabel>
-                        <FormDescription>
-                          Mark as staff member if this person is not a principal investigator
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value || false}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
+                    <FormItem>
+                      <FormLabel>Line Manager</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select line manager (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {allScientists.map((scientist) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.name} - {scientist.title || 'No title'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Select the line manager this person reports to (optional)
+                      </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                {isStaff && (
-                  <FormField
-                    control={form.control}
-                    name="supervisorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Supervisor</FormLabel>
-                        <Select
-                          onValueChange={(value) => field.onChange(parseInt(value))}
-                          defaultValue={field.value?.toString() || undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select supervisor" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {principalInvestigators?.map((pi) => (
-                              <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select the principal investigator this staff member reports to
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
                 
                 <FormField
                   control={form.control}

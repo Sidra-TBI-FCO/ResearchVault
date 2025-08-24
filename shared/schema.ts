@@ -35,8 +35,7 @@ export const scientists = pgTable("scientists", {
   department: text("department"),
   bio: text("bio"),
   profileImageInitials: text("profile_image_initials"), // Storing initials for avatar
-  isStaff: boolean("is_staff").default(false), // True for staff, false for principal investigators
-  supervisorId: integer("supervisor_id"), // For staff members, references scientists.id
+  supervisorId: integer("supervisor_id"), // Line manager, references scientists.id (optional)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
