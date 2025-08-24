@@ -46,6 +46,11 @@ export default function EditResearchActivity() {
     queryKey: ['/api/projects'],
   });
 
+  // Get all scientists
+  const { data: scientists, isLoading: scientistsLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+  });
+
 
 
   const form = useForm<InsertResearchActivity>({
@@ -306,6 +311,82 @@ export default function EditResearchActivity() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
+                  name="budgetHolderId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Principal Investigator/Budget Holder</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select principal investigator/budget holder" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientistsLoading ? (
+                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                          ) : (
+                            scientists?.filter(scientist => 
+                              scientist.title === 'Investigator' || 
+                              scientist.title === 'Staff Scientist' || 
+                              scientist.title === 'Physician'
+                            ).map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {scientist.name} ({scientist.title})
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Must be an Investigator, Staff Scientist, or Physician
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="leadScientistId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lead Scientist</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString() || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select lead scientist" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scientistsLoading ? (
+                            <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                          ) : (
+                            scientists?.map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {scientist.name} ({scientist.title || 'No title'})
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Can be any type of scientist
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
                   name="startDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
@@ -386,6 +467,28 @@ export default function EditResearchActivity() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="additionalNotificationEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Notification Email (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter additional email for notifications" 
+                        type="email"
+                        {...field} 
+                        value={field.value || ""} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Optional email address to receive notifications about this research activity
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
