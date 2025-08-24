@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { EnhancedIbcApplication } from "@/lib/types";
 import { 
   Plus, Search, MoreHorizontal, CalendarRange, 
-  FileText, AlertTriangle, FlaskConical 
+  FileText, AlertTriangle, FlaskConical, Edit, Eye 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -124,7 +124,7 @@ export default function IbcList() {
                   <TableHead>Dates</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Biosafety Level</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
+                  <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -212,16 +212,35 @@ export default function IbcList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle actions menu here
-                        }}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        {/* Show Edit button only for draft applications */}
+                        {application.status === 'draft' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/ibc-applications/edit/${application.id}`);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                        
+                        {/* Show View button for all applications */}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/ibc-applications/edit/${application.id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

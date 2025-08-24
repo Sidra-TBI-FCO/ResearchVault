@@ -125,6 +125,9 @@ export default function IbcApplicationEdit() {
     refetchOnMount: true,
   });
 
+  // Determine if this is read-only mode (non-draft applications)
+  const isReadOnly = ibcApplication?.status !== 'draft';
+
   const form = useForm<EditIbcApplicationFormValues>({
     resolver: zodResolver(editIbcApplicationSchema),
     defaultValues: {
@@ -384,7 +387,9 @@ export default function IbcApplicationEdit() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit IBC Application</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">
+          {isReadOnly ? 'View IBC Application' : 'Edit IBC Application'}
+        </h1>
       </div>
 
       <Form {...form}>
@@ -420,6 +425,7 @@ export default function IbcApplicationEdit() {
                               form.setValue('researchActivityIds', []);
                             }}
                             value={field.value?.toString() || ""}
+                            disabled={isReadOnly}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -466,6 +472,7 @@ export default function IbcApplicationEdit() {
                                     type="checkbox"
                                     id={`sdr-${activity.id}`}
                                     checked={field.value?.includes(activity.id) || false}
+                                    disabled={isReadOnly}
                                     onChange={(e) => {
                                       const currentValues = field.value || [];
                                       if (e.target.checked) {
@@ -501,7 +508,7 @@ export default function IbcApplicationEdit() {
                         <FormItem>
                           <FormLabel>Cayuse Protocol Number</FormLabel>
                           <FormControl>
-                            <Input placeholder="Cayuse protocol number" {...field} />
+                            <Input placeholder="Cayuse protocol number" {...field} disabled={isReadOnly} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -515,7 +522,7 @@ export default function IbcApplicationEdit() {
                         <FormItem>
                           <FormLabel>Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="IBC application title" {...field} />
+                            <Input placeholder="IBC application title" {...field} disabled={isReadOnly} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -531,7 +538,7 @@ export default function IbcApplicationEdit() {
                         <FormItem>
                           <FormLabel>Short Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="Short recognition title" {...field} />
+                            <Input placeholder="Short recognition title" {...field} disabled={isReadOnly} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -544,7 +551,7 @@ export default function IbcApplicationEdit() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Biosafety Level</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select biosafety level" />
@@ -569,7 +576,7 @@ export default function IbcApplicationEdit() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Risk Group Classification</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select risk group" />
@@ -599,6 +606,7 @@ export default function IbcApplicationEdit() {
                               type="checkbox"
                               checked={field.value}
                               onChange={field.onChange}
+                              disabled={isReadOnly}
                               className="rounded border-gray-300"
                             />
                           </FormControl>
@@ -1508,64 +1516,80 @@ export default function IbcApplicationEdit() {
           )}
 
           {/* Submission Comment - Required when submitting */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Submission Comment
-              </CardTitle>
-              <CardDescription>
-                Provide a comment explaining your submission (required when submitting application)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Explain the purpose of this submission, any changes made, or additional information for the IBC office..."
-                value={submissionComment}
-                onChange={(e) => setSubmissionComment(e.target.value)}
-                rows={4}
-                className="resize-none"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                This comment will be recorded with your submission and visible to the IBC office and reviewers
-              </p>
-            </CardContent>
-          </Card>
+          {!isReadOnly && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Submission Comment
+                </CardTitle>
+                <CardDescription>
+                  Provide a comment explaining your submission (required when submitting application)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder="Explain the purpose of this submission, any changes made, or additional information for the IBC office..."
+                  value={submissionComment}
+                  onChange={(e) => setSubmissionComment(e.target.value)}
+                  rows={4}
+                  className="resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  This comment will be recorded with your submission and visible to the IBC office and reviewers
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-          <div className="flex gap-4 pt-6">
-            <Button 
-              type="button" 
-              disabled={saveMutation.isPending || submitMutation.isPending}
-              variant="outline"
-              onClick={async () => {
-                const formData = form.getValues();
-                try {
-                  await handleSave(formData);
-                } catch (error) {
-                  console.error('Error in handleSave:', error);
-                }
-              }}
-            >
-              {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Draft
-            </Button>
-            <Button 
-              type="button" 
-              disabled={saveMutation.isPending || submitMutation.isPending || !submissionComment.trim()}
-              className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
-              onClick={async () => {
-                const formData = form.getValues();
-                try {
-                  await handleSubmit(formData);
-                } catch (error) {
-                  console.error('Error in handleSubmit:', error);
-                }
-              }}
-            >
-              {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Submit Application
-            </Button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex gap-4 pt-6">
+              <Button 
+                type="button" 
+                disabled={saveMutation.isPending || submitMutation.isPending}
+                variant="outline"
+                onClick={async () => {
+                  const formData = form.getValues();
+                  try {
+                    await handleSave(formData);
+                  } catch (error) {
+                    console.error('Error in handleSave:', error);
+                  }
+                }}
+              >
+                {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Draft
+              </Button>
+              <Button 
+                type="button" 
+                disabled={saveMutation.isPending || submitMutation.isPending || !submissionComment.trim()}
+                className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                onClick={async () => {
+                  const formData = form.getValues();
+                  try {
+                    await handleSubmit(formData);
+                  } catch (error) {
+                    console.error('Error in handleSubmit:', error);
+                  }
+                }}
+              >
+                {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit Application
+              </Button>
+            </div>
+          )}
+          
+          {isReadOnly && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-6">
+              <div className="flex items-center space-x-2 text-gray-600">
+                <Eye className="h-4 w-4" />
+                <span className="text-sm font-medium">Read-Only Mode</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                This application has been submitted and cannot be edited. Contact the IBC office if changes are needed.
+              </p>
+            </div>
+          )}
         </form>
       </Form>
     </div>

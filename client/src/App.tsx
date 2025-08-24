@@ -72,7 +72,7 @@ import IrbProtocolReview from "@/pages/irb-reviewer/protocol-review";
 // IBC Applications
 import IbcList from "@/pages/ibc";
 import CreateIbc from "@/pages/ibc/create";
-import IbcApplicationDetail from "@/pages/ibc-applications/detail";
+
 import EditIbcApplication from "@/pages/ibc-applications/edit";
 
 // IBC Office
@@ -185,7 +185,7 @@ function Router() {
         <Route path="/ibc" component={IbcList} />
         <Route path="/ibc/create" component={CreateIbc} />
         <Route path="/ibc-applications/:id/edit" component={EditIbcApplication} />
-        <Route path="/ibc-applications/:id" component={IbcApplicationDetail} />
+
         
         {/* Research Contracts */}
         <Route path="/contracts" component={ContractsList} />
