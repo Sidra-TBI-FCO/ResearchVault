@@ -96,7 +96,7 @@ export default function IbcApplicationEdit() {
   // State for team member selection
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [piComment, setPiComment] = useState("");
+  const [submissionComment, setSubmissionComment] = useState("");
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -248,16 +248,28 @@ export default function IbcApplicationEdit() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: (data: any) => {
-      return apiRequest("PATCH", `/api/ibc-applications/${id}`, { ...data, isDraft: false });
+    mutationFn: async (data: any) => {
+      // First update the application
+      const response = await apiRequest("PATCH", `/api/ibc-applications/${id}`, { ...data, isDraft: false });
+      
+      // Then create the submission comment if provided
+      if (submissionComment.trim()) {
+        await apiRequest("POST", `/api/ibc-applications/${id}/pi-comment`, {
+          comment: submissionComment.trim()
+        });
+      }
+      
+      return response;
     },
     onSuccess: () => {
       toast({
         title: "Success",
         description: "IBC application submitted successfully",
       });
+      setSubmissionComment(""); // Clear the comment
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${id}/comments`] });
       navigate(`/ibc-applications/${id}`);
     },
     onError: (error: any) => {
@@ -269,42 +281,7 @@ export default function IbcApplicationEdit() {
     },
   });
 
-  // PI comment submission mutation
-  const submitPiCommentMutation = useMutation({
-    mutationFn: async (commentData: { comment: string }) => {
-      return await apiRequest("POST", `/api/ibc-applications/${id}/pi-comment`, commentData);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Comment Submitted",
-        description: "Your comment has been submitted successfully",
-      });
-      setPiComment("");
-      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${id}/comments`] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit comment",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handlePiCommentSubmit = () => {
-    if (!piComment.trim()) {
-      toast({
-        title: "Comment Required",
-        description: "Please enter a comment before submitting.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    submitPiCommentMutation.mutate({
-      comment: piComment.trim()
-    });
-  };
 
   const handleSave = async (data: EditIbcApplicationFormValues) => {
     const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
@@ -328,24 +305,27 @@ export default function IbcApplicationEdit() {
   };
 
   const handleSubmit = async (data: EditIbcApplicationFormValues) => {
-    const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
+    // Require submission comment when submitting application
+    if (!submissionComment.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please provide a comment explaining your submission before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { teamMembers, researchActivityIds, submissionComment: formComment, ...ibcData } = data;
     const protocolTeamMembers = JSON.stringify(teamMembers);
     
+    // Keep existing piResponses for backward compatibility
     let piResponses = ibcApplication?.piResponses || [];
-    if (submissionComment && submissionComment.trim()) {
-      const newComment = {
-        comment: submissionComment.trim(),
-        timestamp: new Date().toISOString(),
-        type: 'submission_comment'
-      };
-      if (Array.isArray(piResponses)) {
-        piResponses = [...piResponses, newComment];
-      } else {
-        piResponses = [newComment];
-      }
-    }
     
-    return await submitMutation.mutateAsync({ ...ibcData, protocolTeamMembers, piResponses });
+    return await submitMutation.mutateAsync({ 
+      ...ibcData, 
+      protocolTeamMembers, 
+      piResponses
+    });
   };
 
   if (isLoading) {
@@ -1515,28 +1495,26 @@ export default function IbcApplicationEdit() {
             </TabsContent>
           </Tabs>
 
-          {/* PI Comments Section */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Communication History & Comments
-              </CardTitle>
-              <CardDescription>
-                View past comments and submit new responses to the IBC office
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Comments Timeline */}
-              {commentsLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ) : comments.length > 0 ? (
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Comment History</h4>
+          {/* Communication History */}
+          {comments.length > 0 && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Communication History
+                </CardTitle>
+                <CardDescription>
+                  Review feedback and comments from the IBC office and reviewers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {commentsLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ) : (
                   <div className="space-y-3 max-h-60 overflow-y-auto">
                     {comments.map((comment: any) => (
                       <div key={comment.id} className="border-l-2 border-gray-200 pl-4 py-2">
@@ -1563,47 +1541,33 @@ export default function IbcApplicationEdit() {
                       </div>
                     ))}
                   </div>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-sm">No comments yet</p>
-              )}
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-              {/* PI Comment Submission */}
-              <div className="border-t pt-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Submit New Comment</h4>
-                <div className="space-y-3">
-                  <Textarea
-                    placeholder="Provide your response, clarifications, or additional information to the IBC office..."
-                    value={piComment}
-                    onChange={(e) => setPiComment(e.target.value)}
-                    rows={4}
-                    className="resize-none"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Your comment will be visible to the IBC office and reviewers
-                  </p>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      type="button"
-                      onClick={handlePiCommentSubmit}
-                      disabled={submitPiCommentMutation.isPending || !piComment.trim()}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      {submitPiCommentMutation.isPending ? "Submitting..." : "Submit Comment"}
-                    </Button>
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      onClick={() => setPiComment("")}
-                      disabled={submitPiCommentMutation.isPending}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              </div>
+          {/* Submission Comment - Required when submitting */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Submission Comment
+              </CardTitle>
+              <CardDescription>
+                Provide a comment explaining your submission (required when submitting application)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="Explain the purpose of this submission, any changes made, or additional information for the IBC office..."
+                value={submissionComment}
+                onChange={(e) => setSubmissionComment(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                This comment will be recorded with your submission and visible to the IBC office and reviewers
+              </p>
             </CardContent>
           </Card>
 
@@ -1626,7 +1590,7 @@ export default function IbcApplicationEdit() {
             </Button>
             <Button 
               type="button" 
-              disabled={saveMutation.isPending || submitMutation.isPending}
+              disabled={saveMutation.isPending || submitMutation.isPending || !submissionComment.trim()}
               className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
               onClick={async () => {
                 const formData = form.getValues();
