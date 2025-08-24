@@ -109,13 +109,36 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   }).optional(),
   
   hazardousProcedures: z.object({
-    radioactiveMaterials: z.boolean().default(false),
-    chemicalHazards: z.boolean().default(false),
-    highPressure: z.boolean().default(false),
-    cryogenicMaterials: z.boolean().default(false),
-    laserEquipment: z.boolean().default(false),
-    electromagneticFields: z.boolean().default(false),
-    additionalHazards: z.string().optional(),
+    procedure: z.string().optional(),
+    backboneVector: z.string().optional(),
+    engineeringControls: z.object({
+      centrifugeCone: z.boolean().default(false),
+      classIIBiosafetyCabinet: z.boolean().default(false),
+      engineeredSharps: z.boolean().default(false),
+      fumeHood: z.boolean().default(false),
+      hepaFilteredCage: z.boolean().default(false),
+      localExhaustSnorkel: z.boolean().default(false),
+      na: z.boolean().default(false),
+      sealedRotor: z.boolean().default(false),
+      sealedVialstubes: z.boolean().default(false),
+      sharpsContainer: z.boolean().default(false),
+    }).optional(),
+    ppe: z.object({
+      faceShield: z.boolean().default(false),
+      gloves: z.boolean().default(false),
+      goggles: z.boolean().default(false),
+      headCoverBonnet: z.boolean().default(false),
+      labCoatDisposable: z.boolean().default(false),
+      labCoatReusable: z.boolean().default(false),
+      na: z.boolean().default(false),
+      n95: z.boolean().default(false),
+      padr: z.boolean().default(false),
+      safetyGlasses: z.boolean().default(false),
+      shoeCovers: z.boolean().default(false),
+      surgicalMask: z.boolean().default(false),
+      tyvekSuit: z.boolean().default(false),
+    }).optional(),
+    hazardousProcedureDescription: z.string().optional(),
   }).optional(),
   
   // Methods and Procedures
@@ -262,12 +285,36 @@ export default function IbcApplicationEdit() {
         cIX: false,
       },
       hazardousProcedures: {
-        radioactiveMaterials: false,
-        chemicalHazards: false,
-        highPressure: false,
-        cryogenicMaterials: false,
-        laserEquipment: false,
-        electromagneticFields: false,
+        procedure: "",
+        backboneVector: "",
+        engineeringControls: {
+          centrifugeCone: false,
+          classIIBiosafetyCabinet: false,
+          engineeredSharps: false,
+          fumeHood: false,
+          hepaFilteredCage: false,
+          localExhaustSnorkel: false,
+          na: false,
+          sealedRotor: false,
+          sealedVialstubes: false,
+          sharpsContainer: false,
+        },
+        ppe: {
+          faceShield: false,
+          gloves: false,
+          goggles: false,
+          headCoverBonnet: false,
+          labCoatDisposable: false,
+          labCoatReusable: false,
+          na: false,
+          n95: false,
+          padr: false,
+          safetyGlasses: false,
+          shoeCovers: false,
+          surgicalMask: false,
+          tyvekSuit: false,
+        },
+        hazardousProcedureDescription: "",
       },
       
       // Methods and Procedures defaults
@@ -363,12 +410,36 @@ export default function IbcApplicationEdit() {
           cIX: false,
         },
         hazardousProcedures: ibcApplication.hazardousProcedures || {
-          radioactiveMaterials: false,
-          chemicalHazards: false,
-          highPressure: false,
-          cryogenicMaterials: false,
-          laserEquipment: false,
-          electromagneticFields: false,
+          procedure: "",
+          backboneVector: "",
+          engineeringControls: {
+            centrifugeCone: false,
+            classIIBiosafetyCabinet: false,
+            engineeredSharps: false,
+            fumeHood: false,
+            hepaFilteredCage: false,
+            localExhaustSnorkel: false,
+            na: false,
+            sealedRotor: false,
+            sealedVialstubes: false,
+            sharpsContainer: false,
+          },
+          ppe: {
+            faceShield: false,
+            gloves: false,
+            goggles: false,
+            headCoverBonnet: false,
+            labCoatDisposable: false,
+            labCoatReusable: false,
+            na: false,
+            n95: false,
+            padr: false,
+            safetyGlasses: false,
+            shoeCovers: false,
+            surgicalMask: false,
+            tyvekSuit: false,
+          },
+          hazardousProcedureDescription: "",
         },
         
         // Methods and Procedures actual values
@@ -2480,54 +2551,515 @@ export default function IbcApplicationEdit() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 gap-6">
+                        {/* Procedure Dropdown */}
                         <FormField
                           control={form.control}
-                          name="hazardousProcedures.radioactiveMaterials"
+                          name="hazardousProcedures.procedure"
                           render={({ field }) => (
-                            <FormItem className="flex items-center space-x-3">
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">
+                                Procedure <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select procedure" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="chemicals">Chemicals</SelectItem>
+                                  <SelectItem value="endothermal-reaction">Endothermal Reaction</SelectItem>
+                                  <SelectItem value="facs">FACS</SelectItem>
+                                  <SelectItem value="generation-splashes">Generation of Splashes</SelectItem>
+                                  <SelectItem value="hazardous-procedure">Hazardous Procedure</SelectItem>
+                                  <SelectItem value="sprays-aerosols">Sprays or Aerosols from Centrifugation</SelectItem>
+                                  <SelectItem value="use-sharps">Use of Sharps (needled or glass)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Backbone/Vector Selection */}
+                        <FormField
+                          control={form.control}
+                          name="hazardousProcedures.backboneVector"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">
+                                Select Backbone/Vector that Procedure Applies to <span className="text-red-500">*</span>
+                              </FormLabel>
                               <FormControl>
-                                <input
-                                  type="checkbox"
-                                  checked={field.value || false}
-                                  onChange={field.onChange}
+                                <Input
+                                  placeholder="Enter backbone/vector information"
+                                  {...field}
+                                  value={field.value || ""}
                                   disabled={isReadOnly}
-                                  className="rounded border-gray-300"
                                 />
                               </FormControl>
-                              <div className="space-y-1">
-                                <FormLabel className="text-sm font-medium">
-                                  Use of radioactive materials
-                                </FormLabel>
-                                <FormDescription className="text-xs">
-                                  Procedures involving radioisotopes or radioactive compounds
-                                </FormDescription>
-                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Engineering Controls */}
+                        <div>
+                          <FormLabel className="text-sm font-medium mb-4 block">
+                            Engineering Controls (check all applicable) <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.centrifugeCone"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Centrifuge Cone</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.classIIBiosafetyCabinet"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Class II Biosafety Cabinet</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.engineeredSharps"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Engineered Sharps</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.fumeHood"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Fume Hood</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.hepaFilteredCage"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">HEPA Filtered Cage</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.localExhaustSnorkel"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Local Exhaust Snorkel</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.na"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">N/A</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.sealedRotor"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Sealed Rotor</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.sealedVialstubes"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Sealed Vials/Tubes</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.engineeringControls.sharpsContainer"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Sharps Container</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        {/* PPE Section */}
+                        <div>
+                          <FormLabel className="text-sm font-medium mb-4 block">
+                            PPE (check all applicable) <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.faceShield"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Face shield</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.gloves"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Gloves</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.goggles"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Goggles</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.headCoverBonnet"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Head Cover/Bonnet</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.labCoatDisposable"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Lab Coat, Disposable</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.labCoatReusable"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Lab Coat-reusable, Laundered</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.na"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">N/A</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.n95"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">N95</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.padr"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">PADR</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.safetyGlasses"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Safety Glasses</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.shoeCovers"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Shoe Covers</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.surgicalMask"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Surgical Mask</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="hazardousProcedures.ppe.tyvekSuit"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      disabled={isReadOnly}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm">Tyvek Suit</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Description Field */}
+                        <FormField
+                          control={form.control}
+                          name="hazardousProcedures.hazardousProcedureDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">
+                                Describe detail use of the Hazardous Procedure on Selected Cell Lines <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Describe the detailed use of hazardous procedures on selected cell lines..."
+                                  className="resize-none"
+                                  rows={5}
+                                  {...field}
+                                  value={field.value || ""}
+                                  disabled={isReadOnly}
+                                />
+                              </FormControl>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name="hazardousProcedures.additionalHazards"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Additional Hazardous Procedures</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe any other hazardous procedures, materials, or conditions not covered above..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                                disabled={isReadOnly}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </CardContent>
                   </Card>
                 </TabsContent>
