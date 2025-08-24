@@ -68,7 +68,7 @@ export default function IbcProtocolDetailPage() {
   const [reviewComments, setReviewComments] = useState("");
   const [selectedReviewers, setSelectedReviewers] = useState<number[]>([]);
   const [showReviewerSelection, setShowReviewerSelection] = useState(false);
-  const [piComment, setPiComment] = useState("");
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -162,26 +162,7 @@ export default function IbcProtocolDetailPage() {
     },
   });
 
-  const submitPiCommentMutation = useMutation({
-    mutationFn: async (data: { comment: string }) => {
-      return apiRequest("POST", `/api/ibc-applications/${applicationId}/pi-comment`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${applicationId}/comments`] });
-      toast({
-        title: "Comment Submitted",
-        description: "Your comment has been added to the application.",
-      });
-      setPiComment("");
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to submit comment.",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   if (applicationLoading || !application) {
     return (
@@ -240,20 +221,7 @@ export default function IbcProtocolDetailPage() {
     updateStatusMutation.mutate(updateData);
   };
 
-  const handlePiCommentSubmit = () => {
-    if (!piComment.trim()) {
-      toast({
-        title: "Comment Required",
-        description: "Please enter a comment before submitting.",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    submitPiCommentMutation.mutate({
-      comment: piComment.trim()
-    });
-  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -1415,50 +1383,7 @@ export default function IbcProtocolDetailPage() {
             </CardContent>
           </Card>
 
-          {/* PI Comment Submission */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Principal Investigator Comments
-              </CardTitle>
-              <CardDescription>
-                Submit comments or responses as the Principal Investigator
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Your Comment</label>
-                <Textarea
-                  placeholder="Provide your response, clarifications, or additional information..."
-                  value={piComment}
-                  onChange={(e) => setPiComment(e.target.value)}
-                  rows={4}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  This comment will be visible to the IBC office and reviewers
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handlePiCommentSubmit}
-                  disabled={submitPiCommentMutation.isPending || !piComment.trim()}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {submitPiCommentMutation.isPending ? "Submitting..." : "Submit Comment"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setPiComment("")}
-                  disabled={submitPiCommentMutation.isPending}
-                >
-                  Clear
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
         
         {/* Right Column - Process Guide */}
