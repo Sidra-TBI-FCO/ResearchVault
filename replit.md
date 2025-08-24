@@ -126,6 +126,9 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- August 24, 2025. Added comprehensive NIH Guidelines tab to IBC applications with 5 sections (III-A/B/C, III-D, III-E, III-F, Appendix C) following NIH recombinant DNA research requirements
+- August 24, 2025. Added Protocol Summary field to IBC application Overview tab with enhanced guidance text for both Project Description and Protocol Summary fields
+- August 24, 2025. Removed redundant Submission Comments field from Overview tab to eliminate duplication
 - August 24, 2025. Implemented unified read-only view functionality for IBC applications using single edit page with conditional form disabling based on application status
 - August 24, 2025. Added View/Edit button logic to IBC application list - Edit button for drafts only, View button for all applications
 - August 24, 2025. Fixed data integrity bug where principalInvestigatorId was reset to 0 during form submissions due to || operator instead of ?? nullish coalescing

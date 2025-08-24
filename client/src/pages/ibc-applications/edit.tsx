@@ -53,6 +53,49 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   riskGroupClassification: z.string().optional(),
   protocolSummary: z.string().optional(),
   
+  // NIH Guidelines sections
+  nihSectionABC: z.object({
+    requiresNihDirectorApproval: z.boolean().default(false),
+    drugResistanceTraits: z.boolean().default(false),
+    toxinMolecules: z.boolean().default(false),
+    humanGeneTransfer: z.boolean().default(false),
+    approvalStatus: z.string().optional(),
+    approvalDocuments: z.array(z.string()).default([]),
+  }).optional(),
+  
+  nihSectionD: z.object({
+    riskGroup2Plus: z.boolean().default(false),
+    pathogenDnaRna: z.boolean().default(false),
+    infectiousViral: z.boolean().default(false),
+    wholeAnimalExperiments: z.boolean().default(false),
+    largeScaleExperiments: z.boolean().default(false),
+    geneDriveOrganisms: z.boolean().default(false),
+    containmentLevel: z.string().optional(),
+    ibcApprovalDate: z.string().optional(),
+  }).optional(),
+  
+  nihSectionE: z.object({
+    limitedViralGenome: z.boolean().default(false),
+    plantExperiments: z.boolean().default(false),
+    transgenicRodents: z.boolean().default(false),
+    registrationDate: z.string().optional(),
+  }).optional(),
+  
+  nihSectionF: z.object({
+    exemptExperiments: z.boolean().default(false),
+    exemptionCategories: z.array(z.string()).default([]),
+    exemptionJustification: z.string().optional(),
+  }).optional(),
+  
+  nihAppendixC: z.object({
+    biologicalAgents: z.array(z.object({
+      agentName: z.string(),
+      riskGroup: z.enum(["1", "2", "3", "4"]),
+      containmentRequired: z.string(),
+    })).default([]),
+    additionalAgents: z.string().optional(),
+  }).optional(),
+  
   // Methods and Procedures
   materialAndMethods: z.string().optional(),
   proceduresInvolvingInfectiousAgents: z.string().optional(),
@@ -152,6 +195,35 @@ export default function IbcApplicationEdit() {
       riskGroupClassification: "",
       protocolSummary: "",
       
+      // NIH Guidelines sections defaults
+      nihSectionABC: {
+        requiresNihDirectorApproval: false,
+        drugResistanceTraits: false,
+        toxinMolecules: false,
+        humanGeneTransfer: false,
+        approvalDocuments: [],
+      },
+      nihSectionD: {
+        riskGroup2Plus: false,
+        pathogenDnaRna: false,
+        infectiousViral: false,
+        wholeAnimalExperiments: false,
+        largeScaleExperiments: false,
+        geneDriveOrganisms: false,
+      },
+      nihSectionE: {
+        limitedViralGenome: false,
+        plantExperiments: false,
+        transgenicRodents: false,
+      },
+      nihSectionF: {
+        exemptExperiments: false,
+        exemptionCategories: [],
+      },
+      nihAppendixC: {
+        biologicalAgents: [],
+      },
+      
       // Methods and Procedures defaults
       materialAndMethods: "",
       proceduresInvolvingInfectiousAgents: "",
@@ -199,6 +271,35 @@ export default function IbcApplicationEdit() {
         plants: ibcApplication.plants || false,
         riskGroupClassification: ibcApplication.riskGroupClassification || "",
         protocolSummary: ibcApplication.protocolSummary || "",
+        
+        // NIH Guidelines sections actual values
+        nihSectionABC: ibcApplication.nihSectionABC || {
+          requiresNihDirectorApproval: false,
+          drugResistanceTraits: false,
+          toxinMolecules: false,
+          humanGeneTransfer: false,
+          approvalDocuments: [],
+        },
+        nihSectionD: ibcApplication.nihSectionD || {
+          riskGroup2Plus: false,
+          pathogenDnaRna: false,
+          infectiousViral: false,
+          wholeAnimalExperiments: false,
+          largeScaleExperiments: false,
+          geneDriveOrganisms: false,
+        },
+        nihSectionE: ibcApplication.nihSectionE || {
+          limitedViralGenome: false,
+          plantExperiments: false,
+          transgenicRodents: false,
+        },
+        nihSectionF: ibcApplication.nihSectionF || {
+          exemptExperiments: false,
+          exemptionCategories: [],
+        },
+        nihAppendixC: ibcApplication.nihAppendixC || {
+          biologicalAgents: [],
+        },
         
         // Methods and Procedures actual values
         materialAndMethods: ibcApplication.materialAndMethods || "",
@@ -446,10 +547,11 @@ export default function IbcApplicationEdit() {
       <Form {...form}>
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <Tabs defaultValue="basics" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="basics">Basics</TabsTrigger>
               <TabsTrigger value="staff">Staff</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
               <TabsTrigger value="construction">Under Construction</TabsTrigger>
             </TabsList>
 
@@ -1364,6 +1466,456 @@ export default function IbcApplicationEdit() {
 
 
               </div>
+            </TabsContent>
+
+            <TabsContent value="nih-guidelines" className="space-y-6 mt-6">
+              {/* NIH Section III-A/B/C - High Risk Experiments */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl text-red-800">NIH Section III-A/B/C</CardTitle>
+                  <CardDescription className="text-red-600">
+                    Experiments requiring NIH Director approval and/or IBC approval before initiation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="nihSectionABC.drugResistanceTraits"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-A: Deliberate transfer of drug resistance traits to microorganisms
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Requires NIH Director approval + IBC approval
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionABC.toxinMolecules"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-B: Cloning toxin molecules with LD50 &lt; 100 ng/kg
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Requires NIH OSP + IBC approval
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionABC.humanGeneTransfer"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              III-C: Human gene transfer experiments
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Requires IBC + IRB + RAC approval
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* NIH Section III-D - IBC Approval Required */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl text-orange-800">NIH Section III-D</CardTitle>
+                  <CardDescription className="text-orange-600">
+                    Experiments requiring IBC approval before initiation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.riskGroup2Plus"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Risk Group 2+ pathogen host-vector systems
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Using Risk Group 2, 3, 4, or restricted agents as hosts
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.pathogenDnaRna"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Pathogen DNA/RNA in non-pathogenic hosts
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              DNA/RNA from Risk Group 2+ pathogens in non-pathogenic systems
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.infectiousViral"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Infectious viral vectors in tissue culture
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Infectious DNA/RNA viruses or defective viruses with helper
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.wholeAnimalExperiments"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Whole animal experiments
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Recombinant/synthetic nucleic acids in whole animals (including transgenic)
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.largeScaleExperiments"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Large-scale experiments (&gt;10 liters)
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Culture volumes exceeding 10 liters
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionD.geneDriveOrganisms"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Gene drive modified organisms
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Minimum BL2, BL2-N, or BL2-P containment required
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* NIH Section III-E - Registration Required */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl text-yellow-800">NIH Section III-E</CardTitle>
+                  <CardDescription className="text-yellow-600">
+                    Experiments requiring registration simultaneous with initiation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="nihSectionE.limitedViralGenome"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Limited viral genome experiments
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Recombinant nucleic acids containing ≤2/3 of eukaryotic virus genome
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionE.plantExperiments"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Plant experiments
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Experiments involving whole plants with specific conditions
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="nihSectionE.transgenicRodents"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Transgenic rodents (BL1 containment)
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Generation/use of transgenic rodents requiring only BL1 containment
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* NIH Section III-F - Exempt Experiments */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl text-green-800">NIH Section III-F</CardTitle>
+                  <CardDescription className="text-green-600">
+                    Exempt experiments (may still require institutional oversight)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="nihSectionF.exemptExperiments"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              disabled={isReadOnly}
+                              className="rounded border-gray-300"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium">
+                              Research qualifies for NIH exemption
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Experiments exempt from NIH Guidelines requirements
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {form.watch('nihSectionF.exemptExperiments') && (
+                      <FormField
+                        control={form.control}
+                        name="nihSectionF.exemptionJustification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Exemption Justification</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Explain why this research qualifies for exemption under Section III-F..."
+                                className="resize-none"
+                                rows={3}
+                                {...field}
+                                value={field.value || ""}
+                                disabled={isReadOnly}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* NIH Appendix C - Biological Agents */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl text-blue-800">Appendix C - Biological Agent Classification</CardTitle>
+                  <CardDescription className="text-blue-600">
+                    Classification of biological agents based on risk groups
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="nihAppendixC.additionalAgents"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Additional Biological Agents</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="List any biological agents not covered above, including their risk group classifications..."
+                            className="resize-none"
+                            rows={4}
+                            {...field}
+                            value={field.value || ""}
+                            disabled={isReadOnly}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Include agent names, risk group classifications (1-4), and required containment levels
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="construction" className="space-y-6 mt-6">

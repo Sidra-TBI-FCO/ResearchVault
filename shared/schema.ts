@@ -471,6 +471,22 @@ export const ibcApplications = pgTable("ibc_applications", {
   
   description: text("description"),
   protocolSummary: text("protocol_summary"), // Key protocols/methods summary
+  
+  // NIH Guidelines Section III-A/B/C (High Risk)
+  nihSectionABC: json("nih_section_abc"), // Section III-A/B/C requirements and approvals
+  
+  // NIH Guidelines Section III-D (IBC Approval Required)
+  nihSectionD: json("nih_section_d"), // IBC approval requirements
+  
+  // NIH Guidelines Section III-E (Registration Required)
+  nihSectionE: json("nih_section_e"), // Registration simultaneous with initiation
+  
+  // NIH Guidelines Section III-F (Exempt)
+  nihSectionF: json("nih_section_f"), // Exempt experiments
+  
+  // NIH Guidelines Appendix C (Biological Agents)
+  nihAppendixC: json("nih_appendix_c"), // Biological agent classifications
+  
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
   formData: json("form_data"), // Store form-specific data
   
