@@ -2208,6 +2208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedApplication = await storage.updateIbcApplication(id, {
         status: newStatus,
+        workflowStatus: newStatus, // Keep workflow status in sync with status
         underReviewDate: newStatus === 'under_review' ? new Date() : application.underReviewDate,
         approvalDate: newStatus === 'active' ? new Date() : application.approvalDate,
         vettedDate: newStatus === 'vetted' ? new Date() : application.vettedDate,
