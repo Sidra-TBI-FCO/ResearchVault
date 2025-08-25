@@ -174,7 +174,7 @@ export const publications = pgTable("publications", {
   researchActivityId: integer("research_activity_id"), // references researchActivities.id
   title: text("title").notNull(),
   abstract: text("abstract"),
-  authors: text("authors").notNull(),
+  authors: text("authors"),
   journal: text("journal"),
   volume: text("volume"),
   issue: text("issue"),
