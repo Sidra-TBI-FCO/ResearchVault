@@ -253,35 +253,6 @@ export default function CreatePublication() {
                 
                 <FormField
                   control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Draft">Draft</SelectItem>
-                          <SelectItem value="Submitted">Submitted</SelectItem>
-                          <SelectItem value="Under Review">Under Review</SelectItem>
-                          <SelectItem value="Accepted">Accepted</SelectItem>
-                          <SelectItem value="Published">Published</SelectItem>
-                          <SelectItem value="Rejected">Rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
                   name="volume"
                   render={({ field }) => (
                     <FormItem>
