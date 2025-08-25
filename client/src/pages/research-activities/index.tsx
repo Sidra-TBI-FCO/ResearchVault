@@ -62,13 +62,13 @@ interface ResearchActivity {
   status: string;
   startDate: string | null;
   endDate: string | null;
-  leadPIId: number | null;
+  budgetHolderId: number | null;
   createdAt: string;
   updatedAt: string;
   
   // Related entities
   project?: Project;
-  leadPI?: Scientist;
+  budgetHolder?: Scientist;
 }
 
 export default function ResearchActivitiesList() {
@@ -96,15 +96,15 @@ export default function ResearchActivitiesList() {
   // Enhance research activities with related data
   const enhancedActivities = researchActivities?.map(activity => {
     const project = projects?.find(p => p.id === activity.projectId);
-    const leadPI = activity.leadPIId ? 
-      scientists?.find(s => s.id === activity.leadPIId) : undefined;
+    const budgetHolder = activity.budgetHolderId ? 
+      scientists?.find(s => s.id === activity.budgetHolderId) : undefined;
     return {
       ...activity,
       project: project ? {
         ...project,
         program: programs?.find(prog => prog.id === project.programId)
       } : undefined,
-      leadPI
+      budgetHolder
     };
   });
 
@@ -229,7 +229,7 @@ export default function ResearchActivitiesList() {
                   <TableHead>SDR Number</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Project</TableHead>
-                  <TableHead>Lead PI</TableHead>
+                  <TableHead>PI/Budget Holder</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
@@ -249,11 +249,15 @@ export default function ResearchActivitiesList() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{activity.title}</div>
-                      {activity.description && (
-                        <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
-                          {activity.description}
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600 mt-1">
+                        {activity.project ? (
+                          <span>
+                            PRJ: {activity.project.projectId} • PRG: {activity.project.program?.name || 'No program'}
+                          </span>
+                        ) : (
+                          <span>No project assigned</span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {activity.project ? (
@@ -267,19 +271,19 @@ export default function ResearchActivitiesList() {
                           {activity.project.name}
                         </span>
                       ) : (
-                        <span className="text-sm text-neutral-200">Not assigned</span>
+                        <span className="text-sm text-gray-600">Not assigned</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      {activity.leadPI ? (
+                      {activity.budgetHolder ? (
                         <div className="flex items-center">
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
-                            {activity.leadPI.profileImageInitials || activity.leadPI.name.substring(0, 2)}
+                            {activity.budgetHolder.profileImageInitials || activity.budgetHolder.name.substring(0, 2)}
                           </div>
-                          <span>{activity.leadPI.name}</span>
+                          <span>{activity.budgetHolder.name}</span>
                         </div>
                       ) : (
-                        <span className="text-neutral-200">Unassigned</span>
+                        <span className="text-gray-600">Unassigned</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -317,7 +321,7 @@ export default function ResearchActivitiesList() {
                 ))}
                 {!isLoadingActivities && (!filteredActivities || filteredActivities.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-600">
                       {researchActivities && researchActivities.length > 0 
                         ? "No research activities matching your search criteria."
                         : "No research activities yet. Create your first research activity!"}
