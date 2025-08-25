@@ -13,10 +13,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function PublicationDetail() {
@@ -1038,14 +1038,33 @@ function StatusUpdateForm({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="prepub-site" className="text-sm">Pre-publication Site</Label>
-                    <Input
-                      id="prepub-site"
-                      value={prepublicationSite}
-                      onChange={(e) => setPrepublicationSite(e.target.value)}
-                      placeholder="arXiv, bioRxiv, etc."
-                      className="mt-1"
-                    />
+                    <Label className="text-sm">Pre-publication Site</Label>
+                    <RadioGroup 
+                      value={prepublicationSite} 
+                      onValueChange={setPrepublicationSite}
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="arXiv" id="arxiv" />
+                        <Label htmlFor="arxiv">arXiv</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="bioRxiv" id="biorxiv" />
+                        <Label htmlFor="biorxiv">bioRxiv</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="medRxiv" id="medrxiv" />
+                        <Label htmlFor="medrxiv">medRxiv</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Research Square" id="researchsquare" />
+                        <Label htmlFor="researchsquare">Research Square</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Other" id="other" />
+                        <Label htmlFor="other">Other</Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </div>
               )}
