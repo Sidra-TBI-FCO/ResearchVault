@@ -955,8 +955,10 @@ function StatusUpdateForm({
       updatedFields.vettedForSubmissionByIpOffice = true;
     }
     
-    if (prepublicationUrl && selectedStatus === 'Submitted for review with pre-publication') {
+    if (selectedStatus === 'Submitted for review with pre-publication') {
       updatedFields.prepublicationUrl = prepublicationUrl;
+      updatedFields.prepublicationSite = prepublicationSite;
+      
       if (prepublicationUrl !== publication.prepublicationUrl) {
         changes.push({
           field: 'prepublicationUrl',
@@ -964,10 +966,7 @@ function StatusUpdateForm({
           newValue: prepublicationUrl
         });
       }
-    }
-    
-    if (prepublicationSite && selectedStatus === 'Submitted for review with pre-publication') {
-      updatedFields.prepublicationSite = prepublicationSite;
+      
       if (prepublicationSite !== publication.prepublicationSite) {
         changes.push({
           field: 'prepublicationSite',
