@@ -1376,19 +1376,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validationErrors.push('IP office approval is required for Vetted for submission status. Please update this in the publication edit form.');
       }
       
-      if (status === 'Submitted for review with pre-publication' && 
-          (!currentPublication.prepublicationUrl || !currentPublication.prepublicationSite)) {
-        validationErrors.push('Prepublication URL and site are required for pre-publication submission');
+      if (status === 'Submitted for review with pre-publication') {
+        const finalUrl = updatedFields?.prepublicationUrl || currentPublication.prepublicationUrl;
+        const finalSite = updatedFields?.prepublicationSite || currentPublication.prepublicationSite;
+        if (!finalUrl || !finalSite) {
+          validationErrors.push('Prepublication URL and site are required for pre-publication submission');
+        }
       }
       
-      if (['Under review', 'Accepted/In Press'].includes(status) && 
-          (!currentPublication.journal || currentPublication.journal.trim() === '')) {
-        validationErrors.push('Journal name is required for this status');
+      if (['Under review', 'Accepted/In Press'].includes(status)) {
+        const finalJournal = updatedFields?.journal || currentPublication.journal;
+        if (!finalJournal || finalJournal.trim() === '') {
+          validationErrors.push('Journal name is required for this status');
+        }
       }
       
-      if (status === 'Published' && 
-          (!currentPublication.publicationDate || !currentPublication.doi)) {
-        validationErrors.push('Publication date and DOI are required for Published status');
+      if (status === 'Published') {
+        const finalDate = updatedFields?.publicationDate || currentPublication.publicationDate;
+        const finalDoi = updatedFields?.doi || currentPublication.doi;
+        if (!finalDate || !finalDoi) {
+          validationErrors.push('Publication date and DOI are required for Published status');
+        }
       }
 
       if (validationErrors.length > 0) {
