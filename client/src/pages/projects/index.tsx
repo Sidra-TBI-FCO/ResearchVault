@@ -188,7 +188,7 @@ export default function ProjectsList() {
                     <TableCell>
                       <div className="font-medium">{project.name}</div>
                       {project.description && (
-                        <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
+                        <div className="text-sm text-gray-600 mt-1 line-clamp-1">
                           {project.description}
                         </div>
                       )}
@@ -205,7 +205,7 @@ export default function ProjectsList() {
                           {project.program.name}
                         </span>
                       ) : (
-                        <span className="text-sm text-neutral-200">Not assigned</span>
+                        <span className="text-sm text-gray-600">Not assigned</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -217,7 +217,7 @@ export default function ProjectsList() {
                           <span>{project.principalInvestigator.name}</span>
                         </div>
                       ) : (
-                        <span className="text-neutral-200">Unassigned</span>
+                        <span className="text-gray-600">Unassigned</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -249,7 +249,7 @@ export default function ProjectsList() {
                 ))}
                 {!isLoadingProjects && (!filteredProjects || filteredProjects.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-600">
                       {projects && projects.length > 0 
                         ? "No projects matching your search criteria."
                         : "No projects yet. Create your first project!"}
