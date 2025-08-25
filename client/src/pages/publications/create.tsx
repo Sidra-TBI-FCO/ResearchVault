@@ -26,7 +26,7 @@ import { ArrowLeft } from "lucide-react";
 const createPublicationSchema = insertPublicationSchema.extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
   abstract: z.string().optional(),
-  authors: z.string().min(3, "Authors field is required"),
+  authors: z.string().optional(),
   journal: z.string().optional(),
   volume: z.string().optional(),
   issue: z.string().optional(),
@@ -51,7 +51,7 @@ export default function CreatePublication() {
 
   // Default form values
   const defaultValues: Partial<CreatePublicationFormValues> = {
-    status: "Draft",
+    status: "Concept",
     publicationType: "Journal Article",
     researchActivityId: null,
   };
@@ -131,10 +131,10 @@ export default function CreatePublication() {
                   name="authors"
                   render={({ field }) => (
                     <FormItem className="col-span-full">
-                      <FormLabel>Authors</FormLabel>
+                      <FormLabel>Authors <span className="text-gray-500">(Optional - required for Complete Draft status)</span></FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="List of authors (e.g., Smith J, Doe A, Johnson B)"
+                          placeholder="List of authors (e.g., Smith J, Doe A, Johnson B) - leave empty for Concept stage"
                           {...field}
                         />
                       </FormControl>

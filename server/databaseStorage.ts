@@ -11,6 +11,7 @@ import {
   dataManagementPlans, DataManagementPlan, InsertDataManagementPlan,
   publications, Publication, InsertPublication,
   publicationAuthors, PublicationAuthor, InsertPublicationAuthor,
+  manuscriptHistory, ManuscriptHistory, InsertManuscriptHistory,
   patents, Patent, InsertPatent,
   irbApplications, IrbApplication, InsertIrbApplication,
   irbSubmissions, IrbSubmission, InsertIrbSubmission,

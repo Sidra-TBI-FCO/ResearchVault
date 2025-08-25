@@ -46,7 +46,6 @@ export default function PublicationEdit() {
       doi: publication?.doi || "",
       abstract: publication?.abstract || "",
       publicationType: publication?.publicationType || "Journal Article",
-      status: publication?.status || "Draft",
     },
   });
 
@@ -65,7 +64,6 @@ export default function PublicationEdit() {
         doi: publication.doi || "",
         abstract: publication.abstract || "",
         publicationType: publication.publicationType || "Journal Article",
-        status: publication.status || "Draft",
       });
     }
   }, [publication, form]);
@@ -311,60 +309,32 @@ export default function PublicationEdit() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="publicationType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Publication Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select publication type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Journal Article">Journal Article</SelectItem>
-                          <SelectItem value="Review">Review</SelectItem>
-                          <SelectItem value="Conference Paper">Conference Paper</SelectItem>
-                          <SelectItem value="Book Chapter">Book Chapter</SelectItem>
-                          <SelectItem value="Editorial">Editorial</SelectItem>
-                          <SelectItem value="Letter">Letter</SelectItem>
-                          <SelectItem value="Case Report">Case Report</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Draft">Draft</SelectItem>
-                          <SelectItem value="Submitted">Submitted</SelectItem>
-                          <SelectItem value="Under Review">Under Review</SelectItem>
-                          <SelectItem value="Accepted">Accepted</SelectItem>
-                          <SelectItem value="Published">Published</SelectItem>
-                          <SelectItem value="Rejected">Rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="publicationType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Publication Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select publication type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Journal Article">Journal Article</SelectItem>
+                        <SelectItem value="Review">Review</SelectItem>
+                        <SelectItem value="Conference Paper">Conference Paper</SelectItem>
+                        <SelectItem value="Book Chapter">Book Chapter</SelectItem>
+                        <SelectItem value="Editorial">Editorial</SelectItem>
+                        <SelectItem value="Letter">Letter</SelectItem>
+                        <SelectItem value="Case Report">Case Report</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

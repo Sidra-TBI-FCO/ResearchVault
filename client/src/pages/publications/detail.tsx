@@ -936,7 +936,7 @@ function StatusUpdateForm({
 
   const nextStatuses = getNextStatuses(currentStatus);
   
-  if (nextStatuses.length === 0) {
+  if (nextStatuses.length === 0 && currentStatus === 'Published') {
     return (
       <div className="text-center py-6">
         <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
