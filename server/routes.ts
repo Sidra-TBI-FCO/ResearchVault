@@ -1229,17 +1229,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/publications', async (req: Request, res: Response) => {
     try {
-      const validateData = insertPublicationSchema.parse(req.body);
+      // Create a validation schema that makes authors optional for concept status
+      const createPublicationSchema = insertPublicationSchema.extend({
+        authors: z.string().optional().nullable(),
+      });
+      
+      const validateData = createPublicationSchema.parse(req.body);
+      
+      // Set default status to "Concept" if not provided
+      const publicationData = {
+        ...validateData,
+        status: validateData.status || "Concept"
+      };
       
       // Check if research activity exists if researchActivityId is provided
-      if (validateData.researchActivityId) {
-        const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+      if (publicationData.researchActivityId) {
+        const researchActivity = await storage.getResearchActivity(publicationData.researchActivityId);
         if (!researchActivity) {
           return res.status(404).json({ message: "Research activity not found" });
         }
       }
       
-      const publication = await storage.createPublication(validateData);
+      const publication = await storage.createPublication(publicationData);
       res.status(201).json(publication);
     } catch (error) {
       if (error instanceof ZodError) {
