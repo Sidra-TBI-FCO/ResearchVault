@@ -52,6 +52,14 @@ interface Project {
   leadScientist?: Scientist;
 }
 
+interface ProjectMember {
+  id: number;
+  researchActivityId: number;
+  scientistId: number;
+  role: string;
+  scientist?: Scientist;
+}
+
 interface ResearchActivity {
   id: number;
   sdrNumber: string;
@@ -63,12 +71,15 @@ interface ResearchActivity {
   startDate: string | null;
   endDate: string | null;
   budgetHolderId: number | null;
+  budgetSource: string[];
+  grantCodes: string[];
   createdAt: string;
   updatedAt: string;
   
   // Related entities
   project?: Project;
   budgetHolder?: Scientist;
+  leadScientist?: Scientist;
 }
 
 export default function ResearchActivitiesList() {
@@ -93,18 +104,31 @@ export default function ResearchActivitiesList() {
     queryKey: ['/api/scientists'],
   });
 
+  const { data: projectMembers } = useQuery<ProjectMember[]>({
+    queryKey: ['/api/project-members'],
+  });
+
   // Enhance research activities with related data
   const enhancedActivities = researchActivities?.map(activity => {
     const project = projects?.find(p => p.id === activity.projectId);
     const budgetHolder = activity.budgetHolderId ? 
       scientists?.find(s => s.id === activity.budgetHolderId) : undefined;
+    
+    // Find lead scientist from project members
+    const leadScientistMember = projectMembers?.find(pm => 
+      pm.researchActivityId === activity.id && pm.role === 'Lead Scientist'
+    );
+    const leadScientist = leadScientistMember ? 
+      scientists?.find(s => s.id === leadScientistMember.scientistId) : undefined;
+    
     return {
       ...activity,
       project: project ? {
         ...project,
         program: programs?.find(prog => prog.id === project.programId)
       } : undefined,
-      budgetHolder
+      budgetHolder,
+      leadScientist
     };
   });
 
@@ -229,6 +253,7 @@ export default function ResearchActivitiesList() {
                   <TableHead>SDR Number</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Funding</TableHead>
+                  <TableHead>Lead Scientist</TableHead>
                   <TableHead>PI/Budget Holder</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[100px]"></TableHead>
@@ -274,6 +299,18 @@ export default function ResearchActivitiesList() {
                           <span className="text-gray-600">No funding source</span>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {activity.leadScientist ? (
+                        <div className="flex items-center">
+                          <div className="h-7 w-7 rounded-full bg-blue-200 flex items-center justify-center text-xs text-blue-700 font-medium mr-2">
+                            {activity.leadScientist.profileImageInitials || activity.leadScientist.name.substring(0, 2)}
+                          </div>
+                          <span>{activity.leadScientist.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-600">Unassigned</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {activity.budgetHolder ? (
@@ -322,7 +359,7 @@ export default function ResearchActivitiesList() {
                 ))}
                 {!isLoadingActivities && (!filteredActivities || filteredActivities.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-600">
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-600">
                       {researchActivities && researchActivities.length > 0 
                         ? "No research activities matching your search criteria."
                         : "No research activities yet. Create your first research activity!"}

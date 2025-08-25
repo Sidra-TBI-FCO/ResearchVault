@@ -790,6 +790,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all project members across all projects
+  app.get('/api/project-members', async (req: Request, res: Response) => {
+    try {
+      const allMembers = await storage.getAllProjectMembers();
+      res.json(allMembers);
+    } catch (error) {
+      console.error("Error fetching all project members:", error);
+      res.status(500).json({ message: "Failed to fetch project members" });
+    }
+  });
+
   app.post('/api/projects/:id/members', async (req: Request, res: Response) => {
     try {
       const projectId = parseInt(req.params.id);

@@ -62,6 +62,7 @@ export interface IStorage {
   
   // Project Members operations
   getProjectMembers(researchActivityId: number): Promise<ProjectMember[]>;
+  getAllProjectMembers(): Promise<ProjectMember[]>;
   addProjectMember(member: InsertProjectMember): Promise<ProjectMember>;
   removeProjectMember(researchActivityId: number, scientistId: number): Promise<boolean>;
 

@@ -238,6 +238,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(projectMembers).where(eq(projectMembers.researchActivityId, researchActivityId));
   }
 
+  async getAllProjectMembers(): Promise<ProjectMember[]> {
+    return await db.select().from(projectMembers);
+  }
+
   async addProjectMember(member: InsertProjectMember): Promise<ProjectMember> {
     const [newMember] = await db.insert(projectMembers).values(member).returning();
     return newMember;
