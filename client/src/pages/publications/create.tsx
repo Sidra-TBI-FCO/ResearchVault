@@ -19,13 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertPublicationSchema } from "@shared/schema";
-import { EnhancedProject } from "@/lib/types";
-import { CalendarIcon, ArrowLeft } from "lucide-react";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { insertPublicationSchema, type ResearchActivity } from "@shared/schema";
+import { ArrowLeft } from "lucide-react";
 
 // Extend the insert schema with additional validations
 const createPublicationSchema = insertPublicationSchema.extend({
@@ -37,9 +32,9 @@ const createPublicationSchema = insertPublicationSchema.extend({
   issue: z.string().optional(),
   pages: z.string().optional(),
   doi: z.string().optional(),
-  publicationDate: z.date().optional(),
+  publicationDate: z.string().optional(),
   publicationType: z.string().optional(),
-  projectId: z.number().nullable().optional(),
+  researchActivityId: z.number().nullable().optional(),
   status: z.string().optional(),
 });
 
@@ -49,16 +44,16 @@ export default function CreatePublication() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  // Get all projects for project selection
-  const { data: projects, isLoading: projectsLoading } = useQuery<EnhancedProject[]>({
-    queryKey: ['/api/projects'],
+  // Get all research activities for selection
+  const { data: researchActivities, isLoading: activitiesLoading } = useQuery<ResearchActivity[]>({
+    queryKey: ['/api/research-activities'],
   });
 
   // Default form values
   const defaultValues: Partial<CreatePublicationFormValues> = {
-    status: "In Preparation",
+    status: "Draft",
     publicationType: "Journal Article",
-    projectId: null,
+    researchActivityId: null,
   };
 
   const form = useForm<CreatePublicationFormValues>({
@@ -89,7 +84,13 @@ export default function CreatePublication() {
   });
 
   const onSubmit = (data: CreatePublicationFormValues) => {
-    createPublicationMutation.mutate(data);
+    // Convert string date from HTML input to Date object for API
+    const submitData = {
+      ...data,
+      publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
+      researchActivityId: data.researchActivityId || null,
+    };
+    createPublicationMutation.mutate(submitData);
   };
 
   return (
@@ -132,11 +133,11 @@ export default function CreatePublication() {
                     <FormItem className="col-span-full">
                       <FormLabel>Authors</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Smith J, Johnson A, Williams B" {...field} />
+                        <Textarea 
+                          placeholder="List of authors (e.g., Smith J, Doe A, Johnson B)"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormDescription>
-                        List authors in the format: Last name, First initial, separated by commas
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -192,10 +193,12 @@ export default function CreatePublication() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="Journal Article">Journal Article</SelectItem>
-                          <SelectItem value="Conference Paper">Conference Paper</SelectItem>
                           <SelectItem value="Review">Review</SelectItem>
+                          <SelectItem value="Conference Paper">Conference Paper</SelectItem>
                           <SelectItem value="Book Chapter">Book Chapter</SelectItem>
-                          <SelectItem value="Preprint">Preprint</SelectItem>
+                          <SelectItem value="Editorial">Editorial</SelectItem>
+                          <SelectItem value="Letter">Letter</SelectItem>
+                          <SelectItem value="Case Report">Case Report</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -207,36 +210,11 @@ export default function CreatePublication() {
                   control={form.control}
                   name="publicationDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Publication Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -258,7 +236,7 @@ export default function CreatePublication() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="In Preparation">In Preparation</SelectItem>
+                          <SelectItem value="Draft">Draft</SelectItem>
                           <SelectItem value="Submitted">Submitted</SelectItem>
                           <SelectItem value="Under Review">Under Review</SelectItem>
                           <SelectItem value="Accepted">Accepted</SelectItem>
@@ -329,35 +307,32 @@ export default function CreatePublication() {
                 
                 <FormField
                   control={form.control}
-                  name="projectId"
+                  name="researchActivityId"
                   render={({ field }) => (
                     <FormItem className="col-span-full">
-                      <FormLabel>Associated Project</FormLabel>
+                      <FormLabel>Research Activity (SDR)</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                        onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))}
                         defaultValue={field.value?.toString() || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select associated project (optional)" />
+                            <SelectValue placeholder="Select a research activity (optional)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
-                          {projectsLoading ? (
-                            <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                          {activitiesLoading ? (
+                            <SelectItem value="loading" disabled>Loading research activities...</SelectItem>
                           ) : (
-                            projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.title}
+                            researchActivities?.map((activity) => (
+                              <SelectItem key={activity.id} value={activity.id.toString()}>
+                                {activity.sdrNumber} - {activity.title}
                               </SelectItem>
                             ))
                           )}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        Link this publication to a research project (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
