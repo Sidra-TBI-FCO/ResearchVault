@@ -312,15 +312,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPublication(publication: InsertPublication): Promise<Publication> {
-    try {
-      console.log('Creating publication with data:', publication);
-      const [newPublication] = await db.insert(publications).values(publication).returning();
-      console.log('Successfully created publication:', newPublication);
-      return newPublication;
-    } catch (error) {
-      console.error('Database error creating publication:', error);
-      throw error;
-    }
+    const [newPublication] = await db.insert(publications).values(publication).returning();
+    return newPublication;
   }
 
   async updatePublication(id: number, publication: Partial<InsertPublication>): Promise<Publication | undefined> {
