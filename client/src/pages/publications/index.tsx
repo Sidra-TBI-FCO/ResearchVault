@@ -168,12 +168,14 @@ export default function PublicationsList() {
               </TableHeader>
               <TableBody>
                 {filteredPublications?.map((publication) => (
-                  <TableRow key={publication.id}>
+                  <TableRow 
+                    key={publication.id} 
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => window.location.href = `/publications/${publication.id}`}
+                  >
                     <TableCell>
                       <div className="font-medium">
-                        <Link href={`/publications/${publication.id}`}>
-                          <a className="hover:text-primary-500 transition-colors">{publication.title}</a>
-                        </Link>
+                        {publication.title}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
                         {publication.authors}
@@ -218,7 +220,7 @@ export default function PublicationsList() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
