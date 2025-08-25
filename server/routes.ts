@@ -1377,8 +1377,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (status === 'Submitted for review with pre-publication') {
-        const finalUrl = updatedFields?.prepublicationUrl || currentPublication.prepublicationUrl;
-        const finalSite = updatedFields?.prepublicationSite || currentPublication.prepublicationSite;
+        const finalUrl = (updatedFields?.prepublicationUrl?.trim() || currentPublication.prepublicationUrl?.trim()) || '';
+        const finalSite = (updatedFields?.prepublicationSite?.trim() || currentPublication.prepublicationSite?.trim()) || '';
         if (!finalUrl || !finalSite) {
           validationErrors.push('Prepublication URL and site are required for pre-publication submission');
         }
