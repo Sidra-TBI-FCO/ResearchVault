@@ -1373,9 +1373,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validationErrors.push('Authorship field is required for Complete Draft status');
       }
       
-      if (status === 'Vetted for submission' && !currentPublication.vettedForSubmissionByIpOffice) {
-        validationErrors.push('IP office approval is required for Vetted for submission status');
-      }
       
       if (status === 'Submitted for review with pre-publication' && 
           (!currentPublication.prepublicationUrl || !currentPublication.prepublicationSite)) {

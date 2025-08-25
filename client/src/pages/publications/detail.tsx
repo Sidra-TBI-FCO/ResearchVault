@@ -1024,21 +1024,6 @@ function StatusUpdateForm({
               <div className="font-medium">{status}</div>
               
               {/* Conditional Form Fields */}
-              {status === 'Vetted for submission' && (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="ip-office" 
-                      checked={ipOfficeApproval}
-                      onCheckedChange={(checked) => setIpOfficeApproval(checked as boolean)}
-                    />
-                    <Label htmlFor="ip-office" className="text-sm">IP office approval obtained</Label>
-                  </div>
-                  {!ipOfficeApproval && (
-                    <p className="text-xs text-red-600">IP office approval is required for this status.</p>
-                  )}
-                </div>
-              )}
               
               {status === 'Submitted for review with pre-publication' && (
                 <div className="space-y-3">
