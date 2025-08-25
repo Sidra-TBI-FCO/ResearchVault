@@ -3,8 +3,8 @@ import { queryClient } from "@/lib/queryClient";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResearchActivity, Publication, Patent, PublicationAuthor, Scientist, InsertPublicationAuthor } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users, Info } from "lucide-react";
+import { ResearchActivity, Publication, Patent, PublicationAuthor, Scientist, InsertPublicationAuthor, ManuscriptHistory } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users, Info, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function PublicationDetail() {
   const params = useParams<{ id: string }>();
@@ -29,6 +31,15 @@ export default function PublicationDetail() {
   const [isCorrespondingAuthor, setIsCorrespondingAuthor] = useState<boolean>(false);
   const [isSharedPosition, setIsSharedPosition] = useState<boolean>(false);
 
+  // Status management state
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [ipOfficeApproval, setIpOfficeApproval] = useState(false);
+  const [prepublicationUrl, setPrepublicationUrl] = useState('');
+  const [prepublicationSite, setPrepublicationSite] = useState('');
+  const [journalName, setJournalName] = useState('');
+  const [publicationDateStr, setPublicationDateStr] = useState('');
+  const [doiValue, setDoiValue] = useState('');
+
   const { data: publication, isLoading: publicationLoading } = useQuery<Publication>({
     queryKey: [`/api/publications/${id}`],
   });
@@ -40,6 +51,12 @@ export default function PublicationDetail() {
 
   const { data: scientists = [], isLoading: scientistsLoading } = useQuery<Scientist[]>({
     queryKey: [`/api/scientists`],
+  });
+
+  // Manuscript history query
+  const { data: manuscriptHistory = [], isLoading: historyLoading } = useQuery<ManuscriptHistory[]>({
+    queryKey: [`/api/publications/${id}/history`],
+    enabled: !!publication,
   });
 
   // Mutations for author management
@@ -83,6 +100,44 @@ export default function PublicationDetail() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to remove author", variant: "destructive" });
+    },
+  });
+
+  // Status update mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async (data: { status: string; updatedFields?: any; changes?: any[] }) => {
+      const response = await fetch(`/api/publications/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          status: data.status,
+          changedBy: 1, // TODO: Get from auth context
+          updatedFields: data.updatedFields,
+          changes: data.changes,
+        }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update status');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/publications/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/publications/${id}/history`] });
+      toast({ title: "Success", description: "Status updated successfully" });
+      setIsStatusDialogOpen(false);
+      // Reset form state
+      setIpOfficeApproval(false);
+      setPrepublicationUrl('');
+      setPrepublicationSite('');
+      setJournalName('');
+      setPublicationDateStr('');
+      setDoiValue('');
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -681,6 +736,385 @@ export default function PublicationDetail() {
               </Button>
             </CardContent>
           </Card>
+          
+          {/* Status Management Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Status Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Current Status</p>
+                    <Badge className={
+                      publication.status === 'Published' ? 'bg-green-100 text-green-800' :
+                      publication.status === 'Accepted/In Press' ? 'bg-blue-100 text-blue-800' :
+                      publication.status === 'Under review' ? 'bg-yellow-100 text-yellow-800' :
+                      publication.status === 'Submitted for review with pre-publication' ? 'bg-orange-100 text-orange-800' :
+                      publication.status === 'Submitted for review without pre-publication' ? 'bg-orange-100 text-orange-800' :
+                      publication.status === 'Vetted for submission' ? 'bg-purple-100 text-purple-800' :
+                      publication.status === 'Complete Draft' ? 'bg-cyan-100 text-cyan-800' :
+                      'bg-gray-100 text-gray-800'
+                    }>
+                      {publication.status || 'Concept'}
+                    </Badge>
+                  </div>
+                  
+                  {publication.status !== 'Published' && (
+                    <Button
+                      onClick={() => setIsStatusDialogOpen(true)}
+                      className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                      size="sm"
+                    >
+                      Update Status
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Next Steps Information */}
+                <div className="text-sm text-gray-600">
+                  {(() => {
+                    const status = publication.status || 'Concept';
+                    switch (status) {
+                      case 'Concept':
+                        return 'Next: Complete the manuscript draft and add authorship details.';
+                      case 'Complete Draft':
+                        return 'Next: Obtain IP office approval to proceed to submission.';
+                      case 'Vetted for submission':
+                        return 'Next: Submit for review (with or without pre-publication).';
+                      case 'Submitted for review with pre-publication':
+                      case 'Submitted for review without pre-publication':
+                        return 'Next: Publication will move to "Under review" status.';
+                      case 'Under review':
+                        return 'Next: Publication will be accepted or require revision.';
+                      case 'Accepted/In Press':
+                        return 'Next: Publication will be published with final details.';
+                      case 'Published':
+                        return 'Publication workflow complete.';
+                      default:
+                        return 'Update status to continue workflow.';
+                    }
+                  })()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Manuscript History Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Manuscript History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : manuscriptHistory.length === 0 ? (
+                <p className="text-sm text-gray-500">No changes recorded yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {manuscriptHistory.map((entry) => (
+                    <div key={entry.id} className="border-l-2 border-gray-200 pl-3 py-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">
+                          {entry.fromStatus} → {entry.toStatus}
+                        </span>
+                        <span className="text-gray-500">
+                          {format(new Date(entry.createdAt), 'MMM d, yyyy HH:mm')}
+                        </span>
+                      </div>
+                      {entry.changeReason && (
+                        <p className="text-sm text-gray-600 mt-1">{entry.changeReason}</p>
+                      )}
+                      {entry.changedField && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {entry.changedField}: "{entry.oldValue}" → "{entry.newValue}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Status Update Dialog */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update Publication Status</DialogTitle>
+            <DialogDescription>
+              Move the publication to the next stage in the workflow.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <StatusUpdateForm 
+            publication={publication}
+            onStatusUpdate={(status, updatedFields, changes) => {
+              updateStatusMutation.mutate({ status, updatedFields, changes });
+            }}
+            isLoading={updateStatusMutation.isPending}
+            ipOfficeApproval={ipOfficeApproval}
+            setIpOfficeApproval={setIpOfficeApproval}
+            prepublicationUrl={prepublicationUrl}
+            setPrepublicationUrl={setPrepublicationUrl}
+            prepublicationSite={prepublicationSite}
+            setPrepublicationSite={setPrepublicationSite}
+            journalName={journalName}
+            setJournalName={setJournalName}
+            publicationDateStr={publicationDateStr}
+            setPublicationDateStr={setPublicationDateStr}
+            doiValue={doiValue}
+            setDoiValue={setDoiValue}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Status Update Form Component
+function StatusUpdateForm({
+  publication,
+  onStatusUpdate,
+  isLoading,
+  ipOfficeApproval,
+  setIpOfficeApproval,
+  prepublicationUrl,
+  setPrepublicationUrl,
+  prepublicationSite,
+  setPrepublicationSite,
+  journalName,
+  setJournalName,
+  publicationDateStr,
+  setPublicationDateStr,
+  doiValue,
+  setDoiValue,
+}: {
+  publication: Publication;
+  onStatusUpdate: (status: string, updatedFields?: any, changes?: any[]) => void;
+  isLoading: boolean;
+  ipOfficeApproval: boolean;
+  setIpOfficeApproval: (value: boolean) => void;
+  prepublicationUrl: string;
+  setPrepublicationUrl: (value: string) => void;
+  prepublicationSite: string;
+  setPrepublicationSite: (value: string) => void;
+  journalName: string;
+  setJournalName: (value: string) => void;
+  publicationDateStr: string;
+  setPublicationDateStr: (value: string) => void;
+  doiValue: string;
+  setDoiValue: (value: string) => void;
+}) {
+  const currentStatus = publication.status || 'Concept';
+  
+  const getNextStatuses = (status: string) => {
+    const transitions = {
+      'Concept': ['Complete Draft'],
+      'Complete Draft': ['Vetted for submission'],
+      'Vetted for submission': ['Submitted for review with pre-publication', 'Submitted for review without pre-publication'],
+      'Submitted for review with pre-publication': ['Under review'],
+      'Submitted for review without pre-publication': ['Under review'],
+      'Under review': ['Accepted/In Press'],
+      'Accepted/In Press': ['Published']
+    };
+    return transitions[status] || [];
+  };
+
+  const nextStatuses = getNextStatuses(currentStatus);
+  
+  if (nextStatuses.length === 0) {
+    return (
+      <div className="text-center py-6">
+        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+        <p className="text-lg font-medium">Publication Complete</p>
+        <p className="text-sm text-gray-600">This publication has reached its final status.</p>
+      </div>
+    );
+  }
+
+  const handleStatusUpdate = (selectedStatus: string) => {
+    const updatedFields: any = {};
+    const changes: any[] = [];
+
+    // Collect updated fields based on form inputs
+    if (ipOfficeApproval && selectedStatus === 'Vetted for submission') {
+      updatedFields.vettedForSubmissionByIpOffice = true;
+    }
+    
+    if (prepublicationUrl && selectedStatus === 'Submitted for review with pre-publication') {
+      updatedFields.prepublicationUrl = prepublicationUrl;
+      if (prepublicationUrl !== publication.prepublicationUrl) {
+        changes.push({
+          field: 'prepublicationUrl',
+          oldValue: publication.prepublicationUrl || '',
+          newValue: prepublicationUrl
+        });
+      }
+    }
+    
+    if (prepublicationSite && selectedStatus === 'Submitted for review with pre-publication') {
+      updatedFields.prepublicationSite = prepublicationSite;
+      if (prepublicationSite !== publication.prepublicationSite) {
+        changes.push({
+          field: 'prepublicationSite',
+          oldValue: publication.prepublicationSite || '',
+          newValue: prepublicationSite
+        });
+      }
+    }
+    
+    if (journalName && ['Under review', 'Accepted/In Press'].includes(selectedStatus)) {
+      updatedFields.journal = journalName;
+      if (journalName !== publication.journal) {
+        changes.push({
+          field: 'journal',
+          oldValue: publication.journal || '',
+          newValue: journalName
+        });
+      }
+    }
+    
+    if (publicationDateStr && selectedStatus === 'Published') {
+      updatedFields.publicationDate = new Date(publicationDateStr);
+      const oldDate = publication.publicationDate ? format(new Date(publication.publicationDate), 'yyyy-MM-dd') : '';
+      if (publicationDateStr !== oldDate) {
+        changes.push({
+          field: 'publicationDate',
+          oldValue: oldDate,
+          newValue: publicationDateStr
+        });
+      }
+    }
+    
+    if (doiValue && selectedStatus === 'Published') {
+      updatedFields.doi = doiValue;
+      if (doiValue !== publication.doi) {
+        changes.push({
+          field: 'doi',
+          oldValue: publication.doi || '',
+          newValue: doiValue
+        });
+      }
+    }
+
+    onStatusUpdate(selectedStatus, updatedFields, changes);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label className="text-sm font-medium">Select Next Status</Label>
+        <div className="mt-2 space-y-3">
+          {nextStatuses.map((status) => (
+            <div key={status} className="space-y-3 border border-gray-200 rounded-lg p-4">
+              <div className="font-medium">{status}</div>
+              
+              {/* Conditional Form Fields */}
+              {status === 'Vetted for submission' && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="ip-office" 
+                      checked={ipOfficeApproval}
+                      onCheckedChange={(checked) => setIpOfficeApproval(checked as boolean)}
+                    />
+                    <Label htmlFor="ip-office" className="text-sm">IP office approval obtained</Label>
+                  </div>
+                  {!ipOfficeApproval && (
+                    <p className="text-xs text-red-600">IP office approval is required for this status.</p>
+                  )}
+                </div>
+              )}
+              
+              {status === 'Submitted for review with pre-publication' && (
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="prepub-url" className="text-sm">Pre-publication URL</Label>
+                    <Input
+                      id="prepub-url"
+                      value={prepublicationUrl}
+                      onChange={(e) => setPrepublicationUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="prepub-site" className="text-sm">Pre-publication Site</Label>
+                    <Input
+                      id="prepub-site"
+                      value={prepublicationSite}
+                      onChange={(e) => setPrepublicationSite(e.target.value)}
+                      placeholder="arXiv, bioRxiv, etc."
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {['Under review', 'Accepted/In Press'].includes(status) && (
+                <div>
+                  <Label htmlFor="journal" className="text-sm">Journal Name</Label>
+                  <Input
+                    id="journal"
+                    value={journalName}
+                    onChange={(e) => setJournalName(e.target.value)}
+                    placeholder="Enter journal name"
+                    className="mt-1"
+                  />
+                </div>
+              )}
+              
+              {status === 'Published' && (
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="pub-date" className="text-sm">Publication Date</Label>
+                    <Input
+                      id="pub-date"
+                      type="date"
+                      value={publicationDateStr}
+                      onChange={(e) => setPublicationDateStr(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="doi" className="text-sm">DOI</Label>
+                    <Input
+                      id="doi"
+                      value={doiValue}
+                      onChange={(e) => setDoiValue(e.target.value)}
+                      placeholder="10.1000/xyz123"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <Button
+                  onClick={() => handleStatusUpdate(status)}
+                  disabled={isLoading}
+                  className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                  size="sm"
+                >
+                  {isLoading ? 'Updating...' : `Move to ${status}`}
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

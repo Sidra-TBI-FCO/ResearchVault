@@ -182,7 +182,10 @@ export const publications = pgTable("publications", {
   doi: text("doi"), // Digital Object Identifier
   publicationDate: timestamp("publication_date"),
   publicationType: text("publication_type"), // Journal Article, Conference Paper, Book, etc.
-  status: text("status"), // Published, Submitted, In Preparation, etc.
+  status: text("status").default("Concept"), // Workflow status
+  vettedForSubmissionByIpOffice: boolean("vetted_for_submission_by_ip_office").default(false),
+  prepublicationUrl: text("prepublication_url"), // URL/DOI for prepublication
+  prepublicationSite: text("prepublication_site"), // bioRxiv, arXiv, etc.
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -218,6 +221,25 @@ export const publicationAuthors = pgTable("publication_authors", {
 
 export const insertPublicationAuthorSchema = createInsertSchema(publicationAuthors).omit({
   id: true,
+});
+
+// Manuscript History - Track changes in title/authorship during status changes
+export const manuscriptHistory = pgTable("manuscript_history", {
+  id: serial("id").primaryKey(),
+  publicationId: integer("publication_id").notNull(), // references publications.id
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  changedField: text("changed_field"), // 'title' or 'authors'
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  changedBy: integer("changed_by").notNull(), // references scientists.id
+  changeReason: text("change_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertManuscriptHistorySchema = createInsertSchema(manuscriptHistory).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Patents
@@ -702,6 +724,9 @@ export type InsertPublication = z.infer<typeof insertPublicationSchema>;
 
 export type PublicationAuthor = typeof publicationAuthors.$inferSelect;
 export type InsertPublicationAuthor = z.infer<typeof insertPublicationAuthorSchema>;
+
+export type ManuscriptHistory = typeof manuscriptHistory.$inferSelect;
+export type InsertManuscriptHistory = z.infer<typeof insertManuscriptHistorySchema>;
 
 export type Patent = typeof patents.$inferSelect;
 export type InsertPatent = z.infer<typeof insertPatentSchema>;

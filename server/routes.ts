@@ -1300,6 +1300,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manuscript History
+  app.get('/api/publications/:id/history', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid publication ID" });
+      }
+
+      const history = await storage.getManuscriptHistory(id);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch manuscript history" });
+    }
+  });
+
+  // Publication Status Management
+  app.patch('/api/publications/:id/status', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid publication ID" });
+      }
+
+      const { status, changedBy, changes, updatedFields } = req.body;
+      
+      if (!status || !changedBy) {
+        return res.status(400).json({ message: "Status and changedBy are required" });
+      }
+
+      // Validate status transition
+      const currentPublication = await storage.getPublication(id);
+      if (!currentPublication) {
+        return res.status(404).json({ message: "Publication not found" });
+      }
+
+      // Status validation logic
+      const validTransitions = {
+        'Concept': ['Complete Draft'],
+        'Complete Draft': ['Vetted for submission'],
+        'Vetted for submission': ['Submitted for review with pre-publication', 'Submitted for review without pre-publication'],
+        'Submitted for review with pre-publication': ['Under review'],
+        'Submitted for review without pre-publication': ['Under review'],
+        'Under review': ['Accepted/In Press'],
+        'Accepted/In Press': ['Published']
+      };
+
+      const currentStatus = currentPublication.status || 'Concept';
+      if (!validTransitions[currentStatus]?.includes(status)) {
+        return res.status(400).json({ 
+          message: `Invalid status transition from "${currentStatus}" to "${status}"` 
+        });
+      }
+
+      // Field validation based on status
+      const validationErrors = [];
+      
+      if (status === 'Complete Draft' && (!currentPublication.authors || currentPublication.authors.trim() === '')) {
+        validationErrors.push('Authorship field is required for Complete Draft status');
+      }
+      
+      if (status === 'Vetted for submission' && !currentPublication.vettedForSubmissionByIpOffice) {
+        validationErrors.push('IP office approval is required for Vetted for submission status');
+      }
+      
+      if (status === 'Submitted for review with pre-publication' && 
+          (!currentPublication.prepublicationUrl || !currentPublication.prepublicationSite)) {
+        validationErrors.push('Prepublication URL and site are required for pre-publication submission');
+      }
+      
+      if (['Under review', 'Accepted/In Press'].includes(status) && 
+          (!currentPublication.journal || currentPublication.journal.trim() === '')) {
+        validationErrors.push('Journal name is required for this status');
+      }
+      
+      if (status === 'Published' && 
+          (!currentPublication.publicationDate || !currentPublication.doi)) {
+        validationErrors.push('Publication date and DOI are required for Published status');
+      }
+
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ message: validationErrors.join('; ') });
+      }
+
+      // Update publication with any additional fields provided
+      if (updatedFields) {
+        await storage.updatePublication(id, updatedFields);
+      }
+
+      const updatedPublication = await storage.updatePublicationStatus(id, status, changedBy, changes);
+      
+      if (!updatedPublication) {
+        return res.status(404).json({ message: "Publication not found" });
+      }
+      
+      res.json(updatedPublication);
+    } catch (error) {
+      console.error('Error updating publication status:', error);
+      res.status(500).json({ message: "Failed to update publication status" });
+    }
+  });
+
   // Publication Authors
   app.get('/api/publications/:id/authors', async (req: Request, res: Response) => {
     try {

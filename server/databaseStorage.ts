@@ -329,6 +329,61 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
+  // Manuscript History operations
+  async getManuscriptHistory(publicationId: number): Promise<ManuscriptHistory[]> {
+    return await db
+      .select()
+      .from(manuscriptHistory)
+      .where(eq(manuscriptHistory.publicationId, publicationId))
+      .orderBy(desc(manuscriptHistory.createdAt));
+  }
+
+  async createManuscriptHistoryEntry(entry: InsertManuscriptHistory): Promise<ManuscriptHistory> {
+    const [newEntry] = await db.insert(manuscriptHistory).values(entry).returning();
+    return newEntry;
+  }
+
+  // Publication Status Management
+  async updatePublicationStatus(id: number, status: string, changedBy: number, changes?: {field: string, oldValue: string, newValue: string}[]): Promise<Publication | undefined> {
+    // Get current publication to track changes
+    const currentPublication = await this.getPublication(id);
+    if (!currentPublication) return undefined;
+
+    // Update the publication status
+    const [updatedPublication] = await db
+      .update(publications)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(publications.id, id))
+      .returning();
+
+    // Record status change in history
+    await this.createManuscriptHistoryEntry({
+      publicationId: id,
+      fromStatus: currentPublication.status || 'Unknown',
+      toStatus: status,
+      changedBy,
+      changeReason: `Status changed from ${currentPublication.status || 'Unknown'} to ${status}`,
+    });
+
+    // Record field changes if any
+    if (changes && changes.length > 0) {
+      for (const change of changes) {
+        await this.createManuscriptHistoryEntry({
+          publicationId: id,
+          fromStatus: currentPublication.status || 'Unknown',
+          toStatus: status,
+          changedField: change.field,
+          oldValue: change.oldValue,
+          newValue: change.newValue,
+          changedBy,
+          changeReason: `${change.field} changed during status transition`,
+        });
+      }
+    }
+
+    return updatedPublication;
+  }
+
   // Publication Author operations
   async getPublicationsForScientist(scientistId: number, yearsSince: number = 5): Promise<(Publication & { authorshipType: string; authorPosition: number | null })[]> {
     // Get all publications for the scientist first, then filter by date in JavaScript

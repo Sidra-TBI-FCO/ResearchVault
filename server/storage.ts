@@ -81,6 +81,13 @@ export interface IStorage {
   createPublication(publication: InsertPublication): Promise<Publication>;
   updatePublication(id: number, publication: Partial<InsertPublication>): Promise<Publication | undefined>;
   deletePublication(id: number): Promise<boolean>;
+  
+  // Manuscript History
+  getManuscriptHistory(publicationId: number): Promise<ManuscriptHistory[]>;
+  createManuscriptHistoryEntry(entry: InsertManuscriptHistory): Promise<ManuscriptHistory>;
+  
+  // Publication Status Management
+  updatePublicationStatus(id: number, status: string, changedBy: number, changes?: {field: string, oldValue: string, newValue: string}[]): Promise<Publication | undefined>;
 
   // Patent operations
   getPatents(): Promise<Patent[]>;
