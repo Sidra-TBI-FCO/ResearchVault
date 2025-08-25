@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPublicationSchema, type InsertPublication, type Publication, type ResearchActivity } from "@shared/schema";
@@ -336,6 +337,71 @@ export default function PublicationEdit() {
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Pre-publication Information</h3>
+                
+                <FormField
+                  control={form.control}
+                  name="prepublicationUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pre-publication URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        URL of the preprint publication (e.g., arXiv, bioRxiv)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="prepublicationSite"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pre-publication Site</FormLabel>
+                      <FormControl>
+                        <RadioGroup 
+                          value={field.value || ""} 
+                          onValueChange={field.onChange}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="arXiv" id="edit-arxiv" />
+                            <Label htmlFor="edit-arxiv">arXiv</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="bioRxiv" id="edit-biorxiv" />
+                            <Label htmlFor="edit-biorxiv">bioRxiv</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="medRxiv" id="edit-medrxiv" />
+                            <Label htmlFor="edit-medrxiv">medRxiv</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Research Square" id="edit-researchsquare" />
+                            <Label htmlFor="edit-researchsquare">Research Square</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Other" id="edit-other" />
+                            <Label htmlFor="edit-other">Other</Label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormDescription>
+                        Select the preprint server where the publication is hosted
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
