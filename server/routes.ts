@@ -1169,23 +1169,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Publications
   app.get('/api/publications', async (req: Request, res: Response) => {
     try {
-      const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+      const researchActivityId = req.query.researchActivityId ? parseInt(req.query.researchActivityId as string) : undefined;
       
       let publications;
-      if (projectId && !isNaN(projectId)) {
-        publications = await storage.getPublicationsForProject(projectId);
+      if (researchActivityId && !isNaN(researchActivityId)) {
+        publications = await storage.getPublicationsForResearchActivity(researchActivityId);
       } else {
         publications = await storage.getPublications();
       }
       
-      // Enhance publications with project details
+      // Enhance publications with research activity details
       const enhancedPublications = await Promise.all(publications.map(async (pub) => {
-        const project = pub.projectId ? await storage.getProject(pub.projectId) : null;
+        const researchActivity = pub.researchActivityId ? await storage.getResearchActivity(pub.researchActivityId) : null;
         return {
           ...pub,
-          project: project ? {
-            id: project.id,
-            title: project.title
+          researchActivity: researchActivity ? {
+            id: researchActivity.id,
+            sdrNumber: researchActivity.sdrNumber,
+            title: researchActivity.title
           } : null
         };
       }));
@@ -1208,14 +1209,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Publication not found" });
       }
 
-      // Get project details
-      const project = publication.projectId ? await storage.getProject(publication.projectId) : null;
+      // Get research activity details
+      const researchActivity = publication.researchActivityId ? await storage.getResearchActivity(publication.researchActivityId) : null;
       
       const enhancedPublication = {
         ...publication,
-        project: project ? {
-          id: project.id,
-          title: project.title
+        researchActivity: researchActivity ? {
+          id: researchActivity.id,
+          sdrNumber: researchActivity.sdrNumber,
+          title: researchActivity.title
         } : null
       };
 
@@ -1229,11 +1231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validateData = insertPublicationSchema.parse(req.body);
       
-      // Check if project exists if projectId is provided
-      if (validateData.projectId) {
-        const project = await storage.getProject(validateData.projectId);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
+      // Check if research activity exists if researchActivityId is provided
+      if (validateData.researchActivityId) {
+        const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+        if (!researchActivity) {
+          return res.status(404).json({ message: "Research activity not found" });
         }
       }
       
@@ -1256,11 +1258,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validateData = insertPublicationSchema.partial().parse(req.body);
       
-      // Check if project exists if projectId is provided
-      if (validateData.projectId) {
-        const project = await storage.getProject(validateData.projectId);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
+      // Check if research activity exists if researchActivityId is provided
+      if (validateData.researchActivityId) {
+        const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+        if (!researchActivity) {
+          return res.status(404).json({ message: "Research activity not found" });
         }
       }
       

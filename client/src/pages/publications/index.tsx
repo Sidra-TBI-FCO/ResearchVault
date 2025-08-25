@@ -161,7 +161,7 @@ export default function PublicationsList() {
                   <TableHead className="w-[40%]">Title & Authors</TableHead>
                   <TableHead>Journal</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Project</TableHead>
+                  <TableHead>SDR</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
@@ -198,10 +198,10 @@ export default function PublicationsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {publication.project ? (
-                        <Link href={`/projects/${publication.project.id}`}>
+                      {publication.researchActivity ? (
+                        <Link href={`/research-activities/${publication.researchActivity.id}`}>
                           <a className="text-primary-500 hover:text-primary-600 transition-colors text-sm">
-                            {publication.project.title}
+                            {publication.researchActivity.sdrNumber}
                           </a>
                         </Link>
                       ) : (
