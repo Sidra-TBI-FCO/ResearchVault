@@ -344,26 +344,6 @@ export default function PublicationEdit() {
                 
                 <FormField
                   control={form.control}
-                  name="prepublicationUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Pre-publication URL</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        URL of the preprint publication (e.g., arXiv, bioRxiv)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="prepublicationSite"
                   render={({ field }) => (
                     <FormItem>
@@ -396,12 +376,34 @@ export default function PublicationEdit() {
                         </RadioGroup>
                       </FormControl>
                       <FormDescription>
-                        Select the preprint server where the publication is hosted
+                        Select the preprint server where the publication will be hosted
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {form.watch("prepublicationSite") && (
+                  <FormField
+                    control={form.control}
+                    name="prepublicationUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Pre-publication URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder={`Enter ${form.watch("prepublicationSite")} URL...`}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          URL of the preprint publication on {form.watch("prepublicationSite")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
 
               <FormField
