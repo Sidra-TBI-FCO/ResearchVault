@@ -1395,10 +1395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: validationErrors.join('; ') });
       }
 
-      // Update publication with any additional fields provided (only if there are fields to update)
-      if (updatedFields && Object.keys(updatedFields).length > 0) {
-        await storage.updatePublication(id, updatedFields);
-      }
+      // Status updates are handled by updatePublicationStatus method below
 
       const updatedPublication = await storage.updatePublicationStatus(id, status, changedBy, changes);
       
