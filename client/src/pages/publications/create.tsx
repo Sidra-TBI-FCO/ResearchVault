@@ -34,7 +34,7 @@ const createPublicationSchema = insertPublicationSchema.extend({
   doi: z.string().optional(),
   publicationDate: z.string().optional(),
   publicationType: z.string().optional(),
-  researchActivityId: z.number().nullable().optional(),
+  researchActivityId: z.number().min(1, "Research Activity (SDR) is required"),
   status: z.string().optional(),
 });
 
@@ -53,7 +53,6 @@ export default function CreatePublication() {
   const defaultValues: Partial<CreatePublicationFormValues> = {
     status: "Concept",
     publicationType: "Journal Article",
-    researchActivityId: null,
   };
 
   const form = useForm<CreatePublicationFormValues>({
@@ -88,7 +87,7 @@ export default function CreatePublication() {
     const submitData = {
       ...data,
       publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
-      researchActivityId: data.researchActivityId || null,
+      researchActivityId: data.researchActivityId,
     };
     createPublicationMutation.mutate(submitData);
   };
@@ -121,6 +120,38 @@ export default function CreatePublication() {
                       <FormControl>
                         <Input placeholder="e.g. CRISPR-Cas9 Efficiency in Human Cell Lines" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="researchActivityId"
+                  render={({ field }) => (
+                    <FormItem className="col-span-full">
+                      <FormLabel>Research Activity (SDR) *</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select research activity" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {activitiesLoading ? (
+                            <SelectItem value="" disabled>Loading...</SelectItem>
+                          ) : (
+                            researchActivities?.map((activity) => (
+                              <SelectItem key={activity.id} value={activity.id.toString()}>
+                                {activity.sdrNumber} - {activity.title}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -305,38 +336,6 @@ export default function CreatePublication() {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="researchActivityId"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>Research Activity (SDR)</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))}
-                        defaultValue={field.value?.toString() || "none"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a research activity (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {activitiesLoading ? (
-                            <SelectItem value="loading" disabled>Loading research activities...</SelectItem>
-                          ) : (
-                            researchActivities?.map((activity) => (
-                              <SelectItem key={activity.id} value={activity.id.toString()}>
-                                {activity.sdrNumber} - {activity.title}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <CardFooter className="flex justify-end space-x-2 px-0">

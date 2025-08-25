@@ -32,8 +32,12 @@ export default function PublicationEdit() {
     queryKey: ['/api/research-activities'],
   });
 
+  const editPublicationSchema = insertPublicationSchema.extend({
+    researchActivityId: z.number().min(1, "Research Activity (SDR) is required"),
+  });
+
   const form = useForm<InsertPublication>({
-    resolver: zodResolver(insertPublicationSchema),
+    resolver: zodResolver(editPublicationSchema),
     defaultValues: {
       researchActivityId: publication?.researchActivityId || undefined,
       title: publication?.title || "",
@@ -167,10 +171,24 @@ export default function PublicationEdit() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Publication title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="researchActivityId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Research Activity (SDR)</FormLabel>
+                    <FormLabel>Research Activity (SDR) *</FormLabel>
                     <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
                       <FormControl>
                         <SelectTrigger>
@@ -185,20 +203,6 @@ export default function PublicationEdit() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Publication title" {...field} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
