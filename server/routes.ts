@@ -1336,7 +1336,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { status, changedBy, changes, updatedFields } = req.body;
-      console.log('Status update request:', { status, changedBy, updatedFields });
       
       if (!status || !changedBy) {
         return res.status(400).json({ message: "Status and changedBy are required" });
@@ -1373,6 +1372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validationErrors.push('Authorship field is required for Complete Draft status');
       }
       
+      if (status === 'Vetted for submission' && !currentPublication.vettedForSubmissionByIpOffice) {
+        validationErrors.push('IP office approval is required for Vetted for submission status. Please update this in the publication edit form.');
+      }
       
       if (status === 'Submitted for review with pre-publication' && 
           (!currentPublication.prepublicationUrl || !currentPublication.prepublicationSite)) {
