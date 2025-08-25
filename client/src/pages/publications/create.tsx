@@ -142,7 +142,7 @@ export default function CreatePublication() {
                         </FormControl>
                         <SelectContent>
                           {activitiesLoading ? (
-                            <SelectItem value="" disabled>Loading...</SelectItem>
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
                           ) : (
                             researchActivities?.map((activity) => (
                               <SelectItem key={activity.id} value={activity.id.toString()}>
