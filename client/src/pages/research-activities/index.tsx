@@ -228,7 +228,7 @@ export default function ResearchActivitiesList() {
                 <TableRow>
                   <TableHead>SDR Number</TableHead>
                   <TableHead>Title</TableHead>
-                  <TableHead>Project</TableHead>
+                  <TableHead>Funding</TableHead>
                   <TableHead>PI/Budget Holder</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[100px]"></TableHead>
@@ -252,7 +252,7 @@ export default function ResearchActivitiesList() {
                       <div className="text-sm text-gray-600 mt-1">
                         {activity.project ? (
                           <span>
-                            PRJ: {activity.project.projectId} • PRG: {activity.project.program?.name || 'No program'}
+                            PRJ: {activity.project.projectId} - {activity.project.name} • PRG: {activity.project.program?.name || 'No program'}
                           </span>
                         ) : (
                           <span>No project assigned</span>
@@ -260,19 +260,20 @@ export default function ResearchActivitiesList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {activity.project ? (
-                        <span 
-                          className="text-sm hover:text-primary-500 transition-colors cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/projects/${activity.project.id}`);
-                          }}
-                        >
-                          {activity.project.name}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-600">Not assigned</span>
-                      )}
+                      <div className="text-sm">
+                        {activity.budgetSource && activity.budgetSource.length > 0 ? (
+                          <div>
+                            <div className="font-medium">{activity.budgetSource.join(', ')}</div>
+                            {activity.grantCodes && activity.grantCodes.length > 0 && (
+                              <div className="text-xs text-gray-600 mt-1">
+                                Grant: {activity.grantCodes.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-600">No funding source</span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {activity.budgetHolder ? (
@@ -321,7 +322,7 @@ export default function ResearchActivitiesList() {
                 ))}
                 {!isLoadingActivities && (!filteredActivities || filteredActivities.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-600">
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-600">
                       {researchActivities && researchActivities.length > 0 
                         ? "No research activities matching your search criteria."
                         : "No research activities yet. Create your first research activity!"}
