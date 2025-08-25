@@ -1253,10 +1253,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const publication = await storage.createPublication(publicationData);
       res.status(201).json(publication);
     } catch (error) {
+      console.error("Publication creation error:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to create publication" });
+      res.status(500).json({ message: "Failed to create publication", error: error.message });
     }
   });
 
