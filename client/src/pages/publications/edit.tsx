@@ -53,6 +53,9 @@ export default function PublicationEdit() {
       doi: publication?.doi || "",
       abstract: publication?.abstract || "",
       publicationType: publication?.publicationType || "Journal Article",
+      prepublicationUrl: publication?.prepublicationUrl || "",
+      prepublicationSite: publication?.prepublicationSite || "",
+      vettedForSubmissionByIpOffice: publication?.vettedForSubmissionByIpOffice || false,
     },
   });
 
@@ -71,6 +74,9 @@ export default function PublicationEdit() {
         doi: publication.doi || "",
         abstract: publication.abstract || "",
         publicationType: publication.publicationType || "Journal Article",
+        prepublicationUrl: publication.prepublicationUrl || "",
+        prepublicationSite: publication.prepublicationSite || "",
+        vettedForSubmissionByIpOffice: publication.vettedForSubmissionByIpOffice || false,
       });
     }
   }, [publication, form]);

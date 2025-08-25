@@ -1336,7 +1336,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { status, changedBy, changes, updatedFields } = req.body;
-      console.log('Status update request:', { status, changedBy, updatedFields });
       
       if (!status || !changedBy) {
         return res.status(400).json({ message: "Status and changedBy are required" });
