@@ -211,9 +211,9 @@ export default function ProjectsList() {
                     <TableCell>
                       {project.principalInvestigator ? (
                         <div className="flex items-center">
-                          <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
+                          <span className="text-xs font-medium text-gray-700 mr-2">
                             {project.principalInvestigator.profileImageInitials || project.principalInvestigator.name.substring(0, 2)}
-                          </div>
+                          </span>
                           <span>{project.principalInvestigator.name}</span>
                         </div>
                       ) : (

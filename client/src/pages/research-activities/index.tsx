@@ -304,9 +304,9 @@ export default function ResearchActivitiesList() {
                     <TableCell>
                       {activity.leadScientist ? (
                         <div className="flex items-center">
-                          <div className="h-7 w-7 rounded-full bg-blue-200 flex items-center justify-center text-xs text-blue-700 font-medium mr-2">
+                          <span className="text-xs font-medium text-gray-700 mr-2">
                             {activity.leadScientist.profileImageInitials || activity.leadScientist.name.substring(0, 2)}
-                          </div>
+                          </span>
                           <div>
                             <div className="font-medium">{activity.leadScientist.name}</div>
                             {activity.leadScientist.title && (
@@ -321,9 +321,9 @@ export default function ResearchActivitiesList() {
                     <TableCell>
                       {activity.budgetHolder ? (
                         <div className="flex items-center">
-                          <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
+                          <span className="text-xs font-medium text-gray-700 mr-2">
                             {activity.budgetHolder.profileImageInitials || activity.budgetHolder.name.substring(0, 2)}
-                          </div>
+                          </span>
                           <div>
                             <div className="font-medium">{activity.budgetHolder.name}</div>
                             {activity.budgetHolder.title && (

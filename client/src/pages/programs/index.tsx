@@ -168,9 +168,9 @@ export default function ProgramsList() {
                     <TableCell>
                       {program.programDirector ? (
                         <div className="flex items-center">
-                          <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
+                          <span className="text-xs font-medium text-gray-700 mr-2">
                             {program.programDirector.profileImageInitials || program.programDirector.name.substring(0, 2)}
-                          </div>
+                          </span>
                           <span className="text-sm">{program.programDirector.name}</span>
                         </div>
                       ) : (
@@ -181,25 +181,25 @@ export default function ProgramsList() {
                       <div className="space-y-1">
                         {program.researchCoLead && (
                           <div className="flex items-center">
-                            <div className="h-6 w-6 rounded-full bg-blue-200 flex items-center justify-center text-xs text-blue-700 font-medium mr-2">
+                            <span className="text-xs font-medium text-gray-700 mr-2">
                               {program.researchCoLead.profileImageInitials || program.researchCoLead.name.substring(0, 2)}
-                            </div>
+                            </span>
                             <span className="text-xs text-gray-700">Research: {program.researchCoLead.name}</span>
                           </div>
                         )}
                         {program.clinicalCoLead1 && (
                           <div className="flex items-center">
-                            <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center text-xs text-green-700 font-medium mr-2">
+                            <span className="text-xs font-medium text-gray-700 mr-2">
                               {program.clinicalCoLead1.profileImageInitials || program.clinicalCoLead1.name.substring(0, 2)}
-                            </div>
+                            </span>
                             <span className="text-xs text-gray-700">Clinical 1: {program.clinicalCoLead1.name}</span>
                           </div>
                         )}
                         {program.clinicalCoLead2 && (
                           <div className="flex items-center">
-                            <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center text-xs text-green-700 font-medium mr-2">
+                            <span className="text-xs font-medium text-gray-700 mr-2">
                               {program.clinicalCoLead2.profileImageInitials || program.clinicalCoLead2.name.substring(0, 2)}
-                            </div>
+                            </span>
                             <span className="text-xs text-gray-700">Clinical 2: {program.clinicalCoLead2.name}</span>
                           </div>
                         )}
