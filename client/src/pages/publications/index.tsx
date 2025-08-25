@@ -175,7 +175,7 @@ export default function PublicationsList() {
                           <a className="hover:text-primary-500 transition-colors">{publication.title}</a>
                         </Link>
                       </div>
-                      <div className="text-sm text-neutral-200 mt-1">
+                      <div className="text-sm text-gray-600 mt-1">
                         {publication.authors}
                       </div>
                     </TableCell>
@@ -185,7 +185,7 @@ export default function PublicationsList() {
                         <span>{publication.journal || "—"}</span>
                       </div>
                       {publication.volume && (
-                        <div className="text-sm text-neutral-200 mt-1">
+                        <div className="text-sm text-gray-600 mt-1">
                           Vol. {publication.volume}{publication.issue ? `, Issue ${publication.issue}` : ''}
                           {publication.pages ? `, pp. ${publication.pages}` : ''}
                         </div>
@@ -193,7 +193,7 @@ export default function PublicationsList() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm">
-                        <CalendarRange className="h-4 w-4 mr-1 text-neutral-200" />
+                        <CalendarRange className="h-4 w-4 mr-1 text-gray-600" />
                         <span>{formatDate(publication.publicationDate)}</span>
                       </div>
                     </TableCell>
@@ -205,7 +205,7 @@ export default function PublicationsList() {
                           </a>
                         </Link>
                       ) : (
-                        <span className="text-neutral-200 text-sm">—</span>
+                        <span className="text-gray-600 text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -243,7 +243,7 @@ export default function PublicationsList() {
                 ))}
                 {filteredPublications?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-600">
                       No publications found matching your search.
                     </TableCell>
                   </TableRow>

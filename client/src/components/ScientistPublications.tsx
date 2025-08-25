@@ -201,7 +201,7 @@ export function ScientistPublications({ scientistId, yearsSince = 5 }: Scientist
         </CardHeader>
         <CardContent>
           {publications.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600">
               No publications found in the last {yearsSince} years
             </div>
           ) : (

@@ -74,7 +74,7 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
       <CardContent>
         <div className="space-y-4">
           {publications.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No publications found for the selected time period.</p>
+            <p className="text-gray-600 text-center py-8">No publications found for the selected time period.</p>
           ) : (
             publications.map((pub: Publication) => (
               <div key={pub.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
@@ -103,7 +103,7 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
                 
                 <p className="text-sm text-gray-600 mb-2">{pub.authors}</p>
                 
-                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
                   <span className="font-medium">{pub.journal}</span>
                   {pub.volume && <span>Vol. {pub.volume}</span>}
                   {pub.issue && <span>({pub.issue})</span>}
