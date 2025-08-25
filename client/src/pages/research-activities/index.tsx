@@ -34,6 +34,7 @@ interface Program {
 interface Scientist {
   id: number;
   name: string;
+  title?: string;
   profileImageInitials?: string;
 }
 
@@ -306,7 +307,12 @@ export default function ResearchActivitiesList() {
                           <div className="h-7 w-7 rounded-full bg-blue-200 flex items-center justify-center text-xs text-blue-700 font-medium mr-2">
                             {activity.leadScientist.profileImageInitials || activity.leadScientist.name.substring(0, 2)}
                           </div>
-                          <span>{activity.leadScientist.name}</span>
+                          <div>
+                            <div className="font-medium">{activity.leadScientist.name}</div>
+                            {activity.leadScientist.title && (
+                              <div className="text-xs text-gray-600">{activity.leadScientist.title}</div>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <span className="text-gray-600">Unassigned</span>
@@ -318,7 +324,12 @@ export default function ResearchActivitiesList() {
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
                             {activity.budgetHolder.profileImageInitials || activity.budgetHolder.name.substring(0, 2)}
                           </div>
-                          <span>{activity.budgetHolder.name}</span>
+                          <div>
+                            <div className="font-medium">{activity.budgetHolder.name}</div>
+                            {activity.budgetHolder.title && (
+                              <div className="text-xs text-gray-600">{activity.budgetHolder.title}</div>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <span className="text-gray-600">Unassigned</span>
