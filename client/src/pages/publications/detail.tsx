@@ -768,7 +768,16 @@ export default function PublicationDetail() {
                   
                   {publication.status !== 'Published' && (
                     <Button
-                      onClick={() => setIsStatusDialogOpen(true)}
+                      onClick={() => {
+                        // Pre-populate form with existing values
+                        setJournalName(publication.journal || '');
+                        setDoiValue(publication.doi || '');
+                        setPublicationDateStr(publication.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : '');
+                        setPrepublicationUrl(publication.prepublicationUrl || '');
+                        setPrepublicationSite(publication.prepublicationSite || '');
+                        setAuthorsValue(publication.authors || '');
+                        setIsStatusDialogOpen(true);
+                      }}
                       className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
                       size="sm"
                     >
