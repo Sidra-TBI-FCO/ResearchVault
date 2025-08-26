@@ -381,10 +381,15 @@ export class DatabaseStorage implements IStorage {
         if (author.includes(',')) {
           // Convert Last, First to First Last format
           const [last, first] = author.split(',').map(s => s.trim());
-          return `${first} ${last}`;
+          // Add period to single letter first name
+          const firstFormatted = first.length === 1 ? first + '.' : first;
+          return `${firstFormatted} ${last}`;
         } else {
-          // First Last format - keep as is
-          return parts.join(' ');
+          // First Last format - add period to single letter first name
+          const first = parts[0];
+          const last = parts[1];
+          const firstFormatted = first.length === 1 ? first + '.' : first;
+          return `${firstFormatted} ${last}`;
         }
       } else if (parts.length >= 3) {
         // Handle First Middle Last or multiple middle names
