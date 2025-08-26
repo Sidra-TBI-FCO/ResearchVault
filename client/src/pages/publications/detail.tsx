@@ -39,6 +39,7 @@ export default function PublicationDetail() {
   const [journalName, setJournalName] = useState('');
   const [publicationDateStr, setPublicationDateStr] = useState('');
   const [doiValue, setDoiValue] = useState('');
+  const [authorsValue, setAuthorsValue] = useState('');
 
   const { data: publication, isLoading: publicationLoading } = useQuery<Publication>({
     queryKey: [`/api/publications/${id}`],
@@ -135,6 +136,7 @@ export default function PublicationDetail() {
       setJournalName('');
       setPublicationDateStr('');
       setDoiValue('');
+      setAuthorsValue('');
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -878,6 +880,8 @@ export default function PublicationDetail() {
             setPublicationDateStr={setPublicationDateStr}
             doiValue={doiValue}
             setDoiValue={setDoiValue}
+            authorsValue={authorsValue}
+            setAuthorsValue={setAuthorsValue}
           />
         </DialogContent>
       </Dialog>
@@ -902,6 +906,8 @@ function StatusUpdateForm({
   setPublicationDateStr,
   doiValue,
   setDoiValue,
+  authorsValue,
+  setAuthorsValue,
 }: {
   publication: Publication;
   onStatusUpdate: (status: string, updatedFields?: any, changes?: any[]) => void;
@@ -918,6 +924,8 @@ function StatusUpdateForm({
   setPublicationDateStr: (value: string) => void;
   doiValue: string;
   setDoiValue: (value: string) => void;
+  authorsValue: string;
+  setAuthorsValue: (value: string) => void;
 }) {
   const currentStatus = publication.status || 'Concept';
   
@@ -972,6 +980,17 @@ function StatusUpdateForm({
           field: 'prepublicationSite',
           oldValue: publication.prepublicationSite || '',
           newValue: prepublicationSite
+        });
+      }
+    }
+    
+    if (selectedStatus === 'Complete Draft') {
+      updatedFields.authors = authorsValue;
+      if (authorsValue !== publication.authors) {
+        changes.push({
+          field: 'authors',
+          oldValue: publication.authors || '',
+          newValue: authorsValue
         });
       }
     }
@@ -1064,6 +1083,23 @@ function StatusUpdateForm({
                       </div>
                     </RadioGroup>
                   </div>
+                </div>
+              )}
+              
+              {status === 'Complete Draft' && (
+                <div>
+                  <Label htmlFor="authors" className="text-sm">Authors</Label>
+                  <Textarea
+                    id="authors"
+                    value={authorsValue}
+                    onChange={(e) => setAuthorsValue(e.target.value)}
+                    placeholder="Enter authors (e.g., Smith J, Johnson A, Brown K)"
+                    className="mt-1"
+                    rows={2}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    List authors as they should appear in the publication
+                  </p>
                 </div>
               )}
               
