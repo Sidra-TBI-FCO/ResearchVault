@@ -1251,6 +1251,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const publication = await storage.createPublication(publicationData);
+      
+      // Create initial history entry for publication creation
+      await storage.createManuscriptHistoryEntry({
+        publicationId: publication.id,
+        fromStatus: '',
+        toStatus: publication.status || 'Concept',
+        changedBy: 1, // Default user - could be enhanced with actual session user
+        changeReason: 'Publication created',
+      });
+      
       res.status(201).json(publication);
     } catch (error) {
       console.error("Publication creation error:", error);
