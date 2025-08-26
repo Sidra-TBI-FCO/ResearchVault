@@ -1114,13 +1114,18 @@ function StatusUpdateForm({
                   <Label htmlFor="journal" className="text-sm">Journal Name</Label>
                   <Input
                     id="journal"
+                    name="journal-name-field"
                     value={journalName}
                     onChange={(e) => setJournalName(e.target.value)}
                     placeholder="Enter journal name"
                     className="mt-1"
                     autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                     data-1p-ignore="true"
                     data-lpignore="true"
+                    data-form-type="other"
                   />
                 </div>
               )}
