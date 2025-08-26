@@ -1016,10 +1016,13 @@ function StatusUpdateForm({
     }
     
     if (selectedStatus === 'Published') {
-      updatedFields.publicationDate = publicationDateStr ? new Date(publicationDateStr) : null;
+      updatedFields.publicationDate = publicationDateStr ? publicationDateStr : null;
       updatedFields.doi = doiValue;
       
-      const oldDate = publication.publicationDate ? format(new Date(publication.publicationDate), 'yyyy-MM-dd') : '';
+      const oldDate = publication.publicationDate ? 
+        (typeof publication.publicationDate === 'string' ? 
+          publication.publicationDate.split('T')[0] : 
+          format(new Date(publication.publicationDate), 'yyyy-MM-dd')) : '';
       if (publicationDateStr !== oldDate) {
         changes.push({
           field: 'publicationDate',
@@ -1149,6 +1152,9 @@ function StatusUpdateForm({
                       value={publicationDateStr}
                       onChange={(e) => setPublicationDateStr(e.target.value)}
                       className="mt-1"
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
                     />
                   </div>
                   <div>
