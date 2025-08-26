@@ -976,7 +976,7 @@ function StatusUpdateForm({
       }
     }
     
-    if (journalName && ['Under review', 'Accepted/In Press'].includes(selectedStatus)) {
+    if (['Under review', 'Accepted/In Press'].includes(selectedStatus)) {
       updatedFields.journal = journalName;
       if (journalName !== publication.journal) {
         changes.push({
@@ -987,8 +987,10 @@ function StatusUpdateForm({
       }
     }
     
-    if (publicationDateStr && selectedStatus === 'Published') {
-      updatedFields.publicationDate = new Date(publicationDateStr);
+    if (selectedStatus === 'Published') {
+      updatedFields.publicationDate = publicationDateStr ? new Date(publicationDateStr) : null;
+      updatedFields.doi = doiValue;
+      
       const oldDate = publication.publicationDate ? format(new Date(publication.publicationDate), 'yyyy-MM-dd') : '';
       if (publicationDateStr !== oldDate) {
         changes.push({
@@ -997,10 +999,7 @@ function StatusUpdateForm({
           newValue: publicationDateStr
         });
       }
-    }
-    
-    if (doiValue && selectedStatus === 'Published') {
-      updatedFields.doi = doiValue;
+      
       if (doiValue !== publication.doi) {
         changes.push({
           field: 'doi',
