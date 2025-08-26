@@ -107,6 +107,7 @@ export default function PublicationDetail() {
   // Status update mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (data: { status: string; updatedFields?: any; changes?: any[] }) => {
+      console.log("Frontend sending:", data); // Debug log
       const response = await fetch(`/api/publications/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
