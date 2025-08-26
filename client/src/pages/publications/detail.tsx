@@ -1052,6 +1052,9 @@ function StatusUpdateForm({
                       onChange={(e) => setPrepublicationUrl(e.target.value)}
                       placeholder="https://..."
                       className="mt-1"
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
                     />
                   </div>
                   <div>
@@ -1096,6 +1099,9 @@ function StatusUpdateForm({
                     placeholder="Enter authors (e.g., Smith J, Johnson A, Brown K)"
                     className="mt-1"
                     rows={2}
+                    autoComplete="off"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     List authors as they should appear in the publication
@@ -1112,6 +1118,9 @@ function StatusUpdateForm({
                     onChange={(e) => setJournalName(e.target.value)}
                     placeholder="Enter journal name"
                     className="mt-1"
+                    autoComplete="off"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
                   />
                 </div>
               )}
@@ -1136,6 +1145,9 @@ function StatusUpdateForm({
                       onChange={(e) => setDoiValue(e.target.value)}
                       placeholder="10.1000/xyz123"
                       className="mt-1"
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
                     />
                   </div>
                 </div>
