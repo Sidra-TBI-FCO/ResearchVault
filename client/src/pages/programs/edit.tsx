@@ -170,7 +170,7 @@ export default function ProgramEdit() {
                     <FormItem>
                       <FormLabel>Program ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., PRM-001" {...field} />
+                        <Input placeholder="e.g., PRM-001" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -186,7 +186,7 @@ export default function ProgramEdit() {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Program title" {...field} />
+                      <Input placeholder="Program title" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +200,7 @@ export default function ProgramEdit() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Program description" {...field} value={field.value || ""} />
+                      <Textarea placeholder="Program description" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

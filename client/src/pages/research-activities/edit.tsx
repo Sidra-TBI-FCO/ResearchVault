@@ -210,7 +210,7 @@ export default function EditResearchActivity() {
                     <FormItem>
                       <FormLabel>SDR Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., SDR-001" {...field} />
+                        <Input placeholder="e.g., SDR-001" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -249,7 +249,7 @@ export default function EditResearchActivity() {
                   <FormItem>
                     <FormLabel>Project Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter the full project title" {...field} />
+                      <Input placeholder="Enter the full project title" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -136,7 +136,7 @@ export default function CreateResearchActivity() {
                     <FormItem>
                       <FormLabel>SDR Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. SDR-2023-001" {...field} />
+                        <Input placeholder="e.g. SDR-2023-001" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormDescription>
                         Unique identifier for this research activity
@@ -188,7 +188,7 @@ export default function CreateResearchActivity() {
                     <FormItem className="col-span-full">
                       <FormLabel>Research Activity Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. CRISPR-Cas9 Gene Editing for Cancer Treatment" {...field} />
+                        <Input placeholder="e.g. CRISPR-Cas9 Gene Editing for Cancer Treatment" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -202,7 +202,7 @@ export default function CreateResearchActivity() {
                     <FormItem>
                       <FormLabel>Short Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. CRISPR Cancer Treatment" {...field} />
+                        <Input placeholder="e.g. CRISPR Cancer Treatment" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormDescription>
                         Brief name for easier reference
@@ -310,7 +310,7 @@ export default function CreateResearchActivity() {
                     <FormItem>
                       <FormLabel>Additional Notification Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="e.g. notifications@example.com" {...field} />
+                        <Input type="email" placeholder="e.g. notifications@example.com" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormDescription>
                         Secondary email for project notifications

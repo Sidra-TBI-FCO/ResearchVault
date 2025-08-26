@@ -200,7 +200,7 @@ export default function PatentEdit() {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Patent title" {...field} />
+                      <Input placeholder="Patent title" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -216,6 +216,7 @@ export default function PatentEdit() {
                     <FormControl>
                       <Textarea 
                         placeholder="List of inventors (e.g., Smith J, Doe A, Johnson B)"
+                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                         {...field}
                       />
                     </FormControl>
@@ -232,7 +233,7 @@ export default function PatentEdit() {
                     <FormItem>
                       <FormLabel>Patent Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., US10123456B2" {...field} />
+                        <Input placeholder="e.g., US10123456B2" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -246,7 +247,7 @@ export default function PatentEdit() {
                     <FormItem>
                       <FormLabel>Application Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., US16/123,456" {...field} />
+                        <Input placeholder="e.g., US16/123,456" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -305,7 +306,7 @@ export default function PatentEdit() {
                   <FormItem>
                     <FormLabel>Assignee</FormLabel>
                     <FormControl>
-                      <Input placeholder="Patent assignee organization" {...field} />
+                      <Input placeholder="Patent assignee organization" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -398,6 +399,7 @@ export default function PatentEdit() {
                       <Textarea 
                         placeholder="Patent abstract..."
                         className="min-h-[100px]"
+                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                         {...field}
                       />
                     </FormControl>
@@ -416,6 +418,7 @@ export default function PatentEdit() {
                       <Textarea 
                         placeholder="Patent claims..."
                         className="min-h-[150px]"
+                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                         {...field}
                       />
                     </FormControl>

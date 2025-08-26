@@ -118,7 +118,7 @@ export default function CreatePublication() {
                     <FormItem className="col-span-full">
                       <FormLabel>Publication Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. CRISPR-Cas9 Efficiency in Human Cell Lines" {...field} />
+                        <Input placeholder="e.g. CRISPR-Cas9 Efficiency in Human Cell Lines" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -166,6 +166,7 @@ export default function CreatePublication() {
                       <FormControl>
                         <Textarea 
                           placeholder="List of authors (e.g., Smith J, Doe A, Johnson B) - leave empty for Concept stage"
+                          autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                           {...field}
                         />
                       </FormControl>
@@ -185,6 +186,7 @@ export default function CreatePublication() {
                           placeholder="Publication abstract or summary" 
                           className="resize-none" 
                           rows={4}
+                          autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                           {...field} 
                         />
                       </FormControl>
@@ -200,7 +202,7 @@ export default function CreatePublication() {
                     <FormItem>
                       <FormLabel>Journal</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Nature Biotechnology" {...field} />
+                        <Input placeholder="e.g. Nature Biotechnology" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -244,7 +246,7 @@ export default function CreatePublication() {
                     <FormItem>
                       <FormLabel>Publication Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -258,7 +260,7 @@ export default function CreatePublication() {
                     <FormItem>
                       <FormLabel>Volume</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 42" {...field} />
+                        <Input placeholder="e.g. 42" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -272,7 +274,7 @@ export default function CreatePublication() {
                     <FormItem>
                       <FormLabel>Issue</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 3" {...field} />
+                        <Input placeholder="e.g. 3" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -286,7 +288,7 @@ export default function CreatePublication() {
                     <FormItem>
                       <FormLabel>Pages</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 123-135" {...field} />
+                        <Input placeholder="e.g. 123-135" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -300,7 +302,7 @@ export default function CreatePublication() {
                     <FormItem>
                       <FormLabel>DOI</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 10.1038/nbt.4321" {...field} />
+                        <Input placeholder="e.g. 10.1038/nbt.4321" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

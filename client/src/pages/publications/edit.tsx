@@ -185,7 +185,7 @@ export default function PublicationEdit() {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Publication title" {...field} />
+                      <Input placeholder="Publication title" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -226,6 +226,7 @@ export default function PublicationEdit() {
                     <FormControl>
                       <Textarea 
                         placeholder="List of authors (e.g., Smith J, Doe A, Johnson B)"
+                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                         {...field}
                       />
                     </FormControl>
@@ -242,7 +243,7 @@ export default function PublicationEdit() {
                     <FormItem>
                       <FormLabel>Journal</FormLabel>
                       <FormControl>
-                        <Input placeholder="Journal name" {...field} />
+                        <Input placeholder="Journal name" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -256,7 +257,7 @@ export default function PublicationEdit() {
                     <FormItem>
                       <FormLabel>Publication Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -272,7 +273,7 @@ export default function PublicationEdit() {
                     <FormItem>
                       <FormLabel>Volume</FormLabel>
                       <FormControl>
-                        <Input placeholder="Volume number" {...field} />
+                        <Input placeholder="Volume number" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -286,7 +287,7 @@ export default function PublicationEdit() {
                     <FormItem>
                       <FormLabel>Issue</FormLabel>
                       <FormControl>
-                        <Input placeholder="Issue number" {...field} />
+                        <Input placeholder="Issue number" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -300,7 +301,7 @@ export default function PublicationEdit() {
                     <FormItem>
                       <FormLabel>Pages</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 123-130" {...field} />
+                        <Input placeholder="e.g., 123-130" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -315,7 +316,7 @@ export default function PublicationEdit() {
                   <FormItem>
                     <FormLabel>DOI</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digital Object Identifier" {...field} />
+                      <Input placeholder="Digital Object Identifier" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -399,6 +400,7 @@ export default function PublicationEdit() {
                         <FormControl>
                           <Input 
                             placeholder={`Enter ${form.watch("prepublicationSite")} URL...`}
+                            autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                             {...field} 
                           />
                         </FormControl>
@@ -449,6 +451,7 @@ export default function PublicationEdit() {
                       <Textarea 
                         placeholder="Publication abstract..."
                         className="min-h-[150px]"
+                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                         {...field}
                       />
                     </FormControl>

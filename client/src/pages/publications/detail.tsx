@@ -772,7 +772,7 @@ export default function PublicationDetail() {
                         // Pre-populate form with existing values
                         setJournalName(publication.journal || '');
                         setDoiValue(publication.doi || '');
-                        setPublicationDateStr(publication.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : '');
+                        setPublicationDateStr(publication.publicationDate ? (typeof publication.publicationDate === 'string' ? publication.publicationDate.split('T')[0] : new Date(publication.publicationDate).toISOString().split('T')[0]) : '');
                         setPrepublicationUrl(publication.prepublicationUrl || '');
                         setPrepublicationSite(publication.prepublicationSite || '');
                         setAuthorsValue(publication.authors || '');

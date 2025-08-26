@@ -56,7 +56,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your username" {...field} />
+                      <Input placeholder="Enter your username" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -72,7 +72,8 @@ export default function LoginPage() {
                     <FormControl>
                       <Input 
                         type="password" 
-                        placeholder="Enter your password" 
+                        placeholder="Enter your password"
+                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                         {...field} 
                       />
                     </FormControl>

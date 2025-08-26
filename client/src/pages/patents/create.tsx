@@ -115,7 +115,7 @@ export default function CreatePatent() {
                     <FormItem className="col-span-full">
                       <FormLabel>Patent Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Method for Targeted Gene Delivery Using Modified CRISPR System" {...field} />
+                        <Input placeholder="e.g. Method for Targeted Gene Delivery Using Modified CRISPR System" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -129,7 +129,7 @@ export default function CreatePatent() {
                     <FormItem className="col-span-full">
                       <FormLabel>Inventors</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Rodriguez M, Doe J" {...field} />
+                        <Input placeholder="e.g. Rodriguez M, Doe J" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormDescription>
                         List inventors in the format: Last name, First initial, separated by commas
@@ -150,6 +150,7 @@ export default function CreatePatent() {
                           placeholder="Brief description of the patented invention" 
                           className="resize-none" 
                           rows={4}
+                          autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                           {...field} 
                         />
                       </FormControl>
@@ -193,7 +194,7 @@ export default function CreatePatent() {
                     <FormItem>
                       <FormLabel>Patent Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. US2023/0123456" {...field} />
+                        <Input placeholder="e.g. US2023/0123456" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormDescription>
                         Leave blank if not yet assigned

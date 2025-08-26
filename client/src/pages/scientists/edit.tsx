@@ -192,7 +192,7 @@ export default function EditScientist() {
                     <FormItem className="col-span-full">
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Dr. Sarah Johnson" {...field} value={field.value || ""} />
+                        <Input placeholder="e.g. Dr. Sarah Johnson" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -206,7 +206,7 @@ export default function EditScientist() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Sarah" {...field} value={field.value || ""} />
+                        <Input placeholder="Sarah" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -220,7 +220,7 @@ export default function EditScientist() {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Johnson" {...field} value={field.value || ""} />
+                        <Input placeholder="Johnson" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -234,7 +234,7 @@ export default function EditScientist() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="sarah.johnson@example.com" {...field} value={field.value || ""} />
+                        <Input type="email" placeholder="sarah.johnson@example.com" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -248,7 +248,7 @@ export default function EditScientist() {
                     <FormItem>
                       <FormLabel>Staff ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="12345" {...field} value={field.value || ""} />
+                        <Input placeholder="12345" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormDescription>
                         5-digit staff ID for badge access
@@ -301,7 +301,7 @@ export default function EditScientist() {
                     <FormItem>
                       <FormLabel>Department</FormLabel>
                       <FormControl>
-                        <Input placeholder="Molecular Biology" {...field} value={field.value || ""} />
+                        <Input placeholder="Molecular Biology" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -315,7 +315,7 @@ export default function EditScientist() {
                     <FormItem>
                       <FormLabel>Initials</FormLabel>
                       <FormControl>
-                        <Input placeholder="SJ" maxLength={2} {...field} value={field.value || ""} />
+                        <Input placeholder="SJ" maxLength={2} autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormDescription>
                         Initials shown in profile avatar (max 2 characters)

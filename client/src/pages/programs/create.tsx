@@ -106,7 +106,7 @@ export default function CreateProgram() {
                     <FormItem className="col-span-full">
                       <FormLabel>Program Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Cancer Research Initiative" {...field} />
+                        <Input placeholder="e.g. Cancer Research Initiative" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -154,6 +154,7 @@ export default function CreateProgram() {
                           placeholder="Brief description of the research program" 
                           className="resize-none" 
                           rows={4}
+                          autoComplete="off" data-1p-ignore="true" data-lpignore="true"
                           {...field} 
                         />
                       </FormControl>
