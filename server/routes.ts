@@ -1347,15 +1347,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { status, changedBy, changes, updatedFields } = req.body;
       
-      // Debug logging
-      console.log("Status update request:", { status, updatedFields, currentAuthors: currentPublication?.authors });
-      
       if (!status || !changedBy) {
         return res.status(400).json({ message: "Status and changedBy are required" });
       }
 
       // Validate status transition
       const currentPublication = await storage.getPublication(id);
+      
+      // Debug logging
+      console.log("Status update request:", { 
+        status, 
+        updatedFields, 
+        currentAuthors: currentPublication?.authors,
+        hasUpdatedAuthors: !!updatedFields?.authors 
+      });
       if (!currentPublication) {
         return res.status(404).json({ message: "Publication not found" });
       }
