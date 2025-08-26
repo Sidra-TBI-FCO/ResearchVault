@@ -317,9 +317,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePublication(id: number, publication: Partial<InsertPublication>): Promise<Publication | undefined> {
+    // Handle date conversions properly
+    const updateData = { ...publication };
+    
+    // Convert date strings to Date objects if needed
+    if (updateData.publicationDate && typeof updateData.publicationDate === 'string') {
+      updateData.publicationDate = new Date(updateData.publicationDate);
+    }
+    
     const [updatedPublication] = await db
       .update(publications)
-      .set(publication)
+      .set(updateData)
       .where(eq(publications.id, id))
       .returning();
     return updatedPublication;
