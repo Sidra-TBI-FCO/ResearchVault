@@ -320,9 +320,15 @@ export class DatabaseStorage implements IStorage {
     // Handle date conversions properly
     const updateData = { ...publication };
     
+    console.log('Original publication data:', publication);
+    console.log('PublicationDate type:', typeof updateData.publicationDate);
+    console.log('PublicationDate value:', updateData.publicationDate);
+    
     // Convert date strings to Date objects if needed
     if (updateData.publicationDate && typeof updateData.publicationDate === 'string') {
+      console.log('Converting date string to Date object:', updateData.publicationDate);
       updateData.publicationDate = new Date(updateData.publicationDate);
+      console.log('Converted date:', updateData.publicationDate);
     }
     
     const [updatedPublication] = await db
@@ -358,7 +364,7 @@ export class DatabaseStorage implements IStorage {
     const currentPublication = await this.getPublication(id);
     if (!currentPublication) return undefined;
 
-    // Update the publication status
+    // Update the publication status (only status and updatedAt)
     const [updatedPublication] = await db
       .update(publications)
       .set({ status, updatedAt: new Date() })
