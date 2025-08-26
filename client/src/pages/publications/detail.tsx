@@ -993,6 +993,19 @@ function StatusUpdateForm({
       }
     }
     
+    if (selectedStatus === 'Submitted for review without pre-publication') {
+      // Automatically set prepublication site to "None" for non-prepublication route
+      updatedFields.prepublicationSite = 'None';
+      
+      if ('None' !== publication.prepublicationSite) {
+        changes.push({
+          field: 'prepublicationSite',
+          oldValue: publication.prepublicationSite || '',
+          newValue: 'None'
+        });
+      }
+    }
+    
     if (selectedStatus === 'Complete Draft') {
       updatedFields.authors = authorsValue;
       if (authorsValue !== publication.authors) {

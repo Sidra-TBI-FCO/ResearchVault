@@ -320,15 +320,14 @@ export class DatabaseStorage implements IStorage {
     // Handle date conversions properly
     const updateData = { ...publication };
     
-    console.log('Original publication data:', publication);
-    console.log('PublicationDate type:', typeof updateData.publicationDate);
-    console.log('PublicationDate value:', updateData.publicationDate);
-    
     // Convert date strings to Date objects if needed
     if (updateData.publicationDate && typeof updateData.publicationDate === 'string') {
-      console.log('Converting date string to Date object:', updateData.publicationDate);
       updateData.publicationDate = new Date(updateData.publicationDate);
-      console.log('Converted date:', updateData.publicationDate);
+    }
+    
+    // Standardize author names if provided
+    if (updateData.authors && typeof updateData.authors === 'string') {
+      updateData.authors = this.standardizeAuthorNames(updateData.authors);
     }
     
     const [updatedPublication] = await db
@@ -337,6 +336,62 @@ export class DatabaseStorage implements IStorage {
       .where(eq(publications.id, id))
       .returning();
     return updatedPublication;
+  }
+
+  // Helper function to standardize author names
+  private standardizeAuthorNames(authors: string): string {
+    if (!authors || typeof authors !== 'string') return authors;
+    
+    // Split by common separators (comma, semicolon, or 'and')
+    const authorList = authors.split(/[,;]|\sand\s/i).map(author => author.trim()).filter(Boolean);
+    
+    const standardizedAuthors = authorList.map(author => {
+      // Remove extra spaces and clean up
+      author = author.replace(/\s+/g, ' ').trim();
+      
+      // Skip if already looks properly formatted or is too short
+      if (author.length < 3) return author;
+      
+      // Handle different name formats
+      let parts = author.split(' ').filter(Boolean);
+      
+      if (parts.length === 1) {
+        // Single name - return as is
+        return author;
+      } else if (parts.length === 2) {
+        // First Last or Last, First format
+        if (author.includes(',')) {
+          // Already in Last, First format - just clean it up
+          return author.replace(/,\s*/, ', ');
+        } else {
+          // First Last format - keep as is
+          return parts.join(' ');
+        }
+      } else if (parts.length >= 3) {
+        // Handle First Middle Last or multiple middle names
+        const first = parts[0];
+        const last = parts[parts.length - 1];
+        const middle = parts.slice(1, -1);
+        
+        // Standardize middle names to initials with periods
+        const middleInitials = middle.map(name => {
+          if (name.length === 1) {
+            return name.toUpperCase() + '.';
+          } else if (name.endsWith('.')) {
+            return name.charAt(0).toUpperCase() + '.';
+          } else {
+            return name.charAt(0).toUpperCase() + '.';
+          }
+        }).join(' ');
+        
+        // Return as First Middle. Last
+        return middleInitials ? `${first} ${middleInitials} ${last}` : `${first} ${last}`;
+      }
+      
+      return author;
+    });
+    
+    return standardizedAuthors.join(', ');
   }
 
   async deletePublication(id: number): Promise<boolean> {

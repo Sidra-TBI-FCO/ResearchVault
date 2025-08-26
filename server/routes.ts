@@ -1419,7 +1419,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // First update publication fields if provided
       if (updatedFields && Object.keys(updatedFields).length > 0) {
-        console.log('Updating publication with fields:', updatedFields);
         await storage.updatePublication(id, updatedFields);
       }
 
