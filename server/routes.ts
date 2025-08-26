@@ -1403,8 +1403,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: validationErrors.join('; ') });
       }
 
-      // Status updates are handled by updatePublicationStatus method below
+      // First update publication fields if provided
+      if (updatedFields && Object.keys(updatedFields).length > 0) {
+        await storage.updatePublication(id, updatedFields);
+      }
 
+      // Then update status and create history
       const updatedPublication = await storage.updatePublicationStatus(id, status, changedBy, changes);
       
       if (!updatedPublication) {
