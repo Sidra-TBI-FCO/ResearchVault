@@ -361,8 +361,9 @@ export class DatabaseStorage implements IStorage {
       } else if (parts.length === 2) {
         // First Last or Last, First format
         if (author.includes(',')) {
-          // Already in Last, First format - just clean it up
-          return author.replace(/,\s*/, ', ');
+          // Convert Last, First to First Last format
+          const [last, first] = author.split(',').map(s => s.trim());
+          return `${first} ${last}`;
         } else {
           // First Last format - keep as is
           return parts.join(' ');
