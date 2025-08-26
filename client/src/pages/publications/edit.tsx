@@ -63,7 +63,7 @@ export default function PublicationEdit() {
   React.useEffect(() => {
     if (publication) {
       form.reset({
-        researchActivityId: publication.researchActivityId,
+        researchActivityId: publication.researchActivityId || undefined,
         title: publication.title,
         authors: publication.authors || "",
         journal: publication.journal || "",
@@ -198,7 +198,7 @@ export default function PublicationEdit() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Research Activity (SDR) *</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString() || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a research activity" />
