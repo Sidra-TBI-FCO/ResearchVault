@@ -171,11 +171,14 @@ export default function PublicationEdit() {
         <h1 className="text-2xl font-semibold text-neutral-400">Edit Publication</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Publication Details</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Form - Left 2/3 */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Publication Details</CardTitle>
+            </CardHeader>
+            <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -183,7 +186,7 @@ export default function PublicationEdit() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Publication Title *</FormLabel>
                     <FormControl>
                       <Input placeholder="Publication title" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                     </FormControl>
@@ -480,7 +483,81 @@ export default function PublicationEdit() {
             </form>
           </Form>
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+        
+        {/* Workflow Guide - Right 1/3 */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Publication Workflow</CardTitle>
+              <CardDescription>Status progression and requirements</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="p-3 border rounded-lg bg-gray-50">
+                  <h4 className="font-medium text-sm text-blue-800">1. Concept</h4>
+                  <p className="text-xs text-gray-600 mt-1">Initial stage - basic title and SDR required</p>
+                  <p className="text-xs text-blue-600 mt-1">Required: Title, SDR</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">2. Complete Draft</h4>
+                  <p className="text-xs text-gray-600 mt-1">Full manuscript ready</p>
+                  <p className="text-xs text-orange-600 mt-1">Required: Authors</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">3. Vetted for submission</h4>
+                  <p className="text-xs text-gray-600 mt-1">IP office approval obtained</p>
+                  <p className="text-xs text-gray-500 mt-1">Ready for submission decision</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">4. Submitted for review</h4>
+                  <p className="text-xs text-gray-600 mt-1">With/without pre-publication</p>
+                  <p className="text-xs text-purple-600 mt-1">May require: Pre-pub URL & Site</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">5. Under review</h4>
+                  <p className="text-xs text-gray-600 mt-1">Journal review process</p>
+                  <p className="text-xs text-green-600 mt-1">Required: Journal name</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">6. Accepted/In Press</h4>
+                  <p className="text-xs text-gray-600 mt-1">Accepted, awaiting publication</p>
+                  <p className="text-xs text-green-600 mt-1">Required: Journal name</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg bg-green-50">
+                  <h4 className="font-medium text-sm text-green-800">7. Published</h4>
+                  <p className="text-xs text-gray-600 mt-1">Final published version</p>
+                  <p className="text-xs text-green-600 mt-1">Required: Publication date, DOI</p>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <h5 className="font-medium text-sm text-blue-800 mb-2">Automatic Processing</h5>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• Titles are auto-capitalized</li>
+                  <li>• Author names are standardized</li>
+                  <li>• Fields marked with * are required</li>
+                  <li>• Status updates validate required fields</li>
+                </ul>
+              </div>
+              
+              <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
+                <h5 className="font-medium text-sm text-yellow-800 mb-2">Current Status</h5>
+                <p className="text-xs text-yellow-700">
+                  {publication?.status || 'Unknown'} - Use status update to progress through workflow
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
