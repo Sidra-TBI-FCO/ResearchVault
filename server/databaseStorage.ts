@@ -312,7 +312,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPublication(publication: InsertPublication): Promise<Publication> {
-    const [newPublication] = await db.insert(publications).values(publication).returning();
+    // Handle data standardization
+    const publicationData = { ...publication };
+    
+    // Standardize author names if provided
+    if (publicationData.authors && typeof publicationData.authors === 'string') {
+      publicationData.authors = this.standardizeAuthorNames(publicationData.authors);
+    }
+    
+    // Capitalize title
+    if (publicationData.title && typeof publicationData.title === 'string') {
+      publicationData.title = this.capitalizeTitle(publicationData.title);
+    }
+    
+    const [newPublication] = await db.insert(publications).values(publicationData).returning();
     return newPublication;
   }
 
@@ -328,6 +341,11 @@ export class DatabaseStorage implements IStorage {
     // Standardize author names if provided
     if (updateData.authors && typeof updateData.authors === 'string') {
       updateData.authors = this.standardizeAuthorNames(updateData.authors);
+    }
+    
+    // Capitalize title if provided
+    if (updateData.title && typeof updateData.title === 'string') {
+      updateData.title = this.capitalizeTitle(updateData.title);
     }
     
     const [updatedPublication] = await db
@@ -393,6 +411,39 @@ export class DatabaseStorage implements IStorage {
     });
     
     return standardizedAuthors.join(', ');
+  }
+
+  // Helper function to capitalize title properly
+  private capitalizeTitle(title: string): string {
+    if (!title || typeof title !== 'string') return title;
+    
+    // Words that should not be capitalized unless they are the first or last word
+    const lowercaseWords = [
+      'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'nor', 'of', 
+      'on', 'or', 'so', 'the', 'to', 'up', 'yet', 'with', 'from', 'into', 'onto', 
+      'upon', 'over', 'under', 'above', 'below', 'across', 'through', 'during', 
+      'before', 'after', 'until', 'while', 'about', 'against', 'among', 'around', 
+      'behind', 'beside', 'between', 'beyond', 'inside', 'outside', 'toward', 
+      'towards', 'underneath', 'within', 'without'
+    ];
+    
+    return title.toLowerCase()
+      .split(' ')
+      .map((word, index, array) => {
+        // Always capitalize first and last words
+        if (index === 0 || index === array.length - 1) {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }
+        
+        // Don't capitalize articles, conjunctions, and prepositions
+        if (lowercaseWords.includes(word.toLowerCase())) {
+          return word.toLowerCase();
+        }
+        
+        // Capitalize everything else
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   }
 
   async deletePublication(id: number): Promise<boolean> {

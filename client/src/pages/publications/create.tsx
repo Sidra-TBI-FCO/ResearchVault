@@ -116,7 +116,7 @@ export default function CreatePublication() {
                   name="title"
                   render={({ field }) => (
                     <FormItem className="col-span-full">
-                      <FormLabel>Publication Title</FormLabel>
+                      <FormLabel>Publication Title *</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. CRISPR-Cas9 Efficiency in Human Cell Lines" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
                       </FormControl>

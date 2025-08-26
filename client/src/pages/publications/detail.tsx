@@ -1109,6 +1109,10 @@ function StatusUpdateForm({
                         <RadioGroupItem value="Other" id="other" />
                         <Label htmlFor="other">Other</Label>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="None" id="none" />
+                        <Label htmlFor="none">None</Label>
+                      </div>
                     </RadioGroup>
                   </div>
                 </div>
