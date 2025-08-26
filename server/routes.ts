@@ -1378,8 +1378,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Field validation based on status
       const validationErrors = [];
       
-      if (status === 'Complete Draft' && (!currentPublication.authors || currentPublication.authors.trim() === '')) {
-        validationErrors.push('Authorship field is required for Complete Draft status');
+      if (status === 'Complete Draft') {
+        const finalAuthors = updatedFields?.authors || currentPublication.authors;
+        if (!finalAuthors || finalAuthors.trim() === '') {
+          validationErrors.push('Authorship field is required for Complete Draft status');
+        }
       }
       
       if (status === 'Vetted for submission' && !currentPublication.vettedForSubmissionByIpOffice) {
