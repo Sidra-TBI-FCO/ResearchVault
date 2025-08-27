@@ -146,49 +146,52 @@ export default function PublicationDetail() {
 
   // Function to check if a scientist's name appears in the authors text
   const isScientistInAuthorsText = (scientist: Scientist): boolean => {
-    if (!publication?.authors) return false;
+    if (!publication?.authors) return true; // If no authors text, assume all are valid
     
     const authorNames = publication.authors.split(',').map(name => name.trim().toLowerCase());
     const scientistLastName = scientist.lastName?.toLowerCase() || '';
     const scientistFirstName = scientist.firstName?.toLowerCase() || '';
     
+    if (!scientistLastName || !scientistFirstName) return true; // Skip if missing names
+    
     return authorNames.some(authorName => {
-      // Remove common titles and clean the author name
-      const cleanAuthorName = authorName.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '').trim();
+      // Remove common titles, punctuation, and extra spaces
+      const cleanAuthorName = authorName
+        .replace(/^(dr\.?|prof\.?|professor|mr\.?|ms\.?|mrs\.?|phd\.?|md\.?)\s+/i, '')
+        .replace(/[.,;]/g, '')
+        .trim();
       
-      // Handle abbreviated names like "Chen E", "Wilson J", "Ahmed S"
       const nameParts = cleanAuthorName.split(/\s+/);
       
-      if (nameParts.length >= 2) {
-        const [lastPart, firstPart] = nameParts;
-        
-        // Check if last name matches and first name/initial matches
-        if (scientistLastName && scientistFirstName) {
-          // Match "LastName FirstInitial" format (e.g., "Chen E")
-          if (lastPart === scientistLastName && 
-              firstPart.startsWith(scientistFirstName.charAt(0))) {
-            return true;
-          }
+      // Handle different name formats
+      for (let i = 0; i < nameParts.length; i++) {
+        for (let j = i + 1; j < nameParts.length; j++) {
+          const part1 = nameParts[i];
+          const part2 = nameParts[j];
           
-          // Match "FirstInitial. LastName" format (e.g., "E. Chen")  
-          if (firstPart.replace('.', '') === scientistFirstName.charAt(0).toLowerCase() &&
-              lastPart === scientistLastName) {
-            return true;
-          }
+          // Check various combinations
+          const matches = [
+            // Last name + first initial
+            (part1 === scientistLastName && part2.startsWith(scientistFirstName.charAt(0))),
+            (part2 === scientistLastName && part1.startsWith(scientistFirstName.charAt(0))),
+            // First initial + last name  
+            (part1.replace('.', '').startsWith(scientistFirstName.charAt(0)) && part2 === scientistLastName),
+            (part2.replace('.', '').startsWith(scientistFirstName.charAt(0)) && part1 === scientistLastName),
+            // Full names
+            (part1 === scientistFirstName && part2 === scientistLastName),
+            (part2 === scientistFirstName && part1 === scientistLastName),
+            // Partial matches for flexibility
+            (part1.includes(scientistLastName) || part2.includes(scientistLastName))
+          ];
           
-          // Match full first name formats
-          if (lastPart === scientistLastName && firstPart === scientistFirstName) {
-            return true;
-          }
-          
-          if (firstPart.replace('.', '') === scientistFirstName.toLowerCase() && 
-              lastPart === scientistLastName) {
+          if (matches.some(match => match)) {
             return true;
           }
         }
       }
       
-      return false;
+      // Additional flexible matching - check if last name appears anywhere
+      return cleanAuthorName.includes(scientistLastName);
     });
   };
 
