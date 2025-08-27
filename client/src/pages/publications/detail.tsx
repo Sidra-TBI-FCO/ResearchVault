@@ -182,6 +182,15 @@ export default function PublicationDetail() {
         }
       }
       
+      // Pattern 2b: "X. Y. LastName" (FirstInitial. MiddleInitial. LastName)
+      const multipleInitialsPattern = cleanAuthorName.match(/^([a-z])\.?\s+([a-z])\.?\s+([a-z-]+)$/i);
+      if (multipleInitialsPattern) {
+        const [, firstInit, , lastName] = multipleInitialsPattern; // Skip middle initial
+        if (firstInit === firstInitial && lastName === scientistLastName) {
+          return true;
+        }
+      }
+      
       // Pattern 3: "Emily Chen" (FirstName LastName)
       const fullNamePattern = cleanAuthorName.match(/^([a-z]+)\s+([a-z-]+)$/i);
       if (fullNamePattern) {
