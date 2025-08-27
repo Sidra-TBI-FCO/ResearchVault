@@ -60,8 +60,149 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   plants: z.boolean(),
   
   // Additional fields
-  biologicalAgents: z.string().optional(),
   riskGroupClassification: z.string().optional(),
+  protocolSummary: z.string().optional(),
+  
+  // NIH Guidelines sections
+  nihSectionABC: z.object({
+    requiresNihDirectorApproval: z.boolean().default(false),
+    drugResistanceTraits: z.boolean().default(false),
+    toxinMolecules: z.boolean().default(false),
+    humanGeneTransfer: z.boolean().default(false),
+    approvalStatus: z.string().optional(),
+    approvalDocuments: z.array(z.string()).default([]),
+  }).optional(),
+  
+  nihSectionD: z.object({
+    riskGroup2Plus: z.boolean().default(false),
+    pathogenDnaRna: z.boolean().default(false),
+    infectiousViral: z.boolean().default(false),
+    wholeAnimalExperiments: z.boolean().default(false),
+    wholePlants: z.boolean().default(false),
+    largeScaleExperiments: z.boolean().default(false),
+    influenzaViruses: z.boolean().default(false),
+    geneDriveOrganisms: z.boolean().default(false),
+    containmentLevel: z.string().optional(),
+    ibcApprovalDate: z.string().optional(),
+  }).optional(),
+  
+  nihSectionE: z.object({
+    limitedViralGenome: z.boolean().default(false),
+    plantExperiments: z.boolean().default(false),
+    transgenicRodents: z.boolean().default(false),
+    registrationDate: z.string().optional(),
+  }).optional(),
+  
+  nihSectionF: z.object({
+    f1TissueCulture: z.boolean().default(false),
+    f2EcoliK12: z.boolean().default(false),
+    f3Saccharomyces: z.boolean().default(false),
+    f4Kluyveromyces: z.boolean().default(false),
+    f5Bacillus: z.boolean().default(false),
+    f6GramPositive: z.boolean().default(false),
+    f7TransgenicRodents: z.boolean().default(false),
+    f8TransgenicBreeding: z.boolean().default(false),
+    exemptionJustification: z.string().optional(),
+  }).optional(),
+  
+  nihAppendixC: z.object({
+    cI: z.boolean().default(false),
+    cII: z.boolean().default(false),
+    cIII: z.boolean().default(false),
+    cIV: z.boolean().default(false),
+    cV: z.boolean().default(false),
+    cVI: z.boolean().default(false),
+    cVII: z.boolean().default(false),
+    cVIII: z.boolean().default(false),
+    cIX: z.boolean().default(false),
+    additionalConsiderations: z.string().optional(),
+  }).optional(),
+  
+  hazardousProcedures: z.array(z.object({
+    procedure: z.string().optional(),
+    backboneVector: z.string().optional(),
+    engineeringControls: z.object({
+      centrifugeCone: z.boolean().default(false),
+      classIIBiosafetyCabinet: z.boolean().default(false),
+      engineeredSharps: z.boolean().default(false),
+      fumeHood: z.boolean().default(false),
+      hepaFilteredCage: z.boolean().default(false),
+      localExhaustSnorkel: z.boolean().default(false),
+      na: z.boolean().default(false),
+      sealedRotor: z.boolean().default(false),
+      sealedVialstubes: z.boolean().default(false),
+      sharpsContainer: z.boolean().default(false),
+    }).optional(),
+    ppe: z.object({
+      faceShield: z.boolean().default(false),
+      gloves: z.boolean().default(false),
+      goggles: z.boolean().default(false),
+      headCoverBonnet: z.boolean().default(false),
+      labCoatDisposable: z.boolean().default(false),
+      labCoatReusable: z.boolean().default(false),
+      na: z.boolean().default(false),
+      n95: z.boolean().default(false),
+      padr: z.boolean().default(false),
+      safetyGlasses: z.boolean().default(false),
+      shoeCovers: z.boolean().default(false),
+      surgicalMask: z.boolean().default(false),
+      tyvekSuit: z.boolean().default(false),
+    }).optional(),
+    hazardousProcedureDescription: z.string().optional(),
+  })).default([]),
+  
+  syntheticExperiments: z.array(z.object({
+    backboneSource: z.string().optional(),
+    vectorInsertName: z.string().optional(),
+    vectorInsert: z.string().optional(),
+    insertedDnaSource: z.string().optional(),
+    dnaSequenceNature: z.object({
+      anonymousMarker: z.boolean().default(false),
+      genomicDNA: z.boolean().default(false),
+      toxinGene: z.boolean().default(false),
+      cDNA: z.boolean().default(false),
+      snRNAsiRNA: z.boolean().default(false),
+      other: z.boolean().default(false),
+    }).optional(),
+    anticipatedEffect: z.object({
+      antiApoptotic: z.boolean().default(false),
+      cytokineInducer: z.boolean().default(false),
+      cytokineInhibitor: z.boolean().default(false),
+      growthFactor: z.boolean().default(false),
+      oncogene: z.boolean().default(false),
+      toxic: z.boolean().default(false),
+      tumorInducer: z.boolean().default(false),
+      tumorInhibitor: z.boolean().default(false),
+      otherSpecify: z.string().optional(),
+    }).optional(),
+    viralGenomeFraction: z.string().optional(),
+    replicationCompetent: z.string().optional(),
+    packagingCellLines: z.string().optional(),
+    tropism: z.string().optional(),
+    exposedTo: z.object({
+      arthropods: z.boolean().default(false),
+      cellCulture: z.boolean().default(false),
+      humans: z.boolean().default(false),
+      invertebrateAnimals: z.boolean().default(false),
+      microOrganism: z.boolean().default(false),
+      none: z.boolean().default(false),
+      plantsTransgenicPlants: z.boolean().default(false),
+      vertebrateAnimals: z.boolean().default(false),
+    }).optional(),
+    vectorSource: z.object({
+      researchCollaborator: z.boolean().default(false),
+      commercialVendor: z.boolean().default(false),
+      institutionLab: z.boolean().default(false),
+      otherSource: z.boolean().default(false),
+    }).optional(),
+    organismName: z.string().optional(),
+    organismSource: z.object({
+      library: z.boolean().default(false),
+      pcr: z.boolean().default(false),
+      syntheticOligo: z.boolean().default(false),
+      other: z.boolean().default(false),
+    }).optional(),
+  })).default([]),
   
   // Methods and Procedures
   materialAndMethods: z.string().optional(),
@@ -121,8 +262,61 @@ export default function CreateIbc() {
     nanoparticles: false,
     arthropods: false,
     plants: false,
-    biologicalAgents: "",
     riskGroupClassification: "",
+    protocolSummary: "",
+    
+    // NIH Guidelines defaults
+    nihSectionABC: {
+      requiresNihDirectorApproval: false,
+      drugResistanceTraits: false,
+      toxinMolecules: false,
+      humanGeneTransfer: false,
+      approvalStatus: "",
+      approvalDocuments: [],
+    },
+    nihSectionD: {
+      riskGroup2Plus: false,
+      pathogenDnaRna: false,
+      infectiousViral: false,
+      wholeAnimalExperiments: false,
+      wholePlants: false,
+      largeScaleExperiments: false,
+      influenzaViruses: false,
+      geneDriveOrganisms: false,
+      containmentLevel: "",
+      ibcApprovalDate: "",
+    },
+    nihSectionE: {
+      limitedViralGenome: false,
+      plantExperiments: false,
+      transgenicRodents: false,
+      registrationDate: "",
+    },
+    nihSectionF: {
+      f1TissueCulture: false,
+      f2EcoliK12: false,
+      f3Saccharomyces: false,
+      f4Kluyveromyces: false,
+      f5Bacillus: false,
+      f6GramPositive: false,
+      f7TransgenicRodents: false,
+      f8TransgenicBreeding: false,
+      exemptionJustification: "",
+    },
+    nihAppendixC: {
+      cI: false,
+      cII: false,
+      cIII: false,
+      cIV: false,
+      cV: false,
+      cVI: false,
+      cVII: false,
+      cVIII: false,
+      cIX: false,
+      additionalConsiderations: "",
+    },
+    hazardousProcedures: [],
+    syntheticExperiments: [],
     
     // Methods and Procedures defaults
     materialAndMethods: "",
@@ -287,29 +481,34 @@ export default function CreateIbc() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/ibc")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">New IBC Application</h1>
-      </div>
-
+    <div className="container mx-auto p-6 max-w-6xl">
       <Card>
         <CardHeader>
-          <CardTitle>IBC Application Information</CardTitle>
-          <CardDescription>Enter the details for the Institutional Biosafety Committee application</CardDescription>
+          <div className="flex items-center gap-4 mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/ibc")}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to IBC Applications
+            </Button>
+          </div>
+          <CardTitle className="text-2xl font-bold">Create New IBC Application</CardTitle>
+          <CardDescription>
+            Submit a new application for Institutional Biosafety Committee review
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form className="space-y-6">
+            <form className="space-y-8">
               <Tabs defaultValue="basics" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="basics">Basics</TabsTrigger>
                   <TabsTrigger value="staff">Staff</TabsTrigger>
                   <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="under-construction">Under Construction</TabsTrigger>
+                  <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="basics" className="space-y-6 mt-6">
@@ -318,674 +517,539 @@ export default function CreateIbc() {
                       control={form.control}
                       name="title"
                       render={({ field }) => (
-                        <FormItem className="col-span-full">
+                        <FormItem>
                           <FormLabel>Application Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Microbiome Sample Analysis Protocol" {...field} />
+                            <Input 
+                              placeholder="Enter a descriptive title for your IBC application" 
+                              {...field} 
+                              value={field.value || ""} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="principalInvestigatorId"
                       render={({ field }) => (
-                        <FormItem className="col-span-full">
+                        <FormItem>
                           <FormLabel>Principal Investigator</FormLabel>
-                          <FormDescription>
-                            Select the PI first to filter related research activities
-                          </FormDescription>
-                          <Select
-                            onValueChange={(value) => {
-                              field.onChange(parseInt(value));
-                              // Clear selected research activities when PI changes
-                              form.setValue('researchActivityIds', []);
-                            }}
-                            defaultValue={field.value?.toString() || undefined}
+                          <Select 
+                            onValueChange={(value) => field.onChange(parseInt(value))} 
+                            value={field.value?.toString() || ""}
                           >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a Principal Investigator" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
-                          ) : (
-                            principalInvestigators?.map((pi) => (
-                              <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="researchActivityIds"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>Research Activities (SDRs)</FormLabel>
-                      <FormDescription>
-                        Select one or more research activities that share biosafety protocols
-                      </FormDescription>
-                      <div className="space-y-2">
-                        {!selectedPIId ? (
-                          <div className="text-sm text-muted-foreground italic">
-                            Please select a Principal Investigator first to see available research activities
-                          </div>
-                        ) : activitiesLoading ? (
-                          <div className="text-sm text-muted-foreground">Loading research activities...</div>
-                        ) : researchActivities && researchActivities.length > 0 ? (
-                          researchActivities.map((activity) => (
-                            <div key={activity.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`activity-${activity.id}`}
-                                checked={field.value?.includes(activity.id) || false}
-                                onChange={(e) => {
-                                  const currentValue = field.value || [];
-                                  if (e.target.checked) {
-                                    field.onChange([...currentValue, activity.id]);
-                                  } else {
-                                    field.onChange(currentValue.filter(id => id !== activity.id));
-                                  }
-                                }}
-                                className="rounded border-gray-300"
-                              />
-                              <label htmlFor={`activity-${activity.id}`} className="text-sm cursor-pointer">
-                                <span className="font-medium">{activity.sdrNumber}</span> - {activity.title}
-                                {activity.status && (
-                                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                                    activity.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    activity.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {activity.status}
-                                  </span>
-                                )}
-                              </label>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-sm text-muted-foreground">
-                            No research activities found for the selected Principal Investigator
-                          </div>
-                        )}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="cayuseProtocolNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cayuse Protocol Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. IBC-2023-021" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormDescription>
-                        Leave blank if not yet assigned
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="biosafetyLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Biosafety Level</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select biosafety level" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="BSL-1">BSL-1</SelectItem>
-                          <SelectItem value="BSL-2">BSL-2</SelectItem>
-                          <SelectItem value="BSL-3">BSL-3</SelectItem>
-                          <SelectItem value="BSL-4">BSL-4</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select the highest biosafety level required for this protocol
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Biosafety Options Section */}
-                <div className="col-span-full">
-                  <Card className="bg-blue-50 border-blue-200">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-blue-900">Choose Biosafety Options</CardTitle>
-                      <CardDescription className="text-blue-700">
-                        Please indicate if your research involves any of the following materials or organisms (all questions are mandatory)
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 gap-6">
-                        
-                        <FormField
-                          control={form.control}
-                          name="recombinantSyntheticNucleicAcid"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Recombinant and Synthetic Nucleic Acid Molecules (e.g., bacterial/mammalian expression plasmids, replication incompetent viral vectors, chemically synthesized nucleic acid molecules)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="wholeAnimalsAnimalMaterial"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Whole Animals/Animal Material (e.g., introduction of biologicals/chemicals into animals, use of animal cell lines and/or tissues)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Conditional sub-options for Animal Material */}
-                        {form.watch('wholeAnimalsAnimalMaterial') && (
-                          <FormField
-                            control={form.control}
-                            name="animalMaterialSubOptions"
-                            render={({ field }) => (
-                              <FormItem className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 ml-8">
-                                <div className="space-y-4">
-                                  <FormLabel className="text-base font-medium text-yellow-800">
-                                    Please select all that apply to your research:
-                                  </FormLabel>
-                                  <FormControl>
-                                    <div className="space-y-3">
-                                      {[
-                                        { id: "live_animals", label: "Live Animals" },
-                                        { id: "animal_tissues", label: "Animal Tissues" },
-                                        { id: "animal_cell_lines", label: "Animal Cell Lines" },
-                                        { id: "animal_blood_serum", label: "Animal Blood/Serum" },
-                                        { id: "animal_derived_products", label: "Animal-derived Products" },
-                                        { id: "transgenic_animals", label: "Transgenic Animals" },
-                                        { id: "animal_waste", label: "Animal Waste/Excretions" },
-                                        { id: "other_animal_materials", label: "Other Animal Materials" }
-                                      ].map((option) => (
-                                        <div key={option.id} className="flex items-center space-x-3">
-                                          <Checkbox
-                                            id={option.id}
-                                            checked={(field.value || []).includes(option.id)}
-                                            onCheckedChange={(checked) => {
-                                              const currentValues = field.value || [];
-                                              if (checked) {
-                                                field.onChange([...currentValues, option.id]);
-                                              } else {
-                                                field.onChange(currentValues.filter((value) => value !== option.id));
-                                              }
-                                            }}
-                                          />
-                                          <label
-                                            htmlFor={option.id}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                          >
-                                            {option.label}
-                                          </label>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </FormControl>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-
-                        <FormField
-                          control={form.control}
-                          name="humanNonHumanPrimateMaterial"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Human & Non-Human Primate Material (e.g., blood, fluids, tissues, primary/established cell lines)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Conditional sub-question for Human/Non-Human Primate Material */}
-                        {form.watch('humanNonHumanPrimateMaterial') && (
-                          <FormField
-                            control={form.control}
-                            name="introducingPrimateMaterialIntoAnimals"
-                            render={({ field }) => (
-                              <FormItem className="bg-orange-50 p-4 rounded-lg border border-orange-200 ml-8">
-                                <div className="space-y-3">
-                                  <FormLabel className="text-base font-medium text-orange-800">
-                                    Will you be introducing these materials into animals?
-                                  </FormLabel>
-                                  <FormControl>
-                                    <div className="flex items-center space-x-6">
-                                      <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                          type="radio"
-                                          checked={field.value === true}
-                                          onChange={() => field.onChange(true)}
-                                          className="w-4 h-4 text-orange-600"
-                                        />
-                                        <span>Yes</span>
-                                      </label>
-                                      <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                          type="radio"
-                                          checked={field.value === false}
-                                          onChange={() => field.onChange(false)}
-                                          className="w-4 h-4 text-orange-600"
-                                        />
-                                        <span>No</span>
-                                      </label>
-                                    </div>
-                                  </FormControl>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-
-                        <FormField
-                          control={form.control}
-                          name="microorganismsInfectiousMaterial"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Microorganisms/Potentially Infectious Material (e.g., viruses, bacteria, yeast, fungi, parasites, prions)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="biologicalToxins"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Biological Toxins (e.g., cholera toxin, pertussis toxin, diphtheria toxin, tetrodotoxin)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="nanoparticles"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Nanoparticles (e.g., use of Jet-Pei or Poly-L-Lysine to form nano-sized particles)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="arthropods"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Arthropods (e.g., insects, spiders, crabs, lobsters, shrimp)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="plants"
-                          render={({ field }) => (
-                            <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="space-y-3">
-                                <FormLabel className="text-base font-medium">
-                                  Plants (e.g., toxic/transgenic plants)
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === true}
-                                        onChange={() => field.onChange(true)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>Yes</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        checked={field.value === false}
-                                        onChange={() => field.onChange(false)}
-                                        className="w-4 h-4 text-blue-600"
-                                      />
-                                      <span>No</span>
-                                    </label>
-                                  </div>
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                  <FormField
-                    control={form.control}
-                    name="riskGroupClassification"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Risk Group Classification</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select risk group" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
-                            <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
-                            <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
-                            <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Legacy Biosafety Checkboxes for compatibility */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="recombinantDNA"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="rounded border-gray-300"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">Recombinant DNA</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="humanMaterials"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="rounded border-gray-300"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">Human Materials</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="animalWork"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="rounded border-gray-300"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">Animal Work</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="fieldWork"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="rounded border-gray-300"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">Field Work</FormLabel>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a principal investigator" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {piLoading ? (
+                                <SelectItem value="loading" disabled>Loading...</SelectItem>
+                              ) : (
+                                principalInvestigators?.map((pi) => (
+                                  <SelectItem key={pi.id} value={pi.id.toString()}>
+                                    {pi.firstName} {pi.lastName} ({pi.jobTitle || "Researcher"})
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="biologicalAgents"
+                      name="biosafetyLevel"
                       render={({ field }) => (
-                        <FormItem className="col-span-full">
-                          <FormLabel>Biological Agents</FormLabel>
+                        <FormItem>
+                          <FormLabel>Biosafety Level</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            value={field.value || ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select biosafety level" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="BSL-1">BSL-1</SelectItem>
+                              <SelectItem value="BSL-2">BSL-2</SelectItem>
+                              <SelectItem value="BSL-3">BSL-3</SelectItem>
+                              <SelectItem value="BSL-4">BSL-4</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="riskGroupClassification"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Risk Group Classification</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Human gut bacterial isolates, recombinant DNA, viral vectors" {...field} />
+                            <Input 
+                              placeholder="Risk group classification" 
+                              {...field} 
+                              value={field.value || ""} 
+                            />
                           </FormControl>
-                          <FormDescription>
-                            List the biological agents that will be used in this protocol
-                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="researchActivityIds"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Associated Research Activities (SDRs)</FormLabel>
+                        <FormDescription>
+                          {selectedPIId 
+                            ? "Select the research activities (SDRs) associated with this IBC application" 
+                            : "Please select a principal investigator first"
+                          }
+                        </FormDescription>
+                        {selectedPIId && (
+                          <div className="space-y-3">
+                            {activitiesLoading ? (
+                              <div className="text-gray-500">Loading research activities...</div>
+                            ) : researchActivities && researchActivities.length > 0 ? (
+                              <div className="space-y-2">
+                                {researchActivities.map((activity) => (
+                                  <div key={activity.id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={(field.value || []).includes(activity.id)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValues = field.value || [];
+                                        if (checked) {
+                                          field.onChange([...currentValues, activity.id]);
+                                        } else {
+                                          field.onChange(currentValues.filter((id) => id !== activity.id));
+                                        }
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <div className="font-medium">{activity.sdrNumber}</div>
+                                      <div className="text-sm text-gray-600">{activity.title}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-gray-500">No research activities found for this PI</div>
+                            )}
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Biosafety Options Sections */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold">Biosafety Materials</h3>
+                    <div className="text-sm text-muted-foreground">
+                      Please indicate all materials that will be used in this research project.
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="recombinantSyntheticNucleicAcid"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Recombinant and/or Synthetic Nucleic Acid Molecules (e.g., plasmids, viral vectors, synthetic DNA/RNA)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="wholeAnimalsAnimalMaterial"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Whole Animals and/or Animal Materials (e.g., tissues, cells, sera, proteins)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Conditional sub-options for Animal Material */}
+                    {form.watch('wholeAnimalsAnimalMaterial') && (
+                      <FormField
+                        control={form.control}
+                        name="animalMaterialSubOptions"
+                        render={({ field }) => (
+                          <FormItem className="bg-blue-50 p-4 rounded-lg border border-blue-200 ml-8">
+                            <div className="space-y-3">
+                              <FormLabel className="text-base font-medium text-blue-800">
+                                Please specify which animal materials will be used:
+                              </FormLabel>
+                              <FormControl>
+                                <div className="grid grid-cols-2 gap-3">
+                                  {[
+                                    { id: "live_animals", label: "Live Animals" },
+                                    { id: "animal_tissues", label: "Animal Tissues" },
+                                    { id: "animal_cell_lines", label: "Animal Cell Lines" },
+                                    { id: "animal_blood_serum", label: "Animal Blood/Serum" },
+                                    { id: "animal_derived_products", label: "Animal-derived Products" },
+                                    { id: "transgenic_animals", label: "Transgenic Animals" },
+                                    { id: "animal_waste", label: "Animal Waste/Excretions" },
+                                    { id: "other_animal_materials", label: "Other Animal Materials" }
+                                  ].map((option) => (
+                                    <div key={option.id} className="flex items-center space-x-3">
+                                      <Checkbox
+                                        id={option.id}
+                                        checked={(field.value || []).includes(option.id)}
+                                        onCheckedChange={(checked) => {
+                                          const currentValues = field.value || [];
+                                          if (checked) {
+                                            field.onChange([...currentValues, option.id]);
+                                          } else {
+                                            field.onChange(currentValues.filter((value) => value !== option.id));
+                                          }
+                                        }}
+                                      />
+                                      <label
+                                        htmlFor={option.id}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                      >
+                                        {option.label}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="humanNonHumanPrimateMaterial"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Human & Non-Human Primate Material (e.g., blood, fluids, tissues, primary/established cell lines)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Conditional sub-question for Human/Non-Human Primate Material */}
+                    {form.watch('humanNonHumanPrimateMaterial') && (
+                      <FormField
+                        control={form.control}
+                        name="introducingPrimateMaterialIntoAnimals"
+                        render={({ field }) => (
+                          <FormItem className="bg-orange-50 p-4 rounded-lg border border-orange-200 ml-8">
+                            <div className="space-y-3">
+                              <FormLabel className="text-base font-medium text-orange-800">
+                                Will you be introducing these materials into animals?
+                              </FormLabel>
+                              <FormControl>
+                                <div className="flex items-center space-x-6">
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === true}
+                                      onChange={() => field.onChange(true)}
+                                      className="w-4 h-4 text-orange-600"
+                                    />
+                                    <span>Yes</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === false}
+                                      onChange={() => field.onChange(false)}
+                                      className="w-4 h-4 text-orange-600"
+                                    />
+                                    <span>No</span>
+                                  </label>
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="microorganismsInfectiousMaterial"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Microorganisms/Potentially Infectious Material (e.g., viruses, bacteria, yeast, fungi, parasites, prions)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="biologicalToxins"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Biological Toxins (e.g., cholera toxin, pertussis toxin, diphtheria toxin, tetrodotoxin)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="nanoparticles"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Nanoparticles (e.g., use of Jet-Pei or Poly-L-Lysine to form nano-sized particles)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="arthropods"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Arthropods (e.g., insects, spiders, crabs, lobsters, shrimp)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="plants"
+                      render={({ field }) => (
+                        <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
+                            <FormLabel className="text-base font-medium">
+                              Plants (e.g., transgenic plants, plant tissues, plant pathogens)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === true}
+                                    onChange={() => field.onChange(true)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={field.value === false}
+                                    onChange={() => field.onChange(false)}
+                                    className="w-4 h-4 text-blue-600"
+                                  />
+                                  <span>No</span>
+                                </label>
+                              </div>
+                            </FormControl>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -998,156 +1062,99 @@ export default function CreateIbc() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        Protocol Team Members
+                        Team Members
                       </CardTitle>
                       <CardDescription>
-                        Add team members from available SDR staff who will be involved in this protocol
+                        Add team members who will be involved in this research
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {/* Add Team Member Section */}
-                      {form.watch('researchActivityIds')?.length > 0 && availableStaff?.length ? (
-                        <div className="border rounded-lg p-4 bg-gray-50">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium">Add Protocol Team Member</h4>
-                            </div>
-                            
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-700">Select SDR Team Member</label>
-                                <Select value={selectedMember} onValueChange={setSelectedMember}>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Choose from SDR team members..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {availableStaff.map((staff) => {
-                                      const currentTeamMembers = form.watch('teamMembers') || [];
-                                      const isAlreadySelected = currentTeamMembers.some(member => 
-                                        ('scientistId' in member && member.scientistId === staff.id) || 
-                                        ('name' in member && member.name === staff.name)
-                                      );
-                                      return (
-                                        <SelectItem 
-                                          key={staff.id} 
-                                          value={staff.id.toString()}
-                                          disabled={isAlreadySelected}
-                                        >
-                                          {staff.name} - {staff.title}
-                                          {isAlreadySelected && " (Already added)"}
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                  Protocol Roles (Select Multiple)
-                                </label>
-                                <div className="grid grid-cols-1 gap-3 text-sm">
-                                  {[
-                                    "Team Member",
-                                    "Team Leader", 
-                                    "Safety Rep"
-                                  ].map((role) => (
-                                    <div key={role} className="flex items-center space-x-2">
-                                      <Checkbox 
-                                        id={role.toLowerCase().replace(/\s+/g, '-')}
-                                        checked={selectedRoles.includes(role)}
-                                        onCheckedChange={(checked) => {
-                                          if (checked) {
-                                            setSelectedRoles([...selectedRoles, role]);
-                                          } else {
-                                            setSelectedRoles(selectedRoles.filter(r => r !== role));
-                                          }
-                                        }}
-                                      />
-                                      <label htmlFor={role.toLowerCase().replace(/\s+/g, '-')}>{role}</label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div className="flex space-x-2">
-                                <Button 
-                                  type="button" 
-                                  size="sm" 
-                                  className="bg-teal-600 hover:bg-teal-700"
-                                  disabled={!selectedMember || selectedRoles.length === 0}
-                                  onClick={() => {
-                                    if (selectedMember && selectedRoles.length > 0) {
-                                      const currentMembers = form.getValues('teamMembers') || [];
-                                      form.setValue('teamMembers', [
-                                        ...currentMembers,
-                                        { scientistId: parseInt(selectedMember), role: 'team_member' as const }
-                                      ]);
-                                      setSelectedMember("");
-                                      setSelectedRoles([]);
-                                    }
-                                  }}
-                                >
-                                  Add Member
-                                </Button>
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
+                      {/* Team member selection section */}
+                      {selectedSDRIds.length > 0 && availableStaff && availableStaff.length > 0 && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                          <h4 className="font-medium">Add Team Member from Research Activities</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Select value={selectedMember} onValueChange={setSelectedMember}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a team member" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableStaff.map((staff) => (
+                                  <SelectItem key={staff.id} value={staff.id.toString()}>
+                                    {staff.firstName} {staff.lastName} ({staff.jobTitle || "Staff"})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+
+                            <Select 
+                              value={selectedRoles[0] || ""} 
+                              onValueChange={(value) => setSelectedRoles([value])}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="team_member">Team Member</SelectItem>
+                                <SelectItem value="team_leader">Team Leader</SelectItem>
+                                <SelectItem value="safety_representative">Safety Representative</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <Button 
+                            type="button" 
+                            onClick={() => {
+                              if (selectedMember && selectedRoles.length > 0) {
+                                const staff = availableStaff.find(s => s.id.toString() === selectedMember);
+                                if (staff) {
+                                  const currentMembers = form.getValues('teamMembers') || [];
+                                  const newMember = {
+                                    scientistId: staff.id,
+                                    role: selectedRoles[0] as "team_member" | "team_leader" | "safety_representative"
+                                  };
+                                  
+                                  // Check if member already exists
+                                  const exists = currentMembers.some(member => 
+                                    'scientistId' in member && member.scientistId === staff.id
+                                  );
+                                  
+                                  if (!exists) {
+                                    form.setValue('teamMembers', [...currentMembers, newMember]);
                                     setSelectedMember("");
                                     setSelectedRoles([]);
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-6 text-gray-500">
-                          {!form.watch('researchActivityIds')?.length 
-                            ? "Select research activities in the Basics tab to add team members from their staff"
-                            : staffLoading 
-                            ? "Loading available staff..."
-                            : "No additional staff found in the selected research activities"
-                          }
+                                  }
+                                }
+                              }
+                            }}
+                            disabled={!selectedMember || selectedRoles.length === 0}
+                            className="w-full"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Team Member
+                          </Button>
                         </div>
                       )}
-
-                      {/* Added Team Members List */}
-                      <div className="space-y-3">
+                      
+                      {/* Current team members list */}
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Current Team Members</h4>
                         {form.watch('teamMembers')?.map((member, index) => {
-                          // Handle both new format (with scientistId) and existing format (with name, email, role)
-                          let memberName, memberEmail, memberRole;
-                          
-                          if ('scientistId' in member && member.scientistId) {
-                            // New format - look up in available staff
+                          if ('scientistId' in member) {
+                            // Team member from staff database
                             const staff = availableStaff?.find(s => s.id === member.scientistId);
-                            if (!staff) return null;
-                            memberName = staff.name;
-                            memberEmail = staff.email;
-                            memberRole = member.role;
-                          } else if ('name' in member && member.name) {
-                            // Existing format - use stored values directly
-                            memberName = member.name;
-                            memberEmail = member.email;
-                            memberRole = member.role;
-                          } else {
-                            return null;
-                          }
-                          
-                          return (
-                            <div key={`${('scientistId' in member) ? member.scientistId : member.name}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
-                              <div className="flex-1">
-                                <div className="font-medium">{memberName}</div>
-                                <div className="text-sm text-gray-600">{memberEmail}</div>
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  <Badge variant="secondary" className="text-xs">{memberRole}</Badge>
+                            return (
+                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <div>
+                                    <div className="font-medium">
+                                      {staff ? `${staff.firstName} ${staff.lastName}` : `Staff ID: ${member.scientistId}`}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      {staff?.jobTitle || "Staff"} • Role: {member.role.replace('_', ' ')}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
                                 <Button 
                                   type="button" 
                                   variant="ghost" 
@@ -1162,8 +1169,35 @@ export default function CreateIbc() {
                                   <X className="h-4 w-4" />
                                 </Button>
                               </div>
-                            </div>
-                          );
+                            );
+                          } else {
+                            // External team member
+                            return (
+                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <div>
+                                    <div className="font-medium">{member.name}</div>
+                                    <div className="text-sm text-gray-600">
+                                      {member.email && `${member.email} • `}Role: {member.role}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentMembers = form.getValues('teamMembers') || [];
+                                    form.setValue('teamMembers', 
+                                      currentMembers.filter((_, i) => i !== index)
+                                    );
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          }
                         })}
                         
                         {(!form.watch('teamMembers') || form.watch('teamMembers')?.length === 0) && (
@@ -1184,11 +1218,37 @@ export default function CreateIbc() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Project Description</FormLabel>
+                          <FormDescription>
+                            Please provide a brief description of the research project and its objectives.
+                          </FormDescription>
                           <FormControl>
                             <Textarea 
                               placeholder="Brief description of the research project" 
                               className="resize-none" 
                               rows={4}
+                              {...field}
+                              value={field.value || ""} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="protocolSummary"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Protocol Summary</FormLabel>
+                          <FormDescription>
+                            Please provide a detailed summary of the protocols and procedures to be used in this research, including specific methodologies, safety measures, and experimental design.
+                          </FormDescription>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Detailed summary of research protocols and procedures" 
+                              className="resize-none" 
+                              rows={6}
                               {...field}
                               value={field.value || ""} 
                             />
@@ -1204,182 +1264,294 @@ export default function CreateIbc() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="under-construction" className="space-y-6 mt-6">
-                  {/* Methods and Procedures Section */}
+                <TabsContent value="nih-guidelines" className="space-y-6 mt-6">
+                  {/* NIH Section III-A/B/C - High Risk Experiments */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Methods and Procedures</CardTitle>
-                      <CardDescription>Detailed experimental protocols and methodologies</CardDescription>
+                      <CardTitle className="text-xl text-red-800">NIH Section III-A/B/C</CardTitle>
+                      <CardDescription className="text-red-600">
+                        Experiments requiring additional federal approvals and IBC approval before initiation
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="materialAndMethods"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Materials and Methods</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe the detailed experimental protocols, materials, and methodologies..."
-                                className="resize-none"
-                                rows={5}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="proceduresInvolvingInfectiousAgents"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Procedures Involving Infectious Agents</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe any procedures involving infectious agents..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="cellCultureProcedures"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cell Culture Procedures</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe cell culture techniques, cell lines used..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="nucleicAcidExtractionMethods"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nucleic Acid Extraction Methods</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe DNA/RNA extraction and purification protocols..."
-                                className="resize-none"
-                                rows={3}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="animalProcedures"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Animal Procedures (if applicable)</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe any animal procedures, including routes of administration..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="nihSectionABC.drugResistanceTraits"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-A: Deliberate transfer of drug resistance traits to microorganisms
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Requires federal approval process + IBC approval (contact institution's biosafety office)
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="nihSectionABC.toxinMolecules"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-B: Cloning toxin molecules with LD50 &lt; 100 ng/kg body weight
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Requires NIH Office of Science Policy review + IBC approval
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="nihSectionABC.humanGeneTransfer"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-C: Human gene transfer experiments (clinical trials)
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Requires IBC approval + IRB approval + regulatory compliance
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Safety and Containment Section */}
+                  {/* NIH Section III-D - IBC Approval Required */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Safety and Containment</CardTitle>
-                      <CardDescription>Safety protocols and containment procedures</CardDescription>
+                      <CardTitle className="text-xl text-orange-800">NIH Section III-D</CardTitle>
+                      <CardDescription className="text-orange-600">
+                        Experiments that require Institutional Biosafety Committee approval before initiation
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="containmentProcedures"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Containment Procedures</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe containment procedures and safety measures..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="nihSectionD.riskGroup2Plus"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-D-1: Using Risk Group 2, 3, 4, or restricted agents as host-vector systems
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Risk assessment determines appropriate biosafety level
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="nihSectionD.pathogenDnaRna"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-D-2: DNA from Risk Group 2, 3, 4, or restricted agents in nonpathogenic hosts
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Cloning pathogen DNA into nonpathogenic prokaryotic or lower eukaryotic systems
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="nihSectionD.infectiousViral"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-D-3: Infectious DNA or RNA viruses in tissue culture systems
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Including defective DNA or RNA viruses in presence of helper virus
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                      <FormField
-                        control={form.control}
-                        name="emergencyProcedures"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Emergency Procedures</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe emergency response procedures..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  {/* NIH Section III-E - Registration Required */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-yellow-800">NIH Section III-E</CardTitle>
+                      <CardDescription className="text-yellow-600">
+                        Experiments that require Institutional Biosafety Committee notice simultaneous with initiation
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="nihSectionE.limitedViralGenome"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-E-1: Recombinant nucleic acids containing no more than 2/3 of eukaryotic virus genome
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Must demonstrate that cells lack helper virus and cannot produce infectious virus
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                      <FormField
-                        control={form.control}
-                        name="wasteDisposalPlan"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Waste Disposal Plan</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe waste sterilization and disposal procedures..."
-                                className="resize-none"
-                                rows={3}
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  {/* NIH Section III-F - Exempt Experiments */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-green-800">NIH Section III-F</CardTitle>
+                      <CardDescription className="text-green-600">
+                        Exempt experiments (not subject to NIH Guidelines but may require institutional oversight)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="nihSectionF.f1TissueCulture"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  III-F-1: Tissue culture experiments with recombinant DNA/RNA
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Standard tissue culture techniques with appropriate containment
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* NIH Appendix C - Physical Containment */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-blue-800">NIH Appendix C</CardTitle>
+                      <CardDescription className="text-blue-600">
+                        Physical containment levels for recombinant DNA research
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="nihAppendixC.cI"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <div className="space-y-1">
+                                <FormLabel className="text-sm font-medium">
+                                  C-I: Standard microbiological practices
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Biosafety Level 1 (BL1) containment
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -1416,6 +1588,3 @@ export default function CreateIbc() {
     </div>
   );
 }
-                  <CardDescription>
-                    Detailed experimental protocols and biosafety methods
-                  </CardDescription>
