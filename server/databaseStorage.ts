@@ -367,6 +367,9 @@ export class DatabaseStorage implements IStorage {
       // Remove extra spaces and clean up
       author = author.replace(/\s+/g, ' ').trim();
       
+      // Remove common titles
+      author = author.replace(/^(dr\.?|prof\.?|professor|mr\.?|mrs\.?|ms\.?|miss|sir|dame)\s+/i, '').trim();
+      
       // Skip if already looks properly formatted or is too short
       if (author.length < 3) return author;
       
