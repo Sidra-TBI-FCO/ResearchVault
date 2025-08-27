@@ -626,11 +626,11 @@ export default function PublicationDetail() {
                   <Alert className="border-amber-200 bg-amber-50">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
                     <AlertDescription className="text-amber-800">
-                      <strong>Missing Authors in Text:</strong> The following internal authors are not mentioned in the authors field: {' '}
+                      <strong>Authors mismatch detected:</strong> The following internal authors are not found in the authors field: {' '}
                       <span className="font-medium">
                         {missingAuthors.map(author => author.scientist.name).join(', ')}
                       </span>
-                      . Please update the authors field to include all internal authors.
+                      . Please verify that both the authors field and internal author assignments are correct.
                     </AlertDescription>
                   </Alert>
                 )}
