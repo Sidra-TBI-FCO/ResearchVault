@@ -4,8 +4,9 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, Publication, Patent, PublicationAuthor, Scientist, InsertPublicationAuthor, ManuscriptHistory } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users, Info, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Book, Layers, ExternalLink, Award, Edit, Plus, Trash2, Users, Info, CheckCircle, Clock, AlertCircle, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -142,6 +143,59 @@ export default function PublicationDetail() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  // Function to check if a scientist's name appears in the authors text
+  const isScientistInAuthorsText = (scientist: Scientist): boolean => {
+    if (!publication?.authors) return false;
+    
+    const authorNames = publication.authors.split(',').map(name => name.trim().toLowerCase());
+    const scientistLastName = scientist.lastName?.toLowerCase() || '';
+    const scientistFirstName = scientist.firstName?.toLowerCase() || '';
+    
+    return authorNames.some(authorName => {
+      // Remove common titles and clean the author name
+      const cleanAuthorName = authorName.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '').trim();
+      
+      // Handle abbreviated names like "Chen E", "Wilson J", "Ahmed S"
+      const nameParts = cleanAuthorName.split(/\s+/);
+      
+      if (nameParts.length >= 2) {
+        const [lastPart, firstPart] = nameParts;
+        
+        // Check if last name matches and first name/initial matches
+        if (scientistLastName && scientistFirstName) {
+          // Match "LastName FirstInitial" format (e.g., "Chen E")
+          if (lastPart === scientistLastName && 
+              firstPart.startsWith(scientistFirstName.charAt(0))) {
+            return true;
+          }
+          
+          // Match "FirstInitial. LastName" format (e.g., "E. Chen")  
+          if (firstPart.replace('.', '') === scientistFirstName.charAt(0).toLowerCase() &&
+              lastPart === scientistLastName) {
+            return true;
+          }
+          
+          // Match full first name formats
+          if (lastPart === scientistLastName && firstPart === scientistFirstName) {
+            return true;
+          }
+          
+          if (firstPart.replace('.', '') === scientistFirstName.toLowerCase() && 
+              lastPart === scientistLastName) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    });
+  };
+
+  // Check for missing internal authors in the authors text
+  const missingAuthors = publicationAuthors.filter(author => 
+    !isScientistInAuthorsText(author.scientist)
+  );
 
   const handleAddAuthor = () => {
     if (!selectedScientist || !selectedRole) {
@@ -519,10 +573,28 @@ export default function PublicationDetail() {
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Internal Authors
+                {missingAuthors.length > 0 && (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    {missingAuthors.length} missing in text
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {missingAuthors.length > 0 && (
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      <strong>Missing Authors in Text:</strong> The following internal authors are not mentioned in the authors field: {' '}
+                      <span className="font-medium">
+                        {missingAuthors.map(author => author.scientist.name).join(', ')}
+                      </span>
+                      . Please update the authors field to include all internal authors.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 {authorsLoading ? (
                   <div className="space-y-2">
                     {[1, 2, 3].map((i) => (
@@ -543,11 +615,18 @@ export default function PublicationDetail() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {publicationAuthors.map((author) => (
-                          <TableRow key={author.id}>
-                            <TableCell className="font-medium">
-                              {author.scientist.name}
-                            </TableCell>
+                        {publicationAuthors.map((author) => {
+                          const isInText = isScientistInAuthorsText(author.scientist);
+                          return (
+                            <TableRow key={author.id} className={!isInText ? "bg-amber-50 border-l-4 border-amber-300" : ""}>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                  {author.scientist.name}
+                                  {!isInText && (
+                                    <AlertTriangle className="h-4 w-4 text-amber-600" title="Not found in authors text" />
+                                  )}
+                                </div>
+                              </TableCell>
                             <TableCell>
                               <Badge 
                                 className={`${(() => {
@@ -582,7 +661,8 @@ export default function PublicationDetail() {
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
