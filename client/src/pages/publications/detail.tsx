@@ -422,10 +422,11 @@ export default function PublicationDetail() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="md:col-span-2">
                   <h3 className="text-sm font-medium text-neutral-400">Authors</h3>
-                  <div className="flex items-center gap-1">
-                    <span>{publication.authors}</span>
+                  <div className="flex items-start gap-1 mt-1">
+                    <Users className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span className="break-words">{publication.authors || 'No authors listed'}</span>
                   </div>
                 </div>
               </div>
@@ -465,6 +466,43 @@ export default function PublicationDetail() {
                 </div>
               )}
               
+              {(publication.prepublicationUrl || publication.prepublicationSite) && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-neutral-400">Prepublication</h3>
+                  <div className="flex flex-col gap-1 mt-1">
+                    {publication.prepublicationSite && (
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-3 w-3" />
+                        <span className="text-sm">Site: {publication.prepublicationSite}</span>
+                      </div>
+                    )}
+                    {publication.prepublicationUrl && (
+                      <div className="flex items-center gap-2">
+                        <ExternalLink className="h-3 w-3" />
+                        <a 
+                          href={publication.prepublicationUrl.startsWith('http') ? publication.prepublicationUrl : `https://${publication.prepublicationUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:underline break-all text-sm"
+                        >
+                          {publication.prepublicationUrl}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {publication.vettedForSubmissionByIpOffice && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-neutral-400">IP Office Review</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                    <span className="text-green-600 text-sm font-medium">✓ Vetted for submission</span>
+                  </div>
+                </div>
+              )}
+
               {publication.abstract && (
                 <div className="mt-6">
                   <h3 className="text-md font-medium border-b pb-2">Abstract</h3>
