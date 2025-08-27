@@ -154,44 +154,71 @@ export default function PublicationDetail() {
     
     if (!scientistLastName || !scientistFirstName) return true; // Skip if missing names
     
+    const firstInitial = scientistFirstName.charAt(0);
+    
     return authorNames.some(authorName => {
-      // Remove common titles, punctuation, and extra spaces
+      // Remove common titles and clean
       const cleanAuthorName = authorName
         .replace(/^(dr\.?|prof\.?|professor|mr\.?|ms\.?|mrs\.?|phd\.?|md\.?)\s+/i, '')
-        .replace(/[.,;]/g, '')
         .trim();
       
-      const nameParts = cleanAuthorName.split(/\s+/);
+      // Handle different academic citation patterns
       
-      // Handle different name formats
-      for (let i = 0; i < nameParts.length; i++) {
-        for (let j = i + 1; j < nameParts.length; j++) {
-          const part1 = nameParts[i];
-          const part2 = nameParts[j];
-          
-          // Check various combinations
-          const matches = [
-            // Last name + first initial
-            (part1 === scientistLastName && part2.startsWith(scientistFirstName.charAt(0))),
-            (part2 === scientistLastName && part1.startsWith(scientistFirstName.charAt(0))),
-            // First initial + last name  
-            (part1.replace('.', '').startsWith(scientistFirstName.charAt(0)) && part2 === scientistLastName),
-            (part2.replace('.', '').startsWith(scientistFirstName.charAt(0)) && part1 === scientistLastName),
-            // Full names
-            (part1 === scientistFirstName && part2 === scientistLastName),
-            (part2 === scientistFirstName && part1 === scientistLastName),
-            // Partial matches for flexibility
-            (part1.includes(scientistLastName) || part2.includes(scientistLastName))
-          ];
-          
-          if (matches.some(match => match)) {
-            return true;
+      // Pattern 1: "Smith JA" or "Johnson MK" (LastName InitialInitial...)
+      const lastNameFirstPattern = cleanAuthorName.match(/^([a-z-]+)\s+([a-z]+)$/i);
+      if (lastNameFirstPattern) {
+        const [, lastName, initials] = lastNameFirstPattern;
+        if (lastName === scientistLastName && initials.startsWith(firstInitial)) {
+          return true;
+        }
+      }
+      
+      // Pattern 2: "K. Al-Mansouri" or "L. Chen" (Initial. LastName)
+      const initialFirstPattern = cleanAuthorName.match(/^([a-z])\.?\s+([a-z-]+)$/i);
+      if (initialFirstPattern) {
+        const [, initial, lastName] = initialFirstPattern;
+        if (initial === firstInitial && lastName === scientistLastName) {
+          return true;
+        }
+      }
+      
+      // Pattern 3: "Emily Chen" (FirstName LastName)
+      const fullNamePattern = cleanAuthorName.match(/^([a-z]+)\s+([a-z-]+)$/i);
+      if (fullNamePattern) {
+        const [, firstName, lastName] = fullNamePattern;
+        if (firstName === scientistFirstName && lastName === scientistLastName) {
+          return true;
+        }
+      }
+      
+      // Pattern 4: Multiple parts - find last name and check for first initial
+      const nameParts = cleanAuthorName.split(/\s+/);
+      if (nameParts.length > 2) {
+        // Check if any part matches last name and another starts with first initial
+        for (const part of nameParts) {
+          if (part === scientistLastName) {
+            for (const otherPart of nameParts) {
+              if (otherPart !== part && (
+                otherPart.startsWith(firstInitial) || 
+                otherPart.replace('.', '') === firstInitial
+              )) {
+                return true;
+              }
+            }
           }
         }
       }
       
-      // Additional flexible matching - check if last name appears anywhere
-      return cleanAuthorName.includes(scientistLastName);
+      // Fallback: Check if last name appears and first initial is present
+      if (cleanAuthorName.includes(scientistLastName)) {
+        // Look for the first initial anywhere in the string
+        const hasFirstInitial = cleanAuthorName.includes(firstInitial) || 
+                               cleanAuthorName.includes(firstInitial + '.') ||
+                               cleanAuthorName.includes(scientistFirstName);
+        return hasFirstInitial;
+      }
+      
+      return false;
     });
   };
 
