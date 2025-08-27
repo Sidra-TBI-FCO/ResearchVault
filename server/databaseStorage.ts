@@ -360,6 +360,9 @@ export class DatabaseStorage implements IStorage {
   private standardizeAuthorNames(authors: string): string {
     if (!authors || typeof authors !== 'string') return authors;
     
+    // Remove "et al." and similar endings before processing
+    authors = authors.replace(/[,;\s]+(et\s+al\.?|and\s+others)\s*$/i, '').trim();
+    
     // Split by common separators (comma, semicolon, or 'and')
     const authorList = authors.split(/[,;]|\sand\s/i).map(author => author.trim()).filter(Boolean);
     
