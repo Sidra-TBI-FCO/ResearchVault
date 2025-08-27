@@ -394,11 +394,12 @@ export class DatabaseStorage implements IStorage {
           const first = parts[0];
           const last = parts[1];
           
-          // Detect "LastName FirstInitial" pattern (e.g., "Chen L", "Wilson R")
-          // If second part is a single letter, it's likely an initial
-          if (last.length === 1) {
-            // Convert "Chen L" to "L. Chen"
-            return `${last}. ${first}`;
+          // Detect "LastName InitialInitial..." pattern (e.g., "Chen L", "Smith JA", "Johnson MK")
+          // If second part is all uppercase letters (initials), convert to proper format
+          if (last.match(/^[A-Z]+$/)) {
+            // Convert multiple initials: "Smith JA" → "J. A. Smith"
+            const initials = last.split('').map(initial => initial + '.').join(' ');
+            return `${initials} ${first}`;
           } else {
             // Regular "First Last" format - add period to single letter first name
             const firstFormatted = first.length === 1 ? first + '.' : first;
