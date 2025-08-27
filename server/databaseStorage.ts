@@ -391,11 +391,19 @@ export class DatabaseStorage implements IStorage {
           const firstFormatted = first.length === 1 ? first + '.' : first;
           return `${firstFormatted} ${last}`;
         } else {
-          // First Last format - add period to single letter first name
           const first = parts[0];
           const last = parts[1];
-          const firstFormatted = first.length === 1 ? first + '.' : first;
-          return `${firstFormatted} ${last}`;
+          
+          // Detect "LastName FirstInitial" pattern (e.g., "Chen L", "Wilson R")
+          // If second part is a single letter, it's likely an initial
+          if (last.length === 1) {
+            // Convert "Chen L" to "L. Chen"
+            return `${last}. ${first}`;
+          } else {
+            // Regular "First Last" format - add period to single letter first name
+            const firstFormatted = first.length === 1 ? first + '.' : first;
+            return `${firstFormatted} ${last}`;
+          }
         }
       } else if (parts.length >= 3) {
         // Handle First Middle Last or multiple middle names
