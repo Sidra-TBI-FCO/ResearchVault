@@ -381,18 +381,18 @@ export default function PublicationDetail() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Related Research Activity</h3>
-                  <div className="flex items-center gap-1">
-                    <Layers className="h-3 w-3" />
-                    <span>
+                  <div className="flex items-start gap-1 mt-1">
+                    <Layers className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span className="min-w-0 break-words">
                       {researchActivityLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
                       ) : researchActivity ? (
                         <Button 
                           variant="link" 
-                          className="p-0 h-auto text-primary-600"
+                          className="p-0 h-auto text-primary-600 text-left break-words whitespace-normal"
                           onClick={() => navigate(`/research-activities/${researchActivity.id}`)}
                         >
                           {researchActivity.title}
@@ -402,10 +402,10 @@ export default function PublicationDetail() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-medium text-neutral-400">Publication Date</h3>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                  <div className="flex items-center gap-1 mt-1">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
                     <span>
                       {publication.publicationDate 
                         ? format(new Date(publication.publicationDate), 'MMM d, yyyy') 

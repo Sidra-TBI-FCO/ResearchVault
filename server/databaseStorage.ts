@@ -340,9 +340,7 @@ export class DatabaseStorage implements IStorage {
     
     // Standardize author names if provided
     if (updateData.authors && typeof updateData.authors === 'string') {
-      console.log('Before standardization:', updateData.authors);
       updateData.authors = this.standardizeAuthorNames(updateData.authors);
-      console.log('After standardization:', updateData.authors);
     }
     
     // Capitalize title if provided
@@ -360,7 +358,6 @@ export class DatabaseStorage implements IStorage {
 
   // Helper function to standardize author names
   private standardizeAuthorNames(authors: string): string {
-    console.log('standardizeAuthorNames called with:', authors);
     if (!authors || typeof authors !== 'string') return authors;
     
     // Split by common separators (comma, semicolon, or 'and')
