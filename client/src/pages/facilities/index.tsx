@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building, Room } from "@shared/schema";
+import { Building, Room, Scientist } from "@shared/schema";
 import { 
-  Plus, Search, MoreHorizontal, Building2, 
+  Plus, Search, Edit, Building2, 
   ChevronDown, ChevronUp, MapPin, Users, 
   Shield, Wrench
 } from "lucide-react";
@@ -35,6 +35,11 @@ export default function FacilitiesList() {
   const { data: allRooms, isLoading: roomsLoading } = useQuery<Room[]>({
     queryKey: ['/api/rooms'],
     queryFn: () => fetch('/api/rooms').then(res => res.json()),
+  });
+
+  const { data: scientists } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+    queryFn: () => fetch('/api/scientists').then(res => res.json()),
   });
 
   // Group rooms by building
@@ -66,9 +71,16 @@ export default function FacilitiesList() {
       'BSL-1': 'bg-green-100 text-green-800',
       'BSL-2': 'bg-yellow-100 text-yellow-800',
       'BSL-3': 'bg-orange-100 text-orange-800',
-      'BSL-4': 'bg-red-100 text-red-800'
+      'BSL-4': 'bg-red-100 text-red-800',
+      'ABSL-1': 'bg-blue-100 text-blue-800',
+      'ABSL-2': 'bg-purple-100 text-purple-800'
     };
     return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getScientistInfo = (scientistId: number | null) => {
+    if (!scientistId || !scientists) return null;
+    return scientists.find(s => s.id === scientistId);
   };
 
   if (buildingsLoading || roomsLoading) {
@@ -264,37 +276,44 @@ export default function FacilitiesList() {
                                 </TableCell>
                                 <TableCell>
                                   {room.roomSupervisorId ? (
-                                    <span className="text-sm text-gray-600">
-                                      ID: {room.roomSupervisorId}
-                                    </span>
+                                    (() => {
+                                      const supervisor = getScientistInfo(room.roomSupervisorId);
+                                      return supervisor ? (
+                                        <div className="text-sm">
+                                          <div className="font-medium text-gray-900">{supervisor.name}</div>
+                                          <div className="text-gray-500 text-xs">{supervisor.email}</div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-gray-400">Not found</span>
+                                      );
+                                    })()
                                   ) : (
                                     <span className="text-gray-400">Not assigned</span>
                                   )}
                                 </TableCell>
                                 <TableCell>
                                   {room.roomManagerId ? (
-                                    <span className="text-sm text-gray-600">
-                                      ID: {room.roomManagerId}
-                                    </span>
+                                    (() => {
+                                      const manager = getScientistInfo(room.roomManagerId);
+                                      return manager ? (
+                                        <div className="text-sm">
+                                          <div className="font-medium text-gray-900">{manager.name}</div>
+                                          <div className="text-gray-500 text-xs">{manager.email}</div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-gray-400">Not found</span>
+                                      );
+                                    })()
                                   ) : (
                                     <span className="text-gray-400">Not assigned</span>
                                   )}
                                 </TableCell>
                                 <TableCell>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem asChild>
-                                        <Link href={`/facilities/rooms/edit/${room.id}`}>
-                                          Edit Room
-                                        </Link>
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                                  <Link href={`/facilities/rooms/edit/${room.id}`}>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
                                 </TableCell>
                               </TableRow>
                             ))}
