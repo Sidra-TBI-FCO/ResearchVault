@@ -228,6 +228,11 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const availableBackboneSources = getAvailableBackboneSources();
   const assignedRooms = getAssignedRooms();
+  
+  // Debug logging
+  console.log('applicationRooms:', applicationRooms);
+  console.log('allRooms:', allRooms);
+  console.log('assignedRooms:', assignedRooms);
 
   return (
     <div className="space-y-6">
