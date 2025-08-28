@@ -85,10 +85,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
   // Mutations
   const addRoomMutation = useMutation({
     mutationFn: (data: { roomId: number }) => 
-      apiRequest(`/api/ibc-applications/${applicationId}/rooms`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      apiRequest('POST', `/api/ibc-applications/${applicationId}/rooms`, data),
     onSuccess: () => {
       refetchRooms();
       roomForm.reset();
@@ -102,9 +99,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const removeRoomMutation = useMutation({
     mutationFn: (roomId: number) => 
-      apiRequest(`/api/ibc-applications/${applicationId}/rooms/${roomId}`, {
-        method: 'DELETE',
-      }),
+      apiRequest('DELETE', `/api/ibc-applications/${applicationId}/rooms/${roomId}`),
     onSuccess: () => {
       refetchRooms();
       refetchBackboneSources();
@@ -118,10 +113,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const addBackboneSourceMutation = useMutation({
     mutationFn: (data: { backboneSource: string; roomId: number }) => 
-      apiRequest(`/api/ibc-applications/${applicationId}/backbone-source-rooms`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      apiRequest('POST', `/api/ibc-applications/${applicationId}/backbone-source-rooms`, data),
     onSuccess: () => {
       refetchBackboneSources();
       backboneForm.reset();
@@ -135,9 +127,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const removeBackboneSourceMutation = useMutation({
     mutationFn: ({ backboneSource, roomId }: { backboneSource: string; roomId: number }) => 
-      apiRequest(`/api/ibc-applications/${applicationId}/backbone-source-rooms/${encodeURIComponent(backboneSource)}/${roomId}`, {
-        method: 'DELETE',
-      }),
+      apiRequest('DELETE', `/api/ibc-applications/${applicationId}/backbone-source-rooms/${encodeURIComponent(backboneSource)}/${roomId}`),
     onSuccess: () => {
       refetchBackboneSources();
       toast({ title: "Backbone source assignment removed successfully" });
@@ -149,10 +139,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const addPpeMutation = useMutation({
     mutationFn: (data: { roomId: number; ppeItem: string }) => 
-      apiRequest(`/api/ibc-applications/${applicationId}/ppe`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      apiRequest('POST', `/api/ibc-applications/${applicationId}/ppe`, data),
     onSuccess: () => {
       refetchPpe();
       toast({ title: "PPE added successfully" });
@@ -164,9 +151,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const removePpeMutation = useMutation({
     mutationFn: ({ roomId, ppeItem }: { roomId: number; ppeItem: string }) => 
-      apiRequest(`/api/ibc-applications/${applicationId}/ppe/${roomId}/${encodeURIComponent(ppeItem)}`, {
-        method: 'DELETE',
-      }),
+      apiRequest('DELETE', `/api/ibc-applications/${applicationId}/ppe/${roomId}/${encodeURIComponent(ppeItem)}`),
     onSuccess: () => {
       refetchPpe();
       toast({ title: "PPE removed successfully" });
