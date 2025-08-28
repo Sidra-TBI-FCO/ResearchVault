@@ -171,7 +171,11 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
   const getAssignedRooms = () => {
     if (!allRooms || !applicationRooms) return [];
     const assignedRoomIds = applicationRooms.map(ar => ar.roomId);
-    return allRooms.filter(room => assignedRoomIds.includes(room.id));
+    console.log('assignedRoomIds from applicationRooms:', assignedRoomIds);
+    console.log('allRooms IDs:', allRooms.map(r => r.id));
+    const result = allRooms.filter(room => assignedRoomIds.includes(room.id));
+    console.log('getAssignedRooms result:', result);
+    return result;
   };
 
   const getRoomInfo = (roomId: number) => {
