@@ -1393,9 +1393,23 @@ export class DatabaseStorage implements IStorage {
 
   // Scientists filtering by role for room assignments
   async getScientistsByRole(rolePattern: string): Promise<Scientist[]> {
-    return await db.select().from(scientists)
-      .where(sql`LOWER(${scientists.title}) LIKE ${'%' + rolePattern.toLowerCase() + '%'}`)
-      .orderBy(scientists.lastName, scientists.firstName);
+    if (rolePattern.includes('|')) {
+      // Handle multiple patterns with OR condition
+      const patterns = rolePattern.split('|');
+      const conditions = patterns.map(pattern => 
+        sql`LOWER(${scientists.title}) LIKE ${'%' + pattern.toLowerCase() + '%'}`
+      );
+      const combinedCondition = conditions.reduce((acc, condition) => 
+        acc ? sql`${acc} OR ${condition}` : condition
+      );
+      return await db.select().from(scientists)
+        .where(combinedCondition)
+        .orderBy(scientists.lastName, scientists.firstName);
+    } else {
+      return await db.select().from(scientists)
+        .where(sql`LOWER(${scientists.title}) LIKE ${'%' + rolePattern.toLowerCase() + '%'}`)
+        .orderBy(scientists.lastName, scientists.firstName);
+    }
   }
 }
 

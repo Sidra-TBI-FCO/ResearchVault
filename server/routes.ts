@@ -338,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/scientists/scientific-staff', async (req: Request, res: Response) => {
     try {
-      const scientificStaff = await storage.getScientistsByRole('scientific staff');
+      const scientificStaff = await storage.getScientistsByRole('staff|management');
       res.json(scientificStaff);
     } catch (error) {
       console.error('Error fetching scientific staff:', error);

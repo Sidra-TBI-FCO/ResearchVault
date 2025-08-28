@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, ArrowLeft, Users, Shield, X } from "lucide-react";
 import { insertRoomSchema, Building, Scientist } from "@shared/schema";
 
@@ -39,11 +40,41 @@ const roomFormSchema = insertRoomSchema.extend({
 
 type RoomFormData = z.infer<typeof roomFormSchema>;
 
+// Predefined certification options
+const CERTIFICATION_OPTIONS = [
+  "HEPA Filtered",
+  "Sterile Environment", 
+  "Temperature Controlled",
+  "Humidity Controlled",
+  "Negative Pressure",
+  "Positive Pressure",
+  "Laminar Flow",
+  "Clean Room Certified",
+  "Radiation Controlled",
+  "Chemical Fume Hood",
+  "Biological Safety Cabinet",
+  "Autoclave Access"
+];
+
+// Predefined PPE options  
+const PPE_OPTIONS = [
+  "Lab Coats",
+  "Safety Goggles", 
+  "N95 Masks",
+  "Nitrile Gloves",
+  "Hair Nets",
+  "Shoe Covers",
+  "Face Shields",
+  "Respirators",
+  "Cut-Resistant Gloves",
+  "Chemical-Resistant Gloves",
+  "Disposable Gowns",
+  "Safety Glasses"
+];
+
 export default function CreateRoom() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const [certificationInput, setCertificationInput] = useState("");
-  const [ppeInput, setPpeInput] = useState("");
   
   // Get buildingId from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -110,30 +141,26 @@ export default function CreateRoom() {
     createRoomMutation.mutate(data);
   };
 
-  const addCertification = () => {
-    if (certificationInput.trim()) {
-      const currentCerts = form.getValues('certifications') || [];
-      form.setValue('certifications', [...currentCerts, certificationInput.trim()]);
-      setCertificationInput("");
-    }
-  };
-
-  const removeCertification = (index: number) => {
+  const toggleCertification = (certification: string) => {
     const currentCerts = form.getValues('certifications') || [];
-    form.setValue('certifications', currentCerts.filter((_, i) => i !== index));
-  };
-
-  const addPpe = () => {
-    if (ppeInput.trim()) {
-      const currentPpe = form.getValues('availablePpe') || [];
-      form.setValue('availablePpe', [...currentPpe, ppeInput.trim()]);
-      setPpeInput("");
+    const isSelected = currentCerts.includes(certification);
+    
+    if (isSelected) {
+      form.setValue('certifications', currentCerts.filter(cert => cert !== certification));
+    } else {
+      form.setValue('certifications', [...currentCerts, certification]);
     }
   };
 
-  const removePpe = (index: number) => {
+  const togglePpe = (ppe: string) => {
     const currentPpe = form.getValues('availablePpe') || [];
-    form.setValue('availablePpe', currentPpe.filter((_, i) => i !== index));
+    const isSelected = currentPpe.includes(ppe);
+    
+    if (isSelected) {
+      form.setValue('availablePpe', currentPpe.filter(item => item !== ppe));
+    } else {
+      form.setValue('availablePpe', [...currentPpe, ppe]);
+    }
   };
 
   if (buildingsLoading) {
@@ -288,6 +315,8 @@ export default function CreateRoom() {
                           <SelectItem value="BSL-2">BSL-2</SelectItem>
                           <SelectItem value="BSL-3">BSL-3</SelectItem>
                           <SelectItem value="BSL-4">BSL-4</SelectItem>
+                          <SelectItem value="ABSL-1">ABSL-1</SelectItem>
+                          <SelectItem value="ABSL-2">ABSL-2</SelectItem>
                           <SelectItem value="N/A">N/A</SelectItem>
                         </SelectContent>
                       </Select>
@@ -393,62 +422,45 @@ export default function CreateRoom() {
               </div>
 
               {/* Certifications */}
-              <div className="space-y-3">
-                <FormLabel>Room Certifications</FormLabel>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add certification (e.g., HEPA filtered, Sterile)"
-                    value={certificationInput}
-                    onChange={(e) => setCertificationInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCertification())}
-                  />
-                  <Button type="button" onClick={addCertification} variant="outline">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {form.watch('certifications')?.map((cert, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      <Shield className="h-3 w-3" />
-                      {cert}
-                      <button
-                        type="button"
-                        onClick={() => removeCertification(index)}
-                        className="ml-1 hover:text-red-600"
+              <div className="space-y-4">
+                <FormLabel className="text-base font-medium">Room Certifications</FormLabel>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {CERTIFICATION_OPTIONS.map((certification) => (
+                    <div key={certification} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`cert-${certification}`}
+                        checked={form.watch('certifications')?.includes(certification) || false}
+                        onCheckedChange={() => toggleCertification(certification)}
+                      />
+                      <label
+                        htmlFor={`cert-${certification}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
+                        {certification}
+                      </label>
+                    </div>
                   ))}
                 </div>
               </div>
 
               {/* Available PPE */}
-              <div className="space-y-3">
-                <FormLabel>Available PPE</FormLabel>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add PPE item (e.g., Lab coats, Safety goggles)"
-                    value={ppeInput}
-                    onChange={(e) => setPpeInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPpe())}
-                  />
-                  <Button type="button" onClick={addPpe} variant="outline">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {form.watch('availablePpe')?.map((ppe, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1">
-                      {ppe}
-                      <button
-                        type="button"
-                        onClick={() => removePpe(index)}
-                        className="ml-1 hover:text-red-600"
+              <div className="space-y-4">
+                <FormLabel className="text-base font-medium">Available PPE</FormLabel>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {PPE_OPTIONS.map((ppe) => (
+                    <div key={ppe} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`ppe-${ppe}`}
+                        checked={form.watch('availablePpe')?.includes(ppe) || false}
+                        onCheckedChange={() => togglePpe(ppe)}
+                      />
+                      <label
+                        htmlFor={`ppe-${ppe}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
+                        {ppe}
+                      </label>
+                    </div>
                   ))}
                 </div>
               </div>
