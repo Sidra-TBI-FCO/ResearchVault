@@ -58,15 +58,15 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   // Fetch IBC application facilities data
   const { data: applicationRooms, refetch: refetchRooms } = useQuery<IbcApplicationRoom[]>({
-    queryKey: ['/api/ibc-applications', applicationId, 'rooms'],
+    queryKey: [`/api/ibc-applications/${applicationId}/rooms`],
   });
 
   const { data: backboneSourceRooms, refetch: refetchBackboneSources } = useQuery<IbcBackboneSourceRoom[]>({
-    queryKey: ['/api/ibc-applications', applicationId, 'backbone-source-rooms'],
+    queryKey: [`/api/ibc-applications/${applicationId}/backbone-source-rooms`],
   });
 
   const { data: applicationPpe, refetch: refetchPpe } = useQuery<IbcApplicationPpe[]>({
-    queryKey: ['/api/ibc-applications', applicationId, 'ppe'],
+    queryKey: [`/api/ibc-applications/${applicationId}/ppe`],
   });
 
   // Forms
@@ -91,8 +91,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
       roomForm.reset();
       toast({ title: "Room added successfully" });
     },
-    onError: (error) => {
-      console.error('Add room mutation error:', error);
+    onError: () => {
       toast({ title: "Failed to add room", variant: "destructive" });
     },
   });
@@ -171,11 +170,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
   const getAssignedRooms = () => {
     if (!allRooms || !applicationRooms) return [];
     const assignedRoomIds = applicationRooms.map(ar => ar.roomId);
-    console.log('assignedRoomIds from applicationRooms:', assignedRoomIds);
-    console.log('allRooms IDs:', allRooms.map(r => r.id));
-    const result = allRooms.filter(room => assignedRoomIds.includes(room.id));
-    console.log('getAssignedRooms result:', result);
-    return result;
+    return allRooms.filter(room => assignedRoomIds.includes(room.id));
   };
 
   const getRoomInfo = (roomId: number) => {
@@ -213,8 +208,6 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
   };
 
   const onAddRoom = (data: z.infer<typeof roomSelectionSchema>) => {
-    console.log('onAddRoom called with data:', data);
-    console.log('Form errors:', roomForm.formState.errors);
     addRoomMutation.mutate(data);
   };
 
@@ -232,11 +225,6 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
   const availableBackboneSources = getAvailableBackboneSources();
   const assignedRooms = getAssignedRooms();
-  
-  // Debug logging
-  console.log('applicationRooms:', applicationRooms);
-  console.log('allRooms:', allRooms);
-  console.log('assignedRooms:', assignedRooms);
 
   return (
     <div className="space-y-6">
