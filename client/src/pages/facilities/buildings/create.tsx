@@ -48,7 +48,7 @@ export default function CreateBuilding() {
 
   const createBuildingMutation = useMutation({
     mutationFn: (data: BuildingFormData) => 
-      apiRequest('/api/buildings', 'POST', data),
+      apiRequest('POST', '/api/buildings', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/buildings'] });
       toast({

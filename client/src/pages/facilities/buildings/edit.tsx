@@ -72,7 +72,7 @@ export default function EditBuilding() {
 
   const updateBuildingMutation = useMutation({
     mutationFn: (data: BuildingFormData) => 
-      apiRequest(`/api/buildings/${buildingId}`, 'PATCH', data),
+      apiRequest('PATCH', `/api/buildings/${buildingId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/buildings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/buildings', buildingId] });

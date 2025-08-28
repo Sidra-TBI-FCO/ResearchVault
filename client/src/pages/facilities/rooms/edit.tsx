@@ -114,7 +114,7 @@ export default function EditRoom() {
 
   const updateRoomMutation = useMutation({
     mutationFn: (data: RoomFormData) => 
-      apiRequest(`/api/rooms/${roomId}`, 'PATCH', data),
+      apiRequest('PATCH', `/api/rooms/${roomId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rooms'] });
       queryClient.invalidateQueries({ queryKey: ['/api/rooms', roomId] });
