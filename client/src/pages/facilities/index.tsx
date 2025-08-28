@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building, Room, Scientist } from "@shared/schema";
 import { 
-  Plus, Search, Edit, Building2, 
+  Plus, Search, Edit, MoreHorizontal, Building2, 
   ChevronDown, ChevronUp, MapPin, Users, 
   Shield, Wrench
 } from "lucide-react";
