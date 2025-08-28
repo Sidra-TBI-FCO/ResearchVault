@@ -3852,8 +3852,8 @@ export default function IbcApplicationEdit() {
 
             <TabsContent value="facilities" className="space-y-6 mt-6">
               <IbcFacilitiesTab 
-                applicationId={application.id} 
-                application={application}
+                applicationId={ibcApplication.id} 
+                application={ibcApplication}
                 isReadOnly={isReadOnly}
               />
             </TabsContent>
