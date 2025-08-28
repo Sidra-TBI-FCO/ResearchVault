@@ -40,6 +40,11 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
           icon: <Users className="w-4 h-4 mr-3" />
         },
         { 
+          href: "/facilities",
+          label: "Facilities",
+          icon: <Building className="w-4 h-4 mr-3" />
+        },
+        { 
           href: "/programs",
           label: "Programs (PRM)",
           icon: <Beaker className="w-4 h-4 mr-3" />

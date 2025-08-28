@@ -23,7 +23,9 @@ import {
   ibcDocuments, IbcDocument, InsertIbcDocument,
   ibcBoardMembers, IbcBoardMember, InsertIbcBoardMember,
   researchContracts, ResearchContract, InsertResearchContract,
-  irbBoardMembers, IrbBoardMember, InsertIrbBoardMember
+  irbBoardMembers, IrbBoardMember, InsertIrbBoardMember,
+  buildings, Building, InsertBuilding,
+  rooms, Room, InsertRoom
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1323,6 +1325,77 @@ export class DatabaseStorage implements IStorage {
     }
     
     return `${prefix}${nextNumber.toString().padStart(3, '0')}`;
+  }
+
+  // Building operations
+  async getBuildings(): Promise<Building[]> {
+    return await db.select().from(buildings).orderBy(buildings.name);
+  }
+
+  async getBuilding(id: number): Promise<Building | undefined> {
+    const [building] = await db.select().from(buildings).where(eq(buildings.id, id));
+    return building;
+  }
+
+  async createBuilding(building: InsertBuilding): Promise<Building> {
+    const [newBuilding] = await db.insert(buildings).values(building).returning();
+    return newBuilding;
+  }
+
+  async updateBuilding(id: number, building: Partial<InsertBuilding>): Promise<Building | undefined> {
+    const [updatedBuilding] = await db
+      .update(buildings)
+      .set(building)
+      .where(eq(buildings.id, id))
+      .returning();
+    return updatedBuilding;
+  }
+
+  async deleteBuilding(id: number): Promise<boolean> {
+    const result = await db.delete(buildings).where(eq(buildings.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Room operations
+  async getRooms(): Promise<Room[]> {
+    return await db.select().from(rooms).orderBy(rooms.roomNumber);
+  }
+
+  async getRoom(id: number): Promise<Room | undefined> {
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, id));
+    return room;
+  }
+
+  async getRoomsByBuilding(buildingId: number): Promise<Room[]> {
+    return await db.select().from(rooms)
+      .where(eq(rooms.buildingId, buildingId))
+      .orderBy(rooms.roomNumber);
+  }
+
+  async createRoom(room: InsertRoom): Promise<Room> {
+    const [newRoom] = await db.insert(rooms).values(room).returning();
+    return newRoom;
+  }
+
+  async updateRoom(id: number, room: Partial<InsertRoom>): Promise<Room | undefined> {
+    const [updatedRoom] = await db
+      .update(rooms)
+      .set(room)
+      .where(eq(rooms.id, id))
+      .returning();
+    return updatedRoom;
+  }
+
+  async deleteRoom(id: number): Promise<boolean> {
+    const result = await db.delete(rooms).where(eq(rooms.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Scientists filtering by role for room assignments
+  async getScientistsByRole(rolePattern: string): Promise<Scientist[]> {
+    return await db.select().from(scientists)
+      .where(sql`LOWER(${scientists.title}) LIKE ${'%' + rolePattern.toLowerCase() + '%'}`)
+      .orderBy(scientists.lastName, scientists.firstName);
   }
 }
 

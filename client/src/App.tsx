@@ -15,6 +15,13 @@ import CreateScientist from "@/pages/scientists/create";
 import EditScientist from "@/pages/scientists/edit";
 import ScientistDetail from "@/pages/scientists/detail";
 
+// Facilities
+import FacilitiesList from "@/pages/facilities";
+import CreateBuilding from "@/pages/facilities/buildings/create";
+import EditBuilding from "@/pages/facilities/buildings/edit";
+import CreateRoom from "@/pages/facilities/rooms/create";
+import EditRoom from "@/pages/facilities/rooms/edit";
+
 // Programs (PRM)
 import ProgramsList from "@/pages/programs";
 import ProgramDetail from "@/pages/programs/detail";
@@ -111,6 +118,13 @@ function Router() {
         <Route path="/scientists/create" component={CreateScientist} />
         <Route path="/scientists/:id/edit" component={EditScientist} />
         <Route path="/scientists/:id" component={ScientistDetail} />
+
+        {/* Facilities */}
+        <Route path="/facilities" component={FacilitiesList} />
+        <Route path="/facilities/buildings/create" component={CreateBuilding} />
+        <Route path="/facilities/buildings/edit/:id" component={EditBuilding} />
+        <Route path="/facilities/rooms/create" component={CreateRoom} />
+        <Route path="/facilities/rooms/edit/:id" component={EditRoom} />
 
         {/* Programs */}
         <Route path="/programs" component={ProgramsList} />

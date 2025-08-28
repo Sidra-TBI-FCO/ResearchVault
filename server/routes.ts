@@ -19,7 +19,9 @@ import {
   insertIbcDocumentSchema,
   insertResearchContractSchema,
   insertProgramSchema,
-  insertProjectSchema
+  insertProjectSchema,
+  insertBuildingSchema,
+  insertRoomSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -3050,6 +3052,266 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting IRB board member:', error);
       res.status(500).json({ message: "Failed to delete IRB board member", error: error.message });
+    }
+  });
+
+  // Buildings API routes
+  app.get('/api/buildings', async (req: Request, res: Response) => {
+    try {
+      const buildings = await storage.getBuildings();
+      res.json(buildings);
+    } catch (error) {
+      console.error('Error fetching buildings:', error);
+      res.status(500).json({ message: "Failed to fetch buildings" });
+    }
+  });
+
+  app.get('/api/buildings/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid building ID" });
+      }
+
+      const building = await storage.getBuilding(id);
+      if (!building) {
+        return res.status(404).json({ message: "Building not found" });
+      }
+
+      res.json(building);
+    } catch (error) {
+      console.error('Error fetching building:', error);
+      res.status(500).json({ message: "Failed to fetch building" });
+    }
+  });
+
+  app.post('/api/buildings', async (req: Request, res: Response) => {
+    try {
+      const parsedData = insertBuildingSchema.parse(req.body);
+      const building = await storage.createBuilding(parsedData);
+      res.status(201).json(building);
+    } catch (error) {
+      console.error('Error creating building:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create building" });
+    }
+  });
+
+  app.patch('/api/buildings/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid building ID" });
+      }
+
+      const parsedData = insertBuildingSchema.partial().parse(req.body);
+      const building = await storage.updateBuilding(id, parsedData);
+      if (!building) {
+        return res.status(404).json({ message: "Building not found" });
+      }
+
+      res.json(building);
+    } catch (error) {
+      console.error('Error updating building:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to update building" });
+    }
+  });
+
+  app.delete('/api/buildings/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid building ID" });
+      }
+
+      const success = await storage.deleteBuilding(id);
+      if (!success) {
+        return res.status(404).json({ message: "Building not found" });
+      }
+
+      res.json({ message: "Building deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting building:', error);
+      res.status(500).json({ message: "Failed to delete building" });
+    }
+  });
+
+  // Rooms API routes
+  app.get('/api/rooms', async (req: Request, res: Response) => {
+    try {
+      const buildingId = req.query.buildingId ? parseInt(req.query.buildingId as string) : undefined;
+      
+      if (buildingId) {
+        const rooms = await storage.getRoomsByBuilding(buildingId);
+        res.json(rooms);
+      } else {
+        const rooms = await storage.getRooms();
+        res.json(rooms);
+      }
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+      res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
+  app.get('/api/rooms/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid room ID" });
+      }
+
+      const room = await storage.getRoom(id);
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+
+      res.json(room);
+    } catch (error) {
+      console.error('Error fetching room:', error);
+      res.status(500).json({ message: "Failed to fetch room" });
+    }
+  });
+
+  app.post('/api/rooms', async (req: Request, res: Response) => {
+    try {
+      const parsedData = insertRoomSchema.parse(req.body);
+      
+      // Validate supervisor and manager roles if provided
+      if (parsedData.roomSupervisorId) {
+        const supervisor = await storage.getScientist(parsedData.roomSupervisorId);
+        if (!supervisor || !supervisor.title || !supervisor.title.toLowerCase().includes('investigator')) {
+          return res.status(400).json({ 
+            message: "Room supervisor must be a scientist with 'Investigator' in their title" 
+          });
+        }
+      }
+      
+      if (parsedData.roomManagerId) {
+        const manager = await storage.getScientist(parsedData.roomManagerId);
+        if (!manager || !manager.title || !manager.title.toLowerCase().includes('scientific staff')) {
+          return res.status(400).json({ 
+            message: "Room manager must be a scientist with 'Scientific Staff' in their title" 
+          });
+        }
+      }
+
+      const room = await storage.createRoom(parsedData);
+      res.status(201).json(room);
+    } catch (error) {
+      console.error('Error creating room:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create room" });
+    }
+  });
+
+  app.patch('/api/rooms/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid room ID" });
+      }
+
+      const parsedData = insertRoomSchema.partial().parse(req.body);
+      
+      // Validate supervisor and manager roles if being updated
+      if (parsedData.roomSupervisorId) {
+        const supervisor = await storage.getScientist(parsedData.roomSupervisorId);
+        if (!supervisor || !supervisor.title || !supervisor.title.toLowerCase().includes('investigator')) {
+          return res.status(400).json({ 
+            message: "Room supervisor must be a scientist with 'Investigator' in their title" 
+          });
+        }
+      }
+      
+      if (parsedData.roomManagerId) {
+        const manager = await storage.getScientist(parsedData.roomManagerId);
+        if (!manager || !manager.title || !manager.title.toLowerCase().includes('scientific staff')) {
+          return res.status(400).json({ 
+            message: "Room manager must be a scientist with 'Scientific Staff' in their title" 
+          });
+        }
+      }
+
+      const room = await storage.updateRoom(id, parsedData);
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+
+      res.json(room);
+    } catch (error) {
+      console.error('Error updating room:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to update room" });
+    }
+  });
+
+  app.delete('/api/rooms/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid room ID" });
+      }
+
+      const success = await storage.deleteRoom(id);
+      if (!success) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+
+      res.json({ message: "Room deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      res.status(500).json({ message: "Failed to delete room" });
+    }
+  });
+
+  // Additional utility routes for facilities
+  app.get('/api/buildings/:id/rooms', async (req: Request, res: Response) => {
+    try {
+      const buildingId = parseInt(req.params.id);
+      if (isNaN(buildingId)) {
+        return res.status(400).json({ message: "Invalid building ID" });
+      }
+
+      const rooms = await storage.getRoomsByBuilding(buildingId);
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error fetching building rooms:', error);
+      res.status(500).json({ message: "Failed to fetch building rooms" });
+    }
+  });
+
+  // Get scientists filtered by role for room supervisor/manager selection
+  app.get('/api/scientists/investigators', async (req: Request, res: Response) => {
+    try {
+      const investigators = await storage.getScientistsByRole('investigator');
+      res.json(investigators);
+    } catch (error) {
+      console.error('Error fetching investigators:', error);
+      res.status(500).json({ message: "Failed to fetch investigators" });
+    }
+  });
+
+  app.get('/api/scientists/scientific-staff', async (req: Request, res: Response) => {
+    try {
+      const scientificStaff = await storage.getScientistsByRole('scientific staff');
+      res.json(scientificStaff);
+    } catch (error) {
+      console.error('Error fetching scientific staff:', error);
+      res.status(500).json({ message: "Failed to fetch scientific staff" });
     }
   });
 

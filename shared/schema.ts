@@ -614,6 +614,46 @@ export const insertResearchContractSchema = createInsertSchema(researchContracts
   updatedAt: true,
 });
 
+// Buildings and Rooms (Facilities Management)
+export const buildings = pgTable("buildings", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBuildingSchema = createInsertSchema(buildings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const rooms = pgTable("rooms", {
+  id: serial("id").primaryKey(),
+  buildingId: integer("building_id").notNull(), // references buildings.id
+  floor: text("floor").notNull(), // Can be number or string (e.g., "Ground", "B1", "2")
+  roomNumber: text("room_number").notNull(),
+  roomName: text("room_name").notNull(),
+  roomSupervisorId: integer("room_supervisor_id"), // references scientists.id (must have title "Investigator")
+  roomManagerId: integer("room_manager_id"), // references scientists.id (must have title containing "Scientific Staff")
+  biosafetyLevel: text("biosafety_level"), // BSL1, BSL2, BSL3, BSL4, ABSL1, ABSL2, etc.
+  
+  // Certifications (checkboxes from vector source options in synthetic experiments)
+  certifications: json("certifications"), // Array of certification types
+  
+  // Available PPE (checkboxes from engineering controls in hazardous procedures)
+  availablePpe: json("available_ppe"), // Array of available PPE equipment
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertRoomSchema = createInsertSchema(rooms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // IRB Board Members
 export const irbBoardMembers = pgTable("irb_board_members", {
   id: serial("id").primaryKey(),
@@ -760,3 +800,9 @@ export type InsertResearchContract = z.infer<typeof insertResearchContractSchema
 
 export type IrbBoardMember = typeof irbBoardMembers.$inferSelect;
 export type InsertIrbBoardMember = z.infer<typeof insertIrbBoardMemberSchema>;
+
+export type Building = typeof buildings.$inferSelect;
+export type InsertBuilding = z.infer<typeof insertBuildingSchema>;
+
+export type Room = typeof rooms.$inferSelect;
+export type InsertRoom = z.infer<typeof insertRoomSchema>;

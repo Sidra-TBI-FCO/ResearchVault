@@ -12,7 +12,9 @@ import {
   ibcApplications, IbcApplication, InsertIbcApplication,
   ibcApplicationComments, IbcApplicationComment, InsertIbcApplicationComment,
   ibcApplicationResearchActivities, IbcApplicationResearchActivity, InsertIbcApplicationResearchActivity,
-  researchContracts, ResearchContract, InsertResearchContract
+  researchContracts, ResearchContract, InsertResearchContract,
+  buildings, Building, InsertBuilding,
+  rooms, Room, InsertRoom
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -130,6 +132,24 @@ export interface IStorage {
   createResearchContract(contract: InsertResearchContract): Promise<ResearchContract>;
   updateResearchContract(id: number, contract: Partial<InsertResearchContract>): Promise<ResearchContract | undefined>;
   deleteResearchContract(id: number): Promise<boolean>;
+
+  // Building operations
+  getBuildings(): Promise<Building[]>;
+  getBuilding(id: number): Promise<Building | undefined>;
+  createBuilding(building: InsertBuilding): Promise<Building>;
+  updateBuilding(id: number, building: Partial<InsertBuilding>): Promise<Building | undefined>;
+  deleteBuilding(id: number): Promise<boolean>;
+
+  // Room operations
+  getRooms(): Promise<Room[]>;
+  getRoom(id: number): Promise<Room | undefined>;
+  getRoomsByBuilding(buildingId: number): Promise<Room[]>;
+  createRoom(room: InsertRoom): Promise<Room>;
+  updateRoom(id: number, room: Partial<InsertRoom>): Promise<Room | undefined>;
+  deleteRoom(id: number): Promise<boolean>;
+
+  // Scientists filtering by role for room assignments
+  getScientistsByRole(rolePattern: string): Promise<Scientist[]>;
 
   // Dashboard operations
   getDashboardStats(): Promise<{
