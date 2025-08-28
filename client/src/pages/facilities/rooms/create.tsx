@@ -241,7 +241,14 @@ export default function CreateRoom() {
                     <FormItem>
                       <FormLabel>Room Number *</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 101, A-204" autoComplete="off" data-lpignore="true" {...field} />
+                        <Input 
+                          placeholder="e.g., 101, A-204" 
+                          autoComplete="new-password" 
+                          data-lpignore="true"
+                          data-form-type="other"
+                          data-1p-ignore="true"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

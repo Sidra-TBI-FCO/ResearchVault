@@ -158,13 +158,19 @@ export default function FacilitiesList() {
               
               return (
                 <Card key={building.id} className="border-l-4 border-l-blue-500">
-                  <CardHeader className="pb-3">
+                  <CardHeader 
+                    className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => toggleBuildingExpansion(building.id)}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleBuildingExpansion(building.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBuildingExpansion(building.id);
+                          }}
                           className="p-1 h-6 w-6"
                         >
                           {isExpanded ? 
@@ -183,7 +189,7 @@ export default function FacilitiesList() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <Badge variant="outline" className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           {buildingRooms.length} rooms
