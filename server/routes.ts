@@ -325,6 +325,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get scientists filtered by role for room supervisor/manager selection
+  app.get('/api/scientists/investigators', async (req: Request, res: Response) => {
+    try {
+      const investigators = await storage.getScientistsByRole('investigator');
+      res.json(investigators);
+    } catch (error) {
+      console.error('Error fetching investigators:', error);
+      res.status(500).json({ message: "Failed to fetch investigators" });
+    }
+  });
+
+  app.get('/api/scientists/scientific-staff', async (req: Request, res: Response) => {
+    try {
+      const scientificStaff = await storage.getScientistsByRole('scientific staff');
+      res.json(scientificStaff);
+    } catch (error) {
+      console.error('Error fetching scientific staff:', error);
+      res.status(500).json({ message: "Failed to fetch scientific staff" });
+    }
+  });
+
   app.get('/api/scientists/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -3291,27 +3312,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching building rooms:', error);
       res.status(500).json({ message: "Failed to fetch building rooms" });
-    }
-  });
-
-  // Get scientists filtered by role for room supervisor/manager selection
-  app.get('/api/scientists/investigators', async (req: Request, res: Response) => {
-    try {
-      const investigators = await storage.getScientistsByRole('investigator');
-      res.json(investigators);
-    } catch (error) {
-      console.error('Error fetching investigators:', error);
-      res.status(500).json({ message: "Failed to fetch investigators" });
-    }
-  });
-
-  app.get('/api/scientists/scientific-staff', async (req: Request, res: Response) => {
-    try {
-      const scientificStaff = await storage.getScientistsByRole('scientific staff');
-      res.json(scientificStaff);
-    } catch (error) {
-      console.error('Error fetching scientific staff:', error);
-      res.status(500).json({ message: "Failed to fetch scientific staff" });
     }
   });
 
