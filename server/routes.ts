@@ -338,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/scientists/scientific-staff', async (req: Request, res: Response) => {
     try {
-      const scientificStaff = await storage.getScientistsByRole('staff|management');
+      const scientificStaff = await storage.getScientistsByRole('staff|management|post-doctoral|research');
       res.json(scientificStaff);
     } catch (error) {
       console.error('Error fetching scientific staff:', error);
@@ -3217,9 +3217,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (parsedData.roomManagerId) {
         const manager = await storage.getScientist(parsedData.roomManagerId);
-        if (!manager || !manager.title || !manager.title.toLowerCase().includes('scientific staff')) {
+        if (!manager || !manager.title || 
+            !(manager.title.toLowerCase().includes('staff') || 
+              manager.title.toLowerCase().includes('management') ||
+              manager.title.toLowerCase().includes('post-doctoral') ||
+              manager.title.toLowerCase().includes('research'))) {
           return res.status(400).json({ 
-            message: "Room manager must be a scientist with 'Scientific Staff' in their title" 
+            message: "Room manager must be a scientist with Management, Staff, Post-doctoral, or Research role" 
           });
         }
       }
@@ -3257,9 +3261,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (parsedData.roomManagerId) {
         const manager = await storage.getScientist(parsedData.roomManagerId);
-        if (!manager || !manager.title || !manager.title.toLowerCase().includes('scientific staff')) {
+        if (!manager || !manager.title || 
+            !(manager.title.toLowerCase().includes('staff') || 
+              manager.title.toLowerCase().includes('management') ||
+              manager.title.toLowerCase().includes('post-doctoral') ||
+              manager.title.toLowerCase().includes('research'))) {
           return res.status(400).json({ 
-            message: "Room manager must be a scientist with 'Scientific Staff' in their title" 
+            message: "Room manager must be a scientist with Management, Staff, Post-doctoral, or Research role" 
           });
         }
       }
