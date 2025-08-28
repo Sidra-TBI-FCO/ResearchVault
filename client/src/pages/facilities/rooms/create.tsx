@@ -215,9 +215,9 @@ export default function CreateRoom() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Building *</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger autoComplete="off" data-lpignore="true">
                             <SelectValue placeholder="Select a building" />
                           </SelectTrigger>
                         </FormControl>
@@ -241,7 +241,7 @@ export default function CreateRoom() {
                     <FormItem>
                       <FormLabel>Room Number *</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 101, A-204" {...field} />
+                        <Input placeholder="e.g., 101, A-204" autoComplete="off" data-lpignore="true" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -261,6 +261,8 @@ export default function CreateRoom() {
                           type="number"
                           min="1"
                           placeholder="e.g., 2"
+                          autoComplete="off"
+                          data-lpignore="true"
                           {...field}
                           value={field.value || ""}
                         />
@@ -276,9 +278,9 @@ export default function CreateRoom() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Room Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger autoComplete="off" data-lpignore="true">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                         </FormControl>
@@ -304,9 +306,9 @@ export default function CreateRoom() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Biosafety Level</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger autoComplete="off" data-lpignore="true">
                             <SelectValue placeholder="Select BSL" />
                           </SelectTrigger>
                         </FormControl>
