@@ -208,6 +208,40 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
     return applicationPpe?.filter(ppe => ppe.roomId === roomId) || [];
   };
 
+  const getAvailableRoomsForBackbone = (backboneSource: string) => {
+    if (!assignedRooms || !backboneSourceRooms) return assignedRooms || [];
+    
+    // Filter out rooms that already have this backbone source assigned
+    const roomsWithThisBackbone = backboneSourceRooms
+      .filter(assignment => assignment.backboneSource === backboneSource)
+      .map(assignment => assignment.roomId);
+    
+    return assignedRooms.filter(room => !roomsWithThisBackbone.includes(room.id));
+  };
+
+  const getBackboneSourceGroups = () => {
+    if (!backboneSourceRooms) return {};
+    
+    const groups: Record<string, Array<{ roomId: number; room: any; building: any }>> = {};
+    
+    backboneSourceRooms.forEach(assignment => {
+      if (!groups[assignment.backboneSource]) {
+        groups[assignment.backboneSource] = [];
+      }
+      
+      const room = getRoomInfo(assignment.roomId);
+      const building = room ? getBuildingInfo(room.buildingId) : null;
+      
+      groups[assignment.backboneSource].push({
+        roomId: assignment.roomId,
+        room,
+        building
+      });
+    });
+    
+    return groups;
+  };
+
   const onAddRoom = (data: z.infer<typeof roomSelectionSchema>) => {
     addRoomMutation.mutate(data);
   };
@@ -399,7 +433,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {assignedRooms.map(room => {
+                                {getAvailableRoomsForBackbone(backboneForm.watch('backboneSource') || '').map(room => {
                                   const building = getBuildingInfo(room.buildingId);
                                   return (
                                     <SelectItem key={room.id} value={room.id.toString()}>
@@ -426,41 +460,45 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
                   </Form>
                 )}
 
-                {/* Backbone Source Assignments */}
-                <div className="space-y-3">
+                {/* Backbone Source Assignments - Grouped by Backbone */}
+                <div className="space-y-4">
                   {!backboneSourceRooms || backboneSourceRooms.length === 0 ? (
                     <p className="text-sm text-gray-500 italic">No backbone sources assigned yet</p>
                   ) : (
-                    backboneSourceRooms.map(assignment => {
-                      const room = getRoomInfo(assignment.roomId);
-                      const building = room ? getBuildingInfo(room.buildingId) : null;
-                      return (
-                        <div key={`${assignment.backboneSource}-${assignment.roomId}`} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FlaskConical className="h-4 w-4 text-blue-500" />
-                            <div>
-                              <div className="font-medium">{assignment.backboneSource}</div>
-                              <div className="text-sm text-gray-600">
-                                {building?.name} - {room?.roomNumber}
-                              </div>
-                            </div>
-                          </div>
-                          {!isReadOnly && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeBackboneSourceMutation.mutate({
-                                backboneSource: assignment.backboneSource,
-                                roomId: assignment.roomId
-                              })}
-                              disabled={removeBackboneSourceMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
+                    Object.entries(getBackboneSourceGroups()).map(([backboneSource, roomAssignments]) => (
+                      <div key={backboneSource} className="border rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FlaskConical className="h-5 w-5 text-blue-500" />
+                          <h4 className="font-semibold text-lg">{backboneSource}</h4>
+                          <span className="text-sm text-gray-500">({roomAssignments.length} room{roomAssignments.length !== 1 ? 's' : ''})</span>
                         </div>
-                      );
-                    })
+                        <div className="space-y-2">
+                          {roomAssignments.map(({ roomId, room, building }) => (
+                            <div key={roomId} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                <span className="text-sm font-medium">
+                                  {building?.name} - {room?.roomNumber}
+                                </span>
+                              </div>
+                              {!isReadOnly && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeBackboneSourceMutation.mutate({
+                                    backboneSource,
+                                    roomId
+                                  })}
+                                  disabled={removeBackboneSourceMutation.isPending}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </>
