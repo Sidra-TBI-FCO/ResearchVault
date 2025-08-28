@@ -115,7 +115,8 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
       apiRequest('POST', `/api/ibc-applications/${applicationId}/backbone-source-rooms`, data),
     onSuccess: () => {
       refetchBackboneSources();
-      backboneForm.reset();
+      // Only reset the room field, keep backbone source selected for multiple assignments
+      backboneForm.setValue('roomId', 0);
       setSelectedRoomForBackbone(null);
       toast({ title: "Backbone source assigned successfully" });
     },
@@ -367,7 +368,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Backbone Source</FormLabel>
-                            <Select onValueChange={field.onChange}>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select backbone source" />
@@ -391,7 +392,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Assign to Room</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString() || ""}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select room" />
