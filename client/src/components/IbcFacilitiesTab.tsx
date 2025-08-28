@@ -116,7 +116,7 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
     onSuccess: () => {
       refetchBackboneSources();
       // Only reset the room field, keep backbone source selected for multiple assignments
-      backboneForm.setValue('roomId', 0);
+      backboneForm.resetField('roomId');
       setSelectedRoomForBackbone(null);
       toast({ title: "Backbone source assigned successfully" });
     },
