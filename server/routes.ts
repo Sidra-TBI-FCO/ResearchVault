@@ -21,7 +21,10 @@ import {
   insertProgramSchema,
   insertProjectSchema,
   insertBuildingSchema,
-  insertRoomSchema
+  insertRoomSchema,
+  insertIbcApplicationRoomSchema,
+  insertIbcBackboneSourceRoomSchema,
+  insertIbcApplicationPpeSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2453,6 +2456,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error submitting PI comment:", error);
       res.status(500).json({ message: "Failed to submit comment" });
+    }
+  });
+
+  // IBC Application Facilities Routes
+  
+  // Get rooms for IBC application
+  app.get('/api/ibc-applications/:id/rooms', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const rooms = await storage.getIbcApplicationRooms(id);
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error getting IBC application rooms:', error);
+      res.status(500).json({ message: "Failed to fetch IBC application rooms" });
+    }
+  });
+
+  // Add room to IBC application
+  app.post('/api/ibc-applications/:id/rooms', async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const validatedData = insertIbcApplicationRoomSchema.parse({
+        ...req.body,
+        applicationId
+      });
+      const newRoom = await storage.addRoomToIbcApplication(validatedData);
+      res.status(201).json(newRoom);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: fromZodError(error).toString() });
+      } else {
+        console.error('Error adding room to IBC application:', error);
+        res.status(500).json({ message: "Failed to add room to IBC application" });
+      }
+    }
+  });
+
+  // Remove room from IBC application
+  app.delete('/api/ibc-applications/:id/rooms/:roomId', async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const roomId = parseInt(req.params.roomId);
+      const success = await storage.removeRoomFromIbcApplication(applicationId, roomId);
+      if (success) {
+        res.json({ message: "Room removed from IBC application successfully" });
+      } else {
+        res.status(404).json({ message: "Room not found in IBC application" });
+      }
+    } catch (error) {
+      console.error('Error removing room from IBC application:', error);
+      res.status(500).json({ message: "Failed to remove room from IBC application" });
+    }
+  });
+
+  // Get backbone source room assignments for IBC application
+  app.get('/api/ibc-applications/:id/backbone-source-rooms', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const assignments = await storage.getIbcBackboneSourceRooms(id);
+      res.json(assignments);
+    } catch (error) {
+      console.error('Error getting IBC backbone source rooms:', error);
+      res.status(500).json({ message: "Failed to fetch IBC backbone source rooms" });
+    }
+  });
+
+  // Add backbone source room assignment
+  app.post('/api/ibc-applications/:id/backbone-source-rooms', async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const validatedData = insertIbcBackboneSourceRoomSchema.parse({
+        ...req.body,
+        applicationId
+      });
+      const newAssignment = await storage.addBackboneSourceRoom(validatedData);
+      res.status(201).json(newAssignment);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: fromZodError(error).toString() });
+      } else {
+        console.error('Error adding backbone source room:', error);
+        res.status(500).json({ message: "Failed to add backbone source room assignment" });
+      }
+    }
+  });
+
+  // Remove backbone source room assignment
+  app.delete('/api/ibc-applications/:id/backbone-source-rooms/:backboneSource/:roomId', async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const backboneSource = req.params.backboneSource;
+      const roomId = parseInt(req.params.roomId);
+      const success = await storage.removeBackboneSourceRoom(applicationId, backboneSource, roomId);
+      if (success) {
+        res.json({ message: "Backbone source room assignment removed successfully" });
+      } else {
+        res.status(404).json({ message: "Backbone source room assignment not found" });
+      }
+    } catch (error) {
+      console.error('Error removing backbone source room assignment:', error);
+      res.status(500).json({ message: "Failed to remove backbone source room assignment" });
+    }
+  });
+
+  // Get PPE for IBC application
+  app.get('/api/ibc-applications/:id/ppe', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const roomId = req.query.roomId ? parseInt(req.query.roomId as string) : undefined;
+      
+      let ppe;
+      if (roomId) {
+        ppe = await storage.getIbcApplicationPpeForRoom(id, roomId);
+      } else {
+        ppe = await storage.getIbcApplicationPpe(id);
+      }
+      res.json(ppe);
+    } catch (error) {
+      console.error('Error getting IBC application PPE:', error);
+      res.status(500).json({ message: "Failed to fetch IBC application PPE" });
+    }
+  });
+
+  // Add PPE to IBC application
+  app.post('/api/ibc-applications/:id/ppe', async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const validatedData = insertIbcApplicationPpeSchema.parse({
+        ...req.body,
+        applicationId
+      });
+      const newPpe = await storage.addPpeToIbcApplication(validatedData);
+      res.status(201).json(newPpe);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: fromZodError(error).toString() });
+      } else {
+        console.error('Error adding PPE to IBC application:', error);
+        res.status(500).json({ message: "Failed to add PPE to IBC application" });
+      }
+    }
+  });
+
+  // Remove PPE from IBC application
+  app.delete('/api/ibc-applications/:id/ppe/:roomId/:ppeItem', async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const roomId = parseInt(req.params.roomId);
+      const ppeItem = decodeURIComponent(req.params.ppeItem);
+      const success = await storage.removePpeFromIbcApplication(applicationId, roomId, ppeItem);
+      if (success) {
+        res.json({ message: "PPE removed from IBC application successfully" });
+      } else {
+        res.status(404).json({ message: "PPE not found in IBC application" });
+      }
+    } catch (error) {
+      console.error('Error removing PPE from IBC application:', error);
+      res.status(500).json({ message: "Failed to remove PPE from IBC application" });
     }
   });
 

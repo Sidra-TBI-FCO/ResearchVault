@@ -14,7 +14,10 @@ import {
   ibcApplicationResearchActivities, IbcApplicationResearchActivity, InsertIbcApplicationResearchActivity,
   researchContracts, ResearchContract, InsertResearchContract,
   buildings, Building, InsertBuilding,
-  rooms, Room, InsertRoom
+  rooms, Room, InsertRoom,
+  ibcApplicationRooms, IbcApplicationRoom, InsertIbcApplicationRoom,
+  ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
+  ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -123,6 +126,20 @@ export interface IStorage {
   // IBC Application Comment operations
   getIbcApplicationComments(applicationId: number): Promise<IbcApplicationComment[]>;
   createIbcApplicationComment(comment: InsertIbcApplicationComment): Promise<IbcApplicationComment>;
+
+  // IBC Application Facilities operations
+  getIbcApplicationRooms(applicationId: number): Promise<IbcApplicationRoom[]>;
+  addRoomToIbcApplication(applicationRoom: InsertIbcApplicationRoom): Promise<IbcApplicationRoom>;
+  removeRoomFromIbcApplication(applicationId: number, roomId: number): Promise<boolean>;
+  
+  getIbcBackboneSourceRooms(applicationId: number): Promise<IbcBackboneSourceRoom[]>;
+  addBackboneSourceRoom(backboneSourceRoom: InsertIbcBackboneSourceRoom): Promise<IbcBackboneSourceRoom>;
+  removeBackboneSourceRoom(applicationId: number, backboneSource: string, roomId: number): Promise<boolean>;
+  
+  getIbcApplicationPpe(applicationId: number): Promise<IbcApplicationPpe[]>;
+  getIbcApplicationPpeForRoom(applicationId: number, roomId: number): Promise<IbcApplicationPpe[]>;
+  addPpeToIbcApplication(applicationPpe: InsertIbcApplicationPpe): Promise<IbcApplicationPpe>;
+  removePpeFromIbcApplication(applicationId: number, roomId: number, ppeItem: string): Promise<boolean>;
 
   // Research Contract operations
   getResearchContracts(): Promise<ResearchContract[]>;

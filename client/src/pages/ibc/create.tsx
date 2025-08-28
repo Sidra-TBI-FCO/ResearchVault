@@ -23,7 +23,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertIbcApplicationSchema } from "@shared/schema";
 import { Scientist, Project, ResearchActivity } from "@shared/schema";
-import { CalendarIcon, ArrowLeft, Users, Plus, X } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Users, Plus, X, Building2 } from "lucide-react";
+import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -504,10 +505,14 @@ export default function CreateIbc() {
           <Form {...form}>
             <form className="space-y-8">
               <Tabs defaultValue="basics" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="basics">Basics</TabsTrigger>
                   <TabsTrigger value="staff">Staff</TabsTrigger>
                   <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="facilities">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Facilities
+                  </TabsTrigger>
                   <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
                 </TabsList>
                 
@@ -1262,6 +1267,42 @@ export default function CreateIbc() {
                       <strong>Note:</strong> Submission, approval, and expiration dates will be automatically set by the system during the review process.
                     </div>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="facilities" className="space-y-6 mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        Facilities & Laboratory Assignments
+                      </CardTitle>
+                      <CardDescription>
+                        Assign rooms, backbone sources, and PPE for this IBC application
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-center p-8 text-center">
+                        <div className="space-y-3">
+                          <div className="bg-blue-50 p-4 rounded-lg">
+                            <Building2 className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                            <h4 className="font-medium text-blue-900">Facilities Configuration Available After Creation</h4>
+                            <p className="text-sm text-blue-700 mt-1">
+                              Complete the basic application details first, then configure facilities assignments in the edit view.
+                            </p>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            After creating this application, you'll be able to:
+                          </p>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            <li>• Select multiple rooms from any building</li>
+                            <li>• Assign backbone sources to specific rooms</li>
+                            <li>• Choose appropriate PPE for each room</li>
+                            <li>• Ensure compliance with biosafety requirements</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="nih-guidelines" className="space-y-6 mt-6">

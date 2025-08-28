@@ -25,7 +25,10 @@ import {
   researchContracts, ResearchContract, InsertResearchContract,
   irbBoardMembers, IrbBoardMember, InsertIrbBoardMember,
   buildings, Building, InsertBuilding,
-  rooms, Room, InsertRoom
+  rooms, Room, InsertRoom,
+  ibcApplicationRooms, IbcApplicationRoom, InsertIbcApplicationRoom,
+  ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
+  ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -912,6 +915,85 @@ export class DatabaseStorage implements IStorage {
   async createIbcApplicationComment(comment: InsertIbcApplicationComment): Promise<IbcApplicationComment> {
     const [newComment] = await db.insert(ibcApplicationComments).values(comment).returning();
     return newComment;
+  }
+
+  // IBC Application Facilities operations
+  async getIbcApplicationRooms(applicationId: number): Promise<IbcApplicationRoom[]> {
+    return await db
+      .select()
+      .from(ibcApplicationRooms)
+      .where(eq(ibcApplicationRooms.applicationId, applicationId));
+  }
+
+  async addRoomToIbcApplication(applicationRoom: InsertIbcApplicationRoom): Promise<IbcApplicationRoom> {
+    const [newRoom] = await db.insert(ibcApplicationRooms).values(applicationRoom).returning();
+    return newRoom;
+  }
+
+  async removeRoomFromIbcApplication(applicationId: number, roomId: number): Promise<boolean> {
+    const result = await db
+      .delete(ibcApplicationRooms)
+      .where(and(
+        eq(ibcApplicationRooms.applicationId, applicationId),
+        eq(ibcApplicationRooms.roomId, roomId)
+      ));
+    return result.rowCount > 0;
+  }
+
+  async getIbcBackboneSourceRooms(applicationId: number): Promise<IbcBackboneSourceRoom[]> {
+    return await db
+      .select()
+      .from(ibcBackboneSourceRooms)
+      .where(eq(ibcBackboneSourceRooms.applicationId, applicationId));
+  }
+
+  async addBackboneSourceRoom(backboneSourceRoom: InsertIbcBackboneSourceRoom): Promise<IbcBackboneSourceRoom> {
+    const [newAssignment] = await db.insert(ibcBackboneSourceRooms).values(backboneSourceRoom).returning();
+    return newAssignment;
+  }
+
+  async removeBackboneSourceRoom(applicationId: number, backboneSource: string, roomId: number): Promise<boolean> {
+    const result = await db
+      .delete(ibcBackboneSourceRooms)
+      .where(and(
+        eq(ibcBackboneSourceRooms.applicationId, applicationId),
+        eq(ibcBackboneSourceRooms.backboneSource, backboneSource),
+        eq(ibcBackboneSourceRooms.roomId, roomId)
+      ));
+    return result.rowCount > 0;
+  }
+
+  async getIbcApplicationPpe(applicationId: number): Promise<IbcApplicationPpe[]> {
+    return await db
+      .select()
+      .from(ibcApplicationPpe)
+      .where(eq(ibcApplicationPpe.applicationId, applicationId));
+  }
+
+  async getIbcApplicationPpeForRoom(applicationId: number, roomId: number): Promise<IbcApplicationPpe[]> {
+    return await db
+      .select()
+      .from(ibcApplicationPpe)
+      .where(and(
+        eq(ibcApplicationPpe.applicationId, applicationId),
+        eq(ibcApplicationPpe.roomId, roomId)
+      ));
+  }
+
+  async addPpeToIbcApplication(applicationPpe: InsertIbcApplicationPpe): Promise<IbcApplicationPpe> {
+    const [newPpe] = await db.insert(ibcApplicationPpe).values(applicationPpe).returning();
+    return newPpe;
+  }
+
+  async removePpeFromIbcApplication(applicationId: number, roomId: number, ppeItem: string): Promise<boolean> {
+    const result = await db
+      .delete(ibcApplicationPpe)
+      .where(and(
+        eq(ibcApplicationPpe.applicationId, applicationId),
+        eq(ibcApplicationPpe.roomId, roomId),
+        eq(ibcApplicationPpe.ppeItem, ppeItem)
+      ));
+    return result.rowCount > 0;
   }
 
   // Research Contract operations

@@ -653,6 +653,47 @@ export const insertRoomSchema = createInsertSchema(rooms).omit({
   id: true,
 });
 
+// IBC Application Facilities Integration
+export const ibcApplicationRooms = pgTable("ibc_application_rooms", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull(), // references ibcApplications.id
+  roomId: integer("room_id").notNull(), // references rooms.id
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIbcApplicationRoomSchema = createInsertSchema(ibcApplicationRooms).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Backbone Source Room Assignments
+export const ibcBackboneSourceRooms = pgTable("ibc_backbone_source_rooms", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull(), // references ibcApplications.id
+  backboneSource: text("backbone_source").notNull(), // Must match a backbone source from the application's synthetic experiments
+  roomId: integer("room_id").notNull(), // references rooms.id (must be a room assigned to this application)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIbcBackboneSourceRoomSchema = createInsertSchema(ibcBackboneSourceRooms).omit({
+  id: true,
+  createdAt: true,
+});
+
+// PPE Usage for IBC Applications
+export const ibcApplicationPpe = pgTable("ibc_application_ppe", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull(), // references ibcApplications.id
+  roomId: integer("room_id").notNull(), // references rooms.id (must be a room assigned to this application)
+  ppeItem: text("ppe_item").notNull(), // Must be available in the room's availablePpe array
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIbcApplicationPpeSchema = createInsertSchema(ibcApplicationPpe).omit({
+  id: true,
+  createdAt: true,
+});
+
 // IRB Board Members
 export const irbBoardMembers = pgTable("irb_board_members", {
   id: serial("id").primaryKey(),
@@ -805,3 +846,10 @@ export type InsertBuilding = z.infer<typeof insertBuildingSchema>;
 
 export type Room = typeof rooms.$inferSelect;
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
+
+export type IbcApplicationRoom = typeof ibcApplicationRooms.$inferSelect;
+export type InsertIbcApplicationRoom = z.infer<typeof insertIbcApplicationRoomSchema>;
+export type IbcBackboneSourceRoom = typeof ibcBackboneSourceRooms.$inferSelect;
+export type InsertIbcBackboneSourceRoom = z.infer<typeof insertIbcBackboneSourceRoomSchema>;
+export type IbcApplicationPpe = typeof ibcApplicationPpe.$inferSelect;
+export type InsertIbcApplicationPpe = z.infer<typeof insertIbcApplicationPpeSchema>;
