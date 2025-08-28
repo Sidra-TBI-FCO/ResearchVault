@@ -300,7 +300,8 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
                   )}
                 />
                 <Button 
-                  type="submit" 
+                  type="button" 
+                  onClick={roomForm.handleSubmit(onAddRoom)}
                   disabled={addRoomMutation.isPending}
                   className="shrink-0"
                 >
@@ -427,7 +428,8 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
                         )}
                       />
                       <Button 
-                        type="submit" 
+                        type="button" 
+                        onClick={backboneForm.handleSubmit(onAddBackboneSource)}
                         disabled={addBackboneSourceMutation.isPending}
                         className="shrink-0"
                       >
@@ -577,7 +579,8 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
 
                   {selectedRoomForPpe && getAvailablePpeForRoom(selectedRoomForPpe).length > 0 && (
                     <Button 
-                      type="submit" 
+                      type="button" 
+                      onClick={ppeForm.handleSubmit(onAddPpe)}
                       disabled={addPpeMutation.isPending}
                     >
                       <Plus className="h-4 w-4 mr-2" />
