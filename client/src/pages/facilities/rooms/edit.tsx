@@ -416,7 +416,6 @@ export default function EditRoom() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No supervisor assigned</SelectItem>
                           {investigators?.map((investigator) => (
                             <SelectItem key={investigator.id} value={investigator.id.toString()}>
                               {investigator.name} ({investigator.title})
@@ -442,7 +441,6 @@ export default function EditRoom() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No manager assigned</SelectItem>
                           {scientificStaff?.map((staff) => (
                             <SelectItem key={staff.id} value={staff.id.toString()}>
                               {staff.name} ({staff.title})
