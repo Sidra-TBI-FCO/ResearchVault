@@ -94,7 +94,8 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
       roomForm.reset();
       toast({ title: "Room added successfully" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Add room mutation error:', error);
       toast({ title: "Failed to add room", variant: "destructive" });
     },
   });
@@ -223,6 +224,8 @@ export default function IbcFacilitiesTab({ applicationId, application, isReadOnl
   };
 
   const onAddRoom = (data: z.infer<typeof roomSelectionSchema>) => {
+    console.log('onAddRoom called with data:', data);
+    console.log('Form errors:', roomForm.formState.errors);
     addRoomMutation.mutate(data);
   };
 
