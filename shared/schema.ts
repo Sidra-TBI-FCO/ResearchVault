@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex, date, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -618,40 +618,39 @@ export const insertResearchContractSchema = createInsertSchema(researchContracts
 export const buildings = pgTable("buildings", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  address: text("address"),
+  description: text("description"),
+  totalFloors: integer("totalFloors"),
+  maxOccupancy: integer("maxOccupancy"),
+  emergencyContact: text("emergencyContact"),
+  safetyNotes: text("safetyNotes"),
 });
 
 export const insertBuildingSchema = createInsertSchema(buildings).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 export const rooms = pgTable("rooms", {
   id: serial("id").primaryKey(),
-  buildingId: integer("building_id").notNull(), // references buildings.id
-  floor: text("floor").notNull(), // Can be number or string (e.g., "Ground", "B1", "2")
-  roomNumber: text("room_number").notNull(),
-  roomName: text("room_name").notNull(),
-  roomSupervisorId: integer("room_supervisor_id"), // references scientists.id (must have title "Investigator")
-  roomManagerId: integer("room_manager_id"), // references scientists.id (must have title containing "Scientific Staff")
-  biosafetyLevel: text("biosafety_level"), // BSL1, BSL2, BSL3, BSL4, ABSL1, ABSL2, etc.
-  
-  // Certifications (checkboxes from vector source options in synthetic experiments)
+  buildingId: integer("buildingId").notNull(), // references buildings.id
+  roomNumber: text("roomNumber").notNull(),
+  floor: integer("floor"),
+  roomType: text("roomType"),
+  capacity: integer("capacity"),
+  area: numeric("area"),
+  biosafetyLevel: text("biosafetyLevel"),
+  roomSupervisorId: integer("roomSupervisorId"), // references scientists.id (must have title "Investigator")
+  roomManagerId: integer("roomManagerId"), // references scientists.id (must have title containing "Scientific Staff")
   certifications: json("certifications"), // Array of certification types
-  
-  // Available PPE (checkboxes from engineering controls in hazardous procedures)
-  availablePpe: json("available_ppe"), // Array of available PPE equipment
-  
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  availablePpe: json("availablePpe"), // Array of available PPE equipment
+  equipment: text("equipment"),
+  specialFeatures: text("specialFeatures"),
+  accessRestrictions: text("accessRestrictions"),
+  maintenanceNotes: text("maintenanceNotes"),
 });
 
 export const insertRoomSchema = createInsertSchema(rooms).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 // IRB Board Members
