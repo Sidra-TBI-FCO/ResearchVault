@@ -3,33 +3,15 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { DatabaseStatus } from "../DatabaseStatus";
 import { cn } from "@/lib/utils";
-
-interface DummyUser {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useCurrentUser, DUMMY_USERS } from "@/hooks/useCurrentUser";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Dummy users for development/testing (not in database)
-const DUMMY_USERS: DummyUser[] = [
-  { id: 1, name: 'Dr. Sarah Chen', email: 's.chen@research.org', role: 'Investigator' },
-  { id: 2, name: 'Dr. Michael Rodriguez', email: 'm.rodriguez@research.org', role: 'Staff Scientist' },
-  { id: 3, name: 'Dr. Emily Hassan', email: 'e.hassan@research.org', role: 'Physician' },
-  { id: 4, name: 'Dr. James Wilson', email: 'j.wilson@research.org', role: 'Research Scientist' },
-  { id: 5, name: 'Lisa Thompson', email: 'l.thompson@research.org', role: 'Lab Manager' },
-  { id: 6, name: 'Dr. Alex Kumar', email: 'a.kumar@research.org', role: 'Postdoctoral Researcher' },
-  { id: 7, name: 'Maria Santos', email: 'm.santos@research.org', role: 'PhD Student' },
-  { id: 8, name: 'Iris Administrator', email: 'iris.admin@research.org', role: 'Management' },
-];
-
 export default function Layout({ children }: LayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<DummyUser>(DUMMY_USERS[0]); // Default to first user
+  const { currentUser, setCurrentUser } = useCurrentUser();
 
   const handleUserSwitch = (userId: number) => {
     const user = DUMMY_USERS.find(u => u.id === userId);

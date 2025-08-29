@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import { PermissionsProvider } from "@/hooks/usePermissions";
+import { CurrentUserProvider } from "@/hooks/useCurrentUser";
 
 // Dashboard
 import Dashboard from "@/pages/dashboard";
@@ -230,10 +231,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <PermissionsProvider>
-          <Toaster />
-          <Router />
-        </PermissionsProvider>
+        <CurrentUserProvider>
+          <PermissionsProvider>
+            <Toaster />
+            <Router />
+          </PermissionsProvider>
+        </CurrentUserProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -147,4 +147,20 @@
   .btn-sidra-secondary {
     @apply bg-sidra-teal-light hover:bg-sidra-teal text-sidra-teal-dark hover:text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
   }
+
+  /* Read-only mode styles */
+  .read-only-content button:not(.read-only-allowed),
+  .read-only-content input:not([readonly]),
+  .read-only-content textarea:not([readonly]),
+  .read-only-content select:not([disabled]) {
+    pointer-events: none;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .read-only-content .edit-button,
+  .read-only-content .delete-button,
+  .read-only-content .create-button {
+    display: none;
+  }
 }

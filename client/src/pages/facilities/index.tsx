@@ -22,10 +22,14 @@ import {
   ChevronDown, ChevronUp, MapPin, Users, 
   Shield, Wrench
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 export default function FacilitiesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedBuildings, setExpandedBuildings] = useState<Set<number>>(new Set());
+  const { currentUser } = useCurrentUser();
+  const { canEdit } = useElementPermissions(currentUser.role, "facilities");
 
   const { data: buildings, isLoading: buildingsLoading } = useQuery<Building[]>({
     queryKey: ['/api/buildings'],
@@ -107,46 +111,49 @@ export default function FacilitiesList() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-semibold text-neutral-400">Facilities</h1>
-        <div className="flex gap-2">
-          <Link href="/facilities/buildings/create">
-            <button 
-              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2"
-              style={{ 
-                backgroundColor: '#2D9C95',
-                color: 'white',
-                opacity: '1',
-                visibility: 'visible',
-                display: 'flex'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#238B7A'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D9C95'}
-            >
-              <Building2 className="h-4 w-4" />
-              Add Building
-            </button>
-          </Link>
-          <Link href="/facilities/rooms/create">
-            <button 
-              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2"
-              style={{ 
-                backgroundColor: '#6366F1',
-                color: 'white',
-                opacity: '1',
-                visibility: 'visible',
-                display: 'flex'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5B5BF7'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6366F1'}
-            >
-              <Plus className="h-4 w-4" />
-              Add Room
-            </button>
-          </Link>
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="facilities">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h1 className="text-2xl font-semibold text-neutral-400">Facilities</h1>
+          {canEdit && (
+            <div className="flex gap-2">
+              <Link href="/facilities/buildings/create">
+                <button 
+                  className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2 create-button"
+                  style={{ 
+                    backgroundColor: '#2D9C95',
+                    color: 'white',
+                    opacity: '1',
+                    visibility: 'visible',
+                    display: 'flex'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#238B7A'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D9C95'}
+                >
+                  <Building2 className="h-4 w-4" />
+                  Add Building
+                </button>
+              </Link>
+              <Link href="/facilities/rooms/create">
+                <button 
+                  className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2 create-button"
+                  style={{ 
+                    backgroundColor: '#6366F1',
+                    color: 'white',
+                    opacity: '1',
+                    visibility: 'visible',
+                    display: 'flex'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5B5BF7'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6366F1'}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Room
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
-      </div>
 
       <Card>
         <CardHeader className="pb-3">
@@ -309,11 +316,13 @@ export default function FacilitiesList() {
                                   )}
                                 </TableCell>
                                 <TableCell>
-                                  <Link href={`/facilities/rooms/edit/${room.id}`}>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
+                                  {canEdit && (
+                                    <Link href={`/facilities/rooms/edit/${room.id}`}>
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 edit-button">
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </Link>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -333,9 +342,9 @@ export default function FacilitiesList() {
                 <p className="text-gray-600 mb-4">
                   {searchQuery ? 'Try adjusting your search criteria.' : 'Get started by adding your first building.'}
                 </p>
-                {!searchQuery && (
+                {!searchQuery && canEdit && (
                   <Link href="/facilities/buildings/create">
-                    <Button>
+                    <Button className="create-button">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Building
                     </Button>
@@ -346,6 +355,7 @@ export default function FacilitiesList() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PermissionWrapper>
   );
 }
