@@ -186,27 +186,27 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         <div className="p-4 border-b border-sidra-teal-light/30">
           <div className="flex items-center space-x-3 mb-3">
             <div className="h-10 w-10 rounded-full bg-sidra-teal-light flex items-center justify-center text-sidra-teal-dark font-medium">
-              {getInitials(currentUser.name)}
+              {getInitials(currentUser.role)}
             </div>
             <div className="flex-1">
-              <div className="font-medium text-sidra-navy">{currentUser.name}</div>
-              <div className="text-sm text-sidra-gray">{currentUser.role}</div>
+              <div className="font-medium text-sidra-navy">{currentUser.role}</div>
+              <div className="text-xs text-sidra-gray">Role-based Testing</div>
             </div>
           </div>
           
-          {/* User Selector */}
+          {/* Role Selector */}
           <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
             <SelectTrigger className="w-full h-8 text-xs">
-              <SelectValue placeholder="Switch user..." />
+              <SelectValue placeholder="Switch role..." />
             </SelectTrigger>
             <SelectContent>
               {availableUsers.map((user) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
                   <div className="flex items-center space-x-2">
                     <div className="h-4 w-4 rounded-full bg-sidra-teal-light flex items-center justify-center text-xs text-sidra-teal-dark font-medium">
-                      {getInitials(user.name)}
+                      {getInitials(user.role)}
                     </div>
-                    <span>{user.name}</span>
+                    <span>{user.role}</span>
                   </div>
                 </SelectItem>
               ))}
