@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, RotateCcw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Save, RotateCcw, Eye, EyeOff, Edit } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+type AccessLevel = "hide" | "view" | "edit";
 
 interface NavigationPermission {
   id: string;
   jobTitle: string;
   navigationItem: string;
-  hasAccess: boolean;
+  accessLevel: AccessLevel;
 }
 
 const JOB_TITLES = [
@@ -51,7 +54,7 @@ export default function RoleAccessConfig() {
   const { toast } = useToast();
   const [permissions, setPermissions] = useState<NavigationPermission[]>([]);
 
-  // Initialize permissions with default full access
+  // Initialize permissions with default edit access
   const initializePermissions = () => {
     const defaultPermissions: NavigationPermission[] = [];
     JOB_TITLES.forEach((jobTitle) => {
@@ -60,7 +63,7 @@ export default function RoleAccessConfig() {
           id: `${jobTitle}-${navItem.id}`,
           jobTitle,
           navigationItem: navItem.id,
-          hasAccess: true
+          accessLevel: "edit"
         });
       });
     });
@@ -72,9 +75,9 @@ export default function RoleAccessConfig() {
     initializePermissions();
   });
 
-  const updatePermission = (id: string, hasAccess: boolean) => {
+  const updatePermission = (id: string, accessLevel: AccessLevel) => {
     setPermissions(prev => prev.map(perm => 
-      perm.id === id ? { ...perm, hasAccess } : perm
+      perm.id === id ? { ...perm, accessLevel } : perm
     ));
   };
 
@@ -82,7 +85,7 @@ export default function RoleAccessConfig() {
     initializePermissions();
     toast({
       title: "Reset Complete",
-      description: "All navigation permissions have been reset to full access defaults."
+      description: "All navigation permissions have been reset to Edit (full access) defaults."
     });
   };
 
@@ -126,8 +129,8 @@ export default function RoleAccessConfig() {
         <CardHeader>
           <CardTitle>Permission Matrix</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Configure which navigation sections each job role can access. 
-            By default, all roles have access to all navigation items.
+            Configure navigation access levels for each job role: Hide (not visible), View Only (read-only), or Full Access (can edit). 
+            By default, all roles have Full Access to all navigation items.
           </p>
         </CardHeader>
         <CardContent>
@@ -145,7 +148,7 @@ export default function RoleAccessConfig() {
                   {/* Header */}
                   <div className="grid grid-cols-3 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
                     <div>Job Title</div>
-                    <div className="text-center">Navigation Access</div>
+                    <div className="text-center">Access Level</div>
                     <div className="text-center">Status</div>
                   </div>
 
@@ -154,23 +157,69 @@ export default function RoleAccessConfig() {
                     const permission = getPermissionForRole(jobTitle, navItem.id);
                     if (!permission) return null;
 
+                    const getStatusBadge = (accessLevel: AccessLevel) => {
+                      switch (accessLevel) {
+                        case "hide":
+                          return (
+                            <Badge variant="destructive" className="bg-red-100 text-red-800 flex items-center gap-1">
+                              <EyeOff className="h-3 w-3" />
+                              Hidden
+                            </Badge>
+                          );
+                        case "view":
+                          return (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              View Only
+                            </Badge>
+                          );
+                        case "edit":
+                          return (
+                            <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+                              <Edit className="h-3 w-3" />
+                              Full Access
+                            </Badge>
+                          );
+                      }
+                    };
+
                     return (
                       <div key={`${jobTitle}-${navItem.id}`} className="grid grid-cols-3 gap-4 items-center py-2 hover:bg-muted/50 rounded-lg px-2">
                         <div className="font-medium">{jobTitle}</div>
                         
                         <div className="flex justify-center">
-                          <Switch
-                            checked={permission.hasAccess}
-                            onCheckedChange={(checked) => updatePermission(permission.id, checked)}
-                          />
+                          <Select
+                            value={permission.accessLevel}
+                            onValueChange={(value) => updatePermission(permission.id, value as AccessLevel)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="hide">
+                                <div className="flex items-center gap-2">
+                                  <EyeOff className="h-4 w-4" />
+                                  Hide
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="view">
+                                <div className="flex items-center gap-2">
+                                  <Eye className="h-4 w-4" />
+                                  View Only
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="edit">
+                                <div className="flex items-center gap-2">
+                                  <Edit className="h-4 w-4" />
+                                  Full Access
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="flex justify-center">
-                          {permission.hasAccess ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">Access Granted</Badge>
-                          ) : (
-                            <Badge variant="destructive" className="bg-red-100 text-red-800">Access Denied</Badge>
-                          )}
+                          {getStatusBadge(permission.accessLevel)}
                         </div>
                       </div>
                     );
