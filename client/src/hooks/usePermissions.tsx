@@ -29,7 +29,12 @@ const JOB_TITLES = [
   "Lab Manager",
   "Postdoctoral Researcher",
   "PhD Student",
-  "Management"
+  "Management",
+  "IRB Board Member",
+  "IBC Board Member", 
+  "PMO Officer",
+  "IRB Officer",
+  "IBC Officer"
 ];
 
 const NAVIGATION_ITEMS = [
