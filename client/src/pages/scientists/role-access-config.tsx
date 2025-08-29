@@ -1,23 +1,13 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, RotateCcw, Eye, EyeOff, Edit } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-type AccessLevel = "hide" | "view" | "edit";
-
-interface NavigationPermission {
-  id: string;
-  jobTitle: string;
-  navigationItem: string;
-  accessLevel: AccessLevel;
-}
+import { usePermissions, type AccessLevel, type NavigationPermission } from "@/hooks/usePermissions";
 
 const JOB_TITLES = [
   "Investigator",
@@ -52,10 +42,15 @@ const NAVIGATION_ITEMS = [
 
 export default function RoleAccessConfig() {
   const { toast } = useToast();
-  const [permissions, setPermissions] = useState<NavigationPermission[]>([]);
+  const { permissions, setPermissions, getAccessLevel } = usePermissions();
 
-  // Initialize permissions with default edit access
-  const initializePermissions = () => {
+  const updatePermission = (id: string, accessLevel: AccessLevel) => {
+    setPermissions(permissions.map(perm => 
+      perm.id === id ? { ...perm, accessLevel } : perm
+    ));
+  };
+
+  const resetToDefaults = () => {
     const defaultPermissions: NavigationPermission[] = [];
     JOB_TITLES.forEach((jobTitle) => {
       NAVIGATION_ITEMS.forEach((navItem) => {
@@ -68,21 +63,6 @@ export default function RoleAccessConfig() {
       });
     });
     setPermissions(defaultPermissions);
-  };
-
-  // Initialize permissions on component mount
-  useState(() => {
-    initializePermissions();
-  });
-
-  const updatePermission = (id: string, accessLevel: AccessLevel) => {
-    setPermissions(prev => prev.map(perm => 
-      perm.id === id ? { ...perm, accessLevel } : perm
-    ));
-  };
-
-  const resetToDefaults = () => {
-    initializePermissions();
     toast({
       title: "Reset Complete",
       description: "All navigation permissions have been reset to Edit (full access) defaults."
@@ -188,34 +168,33 @@ export default function RoleAccessConfig() {
                         <div className="font-medium">{jobTitle}</div>
                         
                         <div className="flex justify-center">
-                          <Select
+                          <RadioGroup
                             value={permission.accessLevel}
                             onValueChange={(value) => updatePermission(permission.id, value as AccessLevel)}
+                            className="flex gap-4"
                           >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="hide">
-                                <div className="flex items-center gap-2">
-                                  <EyeOff className="h-4 w-4" />
-                                  Hide
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="view">
-                                <div className="flex items-center gap-2">
-                                  <Eye className="h-4 w-4" />
-                                  View Only
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="edit">
-                                <div className="flex items-center gap-2">
-                                  <Edit className="h-4 w-4" />
-                                  Full Access
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <div className="flex items-center space-x-1">
+                              <RadioGroupItem value="hide" id={`${permission.id}-hide`} />
+                              <Label htmlFor={`${permission.id}-hide`} className="flex items-center gap-1 text-xs cursor-pointer">
+                                <EyeOff className="h-3 w-3" />
+                                Hide
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <RadioGroupItem value="view" id={`${permission.id}-view`} />
+                              <Label htmlFor={`${permission.id}-view`} className="flex items-center gap-1 text-xs cursor-pointer">
+                                <Eye className="h-3 w-3" />
+                                View
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <RadioGroupItem value="edit" id={`${permission.id}-edit`} />
+                              <Label htmlFor={`${permission.id}-edit`} className="flex items-center gap-1 text-xs cursor-pointer">
+                                <Edit className="h-3 w-3" />
+                                Edit
+                              </Label>
+                            </div>
+                          </RadioGroup>
                         </div>
 
                         <div className="flex justify-center">

@@ -4,11 +4,12 @@ import {
   Beaker, LayoutDashboard, Users, FlaskConical, Database, 
   BookOpen, Award, FileText, Table, Handshake, PieChart,
   Settings, LogOut, UserPlus, X, Shield, Biohazard, Building,
-  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp, ChevronDown
+  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp, ChevronDown, Eye
 } from "lucide-react";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface DummyUser {
   id: number;
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
+  const { isHidden, isReadOnly } = usePermissions();
 
   const handleUserSwitch = (userId: string) => {
     onUserSwitch(parseInt(userId));
@@ -40,6 +42,30 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Map href to navigation item identifier
+  const getNavigationItemId = (href: string): string => {
+    const pathMap: Record<string, string> = {
+      "/": "dashboard",
+      "/scientists": "scientists",
+      "/facilities": "facilities", 
+      "/programs": "programs",
+      "/projects": "projects",
+      "/research-activities": "research-activities",
+      "/irb": "irb-applications",
+      "/irb-office": "irb-office",
+      "/irb-reviewer": "irb-reviewer",
+      "/ibc": "ibc-applications",
+      "/ibc-office": "ibc-office",
+      "/ibc-reviewer": "ibc-reviewer",
+      "/data-management": "data-management",
+      "/contracts": "contracts",
+      "/publications": "publications",
+      "/patents": "patents",
+      "/reports": "reports"
+    };
+    return pathMap[href] || href.substring(1);
   };
 
   const navigationSections = [
@@ -230,27 +256,41 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
                   </div>
                 )}
                 <div className={sectionIndex === 0 ? "space-y-1" : "space-y-1 mt-1"}>
-                  {section.items.map((item) => (
-                    <Link 
-                      key={item.href} 
-                      href={item.href}
-                      onClick={() => {
-                        // Close mobile menu when navigation item is clicked
-                        if (mobile && onClose) {
-                          onClose();
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
-                        location === item.href 
-                          ? "bg-sidra-teal text-white font-medium shadow-sm" 
-                          : "text-sidra-navy hover:bg-sidra-teal-light/20 hover:text-sidra-teal-dark"
-                      )}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  ))}
+                  {section.items
+                    .filter((item) => {
+                      const navItemId = getNavigationItemId(item.href);
+                      return !isHidden(currentUser.role, navItemId);
+                    })
+                    .map((item) => {
+                      const navItemId = getNavigationItemId(item.href);
+                      const itemIsReadOnly = isReadOnly(currentUser.role, navItemId);
+                      
+                      return (
+                        <Link 
+                          key={item.href} 
+                          href={item.href}
+                          onClick={() => {
+                            // Close mobile menu when navigation item is clicked
+                            if (mobile && onClose) {
+                              onClose();
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
+                            location === item.href 
+                              ? "bg-sidra-teal text-white font-medium shadow-sm" 
+                              : "text-sidra-navy hover:bg-sidra-teal-light/20 hover:text-sidra-teal-dark",
+                            itemIsReadOnly && "opacity-80"
+                          )}
+                        >
+                          {item.icon}
+                          <span className="flex-1">{item.label}</span>
+                          {itemIsReadOnly && (
+                            <Eye className="w-3 h-3 ml-2 opacity-60" />
+                          )}
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
             ))}

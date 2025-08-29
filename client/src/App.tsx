@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
+import { PermissionsProvider } from "@/hooks/usePermissions";
 
 // Dashboard
 import Dashboard from "@/pages/dashboard";
@@ -229,8 +230,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <PermissionsProvider>
+          <Toaster />
+          <Router />
+        </PermissionsProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
