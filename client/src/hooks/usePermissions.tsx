@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 export type AccessLevel = "hide" | "view" | "edit";
 
@@ -75,34 +75,23 @@ const createDefaultPermissions = (): NavigationPermission[] => {
   return defaultPermissions;
 };
 
-// Load permissions from localStorage or create defaults
-const loadPersistedPermissions = (): NavigationPermission[] => {
-  try {
-    const saved = localStorage.getItem('rolePermissions');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Validate the data structure
-      if (Array.isArray(parsed) && parsed.every(p => 
-        p.id && p.jobTitle && p.navigationItem && p.accessLevel
-      )) {
-        return parsed;
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to load permissions from localStorage:', error);
-  }
-  
-  // Return defaults if nothing saved or error loading
-  return createDefaultPermissions();
+// Convert database permissions to frontend format
+const convertDbPermissionsToFrontend = (dbPermissions: any[]): NavigationPermission[] => {
+  return dbPermissions.map(p => ({
+    id: `${p.jobTitle}-${p.navigationItem}`,
+    jobTitle: p.jobTitle,
+    navigationItem: p.navigationItem,
+    accessLevel: p.accessLevel as AccessLevel
+  }));
 };
 
-// Save permissions to localStorage
-const savePermissionsToStorage = (permissions: NavigationPermission[]) => {
-  try {
-    localStorage.setItem('rolePermissions', JSON.stringify(permissions));
-  } catch (error) {
-    console.warn('Failed to save permissions to localStorage:', error);
-  }
+// Convert frontend permissions to database format for bulk updates
+const convertFrontendPermissionsToDb = (permissions: NavigationPermission[]) => {
+  return permissions.map(p => ({
+    jobTitle: p.jobTitle,
+    navigationItem: p.navigationItem,
+    accessLevel: p.accessLevel
+  }));
 };
 
 interface PermissionsProviderProps {
@@ -110,12 +99,67 @@ interface PermissionsProviderProps {
 }
 
 export function PermissionsProvider({ children }: PermissionsProviderProps) {
-  const [permissions, setPermissions] = useState<NavigationPermission[]>(() => loadPersistedPermissions());
+  const [permissions, setPermissions] = useState<NavigationPermission[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Enhanced setPermissions that also saves to localStorage
-  const setPermissionsWithPersistence = (newPermissions: NavigationPermission[]) => {
+  // Load permissions from database on mount
+  useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        const response = await fetch('/api/role-permissions');
+        if (response.ok) {
+          const dbPermissions = await response.json();
+          if (dbPermissions.length > 0) {
+            setPermissions(convertDbPermissionsToFrontend(dbPermissions));
+          } else {
+            // No permissions in database, seed with defaults
+            const defaults = createDefaultPermissions();
+            setPermissions(defaults);
+            await seedDefaultPermissions(defaults);
+          }
+        } else {
+          // API failed, use defaults  
+          setPermissions(createDefaultPermissions());
+        }
+      } catch (error) {
+        console.warn('Failed to load permissions from database:', error);
+        setPermissions(createDefaultPermissions());
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+
+    loadPermissions();
+  }, []);
+
+  // Seed default permissions to database
+  const seedDefaultPermissions = async (defaultPermissions: NavigationPermission[]) => {
+    try {
+      const dbFormat = convertFrontendPermissionsToDb(defaultPermissions);
+      await fetch('/api/role-permissions/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions: dbFormat })
+      });
+    } catch (error) {
+      console.warn('Failed to seed default permissions:', error);
+    }
+  };
+
+  // Enhanced setPermissions that saves to database
+  const setPermissionsWithPersistence = async (newPermissions: NavigationPermission[]) => {
     setPermissions(newPermissions);
-    savePermissionsToStorage(newPermissions);
+    
+    try {
+      const dbFormat = convertFrontendPermissionsToDb(newPermissions);
+      await fetch('/api/role-permissions/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions: dbFormat })
+      });
+    } catch (error) {
+      console.warn('Failed to save permissions to database:', error);
+    }
   };
 
   const getAccessLevel = (jobTitle: string, navigationItem: string): AccessLevel => {

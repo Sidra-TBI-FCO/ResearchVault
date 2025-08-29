@@ -24,7 +24,8 @@ import {
   insertRoomSchema,
   insertIbcApplicationRoomSchema,
   insertIbcBackboneSourceRoomSchema,
-  insertIbcApplicationPpeSchema
+  insertIbcApplicationPpeSchema,
+  insertRolePermissionSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -3473,6 +3474,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching building rooms:', error);
       res.status(500).json({ message: "Failed to fetch building rooms" });
+    }
+  });
+
+  // Role Permissions Routes
+  app.get('/api/role-permissions', async (req: Request, res: Response) => {
+    try {
+      const permissions = await storage.getRolePermissions();
+      res.json(permissions);
+    } catch (error) {
+      console.error('Error fetching role permissions:', error);
+      res.status(500).json({ message: "Failed to fetch role permissions" });
+    }
+  });
+
+  app.post('/api/role-permissions', async (req: Request, res: Response) => {
+    try {
+      const validateData = insertRolePermissionSchema.parse(req.body);
+      const permission = await storage.createRolePermission(validateData);
+      res.status(201).json(permission);
+    } catch (error) {
+      console.error('Error creating role permission:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create role permission" });
+    }
+  });
+
+  app.patch('/api/role-permissions/:jobTitle/:navigationItem', async (req: Request, res: Response) => {
+    try {
+      const { jobTitle, navigationItem } = req.params;
+      const { accessLevel } = req.body;
+      
+      if (!accessLevel || !["hide", "view", "edit"].includes(accessLevel)) {
+        return res.status(400).json({ message: "Invalid access level" });
+      }
+
+      const permission = await storage.updateRolePermission(jobTitle, navigationItem, accessLevel);
+      if (!permission) {
+        return res.status(404).json({ message: "Role permission not found" });
+      }
+      
+      res.json(permission);
+    } catch (error) {
+      console.error('Error updating role permission:', error);
+      res.status(500).json({ message: "Failed to update role permission" });
+    }
+  });
+
+  app.post('/api/role-permissions/bulk', async (req: Request, res: Response) => {
+    try {
+      const { permissions } = req.body;
+      if (!Array.isArray(permissions)) {
+        return res.status(400).json({ message: "Permissions must be an array" });
+      }
+
+      const results = await storage.updateRolePermissionsBulk(permissions);
+      res.json(results);
+    } catch (error) {
+      console.error('Error bulk updating role permissions:', error);
+      res.status(500).json({ message: "Failed to bulk update role permissions" });
     }
   });
 

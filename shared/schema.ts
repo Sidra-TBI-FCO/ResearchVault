@@ -700,6 +700,25 @@ export const insertIbcApplicationPpeSchema = createInsertSchema(ibcApplicationPp
   createdAt: true,
 });
 
+// Role permissions schema - stores access level for each role/navigation item combination
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  jobTitle: text("job_title").notNull(), // e.g., "Investigator", "PhD Student", etc.
+  navigationItem: text("navigation_item").notNull(), // e.g., "facilities", "programs", etc.
+  accessLevel: text("access_level").notNull(), // "hide", "view", or "edit"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  // Ensure unique combination of jobTitle and navigationItem
+  uniqueJobTitleNavItem: uniqueIndex("unique_job_title_nav_item").on(table.jobTitle, table.navigationItem),
+}));
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // IRB Board Members
 export const irbBoardMembers = pgTable("irb_board_members", {
   id: serial("id").primaryKey(),
@@ -859,3 +878,6 @@ export type IbcBackboneSourceRoom = typeof ibcBackboneSourceRooms.$inferSelect;
 export type InsertIbcBackboneSourceRoom = z.infer<typeof insertIbcBackboneSourceRoomSchema>;
 export type IbcApplicationPpe = typeof ibcApplicationPpe.$inferSelect;
 export type InsertIbcApplicationPpe = z.infer<typeof insertIbcApplicationPpeSchema>;
+
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;

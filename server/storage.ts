@@ -17,7 +17,8 @@ import {
   rooms, Room, InsertRoom,
   ibcApplicationRooms, IbcApplicationRoom, InsertIbcApplicationRoom,
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
-  ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe
+  ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
+  rolePermissions, RolePermission, InsertRolePermission
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -177,6 +178,12 @@ export interface IStorage {
   }>;
   getRecentResearchActivities(limit?: number): Promise<ResearchActivity[]>;
   getUpcomingDeadlines(): Promise<any[]>; // More specific type would be created based on deadline structure
+
+  // Role Permissions operations
+  getRolePermissions(): Promise<RolePermission[]>;
+  createRolePermission(permission: InsertRolePermission): Promise<RolePermission>;
+  updateRolePermission(jobTitle: string, navigationItem: string, accessLevel: string): Promise<RolePermission | undefined>;
+  updateRolePermissionsBulk(permissions: Array<{jobTitle: string, navigationItem: string, accessLevel: string}>): Promise<RolePermission[]>;
 }
 
 export class MemStorage implements IStorage {

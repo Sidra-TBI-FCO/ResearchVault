@@ -28,7 +28,8 @@ import {
   rooms, Room, InsertRoom,
   ibcApplicationRooms, IbcApplicationRoom, InsertIbcApplicationRoom,
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
-  ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe
+  ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
+  rolePermissions, RolePermission, InsertRolePermission
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1492,6 +1493,45 @@ export class DatabaseStorage implements IStorage {
         .where(sql`LOWER(${scientists.title}) LIKE ${'%' + rolePattern.toLowerCase() + '%'}`)
         .orderBy(scientists.lastName, scientists.firstName);
     }
+  }
+
+  // Role Permissions operations
+  async getRolePermissions(): Promise<RolePermission[]> {
+    return await db.select().from(rolePermissions);
+  }
+
+  async createRolePermission(permission: InsertRolePermission): Promise<RolePermission> {
+    const [newPermission] = await db.insert(rolePermissions).values(permission).returning();
+    return newPermission;
+  }
+
+  async updateRolePermission(jobTitle: string, navigationItem: string, accessLevel: string): Promise<RolePermission | undefined> {
+    const [updatedPermission] = await db
+      .update(rolePermissions)
+      .set({ accessLevel, updatedAt: sql`now()` })
+      .where(and(
+        eq(rolePermissions.jobTitle, jobTitle),
+        eq(rolePermissions.navigationItem, navigationItem)
+      ))
+      .returning();
+    return updatedPermission;
+  }
+
+  async updateRolePermissionsBulk(permissions: Array<{jobTitle: string, navigationItem: string, accessLevel: string}>): Promise<RolePermission[]> {
+    const results: RolePermission[] = [];
+    
+    for (const permission of permissions) {
+      const result = await this.updateRolePermission(
+        permission.jobTitle, 
+        permission.navigationItem, 
+        permission.accessLevel
+      );
+      if (result) {
+        results.push(result);
+      }
+    }
+    
+    return results;
   }
 }
 
