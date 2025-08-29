@@ -19,6 +19,8 @@ import { Scientist } from "@shared/schema";
 import { Plus, Search, MoreHorizontal, Mail, Phone, ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 export default function ScientistsList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +28,8 @@ export default function ScientistsList() {
   const [sortField, setSortField] = useState<"name" | "department" | "title" | "activeResearchActivities">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [, navigate] = useLocation();
+  const { currentUser } = useCurrentUser();
+  const { canEdit } = useElementPermissions(currentUser.role, "scientists");
 
   const { data: scientists, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
     queryKey: ['/api/scientists', { includeActivityCount: true }],
@@ -100,35 +104,40 @@ export default function ScientistsList() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-semibold text-neutral-400">Scientists & Staff</h1>
-        <div className="flex items-center gap-3">
-          <Link href="/scientists/role-access-config">
-            <button 
-              className="px-4 py-2 rounded-lg border border-sidra-teal text-sidra-teal transition-colors hover:bg-sidra-teal hover:text-white"
-            >
-              Configure Role Based Access
-            </button>
-          </Link>
-          <Link href="/scientists/create">
-            <button 
-              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-              style={{ 
-                backgroundColor: '#2D9C95',
-                color: 'white',
-                opacity: '1',
-                visibility: 'visible',
-                display: 'block'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-            >
-              Add Scientist
-            </button>
-          </Link>
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="scientists">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h1 className="text-2xl font-semibold text-neutral-400">Scientists & Staff</h1>
+          <div className="flex items-center gap-3">
+            {canEdit && (
+              <Link href="/scientists/role-access-config">
+                <button 
+                  className="px-4 py-2 rounded-lg border border-sidra-teal text-sidra-teal transition-colors hover:bg-sidra-teal hover:text-white"
+                >
+                  Configure Role Based Access
+                </button>
+              </Link>
+            )}
+            {canEdit && (
+              <Link href="/scientists/create">
+                <button 
+                  className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 create-button"
+                  style={{ 
+                    backgroundColor: '#2D9C95',
+                    color: 'white',
+                    opacity: '1',
+                    visibility: 'visible',
+                    display: 'block'
+                  }}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#238B7A'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#2D9C95'}
+                >
+                  Add Scientist
+                </button>
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
 
       <Card>
         <CardHeader className="pb-3">
@@ -359,11 +368,13 @@ export default function ScientistsList() {
                                   View Details
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/scientists/${scientist.id}/edit`}>
-                                  Edit Scientist
-                                </Link>
-                              </DropdownMenuItem>
+                              {canEdit && (
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/scientists/${scientist.id}/edit`} className="edit-button">
+                                    Edit Scientist
+                                  </Link>
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -383,6 +394,7 @@ export default function ScientistsList() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PermissionWrapper>
   );
 }

@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Beaker, FilePlus, Search, MoreHorizontal } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 interface Program {
   id: number;
@@ -45,6 +47,8 @@ interface Scientist {
 export default function ProgramsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
+  const { currentUser } = useCurrentUser();
+  const { canEdit } = useElementPermissions(currentUser.role, "programs");
 
   const { data: programs, isLoading } = useQuery<Program[]>({
     queryKey: ['/api/programs'],
@@ -83,26 +87,29 @@ export default function ProgramsList() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-semibold text-neutral-400">Research Programs (PRM)</h1>
-        <Link href="/programs/create">
-          <button 
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-            style={{ 
-              backgroundColor: '#2D9C95',
-              color: 'white',
-              opacity: '1',
-              visibility: 'visible',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-          >
-            New Program
-          </button>
-        </Link>
-      </div>
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="programs">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h1 className="text-2xl font-semibold text-neutral-400">Research Programs (PRM)</h1>
+          {canEdit && (
+            <Link href="/programs/create">
+              <button 
+                className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 create-button"
+                style={{ 
+                  backgroundColor: '#2D9C95',
+                  color: 'white',
+                  opacity: '1',
+                  visibility: 'visible',
+                  display: 'block'
+                }}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#238B7A'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#2D9C95'}
+              >
+                New Program
+              </button>
+            </Link>
+          )}
+        </div>
 
       <Card>
         <CardHeader className="pb-3">
@@ -225,11 +232,13 @@ export default function ProgramsList() {
                               View Details
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/programs/${program.id}/edit`}>
-                              Edit Program
-                            </Link>
-                          </DropdownMenuItem>
+                          {canEdit && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/programs/${program.id}/edit`} className="edit-button">
+                                Edit Program
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -247,6 +256,7 @@ export default function ProgramsList() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PermissionWrapper>
   );
 }
