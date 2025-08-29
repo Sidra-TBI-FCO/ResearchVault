@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
 import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2 } from "lucide-react";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
+import { IbcInactivationDecontaminationTab } from "@/components/IbcInactivationDecontaminationTab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -712,7 +713,7 @@ export default function IbcApplicationEdit() {
       <Form {...form}>
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <Tabs defaultValue="basics" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="basics">Basics</TabsTrigger>
               <TabsTrigger value="staff">Staff</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -721,6 +722,7 @@ export default function IbcApplicationEdit() {
                 <Building2 className="h-4 w-4 mr-2" />
                 Facilities
               </TabsTrigger>
+              <TabsTrigger value="inactivation">Inactivation & Decontamination</TabsTrigger>
               <TabsTrigger value="construction">Under Construction</TabsTrigger>
             </TabsList>
 
@@ -3852,6 +3854,14 @@ export default function IbcApplicationEdit() {
 
             <TabsContent value="facilities" className="space-y-6 mt-6">
               <IbcFacilitiesTab 
+                applicationId={ibcApplication.id} 
+                application={ibcApplication}
+                isReadOnly={isReadOnly}
+              />
+            </TabsContent>
+
+            <TabsContent value="inactivation" className="space-y-6 mt-6">
+              <IbcInactivationDecontaminationTab 
                 applicationId={ibcApplication.id} 
                 application={ibcApplication}
                 isReadOnly={isReadOnly}

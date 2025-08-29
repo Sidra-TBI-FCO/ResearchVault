@@ -528,6 +528,9 @@ export const ibcApplications = pgTable("ibc_applications", {
   documents: json("documents"), // Store metadata for approval letters, applications, etc.
   formData: json("form_data"), // Store form-specific data
   
+  // Inactivation and Decontamination
+  inactivationDecontamination: json("inactivation_decontamination"), // All inactivation and decontamination data
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

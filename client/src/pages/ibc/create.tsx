@@ -25,6 +25,7 @@ import { insertIbcApplicationSchema } from "@shared/schema";
 import { Scientist, Project, ResearchActivity } from "@shared/schema";
 import { CalendarIcon, ArrowLeft, Users, Plus, X, Building2 } from "lucide-react";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
+import { IbcInactivationDecontaminationTab } from "@/components/IbcInactivationDecontaminationTab";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -505,7 +506,7 @@ export default function CreateIbc() {
           <Form {...form}>
             <form className="space-y-8">
               <Tabs defaultValue="basics" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-6">
                   <TabsTrigger value="basics">Basics</TabsTrigger>
                   <TabsTrigger value="staff">Staff</TabsTrigger>
                   <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -513,6 +514,7 @@ export default function CreateIbc() {
                     <Building2 className="h-4 w-4 mr-2" />
                     Facilities
                   </TabsTrigger>
+                  <TabsTrigger value="inactivation">Inactivation & Decontamination</TabsTrigger>
                   <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
                 </TabsList>
                 
@@ -1299,6 +1301,32 @@ export default function CreateIbc() {
                             <li>• Choose appropriate PPE for each room</li>
                             <li>• Ensure compliance with biosafety requirements</li>
                           </ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="inactivation" className="space-y-6 mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Inactivation and Decontamination</CardTitle>
+                      <CardDescription>
+                        Procedures for inactivation and decontamination will be configured after application creation.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <div className="text-center">
+                            <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                              <span className="text-white text-sm">✓</span>
+                            </div>
+                            <h4 className="font-medium text-blue-900">Inactivation & Decontamination Available After Creation</h4>
+                            <p className="text-sm text-blue-700 mt-1">
+                              Complete the basic application details first, then configure inactivation and decontamination procedures in the edit view.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
