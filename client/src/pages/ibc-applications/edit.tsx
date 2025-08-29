@@ -1657,7 +1657,7 @@ export default function IbcApplicationEdit() {
             <TabsContent value="nucleic-acids" className="space-y-6 mt-6">
               {/* Secondary navigation for nucleic acids sub-tabs */}
               <Tabs defaultValue="nih-guidelines" className="w-full">
-                <TabsList className="w-full flex overflow-x-auto pl-4 pr-4 gap-2 scroll-smooth" style={{scrollPaddingLeft: '16px', scrollPaddingRight: '16px'}}>
+                <TabsList className="w-full justify-start overflow-x-auto px-6 gap-2" style={{scrollPaddingLeft: '24px', scrollPaddingRight: '24px'}}>
                   <TabsTrigger value="nih-guidelines" className="whitespace-nowrap flex-shrink-0">NIH Guidelines</TabsTrigger>
                   <TabsTrigger value="hazardous-procedures" className="whitespace-nowrap flex-shrink-0">Hazardous Procedures</TabsTrigger>
                   <TabsTrigger value="synthetic-experiments" className="whitespace-nowrap flex-shrink-0">Synthetic Experiments</TabsTrigger>
