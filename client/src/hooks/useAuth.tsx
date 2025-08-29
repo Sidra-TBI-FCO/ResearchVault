@@ -13,8 +13,10 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  availableUsers: User[];
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  switchUser: (userId: number) => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -23,27 +25,36 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  // Check if user is authenticated
+  // Check if user is authenticated and load available users
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.user);
+        // Check current user
+        const authResponse = await fetch('/api/auth/me');
+        if (authResponse.ok) {
+          const authData = await authResponse.json();
+          setUser(authData.user);
+        }
+        
+        // Load available users for switching
+        const usersResponse = await fetch('/api/auth/users');
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          setAvailableUsers(usersData.users);
         }
       } catch (error) {
-        // Fail silently, user is not authenticated
+        // Fail silently, user is not authenticated or users can't be loaded
       } finally {
         setLoading(false);
       }
     };
     
-    checkAuth();
+    initializeAuth();
   }, []);
   
   // Login function
@@ -110,14 +121,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
   };
+
+  // Switch user function (for development/testing)
+  const switchUser = async (userId: number): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth/switch-user', {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        toast({
+          title: 'User switched',
+          description: `Now viewing as ${data.user.name}`,
+        });
+        return true;
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Switch user failed',
+          description: errorData.message || 'Failed to switch user',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    } catch (error) {
+      toast({
+        title: 'Switch user error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
+        availableUsers,
         login,
         logout,
+        switchUser,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
       }}

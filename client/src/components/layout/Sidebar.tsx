@@ -4,21 +4,43 @@ import {
   Beaker, LayoutDashboard, Users, FlaskConical, Database, 
   BookOpen, Award, FileText, Table, Handshake, PieChart,
   Settings, LogOut, UserPlus, X, Shield, Biohazard, Building,
-  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp
+  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp, ChevronDown
 } from "lucide-react";
+import { 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from "@/components/ui/select";
+
+interface DummyUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 
 interface SidebarProps {
-  user: {
-    name: string;
-    role: string;
-    initials: string;
-  };
+  currentUser: DummyUser;
+  availableUsers: DummyUser[];
+  onUserSwitch: (userId: number) => void;
   mobile?: boolean;
   onClose?: () => void;
 }
 
-export default function Sidebar({ user, mobile = false, onClose }: SidebarProps) {
+export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
+
+  const handleUserSwitch = (userId: string) => {
+    onUserSwitch(parseInt(userId));
+  };
+
+  // Generate initials from user name
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const navigationSections = [
     {
@@ -162,15 +184,34 @@ export default function Sidebar({ user, mobile = false, onClose }: SidebarProps)
 
         {/* User Info */}
         <div className="p-4 border-b border-sidra-teal-light/30">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mb-3">
             <div className="h-10 w-10 rounded-full bg-sidra-teal-light flex items-center justify-center text-sidra-teal-dark font-medium">
-              {user.initials}
+              {getInitials(currentUser.name)}
             </div>
-            <div>
-              <div className="font-medium text-sidra-navy">{user.name}</div>
-              <div className="text-sm text-sidra-gray">{user.role}</div>
+            <div className="flex-1">
+              <div className="font-medium text-sidra-navy">{currentUser.name}</div>
+              <div className="text-sm text-sidra-gray">{currentUser.role}</div>
             </div>
           </div>
+          
+          {/* User Selector */}
+          <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
+            <SelectTrigger className="w-full h-8 text-xs">
+              <SelectValue placeholder="Switch user..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableUsers.map((user) => (
+                <SelectItem key={user.id} value={user.id.toString()}>
+                  <div className="flex items-center space-x-2">
+                    <div className="h-4 w-4 rounded-full bg-sidra-teal-light flex items-center justify-center text-xs text-sidra-teal-dark font-medium">
+                      {getInitials(user.name)}
+                    </div>
+                    <span>{user.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Navigation */}
