@@ -9,14 +9,11 @@ import { ArrowLeft, Save, RotateCcw } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-interface Permission {
+interface NavigationPermission {
   id: string;
   jobTitle: string;
-  module: string;
-  canView: boolean;
-  canEdit: boolean;
-  canCreate: boolean;
-  canDelete: boolean;
+  navigationItem: string;
+  hasAccess: boolean;
 }
 
 const JOB_TITLES = [
@@ -30,37 +27,40 @@ const JOB_TITLES = [
   "Management"
 ];
 
-const APPLICATION_MODULES = [
-  { id: "dashboard", name: "Dashboard", description: "View system overview and statistics" },
-  { id: "scientists", name: "Scientists & Staff", description: "Manage research team members" },
-  { id: "programs", name: "Programs (PRM)", description: "Manage research programs" },
-  { id: "projects", name: "Projects (PRJ)", description: "Manage research projects" },
-  { id: "research-activities", name: "Research Activities (SDR)", description: "Manage scientific data records" },
-  { id: "publications", name: "Publications", description: "Manage academic publications" },
-  { id: "patents", name: "Patents", description: "Manage intellectual property" },
-  { id: "irb-applications", name: "IRB Applications", description: "Institutional Review Board applications" },
-  { id: "ibc-applications", name: "IBC Applications", description: "Institutional Biosafety Committee applications" },
+const NAVIGATION_ITEMS = [
+  { id: "dashboard", name: "Dashboard", description: "System overview and statistics" },
+  { id: "scientists", name: "Scientists & Staff", description: "Research team management" },
+  { id: "facilities", name: "Facilities", description: "Buildings and rooms management" },
+  { id: "programs", name: "Programs (PRM)", description: "Research programs" },
+  { id: "projects", name: "Projects (PRJ)", description: "Research projects" },
+  { id: "research-activities", name: "Research Activities (SDR)", description: "Scientific data records" },
+  { id: "irb-applications", name: "IRB Applications", description: "Ethics review applications" },
+  { id: "irb-office", name: "IRB Office", description: "IRB administration" },
+  { id: "irb-reviewer", name: "IRB Reviewer", description: "IRB review interface" },
+  { id: "ibc-applications", name: "IBC Applications", description: "Biosafety applications" },
+  { id: "ibc-office", name: "IBC Office", description: "IBC administration" },
+  { id: "ibc-reviewer", name: "IBC Reviewer", description: "IBC review interface" },
   { id: "data-management", name: "Data Management Plans", description: "Research data governance" },
-  { id: "contracts", name: "Research Contracts", description: "Collaboration and funding agreements" }
+  { id: "contracts", name: "Research Contracts", description: "Collaboration agreements" },
+  { id: "publications", name: "Publications", description: "Academic publications" },
+  { id: "patents", name: "Patents", description: "Intellectual property" },
+  { id: "reports", name: "Reports", description: "System reports and analytics" }
 ];
 
 export default function RoleAccessConfig() {
   const { toast } = useToast();
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [permissions, setPermissions] = useState<NavigationPermission[]>([]);
 
   // Initialize permissions with default full access
   const initializePermissions = () => {
-    const defaultPermissions: Permission[] = [];
+    const defaultPermissions: NavigationPermission[] = [];
     JOB_TITLES.forEach((jobTitle) => {
-      APPLICATION_MODULES.forEach((module) => {
+      NAVIGATION_ITEMS.forEach((navItem) => {
         defaultPermissions.push({
-          id: `${jobTitle}-${module.id}`,
+          id: `${jobTitle}-${navItem.id}`,
           jobTitle,
-          module: module.id,
-          canView: true,
-          canEdit: true,
-          canCreate: true,
-          canDelete: true
+          navigationItem: navItem.id,
+          hasAccess: true
         });
       });
     });
@@ -72,9 +72,9 @@ export default function RoleAccessConfig() {
     initializePermissions();
   });
 
-  const updatePermission = (id: string, field: keyof Permission, value: boolean) => {
+  const updatePermission = (id: string, hasAccess: boolean) => {
     setPermissions(prev => prev.map(perm => 
-      perm.id === id ? { ...perm, [field]: value } : perm
+      perm.id === id ? { ...perm, hasAccess } : perm
     ));
   };
 
@@ -82,7 +82,7 @@ export default function RoleAccessConfig() {
     initializePermissions();
     toast({
       title: "Reset Complete",
-      description: "All permissions have been reset to full access defaults."
+      description: "All navigation permissions have been reset to full access defaults."
     });
   };
 
@@ -90,12 +90,12 @@ export default function RoleAccessConfig() {
     // For now, just show a success message since we're not storing in database yet
     toast({
       title: "Permissions Saved",
-      description: "Role-based access permissions have been updated successfully."
+      description: "Navigation access permissions have been updated successfully."
     });
   };
 
-  const getPermissionForRole = (jobTitle: string, moduleId: string) => {
-    return permissions.find(p => p.jobTitle === jobTitle && p.module === moduleId);
+  const getPermissionForRole = (jobTitle: string, navItemId: string) => {
+    return permissions.find(p => p.jobTitle === jobTitle && p.navigationItem === navItemId);
   };
 
   return (
@@ -126,79 +126,50 @@ export default function RoleAccessConfig() {
         <CardHeader>
           <CardTitle>Permission Matrix</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Configure what each job role can access and do within the system. 
-            By default, all roles have full access to all modules.
+            Configure which navigation sections each job role can access. 
+            By default, all roles have access to all navigation items.
           </p>
         </CardHeader>
         <CardContent>
-          <div className="space-y-8">
-            {APPLICATION_MODULES.map((module) => (
-              <div key={module.id} className="space-y-4">
+          <div className="space-y-6">
+            {NAVIGATION_ITEMS.map((navItem) => (
+              <div key={navItem.id} className="space-y-3">
                 <div className="flex items-center justify-between border-b pb-2">
                   <div>
-                    <h3 className="font-medium text-lg">{module.name}</h3>
-                    <p className="text-sm text-muted-foreground">{module.description}</p>
+                    <h3 className="font-medium text-lg">{navItem.name}</h3>
+                    <p className="text-sm text-muted-foreground">{navItem.description}</p>
                   </div>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {/* Header */}
-                  <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+                  <div className="grid grid-cols-3 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
                     <div>Job Title</div>
-                    <div className="text-center">View</div>
-                    <div className="text-center">Edit</div>
-                    <div className="text-center">Create</div>
-                    <div className="text-center">Delete</div>
+                    <div className="text-center">Navigation Access</div>
                     <div className="text-center">Status</div>
                   </div>
 
                   {/* Permission rows */}
                   {JOB_TITLES.map((jobTitle) => {
-                    const permission = getPermissionForRole(jobTitle, module.id);
+                    const permission = getPermissionForRole(jobTitle, navItem.id);
                     if (!permission) return null;
 
-                    const hasFullAccess = permission.canView && permission.canEdit && permission.canCreate && permission.canDelete;
-                    const hasPartialAccess = permission.canView || permission.canEdit || permission.canCreate || permission.canDelete;
-
                     return (
-                      <div key={`${jobTitle}-${module.id}`} className="grid grid-cols-6 gap-4 items-center py-2 hover:bg-muted/50 rounded-lg px-2">
+                      <div key={`${jobTitle}-${navItem.id}`} className="grid grid-cols-3 gap-4 items-center py-2 hover:bg-muted/50 rounded-lg px-2">
                         <div className="font-medium">{jobTitle}</div>
                         
                         <div className="flex justify-center">
                           <Switch
-                            checked={permission.canView}
-                            onCheckedChange={(checked) => updatePermission(permission.id, 'canView', checked)}
-                          />
-                        </div>
-                        
-                        <div className="flex justify-center">
-                          <Switch
-                            checked={permission.canEdit}
-                            onCheckedChange={(checked) => updatePermission(permission.id, 'canEdit', checked)}
-                          />
-                        </div>
-                        
-                        <div className="flex justify-center">
-                          <Switch
-                            checked={permission.canCreate}
-                            onCheckedChange={(checked) => updatePermission(permission.id, 'canCreate', checked)}
-                          />
-                        </div>
-                        
-                        <div className="flex justify-center">
-                          <Switch
-                            checked={permission.canDelete}
-                            onCheckedChange={(checked) => updatePermission(permission.id, 'canDelete', checked)}
+                            checked={permission.hasAccess}
+                            onCheckedChange={(checked) => updatePermission(permission.id, checked)}
                           />
                         </div>
 
                         <div className="flex justify-center">
-                          {hasFullAccess ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">Full Access</Badge>
-                          ) : hasPartialAccess ? (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Partial Access</Badge>
+                          {permission.hasAccess ? (
+                            <Badge variant="default" className="bg-green-100 text-green-800">Access Granted</Badge>
                           ) : (
-                            <Badge variant="destructive" className="bg-red-100 text-red-800">No Access</Badge>
+                            <Badge variant="destructive" className="bg-red-100 text-red-800">Access Denied</Badge>
                           )}
                         </div>
                       </div>
