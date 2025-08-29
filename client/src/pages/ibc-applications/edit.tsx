@@ -714,28 +714,28 @@ export default function IbcApplicationEdit() {
       <Form {...form}>
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <Tabs defaultValue="basics" className="w-full">
-            <TabsList className="w-full flex overflow-x-auto">
-              <TabsTrigger value="basics" className="whitespace-nowrap">Basics</TabsTrigger>
-              <TabsTrigger value="staff" className="whitespace-nowrap">Staff</TabsTrigger>
-              <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
-              <TabsTrigger value="nucleic-acids" className="whitespace-nowrap">
+            <TabsList className="w-full flex overflow-x-auto px-2 gap-1" style={{scrollPaddingLeft: '8px', scrollPaddingRight: '8px'}}>
+              <TabsTrigger value="basics" className="whitespace-nowrap flex-shrink-0">Basics</TabsTrigger>
+              <TabsTrigger value="staff" className="whitespace-nowrap flex-shrink-0">Staff</TabsTrigger>
+              <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Overview</TabsTrigger>
+              <TabsTrigger value="nucleic-acids" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden lg:inline">Recombinant or Synthetic Nucleic Acids</span>
                 <span className="hidden sm:inline lg:hidden">Nucleic Acids</span>
                 <span className="sm:hidden">DNA/RNA</span>
               </TabsTrigger>
-              <TabsTrigger value="facilities" className="whitespace-nowrap">
+              <TabsTrigger value="facilities" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Facilities</span>
                 <span className="sm:hidden">Labs</span>
               </TabsTrigger>
-              <TabsTrigger value="inactivation" className="whitespace-nowrap">
+              <TabsTrigger value="inactivation" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Inactivation & Decontamination</span>
                 <span className="sm:hidden">Inactivation</span>
               </TabsTrigger>
-              <TabsTrigger value="disposal" className="whitespace-nowrap">
+              <TabsTrigger value="disposal" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Disposal</span>
                 <span className="sm:hidden">Disposal</span>
               </TabsTrigger>
-              <TabsTrigger value="construction" className="whitespace-nowrap">
+              <TabsTrigger value="construction" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Under Construction</span>
                 <span className="sm:hidden">Construction</span>
               </TabsTrigger>
@@ -1657,11 +1657,11 @@ export default function IbcApplicationEdit() {
             <TabsContent value="nucleic-acids" className="space-y-6 mt-6">
               {/* Secondary navigation for nucleic acids sub-tabs */}
               <Tabs defaultValue="nih-guidelines" className="w-full">
-                <TabsList className="w-full flex overflow-x-auto">
-                  <TabsTrigger value="nih-guidelines" className="whitespace-nowrap">NIH Guidelines</TabsTrigger>
-                  <TabsTrigger value="hazardous-procedures" className="whitespace-nowrap">Hazardous Procedures</TabsTrigger>
-                  <TabsTrigger value="synthetic-experiments" className="whitespace-nowrap">Synthetic Experiments</TabsTrigger>
-                  <TabsTrigger value="additional-details" className="whitespace-nowrap">Additional Details</TabsTrigger>
+                <TabsList className="w-full flex overflow-x-auto px-2 gap-1" style={{scrollPaddingLeft: '8px', scrollPaddingRight: '8px'}}>
+                  <TabsTrigger value="nih-guidelines" className="whitespace-nowrap flex-shrink-0">NIH Guidelines</TabsTrigger>
+                  <TabsTrigger value="hazardous-procedures" className="whitespace-nowrap flex-shrink-0">Hazardous Procedures</TabsTrigger>
+                  <TabsTrigger value="synthetic-experiments" className="whitespace-nowrap flex-shrink-0">Synthetic Experiments</TabsTrigger>
+                  <TabsTrigger value="additional-details" className="whitespace-nowrap flex-shrink-0">Additional Details</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="nih-guidelines" className="space-y-6 mt-6">

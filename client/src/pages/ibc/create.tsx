@@ -507,23 +507,23 @@ export default function CreateIbc() {
           <Form {...form}>
             <form className="space-y-8">
               <Tabs defaultValue="basics" className="w-full">
-                <TabsList className="w-full flex overflow-x-auto">
-                  <TabsTrigger value="basics" className="whitespace-nowrap">Basics</TabsTrigger>
-                  <TabsTrigger value="staff" className="whitespace-nowrap">Staff</TabsTrigger>
-                  <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
-                  <TabsTrigger value="facilities" className="whitespace-nowrap">
+                <TabsList className="w-full flex overflow-x-auto px-2 gap-1" style={{scrollPaddingLeft: '8px', scrollPaddingRight: '8px'}}>
+                  <TabsTrigger value="basics" className="whitespace-nowrap flex-shrink-0">Basics</TabsTrigger>
+                  <TabsTrigger value="staff" className="whitespace-nowrap flex-shrink-0">Staff</TabsTrigger>
+                  <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Overview</TabsTrigger>
+                  <TabsTrigger value="facilities" className="whitespace-nowrap flex-shrink-0">
                     <span className="hidden sm:inline">Facilities</span>
                     <span className="sm:hidden">Labs</span>
                   </TabsTrigger>
-                  <TabsTrigger value="inactivation" className="whitespace-nowrap">
+                  <TabsTrigger value="inactivation" className="whitespace-nowrap flex-shrink-0">
                     <span className="hidden sm:inline">Inactivation & Decontamination</span>
                     <span className="sm:hidden">Inactivation</span>
                   </TabsTrigger>
-                  <TabsTrigger value="disposal" className="whitespace-nowrap">
+                  <TabsTrigger value="disposal" className="whitespace-nowrap flex-shrink-0">
                     <span className="hidden sm:inline">Disposal</span>
                     <span className="sm:hidden">Disposal</span>
                   </TabsTrigger>
-                  <TabsTrigger value="nih-guidelines" className="whitespace-nowrap">
+                  <TabsTrigger value="nih-guidelines" className="whitespace-nowrap flex-shrink-0">
                     <span className="hidden sm:inline">NIH Guidelines</span>
                     <span className="sm:hidden">NIH</span>
                   </TabsTrigger>
