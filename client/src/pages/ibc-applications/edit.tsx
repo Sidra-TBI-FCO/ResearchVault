@@ -714,7 +714,7 @@ export default function IbcApplicationEdit() {
       <Form {...form}>
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <Tabs defaultValue="basics" className="w-full">
-            <TabsList className="w-full flex overflow-x-auto pl-4 pr-4 gap-2 scroll-smooth" style={{scrollPaddingLeft: '16px', scrollPaddingRight: '16px'}}>
+            <TabsList className="w-full justify-start overflow-x-auto px-6 gap-2" style={{scrollPaddingLeft: '24px', scrollPaddingRight: '24px'}}>
               <TabsTrigger value="basics" className="whitespace-nowrap flex-shrink-0">Basics</TabsTrigger>
               <TabsTrigger value="staff" className="whitespace-nowrap flex-shrink-0">Staff</TabsTrigger>
               <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Overview</TabsTrigger>
