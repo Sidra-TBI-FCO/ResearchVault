@@ -57,10 +57,6 @@ export interface EnhancedIrbApplication extends IrbApplication {
 }
 
 export interface EnhancedIbcApplication extends IbcApplication {
-  project?: {
-    id: number;
-    title: string;
-  };
   principalInvestigator?: {
     id: number;
     name: string;

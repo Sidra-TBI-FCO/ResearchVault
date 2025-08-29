@@ -53,10 +53,7 @@ export default function IbcList() {
     return (
       app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.protocolNumber && app.protocolNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.agents && app.agents.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.principalInvestigator && app.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.project && app.project.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      (app.principalInvestigator && app.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   });
 
@@ -138,22 +135,9 @@ export default function IbcList() {
                       <div className="font-medium">
                         {application.title}
                       </div>
-                      {application.project && (
+                      {application.description && (
                         <div className="text-sm text-neutral-200 mt-1">
-                          Project: <Link href={`/projects/${application.project.id}`}>
-                            <a 
-                              className="text-primary-500 hover:text-primary-600 transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {application.project.title}
-                            </a>
-                          </Link>
-                        </div>
-                      )}
-                      {application.agents && (
-                        <div className="text-xs text-neutral-200 mt-1 flex items-center">
-                          <FlaskConical className="h-3 w-3 mr-1" /> 
-                          {application.agents}
+                          {application.description}
                         </div>
                       )}
                     </TableCell>

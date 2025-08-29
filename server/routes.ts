@@ -1916,24 +1916,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
       
-      let applications;
-      if (projectId && !isNaN(projectId)) {
-        applications = await storage.getIbcApplicationsForProject(projectId);
-      } else {
-        applications = await storage.getIbcApplications();
-      }
+      // IBC applications are not directly linked to projects, so ignore projectId filter
+      const applications = await storage.getIbcApplications();
       
-      // Enhance applications with project and PI details
+      // Enhance applications with PI details (IBC applications are not directly linked to projects)
       const enhancedApplications = await Promise.all(applications.map(async (app) => {
-        const project = await storage.getProject(app.projectId);
         const pi = await storage.getScientist(app.principalInvestigatorId);
         
         return {
           ...app,
-          project: project ? {
-            id: project.id,
-            title: project.title
-          } : null,
           principalInvestigator: pi ? {
             id: pi.id,
             name: pi.name,
@@ -1944,6 +1935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(enhancedApplications);
     } catch (error) {
+      console.error('Error fetching IBC applications:', error);
       res.status(500).json({ message: "Failed to fetch IBC applications" });
     }
   });
