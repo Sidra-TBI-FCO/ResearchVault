@@ -511,7 +511,6 @@ export default function CreateIbc() {
                   <TabsTrigger value="staff" className="whitespace-nowrap">Staff</TabsTrigger>
                   <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
                   <TabsTrigger value="facilities" className="whitespace-nowrap">
-                    <Building2 className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">Facilities</span>
                     <span className="sm:hidden">Labs</span>
                   </TabsTrigger>

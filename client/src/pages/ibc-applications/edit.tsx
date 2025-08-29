@@ -723,7 +723,6 @@ export default function IbcApplicationEdit() {
                 <span className="sm:hidden">DNA/RNA</span>
               </TabsTrigger>
               <TabsTrigger value="facilities" className="whitespace-nowrap">
-                <Building2 className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Facilities</span>
                 <span className="sm:hidden">Labs</span>
               </TabsTrigger>
@@ -1653,11 +1652,11 @@ export default function IbcApplicationEdit() {
             <TabsContent value="nucleic-acids" className="space-y-6 mt-6">
               {/* Secondary navigation for nucleic acids sub-tabs */}
               <Tabs defaultValue="nih-guidelines" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
-                  <TabsTrigger value="hazardous-procedures">Hazardous Procedures</TabsTrigger>
-                  <TabsTrigger value="synthetic-experiments">Synthetic Experiments</TabsTrigger>
-                  <TabsTrigger value="additional-details">Additional Details</TabsTrigger>
+                <TabsList className="w-full flex overflow-x-auto">
+                  <TabsTrigger value="nih-guidelines" className="whitespace-nowrap">NIH Guidelines</TabsTrigger>
+                  <TabsTrigger value="hazardous-procedures" className="whitespace-nowrap">Hazardous Procedures</TabsTrigger>
+                  <TabsTrigger value="synthetic-experiments" className="whitespace-nowrap">Synthetic Experiments</TabsTrigger>
+                  <TabsTrigger value="additional-details" className="whitespace-nowrap">Additional Details</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="nih-guidelines" className="space-y-6 mt-6">
