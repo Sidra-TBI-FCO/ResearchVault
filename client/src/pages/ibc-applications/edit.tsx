@@ -15,6 +15,7 @@ import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplicat
 import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2 } from "lucide-react";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
 import { IbcInactivationDecontaminationTab } from "@/components/IbcInactivationDecontaminationTab";
+import { IbcDisposalTab } from "@/components/IbcDisposalTab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -729,6 +730,10 @@ export default function IbcApplicationEdit() {
               <TabsTrigger value="inactivation" className="whitespace-nowrap">
                 <span className="hidden sm:inline">Inactivation & Decontamination</span>
                 <span className="sm:hidden">Inactivation</span>
+              </TabsTrigger>
+              <TabsTrigger value="disposal" className="whitespace-nowrap">
+                <span className="hidden sm:inline">Disposal</span>
+                <span className="sm:hidden">Disposal</span>
               </TabsTrigger>
               <TabsTrigger value="construction" className="whitespace-nowrap">
                 <span className="hidden sm:inline">Under Construction</span>
@@ -3872,6 +3877,14 @@ export default function IbcApplicationEdit() {
 
             <TabsContent value="inactivation" className="space-y-6 mt-6">
               <IbcInactivationDecontaminationTab 
+                applicationId={ibcApplication.id} 
+                application={ibcApplication}
+                isReadOnly={isReadOnly}
+              />
+            </TabsContent>
+
+            <TabsContent value="disposal" className="space-y-6 mt-6">
+              <IbcDisposalTab 
                 applicationId={ibcApplication.id} 
                 application={ibcApplication}
                 isReadOnly={isReadOnly}

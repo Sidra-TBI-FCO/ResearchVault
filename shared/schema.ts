@@ -531,6 +531,9 @@ export const ibcApplications = pgTable("ibc_applications", {
   // Inactivation and Decontamination
   inactivationDecontamination: json("inactivation_decontamination"), // All inactivation and decontamination data
   
+  // Disposal procedures
+  disposal: json("disposal"), // All disposal procedure data
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

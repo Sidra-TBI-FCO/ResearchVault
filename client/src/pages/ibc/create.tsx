@@ -26,6 +26,7 @@ import { Scientist, Project, ResearchActivity } from "@shared/schema";
 import { CalendarIcon, ArrowLeft, Users, Plus, X, Building2 } from "lucide-react";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
 import { IbcInactivationDecontaminationTab } from "@/components/IbcInactivationDecontaminationTab";
+import { IbcDisposalTab } from "@/components/IbcDisposalTab";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -517,6 +518,10 @@ export default function CreateIbc() {
                   <TabsTrigger value="inactivation" className="whitespace-nowrap">
                     <span className="hidden sm:inline">Inactivation & Decontamination</span>
                     <span className="sm:hidden">Inactivation</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="disposal" className="whitespace-nowrap">
+                    <span className="hidden sm:inline">Disposal</span>
+                    <span className="sm:hidden">Disposal</span>
                   </TabsTrigger>
                   <TabsTrigger value="nih-guidelines" className="whitespace-nowrap">
                     <span className="hidden sm:inline">NIH Guidelines</span>
@@ -1331,6 +1336,32 @@ export default function CreateIbc() {
                             <h4 className="font-medium text-blue-900">Inactivation & Decontamination Available After Creation</h4>
                             <p className="text-sm text-blue-700 mt-1">
                               Complete the basic application details first, then configure inactivation and decontamination procedures in the edit view.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="disposal" className="space-y-6 mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Disposal Procedures</CardTitle>
+                      <CardDescription>
+                        Disposal procedures will be configured after application creation.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <div className="text-center">
+                            <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                              <span className="text-white text-sm">✓</span>
+                            </div>
+                            <h4 className="font-medium text-blue-900">Disposal Procedures Available After Creation</h4>
+                            <p className="text-sm text-blue-700 mt-1">
+                              Complete the basic application details first, then configure disposal procedures in the edit view.
                             </p>
                           </div>
                         </div>
