@@ -713,17 +713,28 @@ export default function IbcApplicationEdit() {
       <Form {...form}>
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <Tabs defaultValue="basics" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="basics">Basics</TabsTrigger>
-              <TabsTrigger value="staff">Staff</TabsTrigger>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="nucleic-acids">Recombinant or Synthetic Nucleic Acids</TabsTrigger>
-              <TabsTrigger value="facilities">
-                <Building2 className="h-4 w-4 mr-2" />
-                Facilities
+            <TabsList className="w-full flex overflow-x-auto">
+              <TabsTrigger value="basics" className="whitespace-nowrap">Basics</TabsTrigger>
+              <TabsTrigger value="staff" className="whitespace-nowrap">Staff</TabsTrigger>
+              <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
+              <TabsTrigger value="nucleic-acids" className="whitespace-nowrap">
+                <span className="hidden lg:inline">Recombinant or Synthetic Nucleic Acids</span>
+                <span className="hidden sm:inline lg:hidden">Nucleic Acids</span>
+                <span className="sm:hidden">DNA/RNA</span>
               </TabsTrigger>
-              <TabsTrigger value="inactivation">Inactivation & Decontamination</TabsTrigger>
-              <TabsTrigger value="construction">Under Construction</TabsTrigger>
+              <TabsTrigger value="facilities" className="whitespace-nowrap">
+                <Building2 className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Facilities</span>
+                <span className="sm:hidden">Labs</span>
+              </TabsTrigger>
+              <TabsTrigger value="inactivation" className="whitespace-nowrap">
+                <span className="hidden sm:inline">Inactivation & Decontamination</span>
+                <span className="sm:hidden">Inactivation</span>
+              </TabsTrigger>
+              <TabsTrigger value="construction" className="whitespace-nowrap">
+                <span className="hidden sm:inline">Under Construction</span>
+                <span className="sm:hidden">Construction</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="basics" className="space-y-6 mt-6">

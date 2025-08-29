@@ -506,16 +506,23 @@ export default function CreateIbc() {
           <Form {...form}>
             <form className="space-y-8">
               <Tabs defaultValue="basics" className="w-full">
-                <TabsList className="grid w-full grid-cols-6">
-                  <TabsTrigger value="basics">Basics</TabsTrigger>
-                  <TabsTrigger value="staff">Staff</TabsTrigger>
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="facilities">
+                <TabsList className="w-full flex overflow-x-auto">
+                  <TabsTrigger value="basics" className="whitespace-nowrap">Basics</TabsTrigger>
+                  <TabsTrigger value="staff" className="whitespace-nowrap">Staff</TabsTrigger>
+                  <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
+                  <TabsTrigger value="facilities" className="whitespace-nowrap">
                     <Building2 className="h-4 w-4 mr-2" />
-                    Facilities
+                    <span className="hidden sm:inline">Facilities</span>
+                    <span className="sm:hidden">Labs</span>
                   </TabsTrigger>
-                  <TabsTrigger value="inactivation">Inactivation & Decontamination</TabsTrigger>
-                  <TabsTrigger value="nih-guidelines">NIH Guidelines</TabsTrigger>
+                  <TabsTrigger value="inactivation" className="whitespace-nowrap">
+                    <span className="hidden sm:inline">Inactivation & Decontamination</span>
+                    <span className="sm:hidden">Inactivation</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="nih-guidelines" className="whitespace-nowrap">
+                    <span className="hidden sm:inline">NIH Guidelines</span>
+                    <span className="sm:hidden">NIH</span>
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="basics" className="space-y-6 mt-6">
