@@ -13,6 +13,7 @@ import Dashboard from "@/pages/dashboard";
 import ScientistsList from "@/pages/scientists";
 import CreateScientist from "@/pages/scientists/create";
 import EditScientist from "@/pages/scientists/edit";
+import RoleAccessConfig from "@/pages/scientists/role-access-config";
 import ScientistDetail from "@/pages/scientists/detail";
 
 // Facilities
@@ -116,6 +117,7 @@ function Router() {
         {/* Scientists & Staff */}
         <Route path="/scientists" component={ScientistsList} />
         <Route path="/scientists/create" component={CreateScientist} />
+        <Route path="/scientists/role-access-config" component={RoleAccessConfig} />
         <Route path="/scientists/:id/edit" component={EditScientist} />
         <Route path="/scientists/:id" component={ScientistDetail} />
 

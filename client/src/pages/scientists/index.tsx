@@ -103,22 +103,31 @@ export default function ScientistsList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-semibold text-neutral-400">Scientists & Staff</h1>
-        <Link href="/scientists/create">
-          <button 
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-            style={{ 
-              backgroundColor: '#2D9C95',
-              color: 'white',
-              opacity: '1',
-              visibility: 'visible',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-          >
-            Add Scientist
-          </button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/scientists/role-access-config">
+            <button 
+              className="px-4 py-2 rounded-lg border border-sidra-teal text-sidra-teal transition-colors hover:bg-sidra-teal hover:text-white"
+            >
+              Configure Role Based Access
+            </button>
+          </Link>
+          <Link href="/scientists/create">
+            <button 
+              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
+              style={{ 
+                backgroundColor: '#2D9C95',
+                color: 'white',
+                opacity: '1',
+                visibility: 'visible',
+                display: 'block'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
+            >
+              Add Scientist
+            </button>
+          </Link>
+        </div>
       </div>
 
       <Card>
@@ -175,18 +184,20 @@ export default function ScientistsList() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" onValueChange={setActiveTab}>
-            <TabsList className="mb-4 flex flex-wrap gap-1">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="management">Management</TabsTrigger>
-              <TabsTrigger value="physician">Physician</TabsTrigger>
-              <TabsTrigger value="investigator">Investigator</TabsTrigger>
-              <TabsTrigger value="staff-scientist">Staff Scientist</TabsTrigger>
-              <TabsTrigger value="research-specialist">Research Specialist</TabsTrigger>
-              <TabsTrigger value="research-assistant">Research Assistant</TabsTrigger>
-              <TabsTrigger value="phd-student">PhD Student</TabsTrigger>
-              <TabsTrigger value="post-doc">Post-doctoral Fellow</TabsTrigger>
-              <TabsTrigger value="lab-manager">Lab Manager</TabsTrigger>
-            </TabsList>
+            <div className="mb-4 overflow-x-auto">
+              <TabsList className="flex justify-start px-6 scroll-smooth">
+                <TabsTrigger value="all" className="flex-shrink-0">All</TabsTrigger>
+                <TabsTrigger value="management" className="flex-shrink-0">Management</TabsTrigger>
+                <TabsTrigger value="physician" className="flex-shrink-0">Physician</TabsTrigger>
+                <TabsTrigger value="investigator" className="flex-shrink-0">Investigator</TabsTrigger>
+                <TabsTrigger value="staff-scientist" className="flex-shrink-0">Staff Scientist</TabsTrigger>
+                <TabsTrigger value="research-specialist" className="flex-shrink-0">Research Specialist</TabsTrigger>
+                <TabsTrigger value="research-assistant" className="flex-shrink-0">Research Assistant</TabsTrigger>
+                <TabsTrigger value="phd-student" className="flex-shrink-0">PhD Student</TabsTrigger>
+                <TabsTrigger value="post-doc" className="flex-shrink-0">Post-doctoral Fellow</TabsTrigger>
+                <TabsTrigger value="lab-manager" className="flex-shrink-0">Lab Manager</TabsTrigger>
+              </TabsList>
+            </div>
             
             <TabsContent value={activeTab}>
               {isLoading ? (
