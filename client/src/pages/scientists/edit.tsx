@@ -26,8 +26,10 @@ import React, { useEffect } from "react";
 
 // Extend the insert schema with additional validations
 const editScientistSchema = insertScientistSchema.extend({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email address"),
+  staffType: z.enum(["scientific", "administrative"]).default("scientific"),
 });
 
 type EditScientistFormValues = z.infer<typeof editScientistSchema>;
@@ -54,7 +56,6 @@ export default function EditScientist() {
   const form = useForm<EditScientistFormValues>({
     resolver: zodResolver(editScientistSchema),
     defaultValues: {
-      name: "",
       firstName: "",
       lastName: "",
       title: "",
@@ -64,6 +65,7 @@ export default function EditScientist() {
       bio: "",
       profileImageInitials: "",
       supervisorId: null,
+      staffType: "scientific",
     },
   });
 
@@ -71,7 +73,6 @@ export default function EditScientist() {
   useEffect(() => {
     if (scientist) {
       form.reset({
-        name: scientist.name || "",
         firstName: scientist.firstName || "",
         lastName: scientist.lastName || "",
         title: scientist.title || "",
@@ -81,6 +82,7 @@ export default function EditScientist() {
         bio: scientist.bio || "",
         profileImageInitials: scientist.profileImageInitials || "",
         supervisorId: scientist.supervisorId || null,
+        staffType: scientist.staffType || "scientific",
       });
     }
   }, [scientist, form]);
@@ -94,29 +96,24 @@ export default function EditScientist() {
       queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
       queryClient.invalidateQueries({ queryKey: ['/api/scientists', id] });
       toast({
-        title: "Scientist updated",
-        description: "The scientist has been successfully updated.",
+        title: "Staff member updated",
+        description: "The staff member has been successfully updated.",
       });
       navigate("/scientists");
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "There was an error updating the scientist.",
+        description: error.message || "There was an error updating the staff member.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: EditScientistFormValues) => {
-    // Generate initials from name if not provided
-    if (!data.profileImageInitials) {
-      const nameParts = data.name.split(' ');
-      if (nameParts.length >= 2) {
-        data.profileImageInitials = `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`;
-      } else {
-        data.profileImageInitials = data.name.substring(0, 2);
-      }
+    // Generate initials from firstName and lastName if not provided
+    if (!data.profileImageInitials && data.firstName && data.lastName) {
+      data.profileImageInitials = `${data.firstName[0]}${data.lastName[0]}`;
     }
     
     updateScientistMutation.mutate(data);
@@ -155,11 +152,11 @@ export default function EditScientist() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Scientist Not Found</h1>
+          <h1 className="text-2xl font-semibold text-neutral-400">Staff Member Not Found</h1>
         </div>
         <Card>
           <CardContent className="pt-6">
-            <p>The scientist you're looking for could not be found.</p>
+            <p>The staff member you're looking for could not be found.</p>
           </CardContent>
         </Card>
       </div>
@@ -173,32 +170,18 @@ export default function EditScientist() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit Scientist</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">Edit Staff Member</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scientist Information</CardTitle>
-          <CardDescription>Update the details for this scientist or staff member</CardDescription>
+          <CardTitle>Staff Information</CardTitle>
+          <CardDescription>Update the details for this staff member</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Dr. Sarah Johnson" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -290,7 +273,35 @@ export default function EditScientist() {
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Select the job title for this scientist or staff member
+                        Select the job title for this staff member
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="staffType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Staff Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || "scientific"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select staff type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="scientific">Scientific Staff</SelectItem>
+                          <SelectItem value="administrative">Administrative Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Categorize as scientific or administrative staff
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -348,7 +359,7 @@ export default function EditScientist() {
                             .filter(scientist => scientist.id !== parseInt(id || "0"))
                             .map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name} - {scientist.title || 'No title'}
+                              {scientist.firstName} {scientist.lastName} - {scientist.title || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>

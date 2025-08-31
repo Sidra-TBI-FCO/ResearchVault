@@ -251,7 +251,7 @@ export default function ScientistDetail() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">{scientist.name}</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">{scientist.firstName} {scientist.lastName}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -277,13 +277,13 @@ export default function ScientistDetail() {
                 <div className="flex items-start gap-6">
                   <Avatar className="h-24 w-24 text-lg">
                     <AvatarFallback className="bg-primary-100 text-primary-700">
-                      {scientist.profileImageInitials || scientist.name.substring(0, 2)}
+                      {scientist.profileImageInitials || `${scientist.firstName?.charAt(0) || ''}${scientist.lastName?.charAt(0) || ''}`}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-4">
                     <div>
                       <h2 className="text-xl font-semibold">
-                        {scientist.name}
+                        {scientist.firstName} {scientist.lastName}
                         {scientist.staffId && (
                           <Badge variant="outline" className="ml-3 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
                             ID: {scientist.staffId}
