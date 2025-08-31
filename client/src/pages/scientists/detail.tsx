@@ -294,7 +294,7 @@ export default function ScientistDetail() {
                       <div className="flex items-center">
                         <div className="text-sm font-medium text-neutral-500 mr-2">Job Title:</div>
                         <p className="text-neutral-700">
-                          {scientist.title || "No title"}
+                          {scientist.jobTitle || "No title"}
                         </p>
                       </div>
                     </div>
