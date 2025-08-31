@@ -28,8 +28,10 @@ import { ArrowLeft } from "lucide-react";
 // Extend the insert schema with additional validations
 const createScientistSchema = insertScientistSchema.extend({
   email: z.string().email("Invalid email address"),
-  name: z.string().min(3, "Name must be at least 3 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   supervisorId: z.number().nullable().optional(),
+  staffType: z.enum(["scientific", "administrative"]).default("scientific"),
 });
 
 type CreateScientistFormValues = z.infer<typeof createScientistSchema>;
@@ -44,9 +46,8 @@ export default function CreateScientist() {
     queryFn: () => fetch('/api/scientists').then(res => res.json()),
   });
 
-  // Default form values
+  // Default form values  
   const defaultValues: Partial<CreateScientistFormValues> = {
-    name: "",
     firstName: "",
     lastName: "",
     title: "",
@@ -56,6 +57,7 @@ export default function CreateScientist() {
     bio: "",
     profileImageInitials: "",
     supervisorId: null,
+    staffType: "scientific",
   };
 
   const form = useForm<CreateScientistFormValues>({
@@ -86,14 +88,9 @@ export default function CreateScientist() {
   });
 
   const onSubmit = (data: CreateScientistFormValues) => {
-    // Generate initials from name if not provided
-    if (!data.profileImageInitials) {
-      const nameParts = data.name.split(' ');
-      if (nameParts.length >= 2) {
-        data.profileImageInitials = `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`;
-      } else {
-        data.profileImageInitials = data.name.substring(0, 2);
-      }
+    // Generate initials from firstName and lastName if not provided
+    if (!data.profileImageInitials && data.firstName && data.lastName) {
+      data.profileImageInitials = `${data.firstName[0]}${data.lastName[0]}`;
     }
     
     // supervisorId can be null if no line manager is selected
@@ -108,32 +105,18 @@ export default function CreateScientist() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Add Scientist or Staff</h1>
+        <h1 className="text-2xl font-semibold text-neutral-400">Add Staff Member</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scientist Information</CardTitle>
-          <CardDescription>Enter the details of the new team member</CardDescription>
+          <CardTitle>Staff Information</CardTitle>
+          <CardDescription>Enter the details of the new staff member</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Dr. Sarah Johnson" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -200,7 +183,12 @@ export default function CreateScientist() {
                     <FormItem>
                       <FormLabel>Job Title</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Automatically set staff type based on job title
+                          const administrativeRoles = ['Management', 'PMO Officer', 'IRB Officer', 'IBC Officer', 'Lab Manager'];
+                          form.setValue('staffType', administrativeRoles.includes(value) ? 'administrative' : 'scientific');
+                        }}
                         value={field.value || ""}
                       >
                         <FormControl>
@@ -225,7 +213,35 @@ export default function CreateScientist() {
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Select the job title for this scientist or staff member
+                        Select the job title for this staff member
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="staffType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Staff Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || "scientific"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select staff type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="scientific">Scientific Staff</SelectItem>
+                          <SelectItem value="administrative">Administrative Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        This is automatically set based on job title, but can be adjusted if needed
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -282,7 +298,7 @@ export default function CreateScientist() {
                         <SelectContent>
                           {allScientists.map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.name} - {scientist.title || 'No title'}
+                              {scientist.firstName} {scientist.lastName} - {scientist.title || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>

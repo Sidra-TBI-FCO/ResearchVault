@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
-export default function ScientistsList() {
+export default function StaffList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [sortField, setSortField] = useState<"name" | "department" | "title" | "activeResearchActivities">("name");
@@ -31,7 +31,7 @@ export default function ScientistsList() {
   const { currentUser } = useCurrentUser();
   const { canEdit } = useElementPermissions(currentUser.role, "scientists");
 
-  const { data: scientists, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
+  const { data: staff, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
     queryKey: ['/api/scientists', { includeActivityCount: true }],
     queryFn: () => fetch('/api/scientists?includeActivityCount=true').then(res => res.json()),
   });
@@ -48,30 +48,34 @@ export default function ScientistsList() {
     queryFn: () => fetch('/api/ibc-board-members').then(res => res.json()),
   });
 
-  const filteredScientists = scientists?.filter(scientist => {
-    const fullName = `${scientist.firstName} ${scientist.lastName}`.toLowerCase();
+  const filteredStaff = staff?.filter(person => {
+    const fullName = `${person.firstName} ${person.lastName}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
-                         (scientist.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                         (scientist.department?.toLowerCase().includes(searchQuery.toLowerCase()));
+                         (person.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                         (person.department?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     if (activeTab === "all") return matchesSearch;
     
-    // Filter by job title
-    if (activeTab === "management") return matchesSearch && scientist.title === "Management";
-    if (activeTab === "physician") return matchesSearch && scientist.title === "Physician";
-    if (activeTab === "investigator") return matchesSearch && scientist.title === "Investigator";
-    if (activeTab === "staff-scientist") return matchesSearch && scientist.title === "Staff Scientist";
-    if (activeTab === "research-specialist") return matchesSearch && scientist.title === "Research Specialist";
-    if (activeTab === "research-assistant") return matchesSearch && scientist.title === "Research Assistant";
-    if (activeTab === "phd-student") return matchesSearch && scientist.title === "PhD Student";
-    if (activeTab === "post-doc") return matchesSearch && scientist.title === "Post-doctoral Fellow";
-    if (activeTab === "lab-manager") return matchesSearch && scientist.title === "Lab Manager";
+    // Filter by staff type
+    if (activeTab === "scientific") return matchesSearch && person.staffType === "scientific";
+    if (activeTab === "administrative") return matchesSearch && person.staffType === "administrative";
+    
+    // Filter by job title (legacy support)
+    if (activeTab === "management") return matchesSearch && person.title === "Management";
+    if (activeTab === "physician") return matchesSearch && person.title === "Physician";
+    if (activeTab === "investigator") return matchesSearch && person.title === "Investigator";
+    if (activeTab === "staff-scientist") return matchesSearch && person.title === "Staff Scientist";
+    if (activeTab === "research-specialist") return matchesSearch && person.title === "Research Specialist";
+    if (activeTab === "research-assistant") return matchesSearch && person.title === "Research Assistant";
+    if (activeTab === "phd-student") return matchesSearch && person.title === "PhD Student";
+    if (activeTab === "post-doc") return matchesSearch && person.title === "Post-doctoral Fellow";
+    if (activeTab === "lab-manager") return matchesSearch && person.title === "Lab Manager";
     
     return matchesSearch;
   });
   
-  // Sort scientists based on selected sort field and direction
-  const sortedScientists = filteredScientists?.sort((a, b) => {
+  // Sort staff based on selected sort field and direction
+  const sortedStaff = filteredStaff?.sort((a, b) => {
     let fieldA: any, fieldB: any;
     
     if (sortField === 'activeResearchActivities') {
@@ -80,12 +84,8 @@ export default function ScientistsList() {
       return sortDirection === 'asc' ? fieldA - fieldB : fieldB - fieldA;
     } else if (sortField === 'name') {
       // Sort by last name, ignoring titles
-      const getLastName = (scientist: any) => {
-        if (scientist.lastName) return scientist.lastName.toLowerCase();
-        // Extract last name from full name, ignoring titles
-        const nameWithoutTitle = scientist.name.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
-        const nameParts = nameWithoutTitle.trim().split(/\s+/);
-        return nameParts[nameParts.length - 1].toLowerCase();
+      const getLastName = (person: any) => {
+        return person.lastName ? person.lastName.toLowerCase() : '';
       };
       
       const lastNameA = getLastName(a);
@@ -108,7 +108,7 @@ export default function ScientistsList() {
     <PermissionWrapper currentUserRole={currentUser.role} navigationItem="scientists">
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-2xl font-semibold text-neutral-400">Scientists & Staff</h1>
+          <h1 className="text-2xl font-semibold text-neutral-400">Staff Directory</h1>
           <div className="flex items-center gap-3">
             {canEdit && (
               <Link href="/scientists/role-access-config">
@@ -133,7 +133,7 @@ export default function ScientistsList() {
                   onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#238B7A'}
                   onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#2D9C95'}
                 >
-                  Add Scientist
+                  Add Staff Member
                 </button>
               </Link>
             )}
@@ -143,7 +143,7 @@ export default function ScientistsList() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle>Research Team</CardTitle>
+            <CardTitle>Staff Directory</CardTitle>
             <div className="flex items-center gap-2">
               {/* Sort Dropdown */}
               <DropdownMenu>
@@ -183,7 +183,7 @@ export default function ScientistsList() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
-                  placeholder="Search team members..."
+                  placeholder="Search staff members..."
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -197,15 +197,12 @@ export default function ScientistsList() {
             <div className="mb-4 overflow-x-auto">
               <TabsList className="flex justify-start px-6 scroll-smooth">
                 <TabsTrigger value="all" className="flex-shrink-0">All</TabsTrigger>
-                <TabsTrigger value="management" className="flex-shrink-0">Management</TabsTrigger>
-                <TabsTrigger value="physician" className="flex-shrink-0">Physician</TabsTrigger>
+                <TabsTrigger value="scientific" className="flex-shrink-0">Scientific Staff</TabsTrigger>
+                <TabsTrigger value="administrative" className="flex-shrink-0">Administrative Staff</TabsTrigger>
                 <TabsTrigger value="investigator" className="flex-shrink-0">Investigator</TabsTrigger>
-                <TabsTrigger value="staff-scientist" className="flex-shrink-0">Staff Scientist</TabsTrigger>
-                <TabsTrigger value="research-specialist" className="flex-shrink-0">Research Specialist</TabsTrigger>
-                <TabsTrigger value="research-assistant" className="flex-shrink-0">Research Assistant</TabsTrigger>
                 <TabsTrigger value="phd-student" className="flex-shrink-0">PhD Student</TabsTrigger>
                 <TabsTrigger value="post-doc" className="flex-shrink-0">Post-doctoral Fellow</TabsTrigger>
-                <TabsTrigger value="lab-manager" className="flex-shrink-0">Lab Manager</TabsTrigger>
+                <TabsTrigger value="management" className="flex-shrink-0">Management</TabsTrigger>
               </TabsList>
             </div>
             
@@ -292,53 +289,65 @@ export default function ScientistsList() {
                           {sortField !== 'title' && <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />}
                         </Button>
                       </TableHead>
+                      <TableHead>Staff Type</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead className="text-center">Active SDRs</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredScientists?.map((scientist) => (
+                    {sortedStaff?.map((person) => (
                       <TableRow 
-                        key={scientist.id}
+                        key={person.id}
                         className="cursor-pointer hover:bg-neutral-50/50 transition-colors"
-                        onClick={() => navigate(`/scientists/${scientist.id}`)}
+                        onClick={() => navigate(`/scientists/${person.id}`)}
                       >
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-3">
                             <div className="h-8 w-8 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium">
-                              {scientist.profileImageInitials || scientist.name.substring(0, 2)}
+                              {person.profileImageInitials || `${person.firstName?.charAt(0) || ''}${person.lastName?.charAt(0) || ''}`}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">{scientist.name}</span>
-                                {scientist.staffId && (
+                                <span className="font-medium">{person.firstName} {person.lastName}</span>
+                                {person.staffId && (
                                   <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
-                                    ID: {scientist.staffId}
+                                    ID: {person.staffId}
                                   </Badge>
                                 )}
-                                {irbMembers?.find((member: any) => member.scientistId === scientist.id && member.isActive) && (
+                                {irbMembers?.find((member: any) => member.scientistId === person.id && member.isActive) && (
                                   <Badge variant="outline" className="rounded-sm bg-green-50 text-green-700 border-green-200">
-                                    IRB {irbMembers.find((member: any) => member.scientistId === scientist.id)?.role === 'chair' ? 'Chair' : 
-                                         irbMembers.find((member: any) => member.scientistId === scientist.id)?.role === 'deputy_chair' ? 'Deputy' : 'Member'}
+                                    IRB {irbMembers.find((member: any) => member.scientistId === person.id)?.role === 'chair' ? 'Chair' : 
+                                         irbMembers.find((member: any) => member.scientistId === person.id)?.role === 'deputy_chair' ? 'Deputy' : 'Member'}
                                   </Badge>
                                 )}
-                                {ibcMembers?.find((member: any) => member.scientistId === scientist.id && member.isActive) && (
+                                {ibcMembers?.find((member: any) => member.scientistId === person.id && member.isActive) && (
                                   <Badge variant="outline" className="rounded-sm bg-purple-50 text-purple-700 border-purple-200">
-                                    IBC {ibcMembers.find((member: any) => member.scientistId === scientist.id)?.role === 'chair' ? 'Chair' : 'Member'}
+                                    IBC {ibcMembers.find((member: any) => member.scientistId === person.id)?.role === 'chair' ? 'Chair' : 'Member'}
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{scientist.department || "—"}</TableCell>
-                        <TableCell>{scientist.title || "No title"}</TableCell>
+                        <TableCell>{person.department || "—"}</TableCell>
+                        <TableCell>{person.title || "No title"}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={person.staffType === 'scientific' 
+                              ? "rounded-sm bg-green-50 text-green-700 border-green-200" 
+                              : "rounded-sm bg-blue-50 text-blue-700 border-blue-200"
+                            }
+                          >
+                            {person.staffType === 'scientific' ? 'Scientific' : 'Administrative'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2 text-neutral-200">
-                            {scientist.email && (
+                            {person.email && (
                               <a 
-                                href={`mailto:${scientist.email}`} 
+                                href={`mailto:${person.email}`} 
                                 className="hover:text-primary-500"
                                 onClick={(e) => e.stopPropagation()}
                               >
@@ -349,7 +358,7 @@ export default function ScientistsList() {
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
-                            {scientist.activeResearchActivities || 0}
+                            {person.activeResearchActivities || 0}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -365,14 +374,14 @@ export default function ScientistsList() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
-                                <Link href={`/scientists/${scientist.id}`}>
+                                <Link href={`/scientists/${person.id}`}>
                                   View Details
                                 </Link>
                               </DropdownMenuItem>
                               {canEdit && (
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/scientists/${scientist.id}/edit`} className="edit-button">
-                                    Edit Scientist
+                                  <Link href={`/scientists/${person.id}/edit`} className="edit-button">
+                                    Edit Staff Member
                                   </Link>
                                 </DropdownMenuItem>
                               )}
@@ -381,10 +390,10 @@ export default function ScientistsList() {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {filteredScientists?.length === 0 && (
+                    {sortedStaff?.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-neutral-200">
-                          No scientists found matching your search.
+                          No staff members found matching your search.
                         </TableCell>
                       </TableRow>
                     )}
