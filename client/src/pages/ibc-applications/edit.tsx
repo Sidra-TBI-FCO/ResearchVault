@@ -874,6 +874,20 @@ export default function IbcApplicationEdit() {
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="shortTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Short Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Short recognition title" {...field} disabled={isReadOnly} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   {/* Legacy IDs Section */}
@@ -915,20 +929,6 @@ export default function IbcApplicationEdit() {
                   </Card>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="shortTitle"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Short Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Short recognition title" {...field} disabled={isReadOnly} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
                     <FormField
                       control={form.control}
                       name="biosafetyLevel"

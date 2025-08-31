@@ -623,6 +623,20 @@ export default function CreateIbc() {
                             </FormItem>
                           )}
                         />
+                        
+                        <FormField
+                          control={form.control}
+                          name="shortTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Short Title</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Short recognition title" {...field} value={field.value || ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
 
                       {/* Legacy IDs Section */}
@@ -664,20 +678,6 @@ export default function CreateIbc() {
                       </Card>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="shortTitle"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Short Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Short recognition title" {...field} value={field.value || ""} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
                         <FormField
                           control={form.control}
                           name="biosafetyLevel"
