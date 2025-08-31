@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Scientist } from "@shared/schema";
 import { ChevronUp, ChevronDown, Users } from "lucide-react";
+import { formatFullName, getInitials } from "@/utils/nameUtils";
 
 interface OrgChartProps {
   scientistId: number;
@@ -91,12 +92,12 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                      {lineManager.profileImageInitials || `${lineManager.firstName?.charAt(0) || ''}${lineManager.lastName?.charAt(0) || ''}`}
+                      {lineManager.profileImageInitials || getInitials(lineManager)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-left">
-                    <div className="font-medium text-sm">{lineManager.firstName} {lineManager.lastName}</div>
-                    <div className="text-xs text-neutral-500">{lineManager.title || 'No title'}</div>
+                    <div className="font-medium text-sm">{formatFullName(lineManager)}</div>
+                    <div className="text-xs text-neutral-500">{lineManager.jobTitle || 'No title'}</div>
                   </div>
                 </div>
               </Button>
@@ -114,12 +115,12 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                  {scientist.profileImageInitials || `${scientist.firstName?.charAt(0) || ''}${scientist.lastName?.charAt(0) || ''}`}
+                  {scientist.profileImageInitials || getInitials(scientist)}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium text-sm">{scientist.firstName} {scientist.lastName}</div>
-                <div className="text-xs text-neutral-600">{scientist.title || 'No title'}</div>
+                <div className="font-medium text-sm">{formatFullName(scientist)}</div>
+                <div className="text-xs text-neutral-600">{scientist.jobTitle || 'No title'}</div>
               </div>
             </div>
           </div>
@@ -151,12 +152,12 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-neutral-100 text-neutral-700 text-xs">
-                        {report.profileImageInitials || `${report.firstName?.charAt(0) || ''}${report.lastName?.charAt(0) || ''}`}
+                        {report.profileImageInitials || getInitials(report)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-left">
-                      <div className="font-medium text-sm">{report.firstName} {report.lastName}</div>
-                      <div className="text-xs text-neutral-500">{report.title || 'No title'}</div>
+                      <div className="font-medium text-sm">{formatFullName(report)}</div>
+                      <div className="text-xs text-neutral-500">{report.jobTitle || 'No title'}</div>
                     </div>
                   </div>
                 </Button>

@@ -21,11 +21,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
+import { formatFullName, formatNameWithJobTitle } from "@/utils/nameUtils";
 
 export default function StaffList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [sortField, setSortField] = useState<"name" | "department" | "title" | "activeResearchActivities">("name");
+  const [sortField, setSortField] = useState<"name" | "department" | "jobTitle" | "activeResearchActivities">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [, navigate] = useLocation();
   const { currentUser } = useCurrentUser();
@@ -49,7 +50,7 @@ export default function StaffList() {
   });
 
   const filteredStaff = staff?.filter(person => {
-    const fullName = `${person.firstName} ${person.lastName}`.toLowerCase();
+    const fullName = formatFullName(person).toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
                          (person.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
                          (person.department?.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -61,15 +62,15 @@ export default function StaffList() {
     if (activeTab === "administrative") return matchesSearch && person.staffType === "administrative";
     
     // Filter by job title (legacy support)
-    if (activeTab === "management") return matchesSearch && person.title === "Management";
-    if (activeTab === "physician") return matchesSearch && person.title === "Physician";
-    if (activeTab === "investigator") return matchesSearch && person.title === "Investigator";
-    if (activeTab === "staff-scientist") return matchesSearch && person.title === "Staff Scientist";
-    if (activeTab === "research-specialist") return matchesSearch && person.title === "Research Specialist";
-    if (activeTab === "research-assistant") return matchesSearch && person.title === "Research Assistant";
-    if (activeTab === "phd-student") return matchesSearch && person.title === "PhD Student";
-    if (activeTab === "post-doc") return matchesSearch && person.title === "Post-doctoral Fellow";
-    if (activeTab === "lab-manager") return matchesSearch && person.title === "Lab Manager";
+    if (activeTab === "management") return matchesSearch && person.jobTitle === "Management";
+    if (activeTab === "physician") return matchesSearch && person.jobTitle === "Physician";
+    if (activeTab === "investigator") return matchesSearch && person.jobTitle === "Investigator";
+    if (activeTab === "staff-scientist") return matchesSearch && person.jobTitle === "Staff Scientist";
+    if (activeTab === "research-specialist") return matchesSearch && person.jobTitle === "Research Specialist";
+    if (activeTab === "research-assistant") return matchesSearch && person.jobTitle === "Research Assistant";
+    if (activeTab === "phd-student") return matchesSearch && person.jobTitle === "PhD Student";
+    if (activeTab === "post-doc") return matchesSearch && person.jobTitle === "Post-doctoral Fellow";
+    if (activeTab === "lab-manager") return matchesSearch && person.jobTitle === "Lab Manager";
     
     return matchesSearch;
   });
@@ -150,7 +151,7 @@ export default function StaffList() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <ArrowUpDown className="h-4 w-4" />
-                    Sort by: {sortField === 'name' ? 'Name' : sortField === 'department' ? 'Department' : sortField === 'title' ? 'Job Title' : 'Active SDRs'}
+                    Sort by: {sortField === 'name' ? 'Name' : sortField === 'department' ? 'Department' : sortField === 'jobTitle' ? 'Job Title' : 'Active SDRs'}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -160,7 +161,7 @@ export default function StaffList() {
                   <DropdownMenuItem onClick={() => setSortField('department')}>
                     Department
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortField('title')}>
+                  <DropdownMenuItem onClick={() => setSortField('jobTitle')}>
                     Job Title
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortField('activeResearchActivities')}>
@@ -272,21 +273,21 @@ export default function StaffList() {
                           variant="ghost" 
                           className="p-0 h-auto font-bold hover:bg-transparent flex items-center"
                           onClick={() => {
-                            if (sortField === 'title') {
+                            if (sortField === 'jobTitle') {
                               setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                             } else {
-                              setSortField('title');
+                              setSortField('jobTitle');
                               setSortDirection('asc');
                             }
                           }}
                         >
                           Job Title
-                          {sortField === 'title' && (
+                          {sortField === 'jobTitle' && (
                             <span className="ml-1">
                               {sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             </span>
                           )}
-                          {sortField !== 'title' && <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />}
+                          {sortField !== 'jobTitle' && <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />}
                         </Button>
                       </TableHead>
                       <TableHead>Staff Type</TableHead>
@@ -305,11 +306,11 @@ export default function StaffList() {
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-3">
                             <div className="h-8 w-8 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium">
-                              {person.profileImageInitials || `${person.firstName?.charAt(0) || ''}${person.lastName?.charAt(0) || ''}`}
+                              {person.profileImageInitials || formatFullName(person).split(' ').map(n => n[0]).join('')}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">{person.firstName} {person.lastName}</span>
+                                <span className="font-medium">{formatFullName(person)}</span>
                                 {person.staffId && (
                                   <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">
                                     ID: {person.staffId}
@@ -331,7 +332,7 @@ export default function StaffList() {
                           </div>
                         </TableCell>
                         <TableCell>{person.department || "—"}</TableCell>
-                        <TableCell>{person.title || "No title"}</TableCell>
+                        <TableCell>{person.jobTitle || "No title"}</TableCell>
                         <TableCell>
                           <Badge 
                             variant="outline" 

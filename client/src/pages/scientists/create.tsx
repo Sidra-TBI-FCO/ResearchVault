@@ -30,6 +30,7 @@ const createScientistSchema = insertScientistSchema.extend({
   email: z.string().email("Invalid email address"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  honorificTitle: z.string().optional(),
   supervisorId: z.number().nullable().optional(),
   staffType: z.enum(["scientific", "administrative"]).default("scientific"),
 });
@@ -48,9 +49,10 @@ export default function CreateScientist() {
 
   // Default form values  
   const defaultValues: Partial<CreateScientistFormValues> = {
+    honorificTitle: "",
     firstName: "",
     lastName: "",
-    title: "",
+    jobTitle: "",
     email: "",
     staffId: "",
     department: "",
@@ -119,6 +121,41 @@ export default function CreateScientist() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
+                  name="honorificTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title (Optional)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select title" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="Dr.">Dr.</SelectItem>
+                          <SelectItem value="Prof.">Prof.</SelectItem>
+                          <SelectItem value="Mr.">Mr.</SelectItem>
+                          <SelectItem value="Ms.">Ms.</SelectItem>
+                          <SelectItem value="Mrs.">Mrs.</SelectItem>
+                          <SelectItem value="Mx.">Mx.</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Honorific title (Dr., Prof., Mr., Ms., etc.)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="md:col-span-1"></div>
+                
+                <FormField
+                  control={form.control}
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
@@ -178,7 +215,7 @@ export default function CreateScientist() {
                 
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="jobTitle"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Job Title</FormLabel>
@@ -298,7 +335,7 @@ export default function CreateScientist() {
                         <SelectContent>
                           {allScientists.map((scientist) => (
                             <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.firstName} {scientist.lastName} - {scientist.title || 'No title'}
+                              {scientist.firstName} {scientist.lastName} - {scientist.jobTitle || 'No title'}
                             </SelectItem>
                           ))}
                         </SelectContent>
