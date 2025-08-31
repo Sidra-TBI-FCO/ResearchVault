@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scientist } from "@shared/schema";
+import { formatFullName } from "@/utils/nameUtils";
 
 interface IrbBoardMember {
   id: number;
@@ -170,7 +171,7 @@ export default function IrbBoardManager() {
   };
 
   const filteredMembers = boardMembers.filter(member => 
-    member.scientist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    formatFullName(member.scientist).toLowerCase().includes(searchQuery.toLowerCase()) ||
     member.expertise.some(exp => exp.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -234,7 +235,7 @@ export default function IrbBoardManager() {
                   <SelectContent>
                     {availableScientists.map((scientist) => (
                       <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                        {scientist.name}
+                        {formatFullName(scientist)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -333,7 +334,7 @@ export default function IrbBoardManager() {
                   const chair = boardMembers.find(m => m.role === 'chair' && m.isActive);
                   return chair ? (
                     <>
-                      <div className="text-sm font-medium truncate">{chair.scientist.name}</div>
+                      <div className="text-sm font-medium truncate">{formatFullName(chair.scientist)}</div>
                       <div className="text-xs text-gray-500">Chair</div>
                     </>
                   ) : (
@@ -359,7 +360,7 @@ export default function IrbBoardManager() {
                   const deputy = boardMembers.find(m => m.role === 'deputy_chair' && m.isActive);
                   return deputy ? (
                     <>
-                      <div className="text-sm font-medium truncate">{deputy.scientist.name}</div>
+                      <div className="text-sm font-medium truncate">{formatFullName(deputy.scientist)}</div>
                       <div className="text-xs text-gray-500">Deputy Chair</div>
                     </>
                   ) : (
@@ -427,7 +428,7 @@ export default function IrbBoardManager() {
                         {member.scientist.profileImageInitials}
                       </div>
                       <div>
-                        <div className="font-medium">{member.scientist.name}</div>
+                        <div className="font-medium">{formatFullName(member.scientist)}</div>
                         <div className="text-sm text-gray-500">{member.scientist.email}</div>
                       </div>
                     </div>
