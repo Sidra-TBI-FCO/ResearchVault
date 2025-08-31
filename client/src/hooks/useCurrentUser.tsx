@@ -36,7 +36,7 @@ interface CurrentUserProviderProps {
 }
 
 export function CurrentUserProvider({ children }: CurrentUserProviderProps) {
-  const [currentUser, setCurrentUser] = useState<DummyUser>(DUMMY_USERS[0]); // Default to first user
+  const [currentUser, setCurrentUser] = useState<DummyUser>(DUMMY_USERS[7]); // Default to Management role
 
   return (
     <CurrentUserContext.Provider value={{ currentUser, setCurrentUser }}>
