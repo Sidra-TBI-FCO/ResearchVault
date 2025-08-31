@@ -554,7 +554,7 @@ export default function CreateIbc() {
                               ) : (
                                 principalInvestigators?.map((pi) => (
                                   <SelectItem key={pi.id} value={pi.id.toString()}>
-                                    {pi.firstName} {pi.lastName} ({pi.jobTitle || "Researcher"})
+                                    {pi.firstName} {pi.lastName} ({pi.title || "Researcher"})
                                   </SelectItem>
                                 ))
                               )}
