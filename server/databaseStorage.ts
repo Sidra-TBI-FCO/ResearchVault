@@ -178,8 +178,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPrincipalInvestigators(): Promise<Scientist[]> {
-    // Since isStaff field was removed, return all scientists as potential PIs
-    return await db.select().from(scientists).orderBy(scientists.lastName, scientists.firstName);
+    // Only return Investigators and Staff Scientists as potential PIs
+    return await db.select().from(scientists)
+      .where(or(
+        eq(scientists.jobTitle, "Investigator"),
+        eq(scientists.jobTitle, "Staff Scientist")
+      ))
+      .orderBy(scientists.lastName, scientists.firstName);
   }
 
   // Research Activity operations

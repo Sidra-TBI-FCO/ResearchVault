@@ -19,7 +19,7 @@ const DUMMY_USERS: DummyUser[] = [
   { id: 1, name: 'Dr. Sarah Chen', email: 's.chen@research.org', role: 'Investigator' },
   { id: 2, name: 'Dr. Michael Rodriguez', email: 'm.rodriguez@research.org', role: 'Staff Scientist' },
   { id: 3, name: 'Dr. Emily Hassan', email: 'e.hassan@research.org', role: 'Physician' },
-  { id: 4, name: 'Dr. James Wilson', email: 'j.wilson@research.org', role: 'Research Scientist' },
+  { id: 4, name: 'Dr. James Wilson', email: 'j.wilson@research.org', role: 'Staff Scientist' },
   { id: 5, name: 'Lisa Thompson', email: 'l.thompson@research.org', role: 'Lab Manager' },
   { id: 6, name: 'Dr. Alex Kumar', email: 'a.kumar@research.org', role: 'Postdoctoral Researcher' },
   { id: 7, name: 'Maria Santos', email: 'm.santos@research.org', role: 'PhD Student' },
