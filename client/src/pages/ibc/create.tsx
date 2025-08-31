@@ -514,177 +514,164 @@ export default function CreateIbc() {
                 </TabsList>
                 
                 <TabsContent value="basics" className="space-y-6 mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Application Title</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter a descriptive title for your IBC application" 
-                              {...field} 
-                              value={field.value || ""} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="principalInvestigatorId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Principal Investigator</FormLabel>
-                          <FormDescription>
-                            Select the PI first to filter related research activities
-                          </FormDescription>
-                          <Select 
-                            onValueChange={(value) => field.onChange(parseInt(value))} 
-                            value={field.value?.toString() || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a Principal Investigator" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {piLoading ? (
-                                <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
-                              ) : (
-                                principalInvestigators?.map((pi) => (
-                                  <SelectItem key={pi.id} value={pi.id.toString()}>
-                                    {pi.firstName} {pi.lastName} ({pi.title || "Researcher"})
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="biosafetyLevel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Biosafety Level</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select biosafety level" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="BSL-1">BSL-1</SelectItem>
-                              <SelectItem value="BSL-2">BSL-2</SelectItem>
-                              <SelectItem value="BSL-3">BSL-3</SelectItem>
-                              <SelectItem value="BSL-4">BSL-4</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="riskGroupClassification"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Risk Group Classification</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select risk group" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
-                              <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
-                              <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
-                              <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="researchActivityIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Associated Research Activities (SDRs)</FormLabel>
-                        <FormDescription>
-                          {selectedPIId 
-                            ? "Select the research activities (SDRs) associated with this IBC application" 
-                            : "Please select a principal investigator first"
-                          }
-                        </FormDescription>
-                        {selectedPIId && (
-                          <div className="space-y-3">
-                            {activitiesLoading ? (
-                              <div className="text-gray-500">Loading research activities...</div>
-                            ) : researchActivities && researchActivities.length > 0 ? (
-                              <div className="space-y-2">
-                                {researchActivities.map((activity) => (
-                                  <div key={activity.id} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      checked={(field.value || []).includes(activity.id)}
-                                      onCheckedChange={(checked) => {
-                                        const currentValues = field.value || [];
-                                        if (checked) {
-                                          field.onChange([...currentValues, activity.id]);
-                                        } else {
-                                          field.onChange(currentValues.filter((id) => id !== activity.id));
-                                        }
-                                      }}
-                                    />
-                                    <div className="flex-1">
-                                      <div className="font-medium">{activity.sdrNumber}</div>
-                                      <div className="text-sm text-gray-600">{activity.title}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-gray-500">No research activities found for this PI</div>
-                            )}
-                          </div>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Legacy IDs Section */}
-                  <Card className="border-dashed">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Legacy IDs (optional)</CardTitle>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Basic Information</CardTitle>
+                      <CardDescription>Core IBC application details</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="cayuseProtocolNumber"
+                          name="principalInvestigatorId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Cayuse Protocol Number</FormLabel>
+                              <FormLabel>Principal Investigator</FormLabel>
+                              <FormDescription>
+                                Select the PI first to filter related research activities
+                              </FormDescription>
+                              <Select
+                                onValueChange={(value) => {
+                                  field.onChange(parseInt(value));
+                                  form.setValue('researchActivityIds', []);
+                                }}
+                                value={field.value?.toString() || ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a Principal Investigator" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {piLoading ? (
+                                    <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
+                                  ) : (
+                                    principalInvestigators?.map((pi) => (
+                                      <SelectItem key={pi.id} value={pi.id.toString()}>
+                                        {pi.firstName} {pi.lastName} ({pi.title || "Researcher"})
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="researchActivityIds"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Research Activities (SDRs)</FormLabel>
+                              <FormDescription>
+                                Select one or more research activities that share biosafety protocols
+                              </FormDescription>
+                              <div className="space-y-2">
+                                {!selectedPIId ? (
+                                  <div className="text-sm text-muted-foreground italic">
+                                    Please select a Principal Investigator first to see available research activities
+                                  </div>
+                                ) : activitiesLoading ? (
+                                  <div className="text-sm text-muted-foreground">Loading research activities...</div>
+                                ) : researchActivities && researchActivities.length > 0 ? (
+                                  researchActivities.map((activity) => (
+                                    <div key={activity.id} className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`sdr-${activity.id}`}
+                                        checked={field.value?.includes(activity.id) || false}
+                                        onChange={(e) => {
+                                          const currentValues = field.value || [];
+                                          if (e.target.checked) {
+                                            field.onChange([...currentValues, activity.id]);
+                                          } else {
+                                            field.onChange(currentValues.filter(id => id !== activity.id));
+                                          }
+                                        }}
+                                        className="rounded border-gray-300"
+                                      />
+                                      <label htmlFor={`sdr-${activity.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        {activity.sdrNumber} - {activity.title}
+                                      </label>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-sm text-muted-foreground italic">
+                                    No research activities available for the selected PI
+                                  </div>
+                                )}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Title</FormLabel>
                               <FormControl>
-                                <Input placeholder="Cayuse protocol number" {...field} value={field.value || ""} />
+                                <Input placeholder="IBC application title" {...field} value={field.value || ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Legacy IDs Section */}
+                      <Card className="border-dashed">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">Legacy IDs (optional)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="cayuseProtocolNumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Cayuse Protocol Number</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Cayuse protocol number" {...field} value={field.value || ""} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="irbnetIbcNumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>IRBnet IBC Number</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="IRBnet IBC number" {...field} value={field.value || ""} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="shortTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Short Title</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Short recognition title" {...field} value={field.value || ""} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -693,18 +680,52 @@ export default function CreateIbc() {
                         
                         <FormField
                           control={form.control}
-                          name="irbnetIbcNumber"
+                          name="biosafetyLevel"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>IRBnet IBC Number</FormLabel>
-                              <FormControl>
-                                <Input placeholder="IRBnet IBC number" {...field} value={field.value || ""} />
-                              </FormControl>
+                              <FormLabel>Biosafety Level</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select biosafety level" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="BSL-1">BSL-1</SelectItem>
+                                  <SelectItem value="BSL-2">BSL-2</SelectItem>
+                                  <SelectItem value="BSL-3">BSL-3</SelectItem>
+                                  <SelectItem value="BSL-4">BSL-4</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
+
+                      <FormField
+                        control={form.control}
+                        name="riskGroupClassification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Risk Group Classification</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select risk group" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
+                                <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
+                                <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
+                                <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </CardContent>
                   </Card>
 
@@ -1111,10 +1132,10 @@ export default function CreateIbc() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        Team Members
+                        Protocol Team Members
                       </CardTitle>
                       <CardDescription>
-                        Add team members who will be involved in this research
+                        Add team members from available SDR staff who will be involved in this protocol
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -1267,18 +1288,18 @@ export default function CreateIbc() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Project Description</FormLabel>
-                          <FormDescription>
-                            Please provide a brief description of the research project and its objectives.
-                          </FormDescription>
                           <FormControl>
                             <Textarea 
-                              placeholder="Brief description of the research project" 
+                              placeholder="Provide a general overview of your research - describe what your research will be about, the scientific objectives, and the broader goals of the study" 
                               className="resize-none" 
                               rows={4}
                               {...field}
                               value={field.value || ""} 
                             />
                           </FormControl>
+                          <FormDescription>
+                            Describe the general overview of what your research will be about
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1290,18 +1311,18 @@ export default function CreateIbc() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Protocol Summary</FormLabel>
-                          <FormDescription>
-                            Please provide a detailed summary of the protocols and procedures to be used in this research, including specific methodologies, safety measures, and experimental design.
-                          </FormDescription>
                           <FormControl>
                             <Textarea 
-                              placeholder="Detailed summary of research protocols and procedures" 
+                              placeholder="Describe the key protocols or methods being used in this research - include specific experimental procedures, techniques, equipment, and methodological approaches that will be employed" 
                               className="resize-none" 
                               rows={6}
                               {...field}
                               value={field.value || ""} 
                             />
                           </FormControl>
+                          <FormDescription>
+                            Provide details about the key protocols or methods being used in your research
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
