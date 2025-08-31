@@ -798,7 +798,7 @@ export default function IbcApplicationEdit() {
                               ) : (
                                 principalInvestigators?.map((pi) => (
                                   <SelectItem key={pi.id} value={pi.id.toString()}>
-                                    {pi.name}
+                                    {pi.firstName} {pi.lastName} ({pi.title || "Researcher"})
                                   </SelectItem>
                                 ))
                               )}

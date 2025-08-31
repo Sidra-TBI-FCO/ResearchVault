@@ -539,18 +539,21 @@ export default function CreateIbc() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Principal Investigator</FormLabel>
+                          <FormDescription>
+                            Select the PI first to filter related research activities
+                          </FormDescription>
                           <Select 
                             onValueChange={(value) => field.onChange(parseInt(value))} 
                             value={field.value?.toString() || ""}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a principal investigator" />
+                                <SelectValue placeholder="Select a Principal Investigator" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {piLoading ? (
-                                <SelectItem value="loading" disabled>Loading...</SelectItem>
+                                <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
                               ) : (
                                 principalInvestigators?.map((pi) => (
                                   <SelectItem key={pi.id} value={pi.id.toString()}>
@@ -600,13 +603,19 @@ export default function CreateIbc() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Risk Group Classification</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Risk group classification" 
-                              {...field} 
-                              value={field.value || ""} 
-                            />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select risk group" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
+                              <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
+                              <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
+                              <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
