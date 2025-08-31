@@ -670,6 +670,44 @@ export default function CreateIbc() {
                     )}
                   />
 
+                  {/* Legacy IDs Section */}
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Legacy IDs (optional)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="cayuseProtocolNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cayuse Protocol Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Cayuse protocol number" {...field} value={field.value || ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="irbnetIbcNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>IRBnet IBC Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="IRBnet IBC number" {...field} value={field.value || ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   {/* Biosafety Options Sections */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold">Biosafety Materials</h3>

@@ -384,6 +384,7 @@ export const ibcApplications = pgTable("ibc_applications", {
   id: serial("id").primaryKey(),
   ibcNumber: text("ibc_number").notNull().unique(), // IBC Project Number
   cayuseProtocolNumber: text("cayuse_protocol_number"), // Cayuse Protocol Number
+  irbnetIbcNumber: text("irbnet_ibc_number"), // IRBnet IBC Number
   title: text("title").notNull(),
   shortTitle: text("short_title"), // Short title for recognition
   principalInvestigatorId: integer("principal_investigator_id").notNull(), // references scientists.id

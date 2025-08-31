@@ -863,20 +863,6 @@ export default function IbcApplicationEdit() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="cayuseProtocolNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cayuse Protocol Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Cayuse protocol number" {...field} disabled={isReadOnly} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
@@ -889,6 +875,44 @@ export default function IbcApplicationEdit() {
                       )}
                     />
                   </div>
+
+                  {/* Legacy IDs Section */}
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Legacy IDs (optional)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="cayuseProtocolNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cayuse Protocol Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Cayuse protocol number" {...field} disabled={isReadOnly} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="irbnetIbcNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>IRBnet IBC Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="IRBnet IBC number" {...field} disabled={isReadOnly} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
