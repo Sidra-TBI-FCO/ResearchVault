@@ -181,8 +181,8 @@ export class DatabaseStorage implements IStorage {
     // Only return Investigators and Staff Scientists as potential PIs
     return await db.select().from(scientists)
       .where(or(
-        eq(scientists.jobTitle, "Investigator"),
-        eq(scientists.jobTitle, "Staff Scientist")
+        eq(scientists.title, "Investigator"),
+        eq(scientists.title, "Staff Scientist")
       ))
       .orderBy(scientists.lastName, scientists.firstName);
   }
