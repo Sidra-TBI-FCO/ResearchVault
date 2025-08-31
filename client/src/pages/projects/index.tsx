@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users } from "lucide-react";
+import { formatFullName, getInitials } from "@/utils/nameUtils";
 
 interface Program {
   id: number;
@@ -33,7 +34,8 @@ interface Program {
 
 interface Scientist {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   profileImageInitials?: string;
 }
 
@@ -212,9 +214,9 @@ export default function ProjectsList() {
                       {project.principalInvestigator ? (
                         <div className="flex items-center">
                           <span className="text-xs font-medium text-gray-700 mr-2">
-                            {project.principalInvestigator.profileImageInitials || project.principalInvestigator.name.substring(0, 2)}
+                            {project.principalInvestigator.profileImageInitials || getInitials(project.principalInvestigator)}
                           </span>
-                          <span>{project.principalInvestigator.name}</span>
+                          <span>{formatFullName(project.principalInvestigator)}</span>
                         </div>
                       ) : (
                         <span className="text-gray-600">Unassigned</span>

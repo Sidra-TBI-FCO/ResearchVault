@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users } from "lucide-react";
+import { formatFullName, getInitials } from "@/utils/nameUtils";
 
 interface Program {
   id: number;
@@ -33,8 +34,9 @@ interface Program {
 
 interface Scientist {
   id: number;
-  name: string;
-  title?: string;
+  firstName: string;
+  lastName: string;
+  jobTitle?: string;
   profileImageInitials?: string;
 }
 
@@ -305,12 +307,12 @@ export default function ResearchActivitiesList() {
                       {activity.leadScientist ? (
                         <div className="flex items-center">
                           <span className="text-xs font-medium text-gray-700 mr-2">
-                            {activity.leadScientist.profileImageInitials || activity.leadScientist.name.substring(0, 2)}
+                            {activity.leadScientist.profileImageInitials || getInitials(activity.leadScientist)}
                           </span>
                           <div>
-                            <div className="font-medium">{activity.leadScientist.name}</div>
-                            {activity.leadScientist.title && (
-                              <div className="text-xs text-gray-600">{activity.leadScientist.title}</div>
+                            <div className="font-medium">{formatFullName(activity.leadScientist)}</div>
+                            {activity.leadScientist.jobTitle && (
+                              <div className="text-xs text-gray-600">{activity.leadScientist.jobTitle}</div>
                             )}
                           </div>
                         </div>
@@ -322,12 +324,12 @@ export default function ResearchActivitiesList() {
                       {activity.budgetHolder ? (
                         <div className="flex items-center">
                           <span className="text-xs font-medium text-gray-700 mr-2">
-                            {activity.budgetHolder.profileImageInitials || activity.budgetHolder.name.substring(0, 2)}
+                            {activity.budgetHolder.profileImageInitials || getInitials(activity.budgetHolder)}
                           </span>
                           <div>
-                            <div className="font-medium">{activity.budgetHolder.name}</div>
-                            {activity.budgetHolder.title && (
-                              <div className="text-xs text-gray-600">{activity.budgetHolder.title}</div>
+                            <div className="font-medium">{formatFullName(activity.budgetHolder)}</div>
+                            {activity.budgetHolder.jobTitle && (
+                              <div className="text-xs text-gray-600">{activity.budgetHolder.jobTitle}</div>
                             )}
                           </div>
                         </div>
