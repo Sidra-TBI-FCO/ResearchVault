@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatFullName } from "@/utils/nameUtils";
 
 export default function ProjectDetail() {
   const params = useParams<{ id: string }>();
@@ -182,7 +183,7 @@ export default function ProjectDetail() {
                           className="p-0 h-auto text-primary-600"
                           onClick={() => navigate(`/scientists/${principalInvestigator.id}`)}
                         >
-                          {principalInvestigator.name}
+                          {formatFullName(principalInvestigator)}
                         </Button>
                       ) : 'Not assigned'}
                     </span>

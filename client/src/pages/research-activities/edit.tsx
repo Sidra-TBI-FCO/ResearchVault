@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { formatFullName } from "@/utils/nameUtils";
 
 export default function EditResearchActivity() {
   const params = useParams<{ id: string }>();
@@ -327,12 +328,12 @@ export default function EditResearchActivity() {
                             <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
                           ) : (
                             scientists?.filter(scientist => 
-                              scientist.title === 'Investigator' || 
-                              scientist.title === 'Staff Scientist' || 
-                              scientist.title === 'Physician'
+                              scientist.jobTitle === 'Investigator' || 
+                              scientist.jobTitle === 'Staff Scientist' || 
+                              scientist.jobTitle === 'Physician'
                             ).map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name} ({scientist.title})
+                                {formatFullName(scientist)} ({scientist.jobTitle})
                               </SelectItem>
                             ))
                           )}

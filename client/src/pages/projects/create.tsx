@@ -21,6 +21,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertProjectSchema } from "@shared/schema";
 import { Scientist, Program } from "@shared/schema";
+import { formatFullName } from "@/utils/nameUtils";
 import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -223,9 +224,9 @@ export default function CreateProject() {
                           {piLoading ? (
                             <SelectItem value="loading" disabled>Loading investigators...</SelectItem>
                           ) : (
-                            principalInvestigators?.filter(scientist => scientist.title === 'Investigator').map((scientist) => (
+                            principalInvestigators?.filter(scientist => scientist.jobTitle === 'Investigator').map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name} - {scientist.title}
+                                {formatFullName(scientist)} - {scientist.jobTitle}
                               </SelectItem>
                             ))
                           )}

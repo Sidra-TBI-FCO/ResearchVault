@@ -22,6 +22,7 @@ import {
   Building
 } from "lucide-react";
 import type { IbcApplication, IbcBoardMember, Scientist } from "@shared/schema";
+import { formatFullName } from "@/utils/nameUtils";
 
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800" },
@@ -86,7 +87,7 @@ export default function IbcOfficePage() {
 
   const getScientistName = (id: number) => {
     const scientist = scientists.find((s: Scientist) => s.id === id);
-    return scientist ? scientist.name : `Scientist ${id}`;
+    return scientist ? formatFullName(scientist) : `Scientist ${id}`;
   };
 
   if (applicationsLoading || boardMembersLoading) {
