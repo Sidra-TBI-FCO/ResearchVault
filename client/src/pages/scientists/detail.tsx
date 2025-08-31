@@ -245,6 +245,9 @@ export default function ScientistDetail() {
     );
   }
 
+  // Check if this is a scientific staff member
+  const isScientificStaff = scientist.staffType === 'scientific';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -334,8 +337,10 @@ export default function ScientistDetail() {
           </CardContent>
         </Card>
 
-        {/* Publications List */}
-        <PublicationsList scientistId={id} yearsSince={5} />
+        {/* Publications List - Only show for scientific staff */}
+        {isScientificStaff && (
+          <PublicationsList scientistId={id} yearsSince={5} />
+        )}
         </div>
 
         {/* Right Column - Org Chart, Research Activities and Publication Charts */}
@@ -346,31 +351,36 @@ export default function ScientistDetail() {
             onNavigate={(scientistId) => navigate(`/scientists/${scientistId}`)}
           />
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Research Activities</CardTitle>
-              <CardDescription>Organized by program and project</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activitiesLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ) : !scientistActivities || scientistActivities.length === 0 ? (
-                <p className="text-neutral-400 text-sm">No research activities found.</p>
-              ) : (
-                <ResearchActivitiesTree 
-                  activities={scientistActivities} 
-                  navigate={navigate}
-                />
-              )}
-            </CardContent>
-          </Card>
+          {/* Research Activities - Only show for scientific staff */}
+          {isScientificStaff && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Research Activities</CardTitle>
+                <CardDescription>Organized by program and project</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {activitiesLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ) : !scientistActivities || scientistActivities.length === 0 ? (
+                  <p className="text-neutral-400 text-sm">No research activities found.</p>
+                ) : (
+                  <ResearchActivitiesTree 
+                    activities={scientistActivities} 
+                    navigate={navigate}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Publication Charts and Statistics */}
-          <PublicationCharts scientistId={id} yearsSince={5} />
+          {/* Publication Charts and Statistics - Only show for scientific staff */}
+          {isScientificStaff && (
+            <PublicationCharts scientistId={id} yearsSince={5} />
+          )}
         </div>
       </div>
     </div>
