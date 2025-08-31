@@ -26,7 +26,7 @@ export type User = typeof users.$inferSelect;
 // Scientists schema
 export const scientists = pgTable("scientists", {
   id: serial("id").primaryKey(),
-  honorificTitle: text("honorific_title"), // Dr, Mr, Ms, Prof, etc.
+  honorificTitle: text("honorific_title").notNull(), // Dr, Mr, Ms, Prof, etc.
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   jobTitle: text("job_title"), // Job title (Investigator, Manager, etc.)

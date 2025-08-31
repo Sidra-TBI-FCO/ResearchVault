@@ -30,7 +30,7 @@ const createScientistSchema = insertScientistSchema.extend({
   email: z.string().email("Invalid email address"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  honorificTitle: z.string().optional(),
+  honorificTitle: z.string().min(1, "Honorific title is required"),
   supervisorId: z.number().nullable().optional(),
   staffType: z.enum(["scientific", "administrative"]).default("scientific"),
 });
@@ -124,7 +124,7 @@ export default function CreateScientist() {
                   name="honorificTitle"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title (Optional)</FormLabel>
+                      <FormLabel>Title</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value || ""}
