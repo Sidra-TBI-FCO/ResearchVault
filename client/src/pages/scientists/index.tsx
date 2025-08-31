@@ -49,7 +49,8 @@ export default function ScientistsList() {
   });
 
   const filteredScientists = scientists?.filter(scientist => {
-    const matchesSearch = scientist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const fullName = `${scientist.firstName} ${scientist.lastName}`.toLowerCase();
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
                          (scientist.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
                          (scientist.department?.toLowerCase().includes(searchQuery.toLowerCase()));
     
