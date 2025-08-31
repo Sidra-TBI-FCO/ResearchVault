@@ -197,7 +197,7 @@ export default function StaffList() {
         <CardContent>
           <Tabs defaultValue="all" onValueChange={setActiveTab}>
             <div className="mb-4 overflow-x-auto">
-              <TabsList className="flex justify-start px-6 scroll-smooth">
+              <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground overflow-x-auto">
                 <TabsTrigger value="all" className="flex-shrink-0">All</TabsTrigger>
                 <TabsTrigger value="scientific" className="flex-shrink-0">Scientific Staff</TabsTrigger>
                 <TabsTrigger value="administrative" className="flex-shrink-0">Administrative Staff</TabsTrigger>
