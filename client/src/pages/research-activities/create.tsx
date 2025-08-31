@@ -28,6 +28,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { formatFullName } from "@/utils/nameUtils";
 
 // Extend the insert schema with additional validations
 const createResearchActivitySchema = insertResearchActivitySchema.extend({
@@ -253,12 +254,12 @@ export default function CreateResearchActivity() {
                             <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
                           ) : (
                             scientists?.filter(scientist => 
-                              scientist.title === 'Investigator' || 
-                              scientist.title === 'Staff Scientist' || 
-                              scientist.title === 'Physician'
+                              scientist.jobTitle === 'Investigator' || 
+                              scientist.jobTitle === 'Staff Scientist' || 
+                              scientist.jobTitle === 'Physician'
                             ).map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.name} ({scientist.title})
+                                {formatFullName(scientist)} ({scientist.jobTitle})
                               </SelectItem>
                             ))
                           )}

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { format } from "date-fns";
+import { formatFullName } from "@/utils/nameUtils";
 
 export default function ProgramDetail() {
   const params = useParams<{ id: string }>();
@@ -188,7 +189,7 @@ export default function ProgramDetail() {
                           className="p-0 h-auto text-primary-600"
                           onClick={() => navigate(`/scientists/${programDirector.id}`)}
                         >
-                          {programDirector.name}
+                          {formatFullName(programDirector)}
                         </Button>
                       ) : 'Not assigned'}
                     </span>
@@ -208,7 +209,7 @@ export default function ProgramDetail() {
                           className="p-0 h-auto text-primary-600"
                           onClick={() => navigate(`/scientists/${researchCoLead.id}`)}
                         >
-                          {researchCoLead.name}
+                          {formatFullName(researchCoLead)}
                         </Button>
                       ) : 'Not assigned'}
                     </span>
@@ -228,7 +229,7 @@ export default function ProgramDetail() {
                           className="p-0 h-auto text-primary-600"
                           onClick={() => navigate(`/scientists/${clinicalCoLead1.id}`)}
                         >
-                          {clinicalCoLead1.name}
+                          {formatFullName(clinicalCoLead1)}
                         </Button>
                       ) : 'Not assigned'}
                     </span>
@@ -248,7 +249,7 @@ export default function ProgramDetail() {
                           className="p-0 h-auto text-primary-600"
                           onClick={() => navigate(`/scientists/${clinicalCoLead2.id}`)}
                         >
-                          {clinicalCoLead2.name}
+                          {formatFullName(clinicalCoLead2)}
                         </Button>
                       ) : 'Not assigned'}
                     </span>

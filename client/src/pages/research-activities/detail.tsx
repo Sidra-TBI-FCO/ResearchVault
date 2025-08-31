@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatFullName } from "@/utils/nameUtils";
 import { usePublicationCount } from "@/hooks/use-publication-count";
 
 // Define interface for detail data
@@ -252,7 +253,7 @@ export default function ResearchActivityDetail() {
                       {scientistsLoading ? (
                         <Skeleton className="h-4 w-32 inline-block" />
                       ) : budgetHolder ? (
-                        <span className="text-sm">{budgetHolder.name} ({budgetHolder.title || 'No title'})</span>
+                        <span className="text-sm">{formatFullName(budgetHolder)} ({budgetHolder.jobTitle || 'No title'})</span>
                       ) : (
                         <span className="text-sm text-orange-600">Not assigned</span>
                       )}
@@ -267,7 +268,7 @@ export default function ResearchActivityDetail() {
                     {teamMembersLoading || scientistsLoading ? (
                       <Skeleton className="h-4 w-32 inline-block" />
                     ) : leadScientist ? (
-                      <span className="text-sm">{leadScientist.name} ({leadScientist.title || 'No title'})</span>
+                      <span className="text-sm">{formatFullName(leadScientist)} ({leadScientist.jobTitle || 'No title'})</span>
                     ) : (
                       <span className="text-sm text-orange-600 font-medium">
                         Not assigned - 
