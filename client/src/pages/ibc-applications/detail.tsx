@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import type { IbcApplication, Scientist, ResearchActivity } from "@shared/schema";
 import TimelineComments from "@/components/TimelineComments";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatFullName } from "@/utils/nameUtils";
 
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800", icon: FileText },
@@ -200,7 +201,7 @@ export default function IbcApplicationDetail() {
                   <label className="text-sm font-medium text-gray-500">Principal Investigator</label>
                   <p className="flex items-center space-x-2">
                     <User className="h-4 w-4" />
-                    <span>{scientist?.name || 'Loading...'}</span>
+                    <span>{scientist ? formatFullName(scientist) : 'Loading...'}</span>
                   </p>
                 </div>
                 <div>

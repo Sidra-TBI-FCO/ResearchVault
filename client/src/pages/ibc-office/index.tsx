@@ -268,7 +268,7 @@ export default function IbcOfficePage() {
                   <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div>
-                        <h4 className="font-medium">{member.scientist.name}</h4>
+                        <h4 className="font-medium">{formatFullName(member.scientist)}</h4>
                         <div className="flex items-center space-x-3 text-sm text-gray-500">
                           <Badge variant="outline">{member.role}</Badge>
                           {member.expertise && member.expertise.length > 0 && (

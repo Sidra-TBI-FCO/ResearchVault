@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { formatFullName } from "@/utils/nameUtils";
 
 export default function PublicationDetail() {
   const params = useParams<{ id: string }>();
@@ -315,7 +316,7 @@ export default function PublicationDetail() {
           }
           
           // Additional check for full name match
-          const scientistFullName = scientist.name.toLowerCase().replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
+          const scientistFullName = formatFullName(scientist).toLowerCase().replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
           return cleanAuthorName.includes(scientistFullName) || scientistFullName.includes(cleanAuthorName);
         });
       }
@@ -327,7 +328,7 @@ export default function PublicationDetail() {
       const getLastName = (scientist: any) => {
         if (scientist.lastName) return scientist.lastName.toLowerCase();
         // Extract last name from full name, ignoring titles
-        const nameWithoutTitle = scientist.name.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
+        const nameWithoutTitle = formatFullName(scientist).replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '');
         const nameParts = nameWithoutTitle.trim().split(/\s+/);
         return nameParts[nameParts.length - 1].toLowerCase();
       };
@@ -628,7 +629,7 @@ export default function PublicationDetail() {
                     <AlertDescription className="text-amber-800">
                       <strong>Authors mismatch detected:</strong> The following internal authors are not found in the authors field: {' '}
                       <span className="font-medium">
-                        {missingAuthors.map(author => author.scientist.name).join(', ')}
+                        {missingAuthors.map(author => formatFullName(author.scientist)).join(', ')}
                       </span>
                       . Please verify that both the authors field and internal author assignments are correct.
                     </AlertDescription>
@@ -660,7 +661,7 @@ export default function PublicationDetail() {
                             <TableRow key={author.id} className={!isInText ? "bg-amber-50 border-l-4 border-amber-300" : ""}>
                               <TableCell className="font-medium">
                                 <div className="flex items-center gap-2">
-                                  {author.scientist.name}
+                                  {formatFullName(author.scientist)}
                                   {!isInText && (
                                     <AlertTriangle className="h-4 w-4 text-amber-600" title="Not found in authors text" />
                                   )}
@@ -750,7 +751,7 @@ export default function PublicationDetail() {
                             ) : (
                               availableScientists.map((scientist) => (
                                 <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                  {scientist.name}
+                                  {formatFullName(scientist)}
                                 </SelectItem>
                               ))
                             )}

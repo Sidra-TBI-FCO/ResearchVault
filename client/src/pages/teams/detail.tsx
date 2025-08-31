@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { formatFullName } from "@/utils/nameUtils";
 import {
   ArrowLeft,
   Plus,
@@ -98,14 +99,14 @@ export default function TeamDetail(props: TeamDetailProps) {
             const parts = name.trim().split(' ');
             return parts[parts.length - 1].toLowerCase();
           };
-          return getLastName(a.name).localeCompare(getLastName(b.name));
+          return getLastName(formatFullName(a)).localeCompare(getLastName(formatFullName(b)));
         })
     : scientists?.sort((a, b) => {
         const getLastName = (name: string) => {
           const parts = name.trim().split(' ');
           return parts[parts.length - 1].toLowerCase();
         };
-        return getLastName(a.name).localeCompare(getLastName(b.name));
+        return getLastName(formatFullName(a)).localeCompare(getLastName(formatFullName(b)));
       }) || [];
   
   // Add team member mutation
@@ -352,7 +353,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                         >
                           <div className="flex items-center justify-between w-full">
                             <div className="flex flex-col">
-                              <span className="font-medium">{scientist.name}</span>
+                              <span className="font-medium">{formatFullName(scientist)}</span>
                               <span className="text-xs text-muted-foreground">{scientist.title}</span>
                             </div>
                             {scientist.staffId && 

@@ -15,6 +15,7 @@ import {
   DollarSign, File 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatFullName } from "@/utils/nameUtils";
 
 export default function ContractsList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +56,7 @@ export default function ContractsList() {
       contract.contractorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (contract.description && contract.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (contract.contractType && contract.contractType.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (contract.principalInvestigator && contract.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (contract.principalInvestigator && formatFullName(contract.principalInvestigator).toLowerCase().includes(searchQuery.toLowerCase())) ||
       (contract.project && contract.project.title.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   });
@@ -141,7 +142,7 @@ export default function ContractsList() {
                       </div>
                       {contract.principalInvestigator && (
                         <div className="text-xs text-neutral-200 mt-1 flex items-center">
-                          <span>PI: {contract.principalInvestigator.name}</span>
+                          <span>PI: {formatFullName(contract.principalInvestigator)}</span>
                         </div>
                       )}
                     </TableCell>
