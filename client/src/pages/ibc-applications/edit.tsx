@@ -63,6 +63,12 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   transportingBioHazardousToOffCampusDetails: z.string().optional(),
   receivingBiologicalFromOffCampus: z.boolean().optional(),
   
+  // Dual Use fields
+  dualUseAgentsAndToxins: z.array(z.string()).optional(),
+  dualUseCategoriesApply: z.boolean().optional(),
+  dualUseCategoriesExplanation: z.string().optional(),
+  dualUseExperimentCategories: z.array(z.string()).optional(),
+  
   // NIH Guidelines sections
   nihSectionABC: z.object({
     requiresNihDirectorApproval: z.boolean().default(false),
@@ -745,6 +751,10 @@ export default function IbcApplicationEdit() {
               <TabsTrigger value="transport" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Transport/Shipping</span>
                 <span className="sm:hidden">Transport</span>
+              </TabsTrigger>
+              <TabsTrigger value="dual-use" className="whitespace-nowrap flex-shrink-0">
+                <span className="hidden sm:inline">Dual Use</span>
+                <span className="sm:hidden">Dual Use</span>
               </TabsTrigger>
               <TabsTrigger value="construction" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Under Construction</span>
@@ -4085,6 +4095,185 @@ export default function IbcApplicationEdit() {
                         </FormItem>
                       )}
                     />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="dual-use" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dual Use</CardTitle>
+                  <CardDescription>Dual use research and agents classification</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Agents and Toxins */}
+                  <div className="space-y-4">
+                    <FormLabel className="text-base font-semibold">
+                      Please check all applicable Agents and Toxins <span className="text-red-500">*</span>
+                    </FormLabel>
+                    
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        'Avian influenza virus (highly pathogenic) virus',
+                        'Bacillus anthracis',
+                        'Burkholderia mallei',
+                        'Dysport, Xeomin, Myobloc, Lantox, Prosigne, Neuronox/Siax',
+                        'Ebola virus',
+                        'Foot-and-mouth disease virus',
+                        'Francisella tularensis',
+                        'Marburg virus',
+                        'N/A',
+                        'Reconstructed 1918 Influenza',
+                        'Rinderpest virus',
+                        'Toxin-producing strains of Clostridium',
+                        'Variola major virus',
+                        'Variola minor virus',
+                        'Yersinia pestis',
+                        'Botulinum neurotoxins (any quantity, even BOTOX; other brand names: Dysport, Xeomin, Myobloc, Lantox, Prosigne, Neuronox/Siax)'
+                      ].map((agent) => (
+                        <FormField
+                          key={agent}
+                          control={form.control}
+                          name="dualUseAgentsAndToxins"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-2">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value?.includes(agent) || false}
+                                  onChange={(e) => {
+                                    const currentValue = field.value || [];
+                                    if (e.target.checked) {
+                                      field.onChange([...currentValue, agent]);
+                                    } else {
+                                      field.onChange(currentValue.filter((item: string) => item !== agent));
+                                    }
+                                  }}
+                                  disabled={isReadOnly}
+                                  className="rounded border-gray-300"
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">{agent}</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dual Use Categories Question */}
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="dualUseCategoriesApply"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">
+                            Does your work fall under the Dual Use Categories? <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex space-x-4">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="true"
+                                  checked={field.value === true}
+                                  onChange={() => field.onChange(true)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>Yes</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="false"
+                                  checked={field.value === false}
+                                  onChange={() => field.onChange(false)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>No</span>
+                              </label>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Conditional fields when "Yes" is selected */}
+                    {form.watch("dualUseCategoriesApply") && (
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="dualUseCategoriesExplanation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>If yes, please explain <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Explain how your work falls under dual use categories..."
+                                  className="resize-none"
+                                  rows={4}
+                                  {...field}
+                                  disabled={isReadOnly}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="space-y-4">
+                          <FormLabel className="text-base font-semibold">
+                            Check any categories of experiments below that apply to the research experiments or projects <span className="text-red-500">*</span>
+                          </FormLabel>
+                          
+                          <div className="grid grid-cols-1 gap-3">
+                            {[
+                              'Alters the host range or tropism of the agent or toxin',
+                              'Confers to the agent or toxin resistance to clinically and/or agriculturally useful prophylactic or therapeutic interventions',
+                              'Disrupts immunity or the effectiveness of an immunization against the agent/toxin w/o clinical and/or agricultural justification',
+                              'Enhances the harmful consequences of the agent or toxin',
+                              'Enhances the susceptibility of a host population to the agent or toxin',
+                              'Generates or reconstitutes an eradicated or extinct agent or toxin listed above',
+                              'Increases the stability, transmissibility, or the ability to disseminate the agent or toxin',
+                              'None of the above'
+                            ].map((category) => (
+                              <FormField
+                                key={category}
+                                control={form.control}
+                                name="dualUseExperimentCategories"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2">
+                                    <FormControl>
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value?.includes(category) || false}
+                                        onChange={(e) => {
+                                          const currentValue = field.value || [];
+                                          if (e.target.checked) {
+                                            field.onChange([...currentValue, category]);
+                                          } else {
+                                            field.onChange(currentValue.filter((item: string) => item !== category));
+                                          }
+                                        }}
+                                        disabled={isReadOnly}
+                                        className="rounded border-gray-300"
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">{category}</FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

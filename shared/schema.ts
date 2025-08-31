@@ -529,6 +529,12 @@ export const ibcApplications = pgTable("ibc_applications", {
   transportingBioHazardousToOffCampus: boolean("transporting_bio_hazardous_to_off_campus"), // Yes/No - transporting bio-hazardous materials to off campus
   transportingBioHazardousToOffCampusDetails: text("transporting_bio_hazardous_to_off_campus_details"), // Details if transporting bio-hazardous to off campus
   receivingBiologicalFromOffCampus: boolean("receiving_biological_from_off_campus"), // Yes/No - receiving biological samples from off campus locations
+
+  // Dual Use Section
+  dualUseAgentsAndToxins: json("dual_use_agents_and_toxins"), // Array of selected agents and toxins
+  dualUseCategoriesApply: boolean("dual_use_categories_apply"), // Yes/No - does work fall under dual use categories
+  dualUseCategoriesExplanation: text("dual_use_categories_explanation"), // Explanation if dual use categories apply
+  dualUseExperimentCategories: json("dual_use_experiment_categories"), // Array of selected experiment categories
   handleMoreThan10Liters: boolean("handle_more_than_10_liters"), // Yes/No - handling >10L culture
   geneDriveSystemCrispr: boolean("gene_drive_system_crispr"), // Yes/No - gene drive system creation
   
