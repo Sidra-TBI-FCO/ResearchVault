@@ -26,9 +26,8 @@ export type User = typeof users.$inferSelect;
 // Scientists schema
 export const scientists = pgTable("scientists", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   title: text("title"),
   email: text("email").notNull().unique(),
   staffId: text("staff_id").unique(), // 5-digit staff ID for badges
