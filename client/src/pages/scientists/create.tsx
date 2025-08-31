@@ -209,13 +209,16 @@ export default function CreateScientist() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Investigator">Investigator</SelectItem>
-                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
-                          <SelectItem value="Physician">Physician</SelectItem>
-                          <SelectItem value="Lab Manager">Lab Manager</SelectItem>
-                          <SelectItem value="Postdoctoral Researcher">Postdoctoral Researcher</SelectItem>
-                          <SelectItem value="PhD Student">PhD Student</SelectItem>
                           <SelectItem value="Management">Management</SelectItem>
+                          <SelectItem value="Investigator">Investigator</SelectItem>
+                          <SelectItem value="Physician">Physician</SelectItem>
+                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
+                          <SelectItem value="Research Specialist">Research Specialist</SelectItem>
+                          <SelectItem value="Research Associate">Research Associate</SelectItem>
+                          <SelectItem value="Research Assistant">Research Assistant</SelectItem>
+                          <SelectItem value="PhD Student">PhD Student</SelectItem>
+                          <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
+                          <SelectItem value="Lab Manager">Lab Manager</SelectItem>
                           <SelectItem value="PMO Officer">PMO Officer</SelectItem>
                           <SelectItem value="IRB Officer">IRB Officer</SelectItem>
                           <SelectItem value="IBC Officer">IBC Officer</SelectItem>
