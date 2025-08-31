@@ -56,6 +56,13 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   riskGroupClassification: z.string().optional(),
   protocolSummary: z.string().optional(),
   
+  // Transport/Shipping fields
+  deviatingFromLocalTransport: z.boolean().optional(),
+  deviatingFromLocalTransportDetails: z.string().optional(),
+  transportingBioHazardousToOffCampus: z.boolean().optional(),
+  transportingBioHazardousToOffCampusDetails: z.string().optional(),
+  receivingBiologicalFromOffCampus: z.boolean().optional(),
+  
   // NIH Guidelines sections
   nihSectionABC: z.object({
     requiresNihDirectorApproval: z.boolean().default(false),
@@ -734,6 +741,10 @@ export default function IbcApplicationEdit() {
               <TabsTrigger value="disposal" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Disposal</span>
                 <span className="sm:hidden">Disposal</span>
+              </TabsTrigger>
+              <TabsTrigger value="transport" className="whitespace-nowrap flex-shrink-0">
+                <span className="hidden sm:inline">Transport/Shipping</span>
+                <span className="sm:hidden">Transport</span>
               </TabsTrigger>
               <TabsTrigger value="construction" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Under Construction</span>
@@ -3889,6 +3900,194 @@ export default function IbcApplicationEdit() {
                 application={ibcApplication}
                 isReadOnly={isReadOnly}
               />
+            </TabsContent>
+
+            <TabsContent value="transport" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transport/Shipping</CardTitle>
+                  <CardDescription>Transport and shipping procedures for biological materials</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Local Transport */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Local Transport</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="deviatingFromLocalTransport"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">
+                            Deviating from Local Transport Standard Practice?
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex space-x-4">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="true"
+                                  checked={field.value === true}
+                                  onChange={() => field.onChange(true)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>Yes</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="false"
+                                  checked={field.value === false}
+                                  onChange={() => field.onChange(false)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>No</span>
+                              </label>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch("deviatingFromLocalTransport") && (
+                      <FormField
+                        control={form.control}
+                        name="deviatingFromLocalTransportDetails"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Please provide details</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the deviation from local transport standard practice..."
+                                className="resize-none"
+                                rows={3}
+                                {...field}
+                                disabled={isReadOnly}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  {/* Transporting to Off Campus Locations */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Transporting to Off Campus Locations</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="transportingBioHazardousToOffCampus"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">
+                            Transporting Bio-hazardous Materials to Off Campus Locations?
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex space-x-4">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="true"
+                                  checked={field.value === true}
+                                  onChange={() => field.onChange(true)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>Yes</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="false"
+                                  checked={field.value === false}
+                                  onChange={() => field.onChange(false)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>No</span>
+                              </label>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch("transportingBioHazardousToOffCampus") && (
+                      <FormField
+                        control={form.control}
+                        name="transportingBioHazardousToOffCampusDetails"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Please provide details</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the bio-hazardous materials being transported to off campus locations..."
+                                className="resize-none"
+                                rows={3}
+                                {...field}
+                                disabled={isReadOnly}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  {/* Transporting from Off Campus Locations */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Transporting from Off Campus Locations</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="receivingBiologicalFromOffCampus"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">
+                            Receiving biological samples from off campus locations?
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex space-x-4">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="true"
+                                  checked={field.value === true}
+                                  onChange={() => field.onChange(true)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>Yes</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  value="false"
+                                  checked={field.value === false}
+                                  onChange={() => field.onChange(false)}
+                                  disabled={isReadOnly}
+                                  className="form-radio"
+                                />
+                                <span>No</span>
+                              </label>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="construction" className="space-y-6 mt-6">

@@ -522,6 +522,13 @@ export const ibcApplications = pgTable("ibc_applications", {
   providedRestrictionVectorMaps: boolean("provided_restriction_vector_maps"), // Yes/No - provided maps to biosafety office
   viralGenomeRegionsAltered: text("viral_genome_regions_altered"), // Viral genome regions deleted/altered
   assayingWildTypeViral: boolean("assaying_wild_type_viral"), // Yes/No - assaying for wild-type viral particles
+
+  // Transport/Shipping Section
+  deviatingFromLocalTransport: boolean("deviating_from_local_transport"), // Yes/No - deviating from local transport standard practice
+  deviatingFromLocalTransportDetails: text("deviating_from_local_transport_details"), // Details if deviating from local transport
+  transportingBioHazardousToOffCampus: boolean("transporting_bio_hazardous_to_off_campus"), // Yes/No - transporting bio-hazardous materials to off campus
+  transportingBioHazardousToOffCampusDetails: text("transporting_bio_hazardous_to_off_campus_details"), // Details if transporting bio-hazardous to off campus
+  receivingBiologicalFromOffCampus: boolean("receiving_biological_from_off_campus"), // Yes/No - receiving biological samples from off campus locations
   handleMoreThan10Liters: boolean("handle_more_than_10_liters"), // Yes/No - handling >10L culture
   geneDriveSystemCrispr: boolean("gene_drive_system_crispr"), // Yes/No - gene drive system creation
   
@@ -568,8 +575,6 @@ export const insertIbcApplicationSchema = createInsertSchema(ibcApplications).om
   updatedAt: true,
 });
 
-export type InsertIbcApplication = z.infer<typeof insertIbcApplicationSchema>;
-export type IbcApplication = typeof ibcApplications.$inferSelect;
 
 // Junction table for IBC Applications and Research Activities (many-to-many)
 export const ibcApplicationResearchActivities = pgTable("ibc_application_research_activities", {
