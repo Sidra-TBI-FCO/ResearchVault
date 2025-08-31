@@ -71,9 +71,7 @@ export default function StaffList() {
     if (activeTab === "phd-student") return matchesSearch && person.jobTitle === "PhD Student";
     if (activeTab === "post-doc") return matchesSearch && person.jobTitle === "Post-doctoral Fellow";
     if (activeTab === "lab-manager") return matchesSearch && person.jobTitle === "Lab Manager";
-    if (activeTab === "irb-officer") return matchesSearch && person.jobTitle === "IRB Officer";
-    if (activeTab === "ibc-officer") return matchesSearch && person.jobTitle === "IBC Officer";
-    if (activeTab === "pmo-officer") return matchesSearch && person.jobTitle === "PMO Officer";
+    if (activeTab === "officers") return matchesSearch && (person.jobTitle === "IRB Officer" || person.jobTitle === "IBC Officer" || person.jobTitle === "PMO Officer");
     
     return matchesSearch;
   });
@@ -207,9 +205,7 @@ export default function StaffList() {
                 <TabsTrigger value="phd-student" className="flex-shrink-0">PhD Student</TabsTrigger>
                 <TabsTrigger value="post-doc" className="flex-shrink-0">Post-doctoral Fellow</TabsTrigger>
                 <TabsTrigger value="management" className="flex-shrink-0">Management</TabsTrigger>
-                <TabsTrigger value="irb-officer" className="flex-shrink-0">IRB Officer</TabsTrigger>
-                <TabsTrigger value="ibc-officer" className="flex-shrink-0">IBC Officer</TabsTrigger>
-                <TabsTrigger value="pmo-officer" className="flex-shrink-0">PMO Officer</TabsTrigger>
+                <TabsTrigger value="officers" className="flex-shrink-0">Officers</TabsTrigger>
               </TabsList>
             </div>
             
