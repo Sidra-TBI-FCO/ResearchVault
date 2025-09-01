@@ -488,16 +488,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
               let usedFallback = false;
               
               try {
+                console.log(`Looking for impact factor: journal="${publication.journal.trim()}", targetYear=${targetYear}`);
                 impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), targetYear);
                 
                 // If no impact factor found for target year, try fallback years
                 if (!impactFactor) {
+                  console.log(`No impact factor found for ${publication.journal.trim()} in ${targetYear}, trying fallbacks...`);
                   usedFallback = true;
                   if (impactFactorYear === "latest") {
                     // For latest, try previous years going back from current year
                     for (let fallbackYear = new Date().getFullYear() - 1; fallbackYear >= 2020; fallbackYear--) {
                       impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
                       if (impactFactor) {
+                        console.log(`Found fallback impact factor for ${publication.journal.trim()} in ${fallbackYear}`);
                         actualYear = fallbackYear;
                         break;
                       }
@@ -509,12 +512,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       if (fallbackYear >= 2020) {
                         impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
                         if (impactFactor) {
+                          console.log(`Found fallback impact factor for ${publication.journal.trim()} in ${fallbackYear}`);
                           actualYear = fallbackYear;
                           break;
                         }
                       }
                     }
                   }
+                } else {
+                  console.log(`Found exact impact factor for ${publication.journal.trim()} in ${targetYear}: ${impactFactor.impactFactor}`);
                 }
               } catch (error) {
                 console.error(`Error getting impact factor for journal "${publication.journal}" year ${targetYear}:`, error);
