@@ -6,6 +6,47 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, FileText } from "lucide-react";
 import { format } from "date-fns";
 
+interface JournalImpactFactor {
+  id: number;
+  journalName: string;
+  year: number;
+  impactFactor: string;
+  rank: number;
+  quartile: string;
+}
+
+function ImpactFactorDisplay({ journal, publicationYear }: { journal: string; publicationYear: number }) {
+  const { data: publicationYearIF } = useQuery<JournalImpactFactor | null>({
+    queryKey: [`/api/journal-impact-factors/journal/${encodeURIComponent(journal)}/year/${publicationYear}`],
+    enabled: !!journal,
+  });
+  
+  const { data: previousYearIF } = useQuery<JournalImpactFactor | null>({
+    queryKey: [`/api/journal-impact-factors/journal/${encodeURIComponent(journal)}/year/${publicationYear - 1}`],
+    enabled: !!journal,
+  });
+  
+  const { data: currentYearIF } = useQuery<JournalImpactFactor | null>({
+    queryKey: [`/api/journal-impact-factors/journal/${encodeURIComponent(journal)}/year/2024`],
+    enabled: !!journal,
+  });
+
+  return (
+    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+      <span className="font-medium">JIF:</span>
+      <span>
+        {publicationYear - 1}: {previousYearIF ? previousYearIF.impactFactor : 'N/A'}
+      </span>
+      <span className="font-semibold text-gray-700">
+        {publicationYear}: {publicationYearIF ? publicationYearIF.impactFactor : 'N/A'}
+      </span>
+      <span>
+        2024: {currentYearIF ? currentYearIF.impactFactor : 'N/A'}
+      </span>
+    </div>
+  );
+}
+
 interface Publication {
   id: number;
   title: string;
@@ -112,6 +153,13 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
                     <span>({format(new Date(pub.publicationDate), 'yyyy')})</span>
                   )}
                 </div>
+                
+                {pub.journal && pub.publicationDate && (
+                  <ImpactFactorDisplay 
+                    journal={pub.journal} 
+                    publicationYear={new Date(pub.publicationDate).getFullYear()} 
+                  />
+                )}
                 
                 {pub.doi && (
                   <div className="mt-2">
