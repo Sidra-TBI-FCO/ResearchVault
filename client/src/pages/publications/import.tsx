@@ -141,7 +141,8 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
   // Save publication
   const saveMutation = useMutation({
     mutationFn: async (data: InsertPublication) => {
-      return apiRequest('/api/publications', 'POST', data);
+      const response = await apiRequest('POST', '/api/publications', data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
@@ -179,7 +180,8 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
   // Add new journal to database
   const addJournalMutation = useMutation({
     mutationFn: async (journalData: any) => {
-      return apiRequest('/api/journal-impact-factors', 'POST', journalData);
+      const response = await apiRequest('POST', '/api/journal-impact-factors', journalData);
+      return response.json();
     },
     onSuccess: (data) => {
       setMatchingJournals([data]);
