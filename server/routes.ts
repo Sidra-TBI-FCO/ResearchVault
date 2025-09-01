@@ -439,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Get journal impact factor for the publication year
           const pubYear = publication.publicationDate ? new Date(publication.publicationDate).getFullYear() : new Date().getFullYear();
-          const impactFactor = await storage.getJournalImpactFactor(publication.journal, pubYear);
+          const impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal, pubYear);
           
           if (!impactFactor?.impactFactor) {
             continue;
