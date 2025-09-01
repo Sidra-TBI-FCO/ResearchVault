@@ -246,7 +246,7 @@ export default function PublicationsList() {
                           {publication.status.includes('*') ? (
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 fill-current" />
-                              {publication.status}
+                              Published
                             </div>
                           ) : (
                             publication.status

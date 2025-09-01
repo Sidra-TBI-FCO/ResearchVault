@@ -405,7 +405,7 @@ export default function PublicationOffice() {
                             {pub.status?.includes('*') ? (
                               <div className="flex items-center gap-1">
                                 <Star className="h-3 w-3 fill-current" />
-                                {pub.status}
+                                Published
                               </div>
                             ) : (
                               pub.status
