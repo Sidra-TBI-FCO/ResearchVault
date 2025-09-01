@@ -93,7 +93,10 @@ export default function PublicationOffice() {
       if (!response.ok) throw new Error('Failed to fetch publications');
       const publications = await response.json();
       // Filter publications that need IP vetting (not yet vetted for IP office)
-      return publications.filter((pub: Publication) => !pub.vettedForSubmissionByIpOffice);
+      return publications.filter((pub: Publication) => 
+        pub.vettedForSubmissionByIpOffice === false && 
+        (pub.status === 'published' || pub.status === 'Published')
+      );
     },
     enabled: activeTab === "ip-vetting"
   });
@@ -104,9 +107,10 @@ export default function PublicationOffice() {
       const response = await fetch('/api/publications');
       if (!response.ok) throw new Error('Failed to fetch publications');
       const publications = await response.json();
-      // Filter published articles that haven't been marked as "Published *"
+      // Filter publications that have been vetted (Published*)
       return publications.filter((pub: Publication) => 
-        pub.status === 'published' || pub.status === 'Published'
+        pub.vettedForSubmissionByIpOffice === true &&
+        (pub.status === 'Published *' || pub.status?.includes('*'))
       );
     },
     enabled: activeTab === "new-publications"
@@ -394,10 +398,13 @@ export default function PublicationOffice() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={pub.status?.includes('*') ? 'default' : 'outline'}>
+                          <Badge 
+                            variant={pub.status?.includes('*') ? 'default' : 'outline'}
+                            className={pub.status?.includes('*') ? 'bg-green-600 hover:bg-green-700' : ''}
+                          >
                             {pub.status?.includes('*') ? (
                               <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3" />
+                                <Star className="h-3 w-3 fill-current" />
                                 {pub.status}
                               </div>
                             ) : (
@@ -407,8 +414,8 @@ export default function PublicationOffice() {
                           {!pub.status?.includes('*') && (
                             <Button 
                               size="sm"
-                              onClick={() => updatePublicationStatusMutation.mutate({ id: pub.id, status: 'Published *' })}
-                              disabled={updatePublicationStatusMutation.isPending}
+                              onClick={() => markAsVettedMutation.mutate(pub.id)}
+                              disabled={markAsVettedMutation.isPending}
                             >
                               <Star className="h-4 w-4 mr-1" />
                               Mark as Published *
