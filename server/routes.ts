@@ -401,6 +401,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sidra Score calculation for all scientists
+  app.post('/api/scientists/sidra-scores', async (req: Request, res: Response) => {
+    try {
+      const { years = 5, multipliers = {} } = req.body;
+      
+      // Default multipliers
+      const defaultMultipliers = {
+        'First Author': 2,
+        'Last Author': 2,
+        'Senior Author': 2,
+        'Corresponding Author': 2
+      };
+      
+      const finalMultipliers = { ...defaultMultipliers, ...multipliers };
+      
+      // Get all scientists
+      const scientists = await storage.getScientists();
+      
+      // Calculate scores for each scientist
+      const rankings = await Promise.all(scientists.map(async (scientist) => {
+        let totalScore = 0;
+        let publicationsCount = 0;
+        
+        // Get publications for this scientist within the time period
+        const publications = await storage.getPublicationsForScientist(scientist.id, years);
+        
+        for (const publication of publications) {
+          // Only count published publications with impact factors
+          if (!['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) {
+            continue;
+          }
+          
+          if (!publication.journal) {
+            continue;
+          }
+          
+          // Get journal impact factor for the publication year
+          const pubYear = publication.publicationDate ? new Date(publication.publicationDate).getFullYear() : new Date().getFullYear();
+          const impactFactor = await storage.getJournalImpactFactor(publication.journal, pubYear);
+          
+          if (!impactFactor?.impactFactor) {
+            continue;
+          }
+          
+          publicationsCount++;
+          
+          // Get authorship type for this scientist on this publication
+          const authors = await storage.getPublicationAuthors(publication.id);
+          const scientistAuthor = authors.find(author => author.scientistId === scientist.id);
+          
+          if (!scientistAuthor) {
+            // If not in author table, use base impact factor
+            totalScore += impactFactor.impactFactor;
+            continue;
+          }
+          
+          // Parse authorship types and apply multipliers
+          const authorshipTypes = scientistAuthor.authorshipType.split(',').map(type => type.trim());
+          let multiplier = 1; // Base multiplier
+          
+          for (const type of authorshipTypes) {
+            if (finalMultipliers[type]) {
+              multiplier = Math.max(multiplier, finalMultipliers[type]);
+            }
+          }
+          
+          totalScore += impactFactor.impactFactor * multiplier;
+        }
+        
+        return {
+          id: scientist.id,
+          honorificTitle: scientist.honorificTitle,
+          firstName: scientist.firstName,
+          lastName: scientist.lastName,
+          jobTitle: scientist.jobTitle,
+          department: scientist.department,
+          publicationsCount,
+          sidraScore: totalScore
+        };
+      }));
+      
+      // Sort by score descending
+      rankings.sort((a, b) => b.sidraScore - a.sidraScore);
+      
+      res.json(rankings);
+    } catch (error) {
+      console.error('Error calculating Sidra scores:', error);
+      res.status(500).json({ message: "Failed to calculate Sidra scores" });
+    }
+  });
+
   app.post('/api/scientists', async (req: Request, res: Response) => {
     try {
       const validateData = insertScientistSchema.parse(req.body);

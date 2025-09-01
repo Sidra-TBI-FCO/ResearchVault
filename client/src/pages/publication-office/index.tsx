@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen } from "lucide-react";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -38,6 +38,14 @@ export default function PublicationOffice() {
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
   const [searchName, setSearchName] = useState("");
   const [exportResults, setExportResults] = useState<{count: number, formattedText: string, publications: any[]} | null>(null);
+  
+  // Sidra Score tab state
+  const [sidraYears, setSidraYears] = useState(5);
+  const [firstAuthorMultiplier, setFirstAuthorMultiplier] = useState(2);
+  const [lastAuthorMultiplier, setLastAuthorMultiplier] = useState(2);
+  const [correspondingAuthorMultiplier, setCorrespondingAuthorMultiplier] = useState(2);
+  const [seniorAuthorMultiplier, setSeniorAuthorMultiplier] = useState(2);
+  const [sidraRankings, setSidraRankings] = useState<any[]>([]);
   
   // Impact Factor tab state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -213,6 +221,40 @@ export default function PublicationOffice() {
       }
     }
   }, []);
+
+  // Sidra Score calculation
+  const calculateSidraScoresMutation = useMutation({
+    mutationFn: async () => {
+      const config = {
+        years: sidraYears,
+        multipliers: {
+          'First Author': firstAuthorMultiplier,
+          'Last Author': lastAuthorMultiplier,
+          'Senior Author': seniorAuthorMultiplier,
+          'Corresponding Author': correspondingAuthorMultiplier
+        }
+      };
+      
+      const response = await fetch('/api/scientists/sidra-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (!response.ok) throw new Error('Failed to calculate Sidra scores');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSidraRankings(data);
+      toast({ title: "Success", description: `Calculated scores for ${data.length} scientists` });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to calculate Sidra scores", variant: "destructive" });
+    },
+  });
+
+  const handleCalculateSidraScores = () => {
+    calculateSidraScoresMutation.mutate();
+  };
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: Partial<InsertJournalImpactFactor> }) => {
@@ -397,7 +439,7 @@ export default function PublicationOffice() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="ip-vetting" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             IP Vetting ({publicationsForIP.length})
@@ -409,6 +451,10 @@ export default function PublicationOffice() {
           <TabsTrigger value="export" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             Export
+          </TabsTrigger>
+          <TabsTrigger value="sidra-score" className="flex items-center gap-2">
+            <Award className="h-4 w-4" />
+            Sidra Score
           </TabsTrigger>
           <TabsTrigger value="impact-factors" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -693,6 +739,178 @@ export default function PublicationOffice() {
                         value={exportResults?.formattedText || ""}
                         readOnly
                       />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Sidra Score Tab */}
+        <TabsContent value="sidra-score" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Configuration Panel */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    Score Configuration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Time Period (Years)</Label>
+                    <Select value={sidraYears.toString()} onValueChange={(value) => setSidraYears(parseInt(value))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 years</SelectItem>
+                        <SelectItem value="5">5 years</SelectItem>
+                        <SelectItem value="10">10 years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-4 border-t pt-4">
+                    <Label>Authorship Multipliers</Label>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-600">First Author</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={firstAuthorMultiplier}
+                        onChange={(e) => setFirstAuthorMultiplier(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-600">Last Author</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={lastAuthorMultiplier}
+                        onChange={(e) => setLastAuthorMultiplier(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-600">Senior Author</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={seniorAuthorMultiplier}
+                        onChange={(e) => setSeniorAuthorMultiplier(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-600">Corresponding Author</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={correspondingAuthorMultiplier}
+                        onChange={(e) => setCorrespondingAuthorMultiplier(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full flex items-center gap-2" 
+                    variant="outline"
+                    onClick={handleCalculateSidraScores}
+                    disabled={calculateSidraScoresMutation.isPending}
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    {calculateSidraScoresMutation.isPending ? 'Calculating...' : 'Calculate Scores'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Scientist Rankings */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Scientist Rankings
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Based on publication impact factors from the last {sidraYears} years
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2">Calculation Formula</h4>
+                      <p className="text-sm text-blue-800">
+                        Sum of journal impact factors for publications in the last {sidraYears} years, 
+                        with multipliers: First Author (×{firstAuthorMultiplier}), 
+                        Last Author (×{lastAuthorMultiplier}), 
+                        Senior Author (×{seniorAuthorMultiplier}), 
+                        Corresponding Author (×{correspondingAuthorMultiplier})
+                      </p>
+                    </div>
+
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-16">Rank</TableHead>
+                            <TableHead>Scientist</TableHead>
+                            <TableHead>Department</TableHead>
+                            <TableHead className="text-right">Publications</TableHead>
+                            <TableHead className="text-right">Sidra Score</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sidraRankings.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                                Click "Calculate Scores" to generate rankings
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            sidraRankings.map((scientist, index) => (
+                              <TableRow key={scientist.id}>
+                                <TableCell className="font-medium">
+                                  {index + 1}
+                                  {index === 0 && <Badge className="ml-2 bg-yellow-100 text-yellow-800">🥇</Badge>}
+                                  {index === 1 && <Badge className="ml-2 bg-gray-100 text-gray-800">🥈</Badge>}
+                                  {index === 2 && <Badge className="ml-2 bg-orange-100 text-orange-800">🥉</Badge>}
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <div className="font-medium">
+                                      {scientist.honorificTitle} {scientist.firstName} {scientist.lastName}
+                                    </div>
+                                    <div className="text-sm text-gray-500">{scientist.jobTitle}</div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-sm text-gray-600">
+                                  {scientist.department}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {scientist.publicationsCount}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="font-medium text-lg">
+                                    {scientist.sidraScore.toFixed(2)}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 </CardContent>
