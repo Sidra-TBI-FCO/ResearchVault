@@ -1,4 +1,4 @@
-import { eq, and, desc, or, sql, inArray, gte } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray, gte, ilike } from "drizzle-orm";
 import { db } from "./db";
 import { IStorage } from "./storage";
 import {
@@ -1485,17 +1485,17 @@ export class DatabaseStorage implements IStorage {
       // Handle multiple patterns with OR condition
       const patterns = rolePattern.split('|');
       const conditions = patterns.map(pattern => 
-        sql`LOWER(${scientists.title}) LIKE ${'%' + pattern.toLowerCase() + '%'}`
+        ilike(scientists.jobTitle, `%${pattern}%`)
       );
       const combinedCondition = conditions.reduce((acc, condition) => 
-        acc ? sql`${acc} OR ${condition}` : condition
+        acc ? or(acc, condition) : condition
       );
       return await db.select().from(scientists)
         .where(combinedCondition)
         .orderBy(scientists.lastName, scientists.firstName);
     } else {
       return await db.select().from(scientists)
-        .where(sql`LOWER(${scientists.title}) LIKE ${'%' + rolePattern.toLowerCase() + '%'}`)
+        .where(ilike(scientists.jobTitle, `%${rolePattern}%`))
         .orderBy(scientists.lastName, scientists.firstName);
     }
   }
