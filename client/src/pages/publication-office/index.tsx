@@ -575,7 +575,7 @@ export default function PublicationOffice() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {impactFactors.map((factor) => (
+                {impactFactors.map((factor: JournalImpactFactor) => (
                   <TableRow key={factor.id}>
                     <TableCell>
                       {editingId === factor.id ? (
@@ -595,7 +595,7 @@ export default function PublicationOffice() {
                       {editingId === factor.id ? (
                         <Input
                           type="number"
-                          value={editForm.year || ''}
+                          value={editForm.year?.toString() || ''}
                           onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) || 0 })}
                           className="w-20"
                         />

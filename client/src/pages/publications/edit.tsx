@@ -330,19 +330,20 @@ export default function PublicationEdit() {
                 control={form.control}
                 name="vettedForSubmissionByIpOffice"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 bg-gray-50">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        disabled={true}
+                        className="cursor-not-allowed"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        IP Office Approval Obtained
+                      <FormLabel className="text-gray-600">
+                        IP Office Approval Status
                       </FormLabel>
                       <FormDescription>
-                        Check this box if the publication has been vetted and approved by the IP office for submission.
+                        This field is managed through the Publication Office. Only IP office staff can update this status.
                       </FormDescription>
                     </div>
                   </FormItem>
