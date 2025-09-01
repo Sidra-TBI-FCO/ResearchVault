@@ -12,13 +12,22 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { JournalImpactFactor, InsertJournalImpactFactor } from "@shared/schema";
+import { Link } from "wouter";
+import { format } from "date-fns";
+import type { JournalImpactFactor, InsertJournalImpactFactor, Publication } from "@shared/schema";
 
 export default function PublicationOffice() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState("ip-vetting");
+  
+  // Impact Factor tab state
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<InsertJournalImpactFactor>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -75,6 +84,33 @@ export default function PublicationOffice() {
   const impactFactors = impactFactorsResult?.data || [];
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
+
+  // Publication queries for the first two tabs
+  const { data: publicationsForIP = [], isLoading: ipPublicationsLoading } = useQuery<Publication[]>({
+    queryKey: ['/api/publications', 'ip-vetting'],
+    queryFn: async () => {
+      const response = await fetch('/api/publications');
+      if (!response.ok) throw new Error('Failed to fetch publications');
+      const publications = await response.json();
+      // Filter publications that need IP vetting (not yet vetted for IP office)
+      return publications.filter((pub: Publication) => !pub.vettedForSubmissionByIpOffice);
+    },
+    enabled: activeTab === "ip-vetting"
+  });
+
+  const { data: newPublications = [], isLoading: newPublicationsLoading } = useQuery<Publication[]>({
+    queryKey: ['/api/publications', 'new-publications'],
+    queryFn: async () => {
+      const response = await fetch('/api/publications');
+      if (!response.ok) throw new Error('Failed to fetch publications');
+      const publications = await response.json();
+      // Filter published articles that haven't been marked as "Published *"
+      return publications.filter((pub: Publication) => 
+        pub.status === 'published' || pub.status === 'Published'
+      );
+    },
+    enabled: activeTab === "new-publications"
+  });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: Partial<InsertJournalImpactFactor> }) => {
@@ -203,7 +239,48 @@ export default function PublicationOffice() {
     }
   };
 
-  if (isLoading) {
+  // Publication status update mutations
+  const updatePublicationStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+      const response = await fetch(`/api/publications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Failed to update publication status');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
+      toast({ title: "Success", description: "Publication status updated" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update publication status", variant: "destructive" });
+    },
+  });
+
+  const markAsVettedMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/publications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ vettedForSubmissionByIpOffice: true, status: 'Published *' }),
+      });
+      if (!response.ok) throw new Error('Failed to mark as vetted');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
+      toast({ title: "Success", description: "Publication marked as vetted" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to mark publication as vetted", variant: "destructive" });
+    },
+  });
+
+  if (isLoading && activeTab === "impact-factors") {
     return (
       <div className="container mx-auto py-8">
         <div className="text-center">Loading impact factors...</div>
@@ -214,31 +291,167 @@ export default function PublicationOffice() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Publication Office - Journal Impact Factors</h1>
-        <div className="flex gap-2">
-          <Label htmlFor="csv-upload" className="cursor-pointer">
-            <Button variant="outline" asChild>
-              <span>
-                <Upload className="h-4 w-4 mr-2" />
-                Import CSV
-              </span>
-            </Button>
-            <Input
-              id="csv-upload"
-              type="file"
-              accept=".csv"
-              onChange={handleCSVImport}
-              className="hidden"
-            />
-          </Label>
-        </div>
+        <h1 className="text-3xl font-bold">Publication Office</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Search & Filter</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="ip-vetting" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            IP Vetting ({publicationsForIP.length})
+          </TabsTrigger>
+          <TabsTrigger value="new-publications" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            New Publications ({newPublications.length})
+          </TabsTrigger>
+          <TabsTrigger value="impact-factors" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Impact Factors
+          </TabsTrigger>
+        </TabsList>
+
+        {/* IP Vetting Tab */}
+        <TabsContent value="ip-vetting" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Publications to be Vetted for IP
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {ipPublicationsLoading ? (
+                <div className="text-center py-8">Loading publications...</div>
+              ) : publicationsForIP.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No publications pending IP vetting
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {publicationsForIP.map((pub: Publication) => (
+                    <div key={pub.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <Link href={`/publications/${pub.id}`}>
+                            <h3 className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer">
+                              {pub.title}
+                            </h3>
+                          </Link>
+                          <p className="text-sm text-gray-600 mt-1">{pub.authors}</p>
+                          <p className="text-sm text-gray-500">
+                            {pub.journal} • {pub.publicationDate ? format(new Date(pub.publicationDate), 'yyyy') : 'No date'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{pub.status}</Badge>
+                          <Button 
+                            size="sm"
+                            onClick={() => markAsVettedMutation.mutate(pub.id)}
+                            disabled={markAsVettedMutation.isPending}
+                          >
+                            Mark as Vetted
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* New Publications Tab */}
+        <TabsContent value="new-publications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                New Publications
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {newPublicationsLoading ? (
+                <div className="text-center py-8">Loading publications...</div>
+              ) : newPublications.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No new publications
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {newPublications.map((pub: Publication) => (
+                    <div key={pub.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <Link href={`/publications/${pub.id}`}>
+                            <h3 className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer">
+                              {pub.title}
+                            </h3>
+                          </Link>
+                          <p className="text-sm text-gray-600 mt-1">{pub.authors}</p>
+                          <p className="text-sm text-gray-500">
+                            {pub.journal} • {pub.publicationDate ? format(new Date(pub.publicationDate), 'yyyy') : 'No date'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={pub.status?.includes('*') ? 'default' : 'outline'}>
+                            {pub.status?.includes('*') ? (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3" />
+                                {pub.status}
+                              </div>
+                            ) : (
+                              pub.status
+                            )}
+                          </Badge>
+                          {!pub.status?.includes('*') && (
+                            <Button 
+                              size="sm"
+                              onClick={() => updatePublicationStatusMutation.mutate({ id: pub.id, status: 'Published *' })}
+                              disabled={updatePublicationStatusMutation.isPending}
+                            >
+                              <Star className="h-4 w-4 mr-1" />
+                              Mark as Published *
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Impact Factors Tab */}
+        <TabsContent value="impact-factors" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div></div>
+            <div className="flex gap-2">
+              <Label htmlFor="csv-upload" className="cursor-pointer">
+                <Button variant="outline" asChild>
+                  <span>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import CSV
+                  </span>
+                </Button>
+                <Input
+                  id="csv-upload"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVImport}
+                  className="hidden"
+                />
+              </Label>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Search & Filter</CardTitle>
+            </CardHeader>
+            <CardContent>
           <div className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="search">Search Journals</Label>
@@ -542,8 +755,10 @@ export default function PublicationOffice() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
