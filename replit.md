@@ -126,6 +126,10 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- September 1, 2025. Enhanced journal impact factor system to include comprehensive JCR fields: ISSN, eISSN, Total Articles, Citable Items, Cited/Citing Half-Life metrics, 5-Year JIF, JIF Without Self-Cites, and JCI with full database schema and import functionality
+- September 1, 2025. Updated Publication Office interface to display all JCR fields in tabular format with 28,480+ journal records
+- September 1, 2025. Added impact factor display to publication detail pages showing current year and previous year metrics with quartile color-coding
+- September 1, 2025. Added journal impact metrics summary to scientist overview pages
 - August 24, 2025. Added comprehensive NIH Guidelines tab to IBC applications with 5 sections (III-A/B/C, III-D, III-E, III-F, Appendix C) following NIH recombinant DNA research requirements
 - August 24, 2025. Added Protocol Summary field to IBC application Overview tab with enhanced guidance text for both Project Description and Protocol Summary fields
 - August 24, 2025. Removed redundant Submission Comments field from Overview tab to eliminate duplication

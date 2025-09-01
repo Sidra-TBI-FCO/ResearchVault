@@ -899,12 +899,23 @@ export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 export const journalImpactFactors = pgTable("journal_impact_factors", {
   id: serial("id").primaryKey(),
   journalName: text("journal_name").notNull(),
+  abbreviatedJournal: text("abbreviated_journal"),
   year: integer("year").notNull(),
-  impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }), // e.g., 15.234
+  publisher: text("publisher"),
+  issn: text("issn"),
+  eissn: text("eissn"),
+  totalCites: integer("total_cites"),
+  totalArticles: integer("total_articles"),
+  citableItems: integer("citable_items"),
+  citedHalfLife: numeric("cited_half_life", { precision: 10, scale: 3 }),
+  citingHalfLife: numeric("citing_half_life", { precision: 10, scale: 3 }),
+  impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }), // JIF 2024
+  fiveYearJif: numeric("five_year_jif", { precision: 10, scale: 3 }),
+  jifWithoutSelfCites: numeric("jif_without_self_cites", { precision: 10, scale: 3 }),
+  jci: numeric("jci", { precision: 10, scale: 3 }),
   quartile: text("quartile"), // Q1, Q2, Q3, Q4
   rank: integer("rank"),
-  totalCitations: integer("total_citations"),
-  publisher: text("publisher"),
+  totalCitations: integer("total_citations"), // Keep for backward compatibility
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

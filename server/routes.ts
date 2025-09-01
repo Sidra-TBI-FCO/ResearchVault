@@ -3623,12 +3623,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const impactFactor = {
             journalName: row.journalName,
+            abbreviatedJournal: row.abbreviatedJournal || null,
             year: row.year,
+            publisher: row.publisher || null,
+            issn: row.issn || null,
+            eissn: row.eissn || null,
+            totalCites: row.totalCites || null,
+            totalArticles: row.totalArticles || null,
+            citableItems: row.citableItems || null,
+            citedHalfLife: row.citedHalfLife || null,
+            citingHalfLife: row.citingHalfLife || null,
             impactFactor: row.impactFactor,
+            fiveYearJif: row.fiveYearJif || null,
+            jifWithoutSelfCites: row.jifWithoutSelfCites || null,
+            jci: row.jci || null,
             quartile: row.quartile,
             rank: row.rank,
-            totalCitations: row.totalCitations || null,
-            publisher: row.publisher || null
+            totalCitations: row.totalCitations || null // Keep for backward compatibility
           };
           
           const created = await storage.createJournalImpactFactor(impactFactor);

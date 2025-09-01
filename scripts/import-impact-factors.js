@@ -36,12 +36,23 @@ function parseCSV() {
       if (!isNaN(impactFactor)) {
         data.push({
           journalName: values[1], // Journal Name
-          year: 2024,
-          impactFactor: impactFactor,
+          abbreviatedJournal: values[3], // Abbreviated Journal
+          year: 2024, // JCR Year
+          publisher: values[4] || null, // Publisher
+          issn: values[5] || null, // ISSN
+          eissn: values[6] || null, // eISSN
+          totalCites: parseInt(values[7]) || null, // Total Cites
+          totalArticles: parseInt(values[8]) || null, // Total Articles
+          citableItems: parseInt(values[9]) || null, // Citable Items
+          citedHalfLife: parseFloat(values[10]) || null, // Cited Half-Life
+          citingHalfLife: parseFloat(values[11]) || null, // Citing Half-Life
+          impactFactor: impactFactor, // JIF 2024
+          fiveYearJif: parseFloat(values[13]) || null, // 5-Year JIF
+          jifWithoutSelfCites: parseFloat(values[14]) || null, // JIF Without Self-Cites
+          jci: parseFloat(values[15]) || null, // JCI
           quartile: values[16], // JIF Quartile
           rank: parseInt(values[17]?.split('/')[0]) || null, // JIF Rank (before slash)
-          totalCitations: parseInt(values[7]) || null, // Total Cites
-          publisher: values[4] || null // Publisher
+          totalCitations: parseInt(values[7]) || null // Keep for backward compatibility
         });
       }
     }

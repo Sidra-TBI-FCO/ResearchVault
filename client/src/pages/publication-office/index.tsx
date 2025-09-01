@@ -230,13 +230,23 @@ export default function PublicationOffice() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Journal Name</TableHead>
+                  <TableHead className="min-w-[200px]">Journal Name</TableHead>
+                  <TableHead className="min-w-[150px]">Abbreviated</TableHead>
                   <TableHead>Year</TableHead>
-                  <TableHead>Impact Factor</TableHead>
+                  <TableHead>ISSN</TableHead>
+                  <TableHead>eISSN</TableHead>
+                  <TableHead>JIF 2024</TableHead>
+                  <TableHead>5-Year JIF</TableHead>
+                  <TableHead>JIF w/o Self</TableHead>
+                  <TableHead>JCI</TableHead>
                   <TableHead>Quartile</TableHead>
                   <TableHead>Rank</TableHead>
-                  <TableHead>Publisher</TableHead>
-                  <TableHead>Total Citations</TableHead>
+                  <TableHead>Total Cites</TableHead>
+                  <TableHead>Total Articles</TableHead>
+                  <TableHead>Citable Items</TableHead>
+                  <TableHead>Cited Half-Life</TableHead>
+                  <TableHead>Citing Half-Life</TableHead>
+                  <TableHead className="min-w-[150px]">Publisher</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -255,6 +265,9 @@ export default function PublicationOffice() {
                       )}
                     </TableCell>
                     <TableCell>
+                      {factor.abbreviatedJournal}
+                    </TableCell>
+                    <TableCell>
                       {editingId === factor.id ? (
                         <Input
                           type="number"
@@ -266,19 +279,24 @@ export default function PublicationOffice() {
                         factor.year
                       )}
                     </TableCell>
+                    <TableCell className="text-xs">{factor.issn}</TableCell>
+                    <TableCell className="text-xs">{factor.eissn}</TableCell>
                     <TableCell>
                       {editingId === factor.id ? (
                         <Input
                           type="number"
-                          step="0.1"
+                          step="0.001"
                           value={editForm.impactFactor || ''}
                           onChange={(e) => setEditForm({ ...editForm, impactFactor: parseFloat(e.target.value) })}
                           className="w-24"
                         />
                       ) : (
-                        <span className="font-mono">{factor.impactFactor}</span>
+                        <span className="font-semibold text-blue-600">{factor.impactFactor}</span>
                       )}
                     </TableCell>
+                    <TableCell>{factor.fiveYearJif}</TableCell>
+                    <TableCell>{factor.jifWithoutSelfCites}</TableCell>
+                    <TableCell>{factor.jci}</TableCell>
                     <TableCell>
                       {editingId === factor.id ? (
                         <Input
@@ -309,7 +327,12 @@ export default function PublicationOffice() {
                         factor.rank
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell>{factor.totalCites?.toLocaleString()}</TableCell>
+                    <TableCell>{factor.totalArticles?.toLocaleString()}</TableCell>
+                    <TableCell>{factor.citableItems?.toLocaleString()}</TableCell>
+                    <TableCell>{factor.citedHalfLife}</TableCell>
+                    <TableCell>{factor.citingHalfLife}</TableCell>
+                    <TableCell className="text-xs">
                       {editingId === factor.id ? (
                         <Input
                           value={editForm.publisher || ''}
@@ -318,18 +341,6 @@ export default function PublicationOffice() {
                         />
                       ) : (
                         <span className="text-sm text-muted-foreground">{factor.publisher}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingId === factor.id ? (
-                        <Input
-                          type="number"
-                          value={editForm.totalCitations || ''}
-                          onChange={(e) => setEditForm({ ...editForm, totalCitations: parseInt(e.target.value) })}
-                          className="w-24"
-                        />
-                      ) : (
-                        factor.totalCitations?.toLocaleString()
                       )}
                     </TableCell>
                     <TableCell>
