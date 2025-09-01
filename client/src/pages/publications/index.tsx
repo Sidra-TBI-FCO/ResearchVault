@@ -16,14 +16,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EnhancedPublication } from "@/lib/types";
-import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText } from "lucide-react";
+import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import PublicationImport from "./import";
 
 export default function PublicationsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [location] = useLocation();
   const [filterResearchActivityId, setFilterResearchActivityId] = useState<number | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { toast } = useToast();
   
   // Parse query params to check for research activity filter
@@ -45,7 +48,7 @@ export default function PublicationsList() {
     enabled: !!filterResearchActivityId,
   });
 
-  const formatDate = (date: string | Date | undefined) => {
+  const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -71,7 +74,7 @@ export default function PublicationsList() {
     if (searchQuery) {
       return (
         publication.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        publication.authors.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (publication.authors && publication.authors.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (publication.journal && publication.journal.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (publication.abstract && publication.abstract.toLowerCase().includes(searchQuery.toLowerCase()))
       );
@@ -104,22 +107,45 @@ export default function PublicationsList() {
             </div>
           )}
         </div>
-        <Link href="/publications/create">
-          <button 
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-            style={{ 
-              backgroundColor: '#2D9C95',
-              color: 'white',
-              opacity: '1',
-              visibility: 'visible',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-          >
-            Add Publication
-          </button>
-        </Link>
+        <div className="flex gap-2">
+          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Import Publication
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Import Publication</DialogTitle>
+              </DialogHeader>
+              <PublicationImport onClose={() => setImportDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Link href="/publications/create">
+            <button 
+              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2"
+              style={{ 
+                backgroundColor: '#2D9C95',
+                color: 'white',
+                opacity: '1',
+                visibility: 'visible',
+                display: 'block'
+              }}
+              onMouseEnter={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.backgroundColor = '#238B7A';
+              }}
+              onMouseLeave={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.backgroundColor = '#2D9C95';
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Add Publication
+            </button>
+          </Link>
+        </div>
       </div>
 
       <Card>
@@ -178,7 +204,7 @@ export default function PublicationsList() {
                         {publication.title}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
-                        {publication.authors}
+                        {publication.authors || '—'}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -200,11 +226,11 @@ export default function PublicationsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {publication.researchActivity ? (
-                        <Link href={`/research-activities/${publication.researchActivity.id}`}>
-                          <a className="text-primary-500 hover:text-primary-600 transition-colors text-sm">
-                            {publication.researchActivity.sdrNumber}
-                          </a>
+                      {publication.researchActivityId ? (
+                        <Link href={`/research-activities/${publication.researchActivityId}`}>
+                          <span className="text-primary-500 hover:text-primary-600 transition-colors text-sm">
+                            SDR-{publication.researchActivityId}
+                          </span>
                         </Link>
                       ) : (
                         <span className="text-gray-600 text-sm">—</span>

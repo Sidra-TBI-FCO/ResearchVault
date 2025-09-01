@@ -3701,6 +3701,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Publication Import Routes
+  app.get('/api/publications/import/pmid/:pmid', async (req: Request, res: Response) => {
+    try {
+      const pmid = req.params.pmid;
+      
+      // Fetch from PubMed E-utilities API
+      const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmid}&retmode=json`;
+      const summaryResponse = await fetch(summaryUrl);
+      
+      if (!summaryResponse.ok) {
+        return res.status(404).json({ message: "PMID not found" });
+      }
+      
+      const summaryData = await summaryResponse.json();
+      const pubmedData = summaryData.result?.[pmid];
+      
+      if (!pubmedData) {
+        return res.status(404).json({ message: "Publication not found for this PMID" });
+      }
+      
+      // Parse PubMed data
+      const authors = pubmedData.authors?.map((author: any) => 
+        `${author.name}${author.authtype ? ` (${author.authtype})` : ''}`
+      ).join(', ') || '';
+      
+      const publication = {
+        title: pubmedData.title || '',
+        authors: authors,
+        journal: pubmedData.fulljournalname || pubmedData.source || '',
+        year: pubmedData.pubdate ? new Date(pubmedData.pubdate).getFullYear() : null,
+        volume: pubmedData.volume || '',
+        issue: pubmedData.issue || '',
+        pages: pubmedData.pages || '',
+        doi: pubmedData.elocationid?.replace('doi: ', '') || pubmedData.articleids?.find((id: any) => id.idtype === 'doi')?.value || '',
+        pmid: pmid,
+        abstract: pubmedData.abstract || '',
+        publicationDate: pubmedData.pubdate ? new Date(pubmedData.pubdate).toISOString().split('T')[0] : ''
+      };
+      
+      res.json(publication);
+    } catch (error) {
+      console.error('Error fetching PubMed data:', error);
+      res.status(500).json({ message: "Failed to fetch publication data from PubMed" });
+    }
+  });
+
+  app.get('/api/publications/import/doi/:doi', async (req: Request, res: Response) => {
+    try {
+      const doi = decodeURIComponent(req.params.doi);
+      
+      // Fetch from CrossRef API
+      const crossrefUrl = `https://api.crossref.org/works/${doi}`;
+      const crossrefResponse = await fetch(crossrefUrl);
+      
+      if (!crossrefResponse.ok) {
+        return res.status(404).json({ message: "DOI not found" });
+      }
+      
+      const crossrefData = await crossrefResponse.json();
+      const work = crossrefData.message;
+      
+      if (!work) {
+        return res.status(404).json({ message: "Publication not found for this DOI" });
+      }
+      
+      // Parse CrossRef data
+      const authors = work.author?.map((author: any) => 
+        `${author.given || ''} ${author.family || ''}`.trim()
+      ).join(', ') || '';
+      
+      const publication = {
+        title: work.title?.[0] || '',
+        authors: authors,
+        journal: work['container-title']?.[0] || '',
+        year: work.published?.['date-parts']?.[0]?.[0] || work.created?.['date-parts']?.[0]?.[0] || null,
+        volume: work.volume || '',
+        issue: work.issue || '',
+        pages: work.page || '',
+        doi: work.DOI || doi,
+        pmid: '', // CrossRef doesn't provide PMID
+        abstract: work.abstract || '',
+        publicationDate: work.published?.['date-parts']?.[0] ? 
+          new Date(work.published['date-parts'][0][0], (work.published['date-parts'][0][1] || 1) - 1, work.published['date-parts'][0][2] || 1).toISOString().split('T')[0] : ''
+      };
+      
+      res.json(publication);
+    } catch (error) {
+      console.error('Error fetching CrossRef data:', error);
+      res.status(500).json({ message: "Failed to fetch publication data from CrossRef" });
+    }
+  });
+
   app.delete('/api/journal-impact-factors/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);

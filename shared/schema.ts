@@ -181,6 +181,7 @@ export const publications = pgTable("publications", {
   issue: text("issue"),
   pages: text("pages"),
   doi: text("doi"), // Digital Object Identifier
+  pmid: text("pmid"), // PubMed ID for imported publications
   publicationDate: timestamp("publication_date"),
   publicationType: text("publication_type"), // Journal Article, Conference Paper, Book, etc.
   status: text("status").default("Concept"), // Workflow status
