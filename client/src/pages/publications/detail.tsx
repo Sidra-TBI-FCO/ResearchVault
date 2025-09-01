@@ -597,9 +597,9 @@ export default function PublicationDetail() {
                         </div>
                         
                         {/* Publication Year (Bold and Larger) */}
-                        <div className="text-center border-2 border-blue-200 rounded-lg p-3 bg-blue-50">
-                          <div className="text-xs text-blue-600 font-medium mb-1">Publication Year</div>
-                          <div className="text-lg font-bold text-blue-700">
+                        <div className="text-center">
+                          <div className="text-xs text-gray-500 mb-1">Publication Year</div>
+                          <div className="text-lg font-bold text-gray-700">
                             {new Date(publication.publicationDate).getFullYear()}
                           </div>
                           {impactFactor ? (
