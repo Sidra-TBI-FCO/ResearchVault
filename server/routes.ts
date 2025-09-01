@@ -416,8 +416,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const finalMultipliers = { ...defaultMultipliers, ...multipliers };
       
-      // Get all scientists
-      const scientists = await storage.getScientists();
+      // Get only scientific staff (exclude non-scientific roles)
+      const allScientists = await storage.getScientists();
+      const scientists = allScientists.filter(scientist => {
+        if (!scientist.jobTitle) return false;
+        
+        const jobTitle = scientist.jobTitle.toLowerCase();
+        const scientificRoles = [
+          'phd student',
+          'post-doctoral',
+          'postdoc',
+          'research',
+          'scientist',
+          'investigator',
+          'principal investigator',
+          'associate investigator',
+          'assistant investigator',
+          'faculty',
+          'professor',
+          'lecturer',
+          'fellow'
+        ];
+        
+        return scientificRoles.some(role => jobTitle.includes(role));
+      });
       
       // Calculate scores for each scientist
       const rankings = await Promise.all(scientists.map(async (scientist) => {
