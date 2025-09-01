@@ -569,7 +569,9 @@ export class DatabaseStorage implements IStorage {
           or(
             eq(publications.status, 'Published'),
             eq(publications.status, 'published'),
-            eq(publications.status, 'In Press')
+            eq(publications.status, 'Published *'),
+            eq(publications.status, 'In Press'),
+            eq(publications.status, 'in press')
           )
         )
       )
