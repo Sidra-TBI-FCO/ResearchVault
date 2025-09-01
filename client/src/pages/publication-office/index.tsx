@@ -1378,13 +1378,13 @@ export default function PublicationOffice() {
                           <div>
                             <span className="text-gray-600">Impact Factor:</span>
                             <p className="font-medium">
-                              {pub.impactFactor} 
+                              {pub.impactFactor}{' '}
                               {pub.usedFallback ? (
-                                <span className="text-orange-600 ml-1">
+                                <span className="text-orange-600">
                                   ({pub.actualYear} - fallback from {pub.targetYear})
                                 </span>
                               ) : (
-                                <span className="text-gray-500 ml-1">({pub.actualYear})</span>
+                                <span className="text-gray-500">({pub.actualYear})</span>
                               )}
                             </p>
                           </div>
