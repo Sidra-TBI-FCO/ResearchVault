@@ -1606,7 +1606,7 @@ export class DatabaseStorage implements IStorage {
   async getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined> {
     const [factor] = await db.select().from(journalImpactFactors)
       .where(and(
-        eq(journalImpactFactors.journalName, journalName),
+        ilike(journalImpactFactors.journalName, journalName),
         eq(journalImpactFactors.year, year)
       ));
     return factor;
