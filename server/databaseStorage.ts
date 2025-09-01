@@ -29,7 +29,8 @@ import {
   ibcApplicationRooms, IbcApplicationRoom, InsertIbcApplicationRoom,
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
-  rolePermissions, RolePermission, InsertRolePermission
+  rolePermissions, RolePermission, InsertRolePermission,
+  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1537,6 +1538,45 @@ export class DatabaseStorage implements IStorage {
     }
     
     return results;
+  }
+
+  // Journal Impact Factor operations
+  async getJournalImpactFactors(): Promise<JournalImpactFactor[]> {
+    return await db.select().from(journalImpactFactors)
+      .orderBy(desc(journalImpactFactors.year), asc(journalImpactFactors.journalName));
+  }
+
+  async getJournalImpactFactor(id: number): Promise<JournalImpactFactor | undefined> {
+    const [factor] = await db.select().from(journalImpactFactors).where(eq(journalImpactFactors.id, id));
+    return factor;
+  }
+
+  async getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined> {
+    const [factor] = await db.select().from(journalImpactFactors)
+      .where(and(
+        eq(journalImpactFactors.journalName, journalName),
+        eq(journalImpactFactors.year, year)
+      ));
+    return factor;
+  }
+
+  async createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor> {
+    const [newFactor] = await db.insert(journalImpactFactors).values(factor).returning();
+    return newFactor;
+  }
+
+  async updateJournalImpactFactor(id: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined> {
+    const [updatedFactor] = await db
+      .update(journalImpactFactors)
+      .set({ ...factor, updatedAt: sql`now()` })
+      .where(eq(journalImpactFactors.id, id))
+      .returning();
+    return updatedFactor;
+  }
+
+  async deleteJournalImpactFactor(id: number): Promise<boolean> {
+    const result = await db.delete(journalImpactFactors).where(eq(journalImpactFactors.id, id));
+    return result.rowCount > 0;
   }
 }
 

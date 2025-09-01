@@ -55,6 +55,9 @@ import CreatePublication from "@/pages/publications/create";
 import PublicationDetail from "@/pages/publications/detail";
 import EditPublication from "@/pages/publications/edit";
 
+// Publication Office
+import PublicationOffice from "@/pages/publication-office/index";
+
 // Patents
 import PatentsList from "@/pages/patents";
 import CreatePatent from "@/pages/patents/create";
@@ -160,6 +163,9 @@ function Router() {
         <Route path="/publications/create" component={CreatePublication} />
         <Route path="/publications/:id/edit" component={EditPublication} />
         <Route path="/publications/:id" component={PublicationDetail} />
+        
+        {/* Publication Office */}
+        <Route path="/publication-office" component={PublicationOffice} />
         
         {/* Patents */}
         <Route path="/patents" component={PatentsList} />

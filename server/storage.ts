@@ -18,7 +18,8 @@ import {
   ibcApplicationRooms, IbcApplicationRoom, InsertIbcApplicationRoom,
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
-  rolePermissions, RolePermission, InsertRolePermission
+  rolePermissions, RolePermission, InsertRolePermission,
+  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -184,6 +185,14 @@ export interface IStorage {
   createRolePermission(permission: InsertRolePermission): Promise<RolePermission>;
   updateRolePermission(jobTitle: string, navigationItem: string, accessLevel: string): Promise<RolePermission | undefined>;
   updateRolePermissionsBulk(permissions: Array<{jobTitle: string, navigationItem: string, accessLevel: string}>): Promise<RolePermission[]>;
+
+  // Journal Impact Factor operations
+  getJournalImpactFactors(): Promise<JournalImpactFactor[]>;
+  getJournalImpactFactor(id: number): Promise<JournalImpactFactor | undefined>;
+  getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined>;
+  createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor>;
+  updateJournalImpactFactor(id: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined>;
+  deleteJournalImpactFactor(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

@@ -3539,6 +3539,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Journal Impact Factors Routes
+  app.get('/api/journal-impact-factors', async (req: Request, res: Response) => {
+    try {
+      const factors = await storage.getJournalImpactFactors();
+      res.json(factors);
+    } catch (error) {
+      console.error('Error fetching journal impact factors:', error);
+      res.status(500).json({ message: "Failed to fetch journal impact factors" });
+    }
+  });
+
+  app.get('/api/journal-impact-factors/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid impact factor ID" });
+      }
+
+      const factor = await storage.getJournalImpactFactor(id);
+      if (!factor) {
+        return res.status(404).json({ message: "Impact factor not found" });
+      }
+
+      res.json(factor);
+    } catch (error) {
+      console.error('Error fetching journal impact factor:', error);
+      res.status(500).json({ message: "Failed to fetch journal impact factor" });
+    }
+  });
+
+  app.get('/api/journal-impact-factors/journal/:journalName/year/:year', async (req: Request, res: Response) => {
+    try {
+      const { journalName, year } = req.params;
+      const yearNum = parseInt(year);
+      
+      if (isNaN(yearNum)) {
+        return res.status(400).json({ message: "Invalid year" });
+      }
+
+      const factor = await storage.getImpactFactorByJournalAndYear(journalName, yearNum);
+      if (!factor) {
+        return res.status(404).json({ message: "Impact factor not found for this journal and year" });
+      }
+
+      res.json(factor);
+    } catch (error) {
+      console.error('Error fetching journal impact factor:', error);
+      res.status(500).json({ message: "Failed to fetch journal impact factor" });
+    }
+  });
+
+  app.post('/api/journal-impact-factors', async (req: Request, res: Response) => {
+    try {
+      const { insertJournalImpactFactorSchema } = await import("@shared/schema");
+      const parsedData = insertJournalImpactFactorSchema.parse(req.body);
+      
+      const factor = await storage.createJournalImpactFactor(parsedData);
+      res.status(201).json(factor);
+    } catch (error: any) {
+      console.error('Error creating journal impact factor:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: "Failed to create journal impact factor" });
+    }
+  });
+
+  app.post('/api/journal-impact-factors/import-csv', async (req: Request, res: Response) => {
+    try {
+      const { csvData } = req.body;
+      if (!csvData || !Array.isArray(csvData)) {
+        return res.status(400).json({ message: "CSV data must be an array" });
+      }
+
+      const results = [];
+      for (const row of csvData) {
+        try {
+          const impactFactor = {
+            journalName: row.journalName,
+            year: row.year,
+            impactFactor: row.impactFactor,
+            quartile: row.quartile,
+            rank: row.rank,
+            totalCitations: row.totalCitations || null,
+            publisher: row.publisher || null
+          };
+          
+          const created = await storage.createJournalImpactFactor(impactFactor);
+          results.push(created);
+        } catch (error) {
+          console.error('Error importing row:', row, error);
+        }
+      }
+
+      res.json({ imported: results.length, total: csvData.length });
+    } catch (error) {
+      console.error('Error importing CSV data:', error);
+      res.status(500).json({ message: "Failed to import CSV data" });
+    }
+  });
+
+  app.patch('/api/journal-impact-factors/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid impact factor ID" });
+      }
+
+      const { insertJournalImpactFactorSchema } = await import("@shared/schema");
+      const parsedData = insertJournalImpactFactorSchema.partial().parse(req.body);
+      
+      const factor = await storage.updateJournalImpactFactor(id, parsedData);
+      if (!factor) {
+        return res.status(404).json({ message: "Impact factor not found" });
+      }
+
+      res.json(factor);
+    } catch (error: any) {
+      console.error('Error updating journal impact factor:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: "Failed to update journal impact factor" });
+    }
+  });
+
+  app.delete('/api/journal-impact-factors/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid impact factor ID" });
+      }
+
+      const success = await storage.deleteJournalImpactFactor(id);
+      if (!success) {
+        return res.status(404).json({ message: "Impact factor not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting journal impact factor:', error);
+      res.status(500).json({ message: "Failed to delete journal impact factor" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
