@@ -424,50 +424,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let totalScore = 0;
         let publicationsCount = 0;
         
-        // Get publications for this scientist within the time period
-        const publications = await storage.getPublicationsForScientist(scientist.id, years);
-        
-        for (const publication of publications) {
-          // Only count published publications with impact factors
-          if (!['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) {
-            continue;
-          }
+        try {
+          // Get publications for this scientist within the time period
+          const publications = await storage.getPublicationsForScientist(scientist.id, years);
           
-          if (!publication.journal) {
-            continue;
-          }
-          
-          // Get journal impact factor for the publication year
-          const pubYear = publication.publicationDate ? new Date(publication.publicationDate).getFullYear() : new Date().getFullYear();
-          const impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal, pubYear);
-          
-          if (!impactFactor?.impactFactor) {
-            continue;
-          }
-          
-          publicationsCount++;
-          
-          // Get authorship type for this scientist on this publication
-          const authors = await storage.getPublicationAuthors(publication.id);
-          const scientistAuthor = authors.find(author => author.scientistId === scientist.id);
-          
-          if (!scientistAuthor) {
-            // If not in author table, use base impact factor
-            totalScore += impactFactor.impactFactor;
-            continue;
-          }
-          
-          // Parse authorship types and apply multipliers
-          const authorshipTypes = scientistAuthor.authorshipType.split(',').map(type => type.trim());
-          let multiplier = 1; // Base multiplier
-          
-          for (const type of authorshipTypes) {
-            if (finalMultipliers[type]) {
-              multiplier = Math.max(multiplier, finalMultipliers[type]);
+          for (const publication of publications) {
+            try {
+              // Only count published publications with impact factors
+              if (!publication.status || !['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) {
+                continue;
+              }
+              
+              if (!publication.journal || publication.journal.trim() === '') {
+                continue;
+              }
+              
+              // Get journal impact factor for the publication year
+              const pubYear = publication.publicationDate ? new Date(publication.publicationDate).getFullYear() : new Date().getFullYear();
+              
+              let impactFactor;
+              try {
+                impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), pubYear);
+              } catch (error) {
+                console.error(`Error getting impact factor for journal "${publication.journal}" year ${pubYear}:`, error);
+                continue;
+              }
+              
+              if (!impactFactor?.impactFactor || isNaN(impactFactor.impactFactor)) {
+                continue;
+              }
+              
+              publicationsCount++;
+              
+              // Get authorship type for this scientist on this publication
+              let authors;
+              try {
+                authors = await storage.getPublicationAuthors(publication.id);
+              } catch (error) {
+                console.error(`Error getting authors for publication ${publication.id}:`, error);
+                // Use base impact factor if we can't get authorship info
+                totalScore += impactFactor.impactFactor;
+                continue;
+              }
+              
+              const scientistAuthor = authors.find(author => author.scientistId === scientist.id);
+              
+              if (!scientistAuthor || !scientistAuthor.authorshipType) {
+                // If not in author table or no authorship type, use base impact factor
+                totalScore += impactFactor.impactFactor;
+                continue;
+              }
+              
+              // Parse authorship types and apply multipliers
+              const authorshipTypes = scientistAuthor.authorshipType.split(',').map(type => type.trim());
+              let multiplier = 1; // Base multiplier
+              
+              for (const type of authorshipTypes) {
+                if (finalMultipliers[type] && !isNaN(finalMultipliers[type])) {
+                  multiplier = Math.max(multiplier, finalMultipliers[type]);
+                }
+              }
+              
+              totalScore += impactFactor.impactFactor * multiplier;
+            } catch (pubError) {
+              console.error(`Error processing publication ${publication.id} for scientist ${scientist.id}:`, pubError);
+              continue;
             }
           }
-          
-          totalScore += impactFactor.impactFactor * multiplier;
+        } catch (scientistError) {
+          console.error(`Error processing scientist ${scientist.id}:`, scientistError);
         }
         
         return {
