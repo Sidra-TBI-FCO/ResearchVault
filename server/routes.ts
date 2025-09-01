@@ -423,6 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rankings = await Promise.all(scientists.map(async (scientist) => {
         let totalScore = 0;
         let publicationsCount = 0;
+        let missingImpactFactorPublications: string[] = [];
         
         try {
           // Get all publications and filter for ones where this scientist is an internal author
@@ -509,6 +510,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               if (!impactFactor?.impactFactor || isNaN(impactFactor.impactFactor)) {
+                // Track publications without impact factors
+                missingImpactFactorPublications.push(publication.title);
                 continue;
               }
               
@@ -542,7 +545,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           jobTitle: scientist.jobTitle,
           department: scientist.department,
           publicationsCount,
-          sidraScore: totalScore
+          sidraScore: totalScore,
+          missingImpactFactorPublications
         };
       }));
       

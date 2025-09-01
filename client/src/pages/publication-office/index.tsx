@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -924,9 +925,31 @@ export default function PublicationOffice() {
                                   {scientist.publicationsCount}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                  <div className="font-medium text-lg">
-                                    {scientist.sidraScore.toFixed(2)}
-                                  </div>
+                                  {scientist.missingImpactFactorPublications && scientist.missingImpactFactorPublications.length > 0 ? (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="font-medium text-lg text-red-600 cursor-help">
+                                            {scientist.sidraScore.toFixed(2)}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-sm">
+                                          <div className="text-sm">
+                                            <p className="font-medium mb-2">Publications without impact factor data:</p>
+                                            <ul className="list-disc pl-4 space-y-1">
+                                              {scientist.missingImpactFactorPublications.map((title, idx) => (
+                                                <li key={idx} className="text-xs">{title}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  ) : (
+                                    <div className="font-medium text-lg">
+                                      {scientist.sidraScore.toFixed(2)}
+                                    </div>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))
