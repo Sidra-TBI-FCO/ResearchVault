@@ -22,11 +22,22 @@ export default function PublicationOffice() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<InsertJournalImpactFactor>>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const limit = 100;
+
+  // Debounce search term to reduce API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const offset = (currentPage - 1) * limit;
   
@@ -36,7 +47,7 @@ export default function PublicationOffice() {
       offset, 
       sortField, 
       sortDirection, 
-      searchTerm, 
+      searchTerm: debouncedSearchTerm, 
       yearFilter 
     }],
     queryFn: async () => {
