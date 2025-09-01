@@ -316,7 +316,8 @@ async function seedDatabase() {
         doi: "10.1038/ng.12345",
         publicationDate: new Date("2023-06-15"),
         publicationType: "Journal Article",
-        status: "Published"
+        status: "Published *",
+        vettedForSubmissionByIpOffice: true
       },
       {
         researchActivityId: researchActivityEntities[2].id,
@@ -330,7 +331,23 @@ async function seedDatabase() {
         doi: "10.4049/jimmunol.54321",
         publicationDate: new Date("2023-08-10"),
         publicationType: "Journal Article",
-        status: "Published"
+        status: "Published",
+        vettedForSubmissionByIpOffice: false
+      },
+      {
+        researchActivityId: researchActivityEntities[1].id,
+        title: "Neural Circuit Mapping in Neurodegenerative Disease Models",
+        abstract: "Advanced imaging techniques reveal novel neural circuit changes in mouse models of neurodegenerative diseases.",
+        authors: "Ahmed S, Chen E, et al.",
+        journal: "Nature Neuroscience",
+        volume: "24",
+        issue: "7",
+        pages: "892-904",
+        doi: "10.1038/nn.67890",
+        publicationDate: new Date("2024-02-20"),
+        publicationType: "Journal Article",
+        status: "Accepted/In Press",
+        vettedForSubmissionByIpOffice: true
       }
     ];
 
