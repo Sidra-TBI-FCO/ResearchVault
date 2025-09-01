@@ -173,6 +173,11 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           icon: <BookOpen className="w-4 h-4 mr-3" />
         },
         { 
+          href: "/publication-office",
+          label: "Publication Office",
+          icon: <Building className="w-4 h-4 mr-3" />
+        },
+        { 
           href: "/patents",
           label: "Patents",
           icon: <Award className="w-4 h-4 mr-3" />

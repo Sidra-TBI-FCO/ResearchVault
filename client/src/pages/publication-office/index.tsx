@@ -259,7 +259,7 @@ export default function PublicationOffice() {
                         <Input
                           type="number"
                           value={editForm.year || ''}
-                          onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) })}
+                          onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) || 0 })}
                           className="w-20"
                         />
                       ) : (

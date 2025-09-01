@@ -899,11 +899,11 @@ export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 export const journalImpactFactors = pgTable("journal_impact_factors", {
   id: serial("id").primaryKey(),
   journalName: text("journal_name").notNull(),
-  issn: text("issn"), // International Standard Serial Number
   year: integer("year").notNull(),
   impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }), // e.g., 15.234
   quartile: text("quartile"), // Q1, Q2, Q3, Q4
-  category: text("category"), // Subject category
+  rank: integer("rank"),
+  totalCitations: integer("total_citations"),
   publisher: text("publisher"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

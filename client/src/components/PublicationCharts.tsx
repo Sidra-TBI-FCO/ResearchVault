@@ -51,6 +51,23 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
     queryKey: [`/api/scientists/${scientistId}/authorship-stats?years=${yearsSince}`],
   });
 
+  // Calculate impact factor statistics
+  const impactFactorStats = React.useMemo(() => {
+    if (!publications.length) return null;
+    
+    const withImpactFactor = publications.filter(pub => pub.journal && pub.publicationDate);
+    const totalPubs = withImpactFactor.length;
+    
+    if (totalPubs === 0) return null;
+
+    // Simple calculation since we don't have impact factor data yet
+    return {
+      totalWithJournal: totalPubs,
+      averageImpactFactor: 0, // Will be calculated with actual data
+      highImpactPubs: 0 // Publications in Q1 journals
+    };
+  }, [publications]);
+
   const chartData = React.useMemo(() => {
     if (!authorshipStats.length) return [];
     
@@ -131,6 +148,39 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
           </div>
         </CardContent>
       </Card>
+
+      {/* Impact Factor Summary */}
+      {impactFactorStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Journal Impact Metrics
+            </CardTitle>
+            <CardDescription>
+              Impact factor statistics for publications with journal information
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{impactFactorStats.totalWithJournal}</div>
+                <div className="text-sm text-blue-600">Publications with Journal</div>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {impactFactorStats.averageImpactFactor > 0 ? impactFactorStats.averageImpactFactor.toFixed(2) : 'N/A'}
+                </div>
+                <div className="text-sm text-green-600">Average Impact Factor</div>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{impactFactorStats.highImpactPubs}</div>
+                <div className="text-sm text-purple-600">High Impact (Q1)</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Authorship Trends Chart */}
       {chartData.length > 0 && (

@@ -47,6 +47,20 @@ export default function PublicationDetail() {
     queryKey: [`/api/publications/${id}`],
   });
 
+  // Query for journal impact factor
+  const { data: impactFactor } = useQuery({
+    queryKey: [`/api/journal-impact-factors/journal/${publication?.journal}/year/${publication?.publicationDate ? new Date(publication.publicationDate).getFullYear() : ''}`],
+    enabled: !!publication?.journal && !!publication?.publicationDate,
+    retry: false // Don't retry if not found
+  });
+
+  // Also query for previous year impact factor
+  const { data: previousYearImpactFactor } = useQuery({
+    queryKey: [`/api/journal-impact-factors/journal/${publication?.journal}/year/${publication?.publicationDate ? new Date(publication.publicationDate).getFullYear() - 1 : ''}`],
+    enabled: !!publication?.journal && !!publication?.publicationDate,
+    retry: false
+  });
+
   const { data: publicationAuthors = [], isLoading: authorsLoading } = useQuery<(PublicationAuthor & { scientist: Scientist })[]>({
     queryKey: [`/api/publications/${id}/authors`],
     enabled: !!publication,
@@ -540,6 +554,55 @@ export default function PublicationDetail() {
                       <span>, pp. {publication.pages}</span>
                     )}
                   </p>
+                  
+                  {/* Impact Factor Display */}
+                  {(impactFactor || previousYearImpactFactor) && (
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Journal Impact Factor</h4>
+                      <div className="flex gap-4 text-sm">
+                        {impactFactor && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600">
+                              {new Date(publication.publicationDate).getFullYear()}:
+                            </span>
+                            <span className="font-semibold text-blue-600">
+                              {impactFactor.impactFactor}
+                            </span>
+                            {impactFactor.quartile && (
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                impactFactor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
+                                impactFactor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
+                                impactFactor.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {impactFactor.quartile}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {previousYearImpactFactor && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600">
+                              {new Date(publication.publicationDate).getFullYear() - 1}:
+                            </span>
+                            <span className="font-semibold text-blue-600">
+                              {previousYearImpactFactor.impactFactor}
+                            </span>
+                            {previousYearImpactFactor.quartile && (
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                previousYearImpactFactor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
+                                previousYearImpactFactor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
+                                previousYearImpactFactor.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {previousYearImpactFactor.quartile}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               
