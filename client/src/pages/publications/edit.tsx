@@ -543,7 +543,7 @@ export default function PublicationEdit() {
                     <span className="text-yellow-500">★</span>
                     8. Published *
                   </h4>
-                  <p className="text-xs text-gray-600 mt-1">IP office vetted and approved</p>
+                  <p className="text-xs text-gray-600 mt-1">Publication Office vetted and approved</p>
                   <p className="text-xs text-green-700 mt-1">Final status - workflow complete</p>
                 </div>
               </div>
