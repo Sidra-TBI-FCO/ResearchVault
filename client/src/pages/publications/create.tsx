@@ -385,6 +385,15 @@ export default function CreatePublication() {
                   <p className="text-xs text-gray-600 mt-1">Final published version</p>
                   <p className="text-xs text-green-600 mt-1">Required: Publication date, DOI</p>
                 </div>
+                
+                <div className="p-3 border rounded-lg bg-green-100">
+                  <h4 className="font-medium text-sm text-green-900 flex items-center gap-1">
+                    <span className="text-yellow-500">★</span>
+                    8. Published *
+                  </h4>
+                  <p className="text-xs text-gray-600 mt-1">IP office vetted and approved</p>
+                  <p className="text-xs text-green-700 mt-1">Final status - workflow complete</p>
+                </div>
               </div>
               
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">

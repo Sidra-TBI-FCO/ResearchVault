@@ -1079,7 +1079,9 @@ export default function PublicationDetail() {
                       case 'Accepted/In Press':
                         return 'Next: Publication will be published with final details.';
                       case 'Published':
-                        return 'Publication workflow complete.';
+                        return 'Next: IP office approval for final completion.';
+                      case 'Published *':
+                        return 'Publication workflow complete - IP office approved.';
                       default:
                         return 'Update status to continue workflow.';
                     }
