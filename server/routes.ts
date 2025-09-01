@@ -3723,7 +3723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Parse PubMed data
       const authors = pubmedData.authors?.map((author: any) => 
-        `${author.name}${author.authtype ? ` (${author.authtype})` : ''}`
+        author.name
       ).join(', ') || '';
       
       const publication = {
