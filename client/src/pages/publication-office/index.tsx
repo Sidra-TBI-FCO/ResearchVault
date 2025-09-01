@@ -107,10 +107,10 @@ export default function PublicationOffice() {
       const response = await fetch('/api/publications');
       if (!response.ok) throw new Error('Failed to fetch publications');
       const publications = await response.json();
-      // Filter publications that have been vetted (Published*)
+      // Filter publications that have been vetted (Published status)
       return publications.filter((pub: Publication) => 
         pub.vettedForSubmissionByIpOffice === true &&
-        (pub.status === 'Published *' || pub.status?.includes('*'))
+        pub.status === 'Published'
       );
     },
     enabled: activeTab === "new-publications"

@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EnhancedPublication } from "@/lib/types";
-import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText, Download } from "lucide-react";
+import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText, Download, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -58,6 +58,7 @@ export default function PublicationsList() {
 
   const statusColors = {
     published: "bg-green-100 text-green-700",
+    "published *": "bg-green-600 text-white",
     submitted: "bg-yellow-100 text-yellow-700",
     "in preparation": "bg-blue-100 text-blue-600",
     rejected: "bg-red-100 text-red-600",
@@ -239,10 +240,17 @@ export default function PublicationsList() {
                     <TableCell>
                       {publication.status && (
                         <Badge 
-                          variant="outline"
+                          variant={publication.status.includes('*') ? 'default' : 'outline'}
                           className={`capitalize ${statusColors[publication.status.toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-600"}`}
                         >
-                          {publication.status}
+                          {publication.status.includes('*') ? (
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-current" />
+                              {publication.status}
+                            </div>
+                          ) : (
+                            publication.status
+                          )}
                         </Badge>
                       )}
                     </TableCell>
