@@ -61,6 +61,13 @@ export default function PublicationDetail() {
     retry: false
   });
 
+  // Query for most current year impact factor (2024)
+  const { data: currentYearImpactFactor } = useQuery({
+    queryKey: [`/api/journal-impact-factors/journal/${publication?.journal}/year/2024`],
+    enabled: !!publication?.journal,
+    retry: false
+  });
+
   const { data: publicationAuthors = [], isLoading: authorsLoading } = useQuery<(PublicationAuthor & { scientist: Scientist })[]>({
     queryKey: [`/api/publications/${id}/authors`],
     enabled: !!publication,
@@ -556,20 +563,45 @@ export default function PublicationDetail() {
                   </p>
                   
                   {/* Impact Factor Display */}
-                  {(impactFactor || previousYearImpactFactor) && (
+                  {(impactFactor || previousYearImpactFactor || currentYearImpactFactor) && (
                     <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Journal Impact Factor</h4>
-                      <div className="flex gap-4 text-sm">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Journal Impact Factor</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Year Before Publication */}
+                        {previousYearImpactFactor && (
+                          <div className="text-center">
+                            <div className="text-xs text-gray-500 mb-1">Year Before Publication</div>
+                            <div className="text-sm font-medium text-gray-700">
+                              {new Date(publication.publicationDate).getFullYear() - 1}
+                            </div>
+                            <div className="text-lg font-semibold text-blue-600">
+                              {previousYearImpactFactor.impactFactor}
+                            </div>
+                            {previousYearImpactFactor.quartile && (
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${
+                                previousYearImpactFactor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
+                                previousYearImpactFactor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
+                                previousYearImpactFactor.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {previousYearImpactFactor.quartile}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Publication Year (Bold and Larger) */}
                         {impactFactor && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-600">
-                              {new Date(publication.publicationDate).getFullYear()}:
-                            </span>
-                            <span className="font-semibold text-blue-600">
+                          <div className="text-center border-2 border-blue-200 rounded-lg p-3 bg-blue-50">
+                            <div className="text-xs text-blue-600 font-medium mb-1">Publication Year</div>
+                            <div className="text-lg font-bold text-blue-700">
+                              {new Date(publication.publicationDate).getFullYear()}
+                            </div>
+                            <div className="text-2xl font-bold text-blue-600">
                               {impactFactor.impactFactor}
-                            </span>
+                            </div>
                             {impactFactor.quartile && (
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                              <span className={`inline-block px-3 py-1 rounded text-sm font-bold mt-2 ${
                                 impactFactor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
                                 impactFactor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
                                 impactFactor.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
@@ -580,22 +612,25 @@ export default function PublicationDetail() {
                             )}
                           </div>
                         )}
-                        {previousYearImpactFactor && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-600">
-                              {new Date(publication.publicationDate).getFullYear() - 1}:
-                            </span>
-                            <span className="font-semibold text-blue-600">
-                              {previousYearImpactFactor.impactFactor}
-                            </span>
-                            {previousYearImpactFactor.quartile && (
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                previousYearImpactFactor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
-                                previousYearImpactFactor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
-                                previousYearImpactFactor.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
+                        
+                        {/* Most Current Year */}
+                        {currentYearImpactFactor && (
+                          <div className="text-center">
+                            <div className="text-xs text-gray-500 mb-1">Most Current</div>
+                            <div className="text-sm font-medium text-gray-700">
+                              2024
+                            </div>
+                            <div className="text-lg font-semibold text-blue-600">
+                              {currentYearImpactFactor.impactFactor}
+                            </div>
+                            {currentYearImpactFactor.quartile && (
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${
+                                currentYearImpactFactor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
+                                currentYearImpactFactor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
+                                currentYearImpactFactor.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-red-100 text-red-800'
                               }`}>
-                                {previousYearImpactFactor.quartile}
+                                {currentYearImpactFactor.quartile}
                               </span>
                             )}
                           </div>

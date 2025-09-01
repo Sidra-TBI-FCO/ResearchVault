@@ -126,6 +126,9 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- September 1, 2025. Added pagination (100 records per page) and column sorting to Publication Office for faster loading of 3,000+ journal records
+- September 1, 2025. Enhanced publication detail pages to show three-year impact factor comparison: year before publication, publication year (bold/larger), and most current year
+- September 1, 2025. Implemented clickable column headers with sort indicators for all JCR fields with default rank ascending sort
 - September 1, 2025. Enhanced journal impact factor system to include comprehensive JCR fields: ISSN, eISSN, Total Articles, Citable Items, Cited/Citing Half-Life metrics, 5-Year JIF, JIF Without Self-Cites, and JCI with full database schema and import functionality
 - September 1, 2025. Updated Publication Office interface to display all JCR fields in tabular format with 28,480+ journal records
 - September 1, 2025. Added impact factor display to publication detail pages showing current year and previous year metrics with quartile color-coding
