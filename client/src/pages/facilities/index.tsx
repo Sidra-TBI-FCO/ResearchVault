@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building, Room, Scientist } from "@shared/schema";
+import { formatFullName } from "@/utils/nameUtils";
 import { 
   Plus, Search, Edit, MoreHorizontal, Building2, 
   ChevronDown, ChevronUp, MapPin, Users, 
@@ -287,7 +288,7 @@ export default function FacilitiesList() {
                                       const supervisor = getScientistInfo(room.roomSupervisorId);
                                       return supervisor ? (
                                         <div className="text-sm">
-                                          <div className="font-medium text-gray-900">{supervisor.name}</div>
+                                          <div className="font-medium text-gray-900">{formatFullName(supervisor)}</div>
                                           <div className="text-gray-500 text-xs">{supervisor.email}</div>
                                         </div>
                                       ) : (
@@ -304,7 +305,7 @@ export default function FacilitiesList() {
                                       const manager = getScientistInfo(room.roomManagerId);
                                       return manager ? (
                                         <div className="text-sm">
-                                          <div className="font-medium text-gray-900">{manager.name}</div>
+                                          <div className="font-medium text-gray-900">{formatFullName(manager)}</div>
                                           <div className="text-gray-500 text-xs">{manager.email}</div>
                                         </div>
                                       ) : (

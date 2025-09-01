@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, ArrowLeft, Users, Shield, X } from "lucide-react";
 import { insertRoomSchema, Building, Scientist } from "@shared/schema";
+import { formatFullName } from "@/utils/nameUtils";
 
 const roomFormSchema = insertRoomSchema.extend({
   floor: z.coerce.number().min(1).optional(),
@@ -394,7 +395,7 @@ export default function CreateRoom() {
                         <SelectContent>
                           {investigators?.map((investigator) => (
                             <SelectItem key={investigator.id} value={investigator.id.toString()}>
-                              {investigator.name} ({investigator.title})
+                              {formatFullName(investigator)} ({investigator.jobTitle})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -419,7 +420,7 @@ export default function CreateRoom() {
                         <SelectContent>
                           {scientificStaff?.map((staff) => (
                             <SelectItem key={staff.id} value={staff.id.toString()}>
-                              {staff.name} ({staff.title})
+                              {formatFullName(staff)} ({staff.jobTitle})
                             </SelectItem>
                           ))}
                         </SelectContent>
