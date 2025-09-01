@@ -45,6 +45,7 @@ export default function PublicationOffice() {
   const [lastAuthorMultiplier, setLastAuthorMultiplier] = useState(2);
   const [correspondingAuthorMultiplier, setCorrespondingAuthorMultiplier] = useState(2);
   const [seniorAuthorMultiplier, setSeniorAuthorMultiplier] = useState(2);
+  const [impactFactorYear, setImpactFactorYear] = useState("publication"); // "prior", "publication", "latest"
   const [sidraRankings, setSidraRankings] = useState<any[]>([]);
   
   // Impact Factor tab state
@@ -227,6 +228,7 @@ export default function PublicationOffice() {
     mutationFn: async () => {
       const config = {
         years: sidraYears,
+        impactFactorYear: impactFactorYear,
         multipliers: {
           'First Author': firstAuthorMultiplier,
           'Last Author': lastAuthorMultiplier,
@@ -774,6 +776,25 @@ export default function PublicationOffice() {
                     </Select>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label>Impact Factor Year</Label>
+                    <Select value={impactFactorYear} onValueChange={setImpactFactorYear}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="prior">Year prior to publication</SelectItem>
+                        <SelectItem value="publication">Publication year</SelectItem>
+                        <SelectItem value="latest">Latest available</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">
+                      {impactFactorYear === "prior" && "Uses impact factor from year before publication (what authors saw when selecting journal)"}
+                      {impactFactorYear === "publication" && "Uses impact factor from the same year as publication"}
+                      {impactFactorYear === "latest" && "Uses the most recent impact factor available for the journal"}
+                    </p>
+                  </div>
+
                   <div className="space-y-4 border-t pt-4">
                     <Label>Authorship Multipliers</Label>
                     
@@ -853,7 +874,8 @@ export default function PublicationOffice() {
                       <h4 className="font-medium text-blue-900 mb-2">Calculation Formula</h4>
                       <p className="text-sm text-blue-800">
                         Sum of journal impact factors for publications in the last {sidraYears} years, 
-                        with multipliers: First Author (×{firstAuthorMultiplier}), 
+                        using {impactFactorYear === "prior" ? "year prior" : impactFactorYear === "publication" ? "publication year" : "latest available"} impact factors.
+                        Multipliers: First Author (×{firstAuthorMultiplier}), 
                         Last Author (×{lastAuthorMultiplier}), 
                         Senior Author (×{seniorAuthorMultiplier}), 
                         Corresponding Author (×{correspondingAuthorMultiplier})

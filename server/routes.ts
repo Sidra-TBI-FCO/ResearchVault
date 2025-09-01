@@ -404,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sidra Score calculation for all scientists
   app.post('/api/scientists/sidra-scores', async (req: Request, res: Response) => {
     try {
-      const { years = 5, multipliers = {} } = req.body;
+      const { years = 5, impactFactorYear = "publication", multipliers = {} } = req.body;
       
       // Default multipliers
       const defaultMultipliers = {
@@ -468,14 +468,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 continue;
               }
               
-              // Get journal impact factor for the publication year
+              // Get journal impact factor based on configured year
               const pubYear = publication.publicationDate ? new Date(publication.publicationDate).getFullYear() : new Date().getFullYear();
+              
+              let targetYear;
+              if (impactFactorYear === "prior") {
+                targetYear = pubYear - 1;
+              } else if (impactFactorYear === "publication") {
+                targetYear = pubYear;
+              } else { // "latest"
+                targetYear = new Date().getFullYear();
+              }
               
               let impactFactor;
               try {
-                impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), pubYear);
+                impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), targetYear);
+                
+                // If no impact factor found for target year, try fallback years
+                if (!impactFactor) {
+                  if (impactFactorYear === "latest") {
+                    // For latest, try previous years going back from current year
+                    for (let fallbackYear = new Date().getFullYear() - 1; fallbackYear >= 2020; fallbackYear--) {
+                      impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
+                      if (impactFactor) break;
+                    }
+                  } else {
+                    // For prior/publication year, try adjacent years
+                    const fallbackYears = [targetYear + 1, targetYear - 1, targetYear + 2, targetYear - 2];
+                    for (const fallbackYear of fallbackYears) {
+                      if (fallbackYear >= 2020) {
+                        impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
+                        if (impactFactor) break;
+                      }
+                    }
+                  }
+                }
               } catch (error) {
-                console.error(`Error getting impact factor for journal "${publication.journal}" year ${pubYear}:`, error);
+                console.error(`Error getting impact factor for journal "${publication.journal}" year ${targetYear}:`, error);
                 continue;
               }
               
