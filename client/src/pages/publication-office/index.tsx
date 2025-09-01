@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -48,6 +49,14 @@ export default function PublicationOffice() {
   const [seniorAuthorMultiplier, setSeniorAuthorMultiplier] = useState(2);
   const [impactFactorYear, setImpactFactorYear] = useState("publication"); // "prior", "publication", "latest"
   const [sidraRankings, setSidraRankings] = useState<any[]>([]);
+  const [selectedScientistDetails, setSelectedScientistDetails] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Function to open calculation details modal
+  const openCalculationDetails = (scientist: any) => {
+    setSelectedScientistDetails(scientist);
+    setIsDetailsModalOpen(true);
+  };
   
   // Impact Factor tab state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -903,7 +912,11 @@ export default function PublicationOffice() {
                             </TableRow>
                           ) : (
                             sidraRankings.map((scientist, index) => (
-                              <TableRow key={scientist.id}>
+                              <TableRow 
+                                key={scientist.id}
+                                className="cursor-pointer hover:bg-gray-50"
+                                onClick={() => openCalculationDetails(scientist)}
+                              >
                                 <TableCell className="font-medium">
                                   {index + 1}
                                   {index === 0 && <Badge className="ml-2 bg-yellow-100 text-yellow-800">🥇</Badge>}
@@ -1299,6 +1312,116 @@ export default function PublicationOffice() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Calculation Details Modal */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Sidra Score Calculation Details
+            </DialogTitle>
+            <DialogDescription>
+              {selectedScientistDetails && (
+                <span>
+                  {selectedScientistDetails.honorificTitle} {selectedScientistDetails.firstName} {selectedScientistDetails.lastName} - 
+                  Score: {selectedScientistDetails.sidraScore.toFixed(2)} ({selectedScientistDetails.publicationsCount} publications)
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedScientistDetails && (
+            <div className="space-y-6">
+              {/* Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Calculation Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Publications</p>
+                      <p className="text-lg font-semibold">{selectedScientistDetails.publicationsCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Sidra Score</p>
+                      <p className="text-lg font-semibold text-blue-600">{selectedScientistDetails.sidraScore.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Department</p>
+                      <p className="font-medium">{selectedScientistDetails.department}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Job Title</p>
+                      <p className="font-medium">{selectedScientistDetails.jobTitle}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Publications with Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Publication Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {selectedScientistDetails.calculationDetails.map((pub, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="mb-2">
+                          <h4 className="font-medium text-sm">{pub.title}</h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {pub.journal} • {pub.publicationDate ? format(new Date(pub.publicationDate), 'yyyy') : 'Unknown Year'}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Impact Factor:</span>
+                            <p className="font-medium">{pub.impactFactor} ({pub.impactFactorYear})</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Authorship:</span>
+                            <p className="font-medium">{pub.authorshipTypes.join(', ')}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Multiplier:</span>
+                            <p className="font-medium">×{pub.multiplier} ({pub.appliedMultipliers.join(', ') || 'Base'})</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Contribution:</span>
+                            <p className="font-semibold text-blue-600">{pub.publicationScore.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Missing Impact Factor Publications */}
+              {selectedScientistDetails.missingImpactFactorPublications.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg text-red-600">Publications Without Impact Factor Data</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-gray-600 mb-2">
+                      These publications were not included in the score calculation:
+                    </div>
+                    <ul className="space-y-2">
+                      {selectedScientistDetails.missingImpactFactorPublications.map((title, index) => (
+                        <li key={index} className="text-sm p-2 bg-red-50 rounded border-l-4 border-red-200">
+                          {title}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

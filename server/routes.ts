@@ -446,6 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let totalScore = 0;
         let publicationsCount = 0;
         let missingImpactFactorPublications: string[] = [];
+        let calculationDetails: any[] = [];
         
         try {
           // Get all publications and filter for ones where this scientist is an internal author
@@ -542,14 +543,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Parse authorship types and apply multipliers
               const authorshipTypes = publication.authorshipType.split(',').map(type => type.trim());
               let multiplier = 1; // Base multiplier
+              let appliedMultipliers: string[] = [];
               
               for (const type of authorshipTypes) {
                 if (finalMultipliers[type] && !isNaN(finalMultipliers[type])) {
-                  multiplier = Math.max(multiplier, finalMultipliers[type]);
+                  if (finalMultipliers[type] > multiplier) {
+                    multiplier = finalMultipliers[type];
+                    appliedMultipliers = [type];
+                  } else if (finalMultipliers[type] === multiplier && !appliedMultipliers.includes(type)) {
+                    appliedMultipliers.push(type);
+                  }
                 }
               }
               
-              totalScore += impactFactor.impactFactor * multiplier;
+              const publicationScore = impactFactor.impactFactor * multiplier;
+              totalScore += publicationScore;
+              
+              // Store calculation details
+              calculationDetails.push({
+                title: publication.title,
+                journal: publication.journal,
+                publicationDate: publication.publicationDate,
+                impactFactor: impactFactor.impactFactor,
+                impactFactorYear: targetYear,
+                authorshipTypes: authorshipTypes,
+                appliedMultipliers: appliedMultipliers,
+                multiplier: multiplier,
+                publicationScore: publicationScore
+              });
             } catch (pubError) {
               console.error(`Error processing publication ${publication.id} for scientist ${scientist.id}:`, pubError);
               continue;
@@ -568,7 +589,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           department: scientist.department,
           publicationsCount,
           sidraScore: totalScore,
-          missingImpactFactorPublications
+          missingImpactFactorPublications,
+          calculationDetails
         };
       }));
       
