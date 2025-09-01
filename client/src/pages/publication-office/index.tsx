@@ -58,6 +58,14 @@ export default function PublicationOffice() {
         sortDirection
       });
       
+      if (debouncedSearchTerm) {
+        params.append('searchTerm', debouncedSearchTerm);
+      }
+      
+      if (yearFilter) {
+        params.append('yearFilter', yearFilter);
+      }
+      
       const response = await fetch(`/api/journal-impact-factors?${params}`);
       if (!response.ok) throw new Error('Failed to fetch impact factors');
       return response.json();
@@ -67,23 +75,6 @@ export default function PublicationOffice() {
   const impactFactors = impactFactorsResult?.data || [];
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
-
-  // Client-side filtering for search and year (since we have pagination)
-  const filteredFactors = impactFactors.filter(factor => {
-    if (searchTerm && !factor.journalName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !factor.publisher?.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    
-    if (yearFilter) {
-      const year = parseInt(yearFilter);
-      if (!isNaN(year) && factor.year !== year) {
-        return false;
-      }
-    }
-    
-    return true;
-  });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: Partial<InsertJournalImpactFactor> }) => {
@@ -364,7 +355,7 @@ export default function PublicationOffice() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {impactFactors?.map((factor) => (
+                {impactFactors.map((factor) => (
                   <TableRow key={factor.id}>
                     <TableCell>
                       {editingId === factor.id ? (

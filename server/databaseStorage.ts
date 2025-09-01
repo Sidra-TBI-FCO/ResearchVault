@@ -1546,8 +1546,31 @@ export class DatabaseStorage implements IStorage {
     offset?: number;
     sortField?: string;
     sortDirection?: 'asc' | 'desc';
+    searchTerm?: string;
+    yearFilter?: string;
   }): Promise<{ data: JournalImpactFactor[]; total: number }> {
-    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc' } = options || {};
+    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc', searchTerm = '', yearFilter = '' } = options || {};
+    
+    // Build where clauses for filtering
+    const whereConditions = [];
+    
+    if (searchTerm.trim()) {
+      whereConditions.push(
+        or(
+          ilike(journalImpactFactors.journalName, `%${searchTerm}%`),
+          ilike(journalImpactFactors.publisher, `%${searchTerm}%`)
+        )
+      );
+    }
+    
+    if (yearFilter.trim()) {
+      const year = parseInt(yearFilter);
+      if (!isNaN(year)) {
+        whereConditions.push(eq(journalImpactFactors.year, year));
+      }
+    }
+    
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
     
     // Build the order by clause based on sortField and sortDirection
     let orderBy;
@@ -1559,13 +1582,15 @@ export class DatabaseStorage implements IStorage {
       orderBy = asc(journalImpactFactors.rank);
     }
 
-    // Get total count
+    // Get total count with filters
     const [{ count: total }] = await db
       .select({ count: sql`count(*)`.mapWith(Number) })
-      .from(journalImpactFactors);
+      .from(journalImpactFactors)
+      .where(whereClause);
 
-    // Get paginated data
+    // Get paginated data with filters
     const data = await db.select().from(journalImpactFactors)
+      .where(whereClause)
       .orderBy(orderBy)
       .limit(limit)
       .offset(offset);

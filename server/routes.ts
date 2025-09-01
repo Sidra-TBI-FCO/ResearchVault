@@ -3546,12 +3546,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       const sortField = req.query.sortField as string || 'rank';
       const sortDirection = (req.query.sortDirection as 'asc' | 'desc') || 'asc';
+      const searchTerm = req.query.searchTerm as string || '';
+      const yearFilter = req.query.yearFilter as string || '';
 
       const result = await storage.getJournalImpactFactors({
         limit,
         offset,
         sortField,
-        sortDirection
+        sortDirection,
+        searchTerm,
+        yearFilter
       });
       
       res.json(result);
