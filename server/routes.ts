@@ -484,16 +484,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               let impactFactor;
+              let actualYear = targetYear;
+              let usedFallback = false;
+              
               try {
                 impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), targetYear);
                 
                 // If no impact factor found for target year, try fallback years
                 if (!impactFactor) {
+                  usedFallback = true;
                   if (impactFactorYear === "latest") {
                     // For latest, try previous years going back from current year
                     for (let fallbackYear = new Date().getFullYear() - 1; fallbackYear >= 2020; fallbackYear--) {
                       impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
-                      if (impactFactor) break;
+                      if (impactFactor) {
+                        actualYear = fallbackYear;
+                        break;
+                      }
                     }
                   } else {
                     // For prior/publication year, try adjacent years
@@ -501,7 +508,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     for (const fallbackYear of fallbackYears) {
                       if (fallbackYear >= 2020) {
                         impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
-                        if (impactFactor) break;
+                        if (impactFactor) {
+                          actualYear = fallbackYear;
+                          break;
+                        }
                       }
                     }
                   }
@@ -544,7 +554,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 journal: publication.journal,
                 publicationDate: publication.publicationDate,
                 impactFactor: impactFactor.impactFactor,
-                impactFactorYear: targetYear,
+                targetYear: targetYear,
+                actualYear: actualYear,
+                usedFallback: usedFallback,
                 authorshipTypes: authorshipTypes,
                 appliedMultipliers: appliedMultipliers,
                 multiplier: multiplier,
