@@ -425,10 +425,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let publicationsCount = 0;
         
         try {
-          // Get publications for this scientist within the time period
-          const publications = await storage.getPublicationsForScientist(scientist.id, years);
+          // Get all publications and filter for ones where this scientist is an internal author
+          const allPublications = await storage.getPublications();
+          const scientistPublications = [];
           
-          for (const publication of publications) {
+          // First, get all publications where this scientist is an internal author
+          for (const publication of allPublications) {
+            try {
+              const authors = await storage.getPublicationAuthors(publication.id);
+              const scientistAuthor = authors.find(author => author.scientistId === scientist.id);
+              
+              if (scientistAuthor) {
+                // Check if publication is within time period
+                if (publication.publicationDate) {
+                  const pubDate = new Date(publication.publicationDate);
+                  const cutoffDate = new Date();
+                  cutoffDate.setFullYear(cutoffDate.getFullYear() - years);
+                  
+                  if (pubDate >= cutoffDate) {
+                    scientistPublications.push({
+                      ...publication,
+                      authorshipType: scientistAuthor.authorshipType
+                    });
+                  }
+                }
+              }
+            } catch (error) {
+              console.error(`Error checking authorship for publication ${publication.id}:`, error);
+              continue;
+            }
+          }
+          
+          // Now calculate scores for publications where scientist is internal author
+          for (const publication of scientistPublications) {
             try {
               // Only count published publications with impact factors
               if (!publication.status || !['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) {
@@ -456,27 +485,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               publicationsCount++;
               
-              // Get authorship type for this scientist on this publication
-              let authors;
-              try {
-                authors = await storage.getPublicationAuthors(publication.id);
-              } catch (error) {
-                console.error(`Error getting authors for publication ${publication.id}:`, error);
-                // Use base impact factor if we can't get authorship info
-                totalScore += impactFactor.impactFactor;
-                continue;
-              }
-              
-              const scientistAuthor = authors.find(author => author.scientistId === scientist.id);
-              
-              if (!scientistAuthor || !scientistAuthor.authorshipType) {
-                // If not in author table or no authorship type, use base impact factor
-                totalScore += impactFactor.impactFactor;
-                continue;
-              }
-              
               // Parse authorship types and apply multipliers
-              const authorshipTypes = scientistAuthor.authorshipType.split(',').map(type => type.trim());
+              const authorshipTypes = publication.authorshipType.split(',').map(type => type.trim());
               let multiplier = 1; // Base multiplier
               
               for (const type of authorshipTypes) {
