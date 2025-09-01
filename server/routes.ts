@@ -1546,6 +1546,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Publication Export  
+  app.post('/api/publications/export', async (req: Request, res: Response) => {
+    try {
+      const { startDate, endDate, journal, scientist, status } = req.body;
+      
+      // Get all publications first
+      const allPublications = await storage.getPublications();
+      
+      // Apply filters
+      let filteredPublications = allPublications;
+      
+      if (startDate || endDate) {
+        filteredPublications = filteredPublications.filter(pub => {
+          if (!pub.publicationDate) return false;
+          const pubDate = new Date(pub.publicationDate);
+          if (startDate && pubDate < new Date(startDate)) return false;
+          if (endDate && pubDate > new Date(endDate)) return false;
+          return true;
+        });
+      }
+      
+      if (journal) {
+        filteredPublications = filteredPublications.filter(pub => 
+          pub.journal?.toLowerCase().includes(journal.toLowerCase())
+        );
+      }
+      
+      if (status && status !== 'all') {
+        filteredPublications = filteredPublications.filter(pub => 
+          pub.status === status
+        );
+      }
+      
+      if (scientist) {
+        filteredPublications = filteredPublications.filter(pub => 
+          pub.authors?.toLowerCase().includes(scientist.toLowerCase())
+        );
+      }
+      
+      // Format as text for copy-paste
+      const formattedText = filteredPublications.map(pub => {
+        const year = pub.publicationDate ? new Date(pub.publicationDate).getFullYear() : 'N/A';
+        return `${pub.title}\n${pub.authors || 'No authors listed'}\n${pub.journal || 'No journal'} ${pub.volume ? `${pub.volume}` : ''}${pub.issue ? `(${pub.issue})` : ''}${pub.pages ? `: ${pub.pages}` : ''} (${year})\n${pub.doi ? `DOI: ${pub.doi}` : 'No DOI'}\nStatus: ${pub.status || 'Unknown'}\n\n---\n\n`;
+      }).join('');
+      
+      res.json({ 
+        count: filteredPublications.length,
+        formattedText,
+        publications: filteredPublications
+      });
+    } catch (error) {
+      console.error('Error exporting publications:', error);
+      res.status(500).json({ message: "Failed to export publications" });
+    }
+  });
+
   // Patents
   app.get('/api/patents', async (req: Request, res: Response) => {
     try {

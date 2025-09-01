@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Table, 
   TableBody, 
@@ -14,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3 } from "lucide-react";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -26,6 +28,16 @@ export default function PublicationOffice() {
   
   // Tab state
   const [activeTab, setActiveTab] = useState("ip-vetting");
+  
+  // Export tab state
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
+  const [exportJournal, setExportJournal] = useState("");
+  const [exportScientist, setExportScientist] = useState("");
+  const [exportStatus, setExportStatus] = useState("");
+  const [savedSearches, setSavedSearches] = useState<any[]>([]);
+  const [searchName, setSearchName] = useState("");
+  const [exportResults, setExportResults] = useState<{count: number, formattedText: string, publications: any[]} | null>(null);
   
   // Impact Factor tab state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -115,6 +127,92 @@ export default function PublicationOffice() {
     },
     enabled: activeTab === "new-publications"
   });
+
+  // Export functionality
+  const searchExportMutation = useMutation({
+    mutationFn: async (filters: any) => {
+      const response = await fetch('/api/publications/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filters)
+      });
+      if (!response.ok) throw new Error('Failed to export publications');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setExportResults(data);
+      toast({ title: "Success", description: `Found ${data.count} publications` });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to search publications", variant: "destructive" });
+    },
+  });
+
+  const handleExportSearch = () => {
+    const filters = {
+      startDate: exportStartDate || undefined,
+      endDate: exportEndDate || undefined,
+      journal: exportJournal || undefined,
+      scientist: exportScientist || undefined,
+      status: exportStatus || undefined
+    };
+    searchExportMutation.mutate(filters);
+  };
+
+  const handleCopyToClipboard = () => {
+    if (exportResults?.formattedText) {
+      navigator.clipboard.writeText(exportResults.formattedText).then(() => {
+        toast({ title: "Success", description: "Publications copied to clipboard" });
+      }).catch(() => {
+        toast({ title: "Error", description: "Failed to copy to clipboard", variant: "destructive" });
+      });
+    }
+  };
+
+  const handleSaveSearch = () => {
+    if (!searchName.trim()) {
+      toast({ title: "Error", description: "Please enter a search name", variant: "destructive" });
+      return;
+    }
+    
+    const newSearch = {
+      name: searchName,
+      filters: {
+        startDate: exportStartDate,
+        endDate: exportEndDate,
+        journal: exportJournal,
+        scientist: exportScientist,
+        status: exportStatus
+      }
+    };
+    
+    const updated = [...savedSearches, newSearch];
+    setSavedSearches(updated);
+    localStorage.setItem('publication-export-searches', JSON.stringify(updated));
+    setSearchName("");
+    toast({ title: "Success", description: "Search saved" });
+  };
+
+  const handleLoadSearch = (search: any) => {
+    setExportStartDate(search.filters.startDate || "");
+    setExportEndDate(search.filters.endDate || "");
+    setExportJournal(search.filters.journal || "");
+    setExportScientist(search.filters.scientist || "");
+    setExportStatus(search.filters.status || "");
+    toast({ title: "Success", description: "Search loaded" });
+  };
+
+  // Load saved searches on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('publication-export-searches');
+    if (saved) {
+      try {
+        setSavedSearches(JSON.parse(saved));
+      } catch (error) {
+        console.error('Failed to load saved searches:', error);
+      }
+    }
+  }, []);
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: Partial<InsertJournalImpactFactor> }) => {
@@ -299,7 +397,7 @@ export default function PublicationOffice() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="ip-vetting" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             IP Vetting ({publicationsForIP.length})
@@ -307,6 +405,10 @@ export default function PublicationOffice() {
           <TabsTrigger value="new-publications" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             New Publications ({newPublications.length})
+          </TabsTrigger>
+          <TabsTrigger value="export" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export
           </TabsTrigger>
           <TabsTrigger value="impact-factors" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -429,6 +531,174 @@ export default function PublicationOffice() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Export Tab */}
+        <TabsContent value="export" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Filters Panel */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5" />
+                    Export Filters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Date Range</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-gray-500">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={exportStartDate}
+                          onChange={(e) => setExportStartDate(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">End Date</Label>
+                        <Input
+                          type="date"
+                          value={exportEndDate}
+                          onChange={(e) => setExportEndDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Journal</Label>
+                    <Input
+                      placeholder="Enter journal name..."
+                      value={exportJournal}
+                      onChange={(e) => setExportJournal(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select value={exportStatus} onValueChange={setExportStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All statuses</SelectItem>
+                        <SelectItem value="Concept">Concept</SelectItem>
+                        <SelectItem value="Complete Draft">Complete Draft</SelectItem>
+                        <SelectItem value="Vetted for submission">Vetted for submission</SelectItem>
+                        <SelectItem value="Submitted for review">Submitted for review</SelectItem>
+                        <SelectItem value="Under review">Under review</SelectItem>
+                        <SelectItem value="Accepted/In Press">Accepted/In Press</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                        <SelectItem value="Published *">Published *</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Author/Scientist</Label>
+                    <Input
+                      placeholder="Enter scientist name..."
+                      value={exportScientist}
+                      onChange={(e) => setExportScientist(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <Label>Save Search</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        placeholder="Search name..."
+                        value={searchName}
+                        onChange={(e) => setSearchName(e.target.value)}
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={handleSaveSearch}
+                        disabled={!searchName.trim()}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+
+                  {savedSearches.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Saved Searches</Label>
+                      <div className="space-y-1">
+                        {savedSearches.map((search, index) => (
+                          <Button
+                            key={index}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start"
+                            onClick={() => handleLoadSearch(search)}
+                          >
+                            {search.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Export Results */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Export Results
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex items-center gap-2"
+                        onClick={handleExportSearch}
+                        disabled={searchExportMutation.isPending}
+                      >
+                        <Search className="h-4 w-4" />
+                        {searchExportMutation.isPending ? 'Searching...' : 'Search Publications'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={handleCopyToClipboard}
+                        disabled={!exportResults?.formattedText}
+                      >
+                        <Download className="h-4 w-4" />
+                        Copy to Clipboard
+                      </Button>
+                    </div>
+                    
+                    {exportResults && (
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-800 font-medium">
+                          Found {exportResults.count} publication{exportResults.count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="border rounded-lg p-4 min-h-[400px] bg-gray-50">
+                      <Textarea
+                        className="w-full h-96 font-mono text-sm bg-white"
+                        placeholder="Filtered publication results will appear here in copy-paste ready format..."
+                        value={exportResults?.formattedText || ""}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Impact Factors Tab */}
