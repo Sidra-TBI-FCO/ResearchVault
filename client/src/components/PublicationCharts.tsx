@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Award } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface Publication {
@@ -43,11 +43,11 @@ const authorshipOrder = ['First Author', 'Contributing Author', 'Senior/Last Aut
 const chartAuthorshipOrder = ['First Author', 'Contributing Author', 'Senior/Last Author']; // Exclude Corresponding Author from chart to avoid overlap
 
 export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationChartsProps) {
-  const { data: publications = [], isLoading: pubLoading } = useQuery({
+  const { data: publications = [], isLoading: pubLoading } = useQuery<Publication[]>({
     queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
 
-  const { data: authorshipStats = [], isLoading: statsLoading } = useQuery({
+  const { data: authorshipStats = [], isLoading: statsLoading } = useQuery<AuthorshipStats[]>({
     queryKey: [`/api/scientists/${scientistId}/authorship-stats?years=${yearsSince}`],
   });
 
