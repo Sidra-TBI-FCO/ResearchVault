@@ -1570,7 +1570,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : sql`1=1`;
     
     // Build the order by clause based on sortField and sortDirection
     let orderBy;
