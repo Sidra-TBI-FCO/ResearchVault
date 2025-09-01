@@ -568,10 +568,8 @@ export class DatabaseStorage implements IStorage {
           eq(publicationAuthors.scientistId, scientistId),
           or(
             eq(publications.status, 'Published'),
-            eq(publications.status, 'published'),
             eq(publications.status, 'Published *'),
-            eq(publications.status, 'In Press'),
-            eq(publications.status, 'in press')
+            eq(publications.status, 'Accepted/In Press')
           )
         )
       )
