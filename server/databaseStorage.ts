@@ -1541,9 +1541,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Journal Impact Factor operations
-  async getJournalImpactFactors(): Promise<JournalImpactFactor[]> {
-    return await db.select().from(journalImpactFactors)
-      .orderBy(desc(journalImpactFactors.year), asc(journalImpactFactors.journalName));
+  async getJournalImpactFactors(options?: {
+    limit?: number;
+    offset?: number;
+    sortField?: string;
+    sortDirection?: 'asc' | 'desc';
+  }): Promise<{ data: JournalImpactFactor[]; total: number }> {
+    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc' } = options || {};
+    
+    // Build the order by clause based on sortField and sortDirection
+    let orderBy;
+    const column = journalImpactFactors[sortField as keyof typeof journalImpactFactors];
+    if (column) {
+      orderBy = sortDirection === 'asc' ? asc(column) : desc(column);
+    } else {
+      // Default to rank ascending
+      orderBy = asc(journalImpactFactors.rank);
+    }
+
+    // Get total count
+    const [{ count: total }] = await db
+      .select({ count: sql`count(*)`.mapWith(Number) })
+      .from(journalImpactFactors);
+
+    // Get paginated data
+    const data = await db.select().from(journalImpactFactors)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    return { data, total };
   }
 
   async getJournalImpactFactor(id: number): Promise<JournalImpactFactor | undefined> {

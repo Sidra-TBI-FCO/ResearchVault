@@ -3542,8 +3542,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Journal Impact Factors Routes
   app.get('/api/journal-impact-factors', async (req: Request, res: Response) => {
     try {
-      const factors = await storage.getJournalImpactFactors();
-      res.json(factors);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      const sortField = req.query.sortField as string || 'rank';
+      const sortDirection = (req.query.sortDirection as 'asc' | 'desc') || 'asc';
+
+      const result = await storage.getJournalImpactFactors({
+        limit,
+        offset,
+        sortField,
+        sortDirection
+      });
+      
+      res.json(result);
     } catch (error) {
       console.error('Error fetching journal impact factors:', error);
       res.status(500).json({ message: "Failed to fetch journal impact factors" });

@@ -12,7 +12,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Pencil, Save, X, Upload, Search } from "lucide-react";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { JournalImpactFactor, InsertJournalImpactFactor } from "@shared/schema";
 
@@ -23,28 +23,55 @@ export default function PublicationOffice() {
   const [editForm, setEditForm] = useState<Partial<InsertJournalImpactFactor>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState("rank");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const limit = 100;
 
-  const { data: impactFactors, isLoading } = useQuery({
-    queryKey: ['/api/journal-impact-factors'],
-    select: (data: JournalImpactFactor[]) => {
-      let filtered = data;
+  const offset = (currentPage - 1) * limit;
+  
+  const { data: impactFactorsResult, isLoading } = useQuery({
+    queryKey: ['/api/journal-impact-factors', { 
+      limit, 
+      offset, 
+      sortField, 
+      sortDirection, 
+      searchTerm, 
+      yearFilter 
+    }],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        offset: offset.toString(),
+        sortField,
+        sortDirection
+      });
       
-      if (searchTerm) {
-        filtered = filtered.filter(factor => 
-          factor.journalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          factor.publisher?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      
-      if (yearFilter) {
-        const year = parseInt(yearFilter);
-        if (!isNaN(year)) {
-          filtered = filtered.filter(factor => factor.year === year);
-        }
-      }
-      
-      return filtered;
+      const response = await fetch(`/api/journal-impact-factors?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch impact factors');
+      return response.json();
     }
+  });
+
+  const impactFactors = impactFactorsResult?.data || [];
+  const totalRecords = impactFactorsResult?.total || 0;
+  const totalPages = Math.ceil(totalRecords / limit);
+
+  // Client-side filtering for search and year (since we have pagination)
+  const filteredFactors = impactFactors.filter(factor => {
+    if (searchTerm && !factor.journalName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !factor.publisher?.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    if (yearFilter) {
+      const year = parseInt(yearFilter);
+      if (!isNaN(year) && factor.year !== year) {
+        return false;
+      }
+    }
+    
+    return true;
   });
 
   const updateMutation = useMutation({
@@ -106,6 +133,25 @@ export default function PublicationOffice() {
   const handleCancel = () => {
     setEditingId(null);
     setEditForm({});
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="h-4 w-4" /> : 
+      <ArrowDown className="h-4 w-4" />;
   };
 
   const handleCSVImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,7 +268,7 @@ export default function PublicationOffice() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Impact Factors ({impactFactors?.length || 0} journals)
+            Impact Factors ({totalRecords.toLocaleString()} journals, showing page {currentPage} of {totalPages})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -230,23 +276,79 @@ export default function PublicationOffice() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Journal Name</TableHead>
+                  <TableHead className="min-w-[200px]">
+                    <Button variant="ghost" onClick={() => handleSort('journalName')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Journal Name {getSortIcon('journalName')}
+                    </Button>
+                  </TableHead>
                   <TableHead className="min-w-[150px]">Abbreviated</TableHead>
-                  <TableHead>Year</TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('year')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Year {getSortIcon('year')}
+                    </Button>
+                  </TableHead>
                   <TableHead>ISSN</TableHead>
                   <TableHead>eISSN</TableHead>
-                  <TableHead>JIF 2024</TableHead>
-                  <TableHead>5-Year JIF</TableHead>
-                  <TableHead>JIF w/o Self</TableHead>
-                  <TableHead>JCI</TableHead>
-                  <TableHead>Quartile</TableHead>
-                  <TableHead>Rank</TableHead>
-                  <TableHead>Total Cites</TableHead>
-                  <TableHead>Total Articles</TableHead>
-                  <TableHead>Citable Items</TableHead>
-                  <TableHead>Cited Half-Life</TableHead>
-                  <TableHead>Citing Half-Life</TableHead>
-                  <TableHead className="min-w-[150px]">Publisher</TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('impactFactor')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      JIF 2024 {getSortIcon('impactFactor')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('fiveYearJif')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      5-Year JIF {getSortIcon('fiveYearJif')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('jifWithoutSelfCites')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      JIF w/o Self {getSortIcon('jifWithoutSelfCites')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('jci')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      JCI {getSortIcon('jci')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('quartile')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Quartile {getSortIcon('quartile')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('rank')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Rank {getSortIcon('rank')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('totalCites')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Total Cites {getSortIcon('totalCites')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('totalArticles')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Total Articles {getSortIcon('totalArticles')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('citableItems')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Citable Items {getSortIcon('citableItems')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('citedHalfLife')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Cited Half-Life {getSortIcon('citedHalfLife')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('citingHalfLife')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Citing Half-Life {getSortIcon('citingHalfLife')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="min-w-[150px]">
+                    <Button variant="ghost" onClick={() => handleSort('publisher')} className="flex items-center gap-1 p-0 h-auto font-semibold">
+                      Publisher {getSortIcon('publisher')}
+                    </Button>
+                  </TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -390,6 +492,52 @@ export default function PublicationOffice() {
           {(!impactFactors || impactFactors.length === 0) && (
             <div className="text-center py-8 text-muted-foreground">
               No impact factors found. Use the Import CSV button to load journal data.
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords.toLocaleString()} journals
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
