@@ -1612,6 +1612,12 @@ export class DatabaseStorage implements IStorage {
     return factor;
   }
 
+  async getHistoricalImpactFactors(journalName: string): Promise<JournalImpactFactor[]> {
+    return await db.select().from(journalImpactFactors)
+      .where(ilike(journalImpactFactors.journalName, journalName))
+      .orderBy(asc(journalImpactFactors.year));
+  }
+
   async createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor> {
     const [newFactor] = await db.insert(journalImpactFactors).values(factor).returning();
     return newFactor;

@@ -3861,6 +3861,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/journal-impact-factors/historical/:journalName', async (req: Request, res: Response) => {
+    try {
+      const { journalName } = req.params;
+      const decodedJournalName = decodeURIComponent(journalName);
+      
+      const historicalData = await storage.getHistoricalImpactFactors(decodedJournalName);
+      res.json(historicalData);
+    } catch (error) {
+      console.error('Error fetching historical impact factors:', error);
+      res.status(500).json({ message: "Failed to fetch historical impact factors" });
+    }
+  });
+
   app.post('/api/journal-impact-factors', async (req: Request, res: Response) => {
     try {
       const { insertJournalImpactFactorSchema } = await import("@shared/schema");

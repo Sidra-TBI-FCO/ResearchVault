@@ -190,6 +190,7 @@ export interface IStorage {
   getJournalImpactFactors(): Promise<JournalImpactFactor[]>;
   getJournalImpactFactor(id: number): Promise<JournalImpactFactor | undefined>;
   getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined>;
+  getHistoricalImpactFactors(journalName: string): Promise<JournalImpactFactor[]>;
   createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor>;
   updateJournalImpactFactor(id: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined>;
   deleteJournalImpactFactor(id: number): Promise<boolean>;

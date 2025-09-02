@@ -22,6 +22,7 @@ import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLef
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { format } from "date-fns";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from "recharts";
 import type { JournalImpactFactor, InsertJournalImpactFactor, Publication } from "@shared/schema";
 
 export default function PublicationOffice() {
@@ -68,6 +69,10 @@ export default function PublicationOffice() {
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const limit = 100;
+  
+  // Journal detail modal state
+  const [selectedJournal, setSelectedJournal] = useState<JournalImpactFactor | null>(null);
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
 
   // Debounce search term to reduce API calls
   useEffect(() => {
@@ -115,6 +120,18 @@ export default function PublicationOffice() {
   const impactFactors = impactFactorsResult?.data || [];
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
+
+  // Query for historical data of selected journal
+  const { data: historicalData = [] } = useQuery({
+    queryKey: ['/api/journal-impact-factors/historical', selectedJournal?.journalName],
+    queryFn: async () => {
+      if (!selectedJournal?.journalName) return [];
+      const response = await fetch(`/api/journal-impact-factors/historical/${encodeURIComponent(selectedJournal.journalName)}`);
+      if (!response.ok) throw new Error('Failed to fetch historical data');
+      return response.json();
+    },
+    enabled: !!selectedJournal && isJournalModalOpen
+  });
 
   // Publication queries for the first two tabs
   const { data: publicationsForIP = [], isLoading: ipPublicationsLoading } = useQuery<Publication[]>({
@@ -1126,7 +1143,14 @@ export default function PublicationOffice() {
               </TableHeader>
               <TableBody>
                 {impactFactors.map((factor: JournalImpactFactor) => (
-                  <TableRow key={factor.id}>
+                  <TableRow 
+                    key={factor.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedJournal(factor);
+                      setIsJournalModalOpen(true);
+                    }}
+                  >
                     <TableCell>
                       {editingId === factor.id ? (
                         <Input
@@ -1219,7 +1243,7 @@ export default function PublicationOffice() {
                     </TableCell>
                     <TableCell>
                       {editingId === factor.id ? (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="sm"
                             onClick={handleSave}
@@ -1236,7 +1260,7 @@ export default function PublicationOffice() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="sm"
                             variant="outline"
@@ -1431,6 +1455,117 @@ export default function PublicationOffice() {
                   </CardContent>
                 </Card>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Journal Detail Modal */}
+      <Dialog open={isJournalModalOpen} onOpenChange={setIsJournalModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              {selectedJournal?.journalName}
+            </DialogTitle>
+            <DialogDescription>
+              Impact factor trend analysis and journal details
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedJournal && (
+            <div className="space-y-6">
+              {/* Basic Journal Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-2">Journal Details</h4>
+                  <div className="space-y-1">
+                    <p><span className="font-medium">Abbreviated:</span> {selectedJournal.abbreviatedJournal || 'N/A'}</p>
+                    <p><span className="font-medium">Publisher:</span> {selectedJournal.publisher || 'N/A'}</p>
+                    <p><span className="font-medium">ISSN:</span> {selectedJournal.issn || 'N/A'}</p>
+                    <p><span className="font-medium">eISSN:</span> {selectedJournal.eissn || 'N/A'}</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-2">Current Metrics ({selectedJournal.year})</h4>
+                  <div className="space-y-1">
+                    <p><span className="font-medium">Impact Factor:</span> {selectedJournal.impactFactor}</p>
+                    <p><span className="font-medium">5-Year JIF:</span> {selectedJournal.fiveYearJif || 'N/A'}</p>
+                    <p><span className="font-medium">Quartile:</span> 
+                      <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+                        selectedJournal.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
+                        selectedJournal.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
+                        selectedJournal.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedJournal.quartile}
+                      </span>
+                    </p>
+                    <p><span className="font-medium">Rank:</span> {selectedJournal.rank}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Impact Factor Chart */}
+              <div>
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Impact Factor Over Time
+                </h4>
+                {historicalData.length > 0 ? (
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={historicalData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" />
+                        <YAxis />
+                        <ChartTooltip
+                          formatter={(value: number, name: string) => [value.toFixed(3), 'Impact Factor']}
+                          labelFormatter={(year: number) => `Year: ${year}`}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="impactFactor" 
+                          stroke="#2563eb" 
+                          strokeWidth={2}
+                          dot={{ fill: '#2563eb', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No historical data available for this journal</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Metrics */}
+              <div>
+                <h4 className="font-semibold mb-4">Citation Metrics</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-muted/30 rounded">
+                    <div className="text-lg font-bold">{selectedJournal.totalCites?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-xs text-muted-foreground">Total Cites</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted/30 rounded">
+                    <div className="text-lg font-bold">{selectedJournal.totalArticles?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-xs text-muted-foreground">Total Articles</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted/30 rounded">
+                    <div className="text-lg font-bold">{selectedJournal.citedHalfLife || 'N/A'}</div>
+                    <div className="text-xs text-muted-foreground">Cited Half-Life</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted/30 rounded">
+                    <div className="text-lg font-bold">{selectedJournal.jci || 'N/A'}</div>
+                    <div className="text-xs text-muted-foreground">JCI</div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
