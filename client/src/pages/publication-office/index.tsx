@@ -1021,13 +1021,16 @@ export default function PublicationOffice() {
             </div>
             <div className="w-32">
               <Label htmlFor="year">Year</Label>
-              <Input
-                id="year"
-                type="number"
-                placeholder="2024"
-                value={yearFilter}
-                onChange={(e) => setYearFilter(e.target.value)}
-              />
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="2023">2023</SelectItem>
+                  <SelectItem value="2024">2024</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
