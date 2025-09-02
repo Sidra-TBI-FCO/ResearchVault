@@ -1080,7 +1080,7 @@ export default function PublicationOffice() {
                   <TableHead>eISSN</TableHead>
                   <TableHead>
                     <Button variant="ghost" onClick={() => handleSort('impactFactor')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JIF 2024 {getSortIcon('impactFactor')}
+                      JIF {getSortIcon('impactFactor')}
                     </Button>
                   </TableHead>
                   <TableHead>
