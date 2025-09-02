@@ -2,7 +2,7 @@
 import fs from 'fs';
 
 function parseCSV() {
-  const csvContent = fs.readFileSync('attached_assets/JCRImpactFactors2025_1756724005059.csv', 'utf8');
+  const csvContent = fs.readFileSync('../attached_assets/JCR2024_1756801503896.csv', 'utf8');
   const lines = csvContent.split('\n');
   const headers = lines[0].split(',');
   
@@ -29,30 +29,38 @@ function parseCSV() {
     }
     values.push(current.trim());
     
-    if (values.length >= 18) {
-      const impactFactorStr = values[12]; // JIF 2024 column
+    if (values.length >= 7) {
+      const impactFactorStr = values[4]; // JIF column
       const impactFactor = parseFloat(impactFactorStr);
       
       if (!isNaN(impactFactor)) {
+        // Parse category field (format: "CATEGORY|QUARTILE|RANK/TOTAL")
+        const categoryInfo = values[6] || '';
+        const categoryParts = categoryInfo.split('|');
+        const category = categoryParts[0] || null;
+        const quartile = categoryParts[1] || null;
+        const rankInfo = categoryParts[2] || '';
+        const rank = rankInfo.includes('/') ? parseInt(rankInfo.split('/')[0]) || null : null;
+        
         data.push({
-          journalName: values[1], // Journal Name
-          abbreviatedJournal: values[3], // Abbreviated Journal
-          year: 2024, // JCR Year
-          publisher: values[4] || null, // Publisher
-          issn: values[5] || null, // ISSN
-          eissn: values[6] || null, // eISSN
-          totalCites: parseInt(values[7]) || null, // Total Cites
-          totalArticles: parseInt(values[8]) || null, // Total Articles
-          citableItems: parseInt(values[9]) || null, // Citable Items
-          citedHalfLife: parseFloat(values[10]) || null, // Cited Half-Life
-          citingHalfLife: parseFloat(values[11]) || null, // Citing Half-Life
-          impactFactor: impactFactor, // JIF 2024
-          fiveYearJif: parseFloat(values[13]) || null, // 5-Year JIF
-          jifWithoutSelfCites: parseFloat(values[14]) || null, // JIF Without Self-Cites
-          jci: parseFloat(values[15]) || null, // JCI
-          quartile: values[16], // JIF Quartile
-          rank: parseInt(values[17]?.split('/')[0]) || null, // JIF Rank (before slash)
-          totalCitations: parseInt(values[7]) || null // Keep for backward compatibility
+          journalName: values[0], // Name
+          abbreviatedJournal: values[1], // Abbr Name
+          year: 2023, // Set to 2023 as requested
+          publisher: null, // Not available in this format
+          issn: values[2] || null, // ISSN
+          eissn: values[3] || null, // EISSN
+          totalCites: null, // Not available in this format
+          totalArticles: null, // Not available in this format
+          citableItems: null, // Not available in this format
+          citedHalfLife: null, // Not available in this format
+          citingHalfLife: null, // Not available in this format
+          impactFactor: impactFactor, // JIF
+          fiveYearJif: parseFloat(values[5]) || null, // JIF5Years
+          jifWithoutSelfCites: null, // Not available in this format
+          jci: null, // Not available in this format
+          quartile: quartile, // Extracted from category
+          rank: rank, // Extracted from category
+          totalCitations: null // Not available in this format
         });
       }
     }
