@@ -223,7 +223,7 @@ export default function CreateScientist() {
                         onValueChange={(value) => {
                           field.onChange(value);
                           // Automatically set staff type based on job title
-                          const administrativeRoles = ['Management', 'PMO Officer', 'IRB Officer', 'IBC Officer', 'Lab Manager'];
+                          const administrativeRoles = ['Management', 'PMO Officer', 'IRB Officer', 'IBC Officer', 'Lab Manager', 'Outcome Officer'];
                           form.setValue('staffType', administrativeRoles.includes(value) ? 'administrative' : 'scientific');
                         }}
                         value={field.value || ""}
@@ -247,6 +247,7 @@ export default function CreateScientist() {
                           <SelectItem value="PMO Officer">PMO Officer</SelectItem>
                           <SelectItem value="IRB Officer">IRB Officer</SelectItem>
                           <SelectItem value="IBC Officer">IBC Officer</SelectItem>
+                          <SelectItem value="Outcome Officer">Outcome Officer</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
