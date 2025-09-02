@@ -62,7 +62,14 @@ export default function RoleAccessConfig() {
   };
   
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Find the scrollable main content container
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Fallback to window scroll
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const updatePermission = (id: string, accessLevel: AccessLevel) => {
