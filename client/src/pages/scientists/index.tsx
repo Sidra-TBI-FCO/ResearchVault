@@ -71,7 +71,8 @@ export default function StaffList() {
     if (activeTab === "phd-student") return matchesSearch && person.jobTitle === "PhD Student";
     if (activeTab === "post-doc") return matchesSearch && person.jobTitle === "Post-doctoral Fellow";
     if (activeTab === "lab-manager") return matchesSearch && person.jobTitle === "Lab Manager";
-    if (activeTab === "officers") return matchesSearch && (person.jobTitle === "IRB Officer" || person.jobTitle === "IBC Officer" || person.jobTitle === "PMO Officer");
+    if (activeTab === "research-associate") return matchesSearch && person.jobTitle === "Research Associate";
+    if (activeTab === "officers") return matchesSearch && (person.jobTitle === "IRB Officer" || person.jobTitle === "IBC Officer" || person.jobTitle === "PMO Officer" || person.jobTitle === "Outcome Officer");
     
     return matchesSearch;
   });
@@ -201,10 +202,16 @@ export default function StaffList() {
                 <TabsTrigger value="all" className="flex-shrink-0">All</TabsTrigger>
                 <TabsTrigger value="scientific" className="flex-shrink-0">Scientific Staff</TabsTrigger>
                 <TabsTrigger value="administrative" className="flex-shrink-0">Administrative Staff</TabsTrigger>
+                <TabsTrigger value="management" className="flex-shrink-0">Management</TabsTrigger>
                 <TabsTrigger value="investigator" className="flex-shrink-0">Investigator</TabsTrigger>
+                <TabsTrigger value="physician" className="flex-shrink-0">Physician</TabsTrigger>
+                <TabsTrigger value="staff-scientist" className="flex-shrink-0">Staff Scientist</TabsTrigger>
+                <TabsTrigger value="research-specialist" className="flex-shrink-0">Research Specialist</TabsTrigger>
+                <TabsTrigger value="research-associate" className="flex-shrink-0">Research Associate</TabsTrigger>
+                <TabsTrigger value="research-assistant" className="flex-shrink-0">Research Assistant</TabsTrigger>
                 <TabsTrigger value="phd-student" className="flex-shrink-0">PhD Student</TabsTrigger>
                 <TabsTrigger value="post-doc" className="flex-shrink-0">Post-doctoral Fellow</TabsTrigger>
-                <TabsTrigger value="management" className="flex-shrink-0">Management</TabsTrigger>
+                <TabsTrigger value="lab-manager" className="flex-shrink-0">Lab Manager</TabsTrigger>
                 <TabsTrigger value="officers" className="flex-shrink-0">Officers</TabsTrigger>
               </TabsList>
             </div>
