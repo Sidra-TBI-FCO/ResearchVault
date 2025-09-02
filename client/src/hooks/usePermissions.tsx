@@ -25,7 +25,6 @@ const JOB_TITLES = [
   "Investigator",
   "Staff Scientist", 
   "Physician",
-  "Research Scientist",
   "Research Specialist",
   "Research Associate",
   "Research Assistant",

@@ -802,7 +802,7 @@ export class MemStorage implements IStorage {
 
     const lisa = this.createScientist({
       name: "Dr. Lisa Tanaka",
-      title: "Research Scientist",
+      title: "Staff Scientist",
       email: "lisa.tanaka@example.com",
       department: "Neuroscience",
       role: "Lead Scientist",
@@ -817,7 +817,7 @@ export class MemStorage implements IStorage {
       title: "Postdoctoral Researcher",
       email: "emily.wilson@example.com",
       department: "Molecular Biology",
-      role: "Research Scientist",
+      role: "Staff Scientist",
       bio: "Specializes in protein interactions",
       profileImageInitials: "EW",
       isStaff: true,
