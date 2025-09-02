@@ -1026,15 +1026,26 @@ export default function PublicationDetail() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">Current Status</p>
-                    <Badge className={
-                      publication.status === 'Published' ? 'bg-green-100 text-green-800' :
-                      publication.status === 'Accepted/In Press' ? 'bg-blue-100 text-blue-800' :
-                      publication.status === 'Under review' ? 'bg-yellow-100 text-yellow-800' :
-                      publication.status === 'Submitted for review with pre-publication' ? 'bg-orange-100 text-orange-800' :
-                      publication.status === 'Submitted for review without pre-publication' ? 'bg-orange-100 text-orange-800' :
-                      publication.status === 'Vetted for submission' ? 'bg-purple-100 text-purple-800' :
-                      publication.status === 'Complete Draft' ? 'bg-cyan-100 text-cyan-800' :
-                      'bg-gray-100 text-gray-800'
+                    <Badge variant={
+                      publication.status === 'Published *' ? 'default' :
+                      publication.status === 'Published' ? 'secondary' :
+                      publication.status === 'Accepted/In Press' ? 'secondary' :
+                      publication.status === 'Under review' ? 'secondary' :
+                      publication.status === 'Submitted for review with pre-publication' ? 'secondary' :
+                      publication.status === 'Submitted for review without pre-publication' ? 'secondary' :
+                      publication.status === 'Vetted for submission' ? 'secondary' :
+                      publication.status === 'Complete Draft' ? 'secondary' :
+                      'outline'
+                    } className={
+                      publication.status === 'Published *' ? 'bg-green-600 text-white hover:bg-green-700' :
+                      publication.status === 'Published' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                      publication.status === 'Accepted/In Press' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' :
+                      publication.status === 'Under review' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                      publication.status === 'Submitted for review with pre-publication' ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' :
+                      publication.status === 'Submitted for review without pre-publication' ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' :
+                      publication.status === 'Vetted for submission' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' :
+                      publication.status === 'Complete Draft' ? 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200' :
+                      ''
                     }>
                       {publication.status || 'Concept'}
                     </Badge>
