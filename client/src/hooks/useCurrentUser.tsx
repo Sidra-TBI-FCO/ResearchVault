@@ -26,9 +26,10 @@ const DUMMY_USERS: DummyUser[] = [
   { id: 8, name: 'Iris Administrator', email: 'iris.admin@research.org', role: 'Management' },
   { id: 9, name: 'Dr. Jennifer Park', email: 'j.park@research.org', role: 'IRB Board Member' },
   { id: 10, name: 'Dr. Robert Kim', email: 'r.kim@research.org', role: 'IBC Board Member' },
-  { id: 11, name: 'Sarah Chen (PMO)', email: 'sarah.chen@research.org', role: 'PMO Officer' },
-  { id: 12, name: 'Jennifer Park (IRB)', email: 'jennifer.park@research.org', role: 'IRB Officer' },
-  { id: 13, name: 'Lisa Wong (IBC)', email: 'lisa.wong@research.org', role: 'IBC Officer' },
+  { id: 11, name: 'Jessica Morgan', email: 'j.morgan@research.org', role: 'Outcome Officer' },
+  { id: 12, name: 'Sarah Chen (PMO)', email: 'sarah.chen@research.org', role: 'PMO Officer' },
+  { id: 13, name: 'Jennifer Park (IRB)', email: 'jennifer.park@research.org', role: 'IRB Officer' },
+  { id: 14, name: 'Lisa Wong (IBC)', email: 'lisa.wong@research.org', role: 'IBC Officer' },
 ];
 
 interface CurrentUserProviderProps {
