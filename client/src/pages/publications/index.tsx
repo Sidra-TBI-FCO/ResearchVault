@@ -124,27 +124,10 @@ export default function PublicationsList() {
             </DialogContent>
           </Dialog>
           <Link href="/publications/create">
-            <button 
-              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2"
-              style={{ 
-                backgroundColor: '#2D9C95',
-                color: 'white',
-                opacity: '1',
-                visibility: 'visible',
-                display: 'block'
-              }}
-              onMouseEnter={(e) => {
-                const target = e.target as HTMLElement;
-                target.style.backgroundColor = '#238B7A';
-              }}
-              onMouseLeave={(e) => {
-                const target = e.target as HTMLElement;
-                target.style.backgroundColor = '#2D9C95';
-              }}
-            >
+            <Button className="flex items-center gap-2 bg-[#2D9C95] hover:bg-[#238B7A] text-white">
               <Plus className="h-4 w-4" />
               Add Publication
-            </button>
+            </Button>
           </Link>
         </div>
       </div>
