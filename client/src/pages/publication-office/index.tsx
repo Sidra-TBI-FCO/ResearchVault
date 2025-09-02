@@ -1533,10 +1533,13 @@ export default function PublicationOffice() {
                         <XAxis dataKey="year" />
                         <YAxis />
                         <ChartTooltip
-                          formatter={(value: any, name: string) => [
-                            typeof value === 'number' ? value.toFixed(3) : 'N/A', 
-                            'Impact Factor'
-                          ]}
+                          formatter={(value: any, name: string) => {
+                            const numValue = parseFloat(value);
+                            return [
+                              !isNaN(numValue) ? numValue.toFixed(3) : value?.toString() || 'N/A', 
+                              'Impact Factor'
+                            ];
+                          }}
                           labelFormatter={(year: any) => `Year: ${year}`}
                         />
                         <Line 
