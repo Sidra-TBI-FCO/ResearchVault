@@ -1520,8 +1520,11 @@ export default function PublicationOffice() {
                         <XAxis dataKey="year" />
                         <YAxis />
                         <ChartTooltip
-                          formatter={(value: number, name: string) => [value.toFixed(3), 'Impact Factor']}
-                          labelFormatter={(year: number) => `Year: ${year}`}
+                          formatter={(value: any, name: string) => [
+                            typeof value === 'number' ? value.toFixed(3) : 'N/A', 
+                            'Impact Factor'
+                          ]}
+                          labelFormatter={(year: any) => `Year: ${year}`}
                         />
                         <Line 
                           type="monotone" 
