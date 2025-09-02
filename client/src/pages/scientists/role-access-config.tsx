@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Save, RotateCcw, Eye, EyeOff, Edit } from "lucide-react";
+import { ArrowLeft, Save, RotateCcw, Eye, EyeOff, Edit, ArrowUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions, type AccessLevel, type NavigationPermission } from "@/hooks/usePermissions";
 
@@ -45,6 +45,7 @@ const NAVIGATION_ITEMS = [
   { id: "data-management", name: "Data Management Plans", description: "Research data governance" },
   { id: "contracts", name: "Research Contracts", description: "Collaboration agreements" },
   { id: "publications", name: "Publications", description: "Academic publications" },
+  { id: "outcome-office", name: "Outcome Office", description: "Research outcomes and impact tracking" },
   { id: "patents", name: "Patents", description: "Intellectual property" },
   { id: "reports", name: "Reports", description: "System reports and analytics" }
 ];
@@ -52,6 +53,17 @@ const NAVIGATION_ITEMS = [
 export default function RoleAccessConfig() {
   const { toast } = useToast();
   const { permissions, setPermissions, getAccessLevel } = usePermissions();
+  
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(`section-${sectionId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const updatePermission = (id: string, accessLevel: AccessLevel) => {
     setPermissions(permissions.map(perm => 
@@ -122,10 +134,28 @@ export default function RoleAccessConfig() {
             By default, all roles have Full Access to all navigation items.
           </p>
         </CardHeader>
+        
+        {/* Quick Navigation */}
+        <div className="border-b px-6 py-4">
+          <h3 className="text-sm font-medium mb-3 text-muted-foreground">Quick Navigation</h3>
+          <div className="flex flex-wrap gap-2">
+            {NAVIGATION_ITEMS.map((navItem) => (
+              <Button
+                key={navItem.id}
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToSection(navItem.id)}
+                className="text-xs h-7"
+              >
+                {navItem.name}
+              </Button>
+            ))}
+          </div>
+        </div>
         <CardContent>
           <div className="space-y-6">
             {NAVIGATION_ITEMS.map((navItem) => (
-              <div key={navItem.id} className="space-y-3">
+              <div key={navItem.id} id={`section-${navItem.id}`} className="space-y-3 scroll-mt-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <div>
                     <h3 className="font-medium text-lg">{navItem.name}</h3>
@@ -218,6 +248,17 @@ export default function RoleAccessConfig() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Floating Back to Top Button */}
+      <div className="fixed bottom-6 right-6">
+        <Button
+          onClick={scrollToTop}
+          className="rounded-full h-12 w-12 shadow-lg"
+          size="icon"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
