@@ -44,7 +44,7 @@ const JOB_TITLES = [
 const NAVIGATION_ITEMS = [
   "dashboard", "scientists", "facilities", "programs", "projects", "research-activities",
   "irb-applications", "irb-office", "irb-reviewer", "ibc-applications", "ibc-office", 
-  "ibc-reviewer", "data-management", "contracts", "publications", "patents", "reports"
+  "ibc-reviewer", "data-management", "contracts", "publications", "outcome-office", "patents", "reports"
 ];
 
 const createDefaultPermissions = (): NavigationPermission[] => {

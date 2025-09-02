@@ -62,6 +62,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       "/data-management": "data-management",
       "/contracts": "contracts",
       "/publications": "publications",
+      "/outcome-office": "outcome-office",
       "/patents": "patents",
       "/reports": "reports"
     };
@@ -173,8 +174,8 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           icon: <BookOpen className="w-4 h-4 mr-3" />
         },
         { 
-          href: "/publication-office",
-          label: "Publication Office",
+          href: "/outcome-office",
+          label: "Outcome Office",
           icon: <Building className="w-4 h-4 mr-3" />
         },
         { 

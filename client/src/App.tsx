@@ -164,8 +164,8 @@ function Router() {
         <Route path="/publications/:id/edit" component={EditPublication} />
         <Route path="/publications/:id" component={PublicationDetail} />
         
-        {/* Publication Office */}
-        <Route path="/publication-office" component={PublicationOffice} />
+        {/* Outcome Office */}
+        <Route path="/outcome-office" component={PublicationOffice} />
         
         {/* Patents */}
         <Route path="/patents" component={PatentsList} />

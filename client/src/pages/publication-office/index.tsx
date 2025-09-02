@@ -447,7 +447,7 @@ export default function PublicationOffice() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Publication Office</h1>
+        <h1 className="text-3xl font-bold">Outcome Office</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
