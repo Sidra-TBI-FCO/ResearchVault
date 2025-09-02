@@ -13,13 +13,20 @@ const JOB_TITLES = [
   "Investigator",
   "Staff Scientist", 
   "Physician",
+  "Research Scientist",
+  "Research Specialist",
+  "Research Associate",
+  "Research Assistant",
   "Lab Manager",
   "Postdoctoral Researcher",
   "PhD Student",
   "Management",
+  "IRB Board Member",
+  "IBC Board Member", 
   "PMO Officer",
   "IRB Officer",
-  "IBC Officer"
+  "IBC Officer",
+  "Outcome Officer"
 ];
 
 const NAVIGATION_ITEMS = [
