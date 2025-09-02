@@ -2,7 +2,7 @@
 import fs from 'fs';
 
 function parseCSV() {
-  const csvContent = fs.readFileSync('../attached_assets/JCR2024_1756801503896.csv', 'utf8');
+  const csvContent = fs.readFileSync('../attached_assets/JCR2023_1756802332065.csv', 'utf8');
   const lines = csvContent.split('\n');
   const headers = lines[0].split(',');
   
@@ -29,37 +29,30 @@ function parseCSV() {
     }
     values.push(current.trim());
     
-    if (values.length >= 7) {
-      const impactFactorStr = values[4]; // JIF column
+    if (values.length >= 4) {
+      const impactFactorStr = values[2]; // JIF column
       const impactFactor = parseFloat(impactFactorStr);
+      const rank = parseInt(values[3]) || null; // Rank column
       
-      if (!isNaN(impactFactor)) {
-        // Parse category field (format: "CATEGORY|QUARTILE|RANK/TOTAL")
-        const categoryInfo = values[6] || '';
-        const categoryParts = categoryInfo.split('|');
-        const category = categoryParts[0] || null;
-        const quartile = categoryParts[1] || null;
-        const rankInfo = categoryParts[2] || '';
-        const rank = rankInfo.includes('/') ? parseInt(rankInfo.split('/')[0]) || null : null;
-        
+      if (!isNaN(impactFactor) && values[0] && values[0].trim()) {
         data.push({
-          journalName: values[0], // Name
-          abbreviatedJournal: values[1], // Abbr Name
-          year: 2023, // Set to 2023 as requested
+          journalName: values[0], // Journal name
+          abbreviatedJournal: null, // Not available in this format
+          year: 2022, // Set to 2022 for this dataset
           publisher: null, // Not available in this format
-          issn: values[2] || null, // ISSN
-          eissn: values[3] || null, // EISSN
+          issn: null, // Not available in this format
+          eissn: null, // Not available in this format
           totalCites: null, // Not available in this format
           totalArticles: null, // Not available in this format
           citableItems: null, // Not available in this format
           citedHalfLife: null, // Not available in this format
           citingHalfLife: null, // Not available in this format
           impactFactor: impactFactor, // JIF
-          fiveYearJif: parseFloat(values[5]) || null, // JIF5Years
+          fiveYearJif: null, // Not available in this format
           jifWithoutSelfCites: null, // Not available in this format
           jci: null, // Not available in this format
-          quartile: quartile, // Extracted from category
-          rank: rank, // Extracted from category
+          quartile: null, // Not available in this format
+          rank: rank, // Rank
           totalCitations: null // Not available in this format
         });
       }
