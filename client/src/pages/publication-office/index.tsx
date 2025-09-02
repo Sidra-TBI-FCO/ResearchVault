@@ -1487,22 +1487,35 @@ export default function PublicationOffice() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground mb-2">Current Metrics ({selectedJournal.year})</h4>
-                  <div className="space-y-1">
-                    <p><span className="font-medium">Impact Factor:</span> {selectedJournal.impactFactor}</p>
-                    <p><span className="font-medium">5-Year JIF:</span> {selectedJournal.fiveYearJif ?? 'N/A'}</p>
-                    <p><span className="font-medium">Quartile:</span> 
-                      <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
-                        selectedJournal.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
-                        selectedJournal.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
-                        selectedJournal.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {selectedJournal.quartile}
-                      </span>
-                    </p>
-                    <p><span className="font-medium">Rank:</span> {selectedJournal.rank}</p>
-                  </div>
+                  {(() => {
+                    // Find the most recent year's data
+                    const latestData = historicalData.length > 0 
+                      ? historicalData.reduce((latest, current) => 
+                          current.year > latest.year ? current : latest
+                        )
+                      : selectedJournal;
+                    
+                    return (
+                      <>
+                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Current Metrics ({latestData.year})</h4>
+                        <div className="space-y-1">
+                          <p><span className="font-medium">Impact Factor:</span> {latestData.impactFactor ?? 'N/A'}</p>
+                          <p><span className="font-medium">5-Year JIF:</span> {latestData.fiveYearJif ?? 'N/A'}</p>
+                          <p><span className="font-medium">Quartile:</span> 
+                            <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+                              latestData.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
+                              latestData.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
+                              latestData.quartile === 'Q3' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {latestData.quartile ?? 'N/A'}
+                            </span>
+                          </p>
+                          <p><span className="font-medium">Rank:</span> {latestData.rank ?? 'N/A'}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1551,22 +1564,51 @@ export default function PublicationOffice() {
               <div>
                 <h4 className="font-semibold mb-4">Citation Metrics</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.totalCites != null ? selectedJournal.totalCites.toLocaleString() : 'N/A'}</div>
-                    <div className="text-xs text-muted-foreground">Total Cites</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.totalArticles != null ? selectedJournal.totalArticles.toLocaleString() : 'N/A'}</div>
-                    <div className="text-xs text-muted-foreground">Total Articles</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.citedHalfLife ?? 'N/A'}</div>
-                    <div className="text-xs text-muted-foreground">Cited Half-Life</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.jci ?? 'N/A'}</div>
-                    <div className="text-xs text-muted-foreground">JCI</div>
-                  </div>
+                  {(() => {
+                    // Use the most recent year's data for citation metrics too
+                    const latestData = historicalData.length > 0 
+                      ? historicalData.reduce((latest, current) => 
+                          current.year > latest.year ? current : latest
+                        )
+                      : selectedJournal;
+                    
+                    return (
+                      <>
+                        <div className="text-center p-3 bg-muted/30 rounded">
+                          <div className="text-lg font-bold">
+                            {latestData.totalCites != null && latestData.totalCites !== 0 
+                              ? latestData.totalCites.toLocaleString() 
+                              : 'N/A'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Total Cites</div>
+                        </div>
+                        <div className="text-center p-3 bg-muted/30 rounded">
+                          <div className="text-lg font-bold">
+                            {latestData.totalArticles != null && latestData.totalArticles !== 0 
+                              ? latestData.totalArticles.toLocaleString() 
+                              : 'N/A'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Total Articles</div>
+                        </div>
+                        <div className="text-center p-3 bg-muted/30 rounded">
+                          <div className="text-lg font-bold">
+                            {latestData.citedHalfLife != null && latestData.citedHalfLife !== 0 
+                              ? latestData.citedHalfLife 
+                              : 'N/A'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Cited Half-Life</div>
+                        </div>
+                        <div className="text-center p-3 bg-muted/30 rounded">
+                          <div className="text-lg font-bold">
+                            {latestData.jci != null && latestData.jci !== 0 
+                              ? latestData.jci 
+                              : 'N/A'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">JCI</div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
