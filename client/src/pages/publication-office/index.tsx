@@ -63,7 +63,7 @@ export default function PublicationOffice() {
   const [editForm, setEditForm] = useState<Partial<InsertJournalImpactFactor>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [yearFilter, setYearFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -102,7 +102,7 @@ export default function PublicationOffice() {
         params.append('searchTerm', debouncedSearchTerm);
       }
       
-      if (yearFilter) {
+      if (yearFilter && yearFilter !== "all") {
         params.append('yearFilter', yearFilter);
       }
       
@@ -1026,7 +1026,7 @@ export default function PublicationOffice() {
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   <SelectItem value="2023">2023</SelectItem>
                   <SelectItem value="2024">2024</SelectItem>
                 </SelectContent>
