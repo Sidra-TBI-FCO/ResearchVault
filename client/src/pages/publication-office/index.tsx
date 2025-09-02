@@ -1480,17 +1480,17 @@ export default function PublicationOffice() {
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-2">Journal Details</h4>
                   <div className="space-y-1">
-                    <p><span className="font-medium">Abbreviated:</span> {selectedJournal.abbreviatedJournal || 'N/A'}</p>
-                    <p><span className="font-medium">Publisher:</span> {selectedJournal.publisher || 'N/A'}</p>
-                    <p><span className="font-medium">ISSN:</span> {selectedJournal.issn || 'N/A'}</p>
-                    <p><span className="font-medium">eISSN:</span> {selectedJournal.eissn || 'N/A'}</p>
+                    <p><span className="font-medium">Abbreviated:</span> {selectedJournal.abbreviatedJournal ?? 'N/A'}</p>
+                    <p><span className="font-medium">Publisher:</span> {selectedJournal.publisher ?? 'N/A'}</p>
+                    <p><span className="font-medium">ISSN:</span> {selectedJournal.issn ?? 'N/A'}</p>
+                    <p><span className="font-medium">eISSN:</span> {selectedJournal.eissn ?? 'N/A'}</p>
                   </div>
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-2">Current Metrics ({selectedJournal.year})</h4>
                   <div className="space-y-1">
                     <p><span className="font-medium">Impact Factor:</span> {selectedJournal.impactFactor}</p>
-                    <p><span className="font-medium">5-Year JIF:</span> {selectedJournal.fiveYearJif || 'N/A'}</p>
+                    <p><span className="font-medium">5-Year JIF:</span> {selectedJournal.fiveYearJif ?? 'N/A'}</p>
                     <p><span className="font-medium">Quartile:</span> 
                       <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
                         selectedJournal.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
@@ -1552,19 +1552,19 @@ export default function PublicationOffice() {
                 <h4 className="font-semibold mb-4">Citation Metrics</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.totalCites?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-lg font-bold">{selectedJournal.totalCites != null ? selectedJournal.totalCites.toLocaleString() : 'N/A'}</div>
                     <div className="text-xs text-muted-foreground">Total Cites</div>
                   </div>
                   <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.totalArticles?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-lg font-bold">{selectedJournal.totalArticles != null ? selectedJournal.totalArticles.toLocaleString() : 'N/A'}</div>
                     <div className="text-xs text-muted-foreground">Total Articles</div>
                   </div>
                   <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.citedHalfLife || 'N/A'}</div>
+                    <div className="text-lg font-bold">{selectedJournal.citedHalfLife ?? 'N/A'}</div>
                     <div className="text-xs text-muted-foreground">Cited Half-Life</div>
                   </div>
                   <div className="text-center p-3 bg-muted/30 rounded">
-                    <div className="text-lg font-bold">{selectedJournal.jci || 'N/A'}</div>
+                    <div className="text-lg font-bold">{selectedJournal.jci ?? 'N/A'}</div>
                     <div className="text-xs text-muted-foreground">JCI</div>
                   </div>
                 </div>
