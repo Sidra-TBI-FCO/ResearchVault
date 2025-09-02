@@ -1051,7 +1051,7 @@ export default function PublicationDetail() {
                     </Badge>
                   </div>
                   
-                  {publication.status !== 'Published' && (
+                  {publication.status !== 'Published' && publication.status !== 'Published *' && (
                     <Button
                       onClick={() => {
                         // Pre-populate form with existing values
