@@ -41,9 +41,12 @@ export default function EditGrant() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const grantId = params?.id ? parseInt(params.id) : null;
-  const [collaboratorsInput, setCollaboratorsInput] = useState("");
   const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
-  const [initializedGrantId, setInitializedGrantId] = useState<number | null>(null);
+
+  const { data: grant, isLoading: isLoadingGrant } = useQuery({
+    queryKey: ['/api/grants', grantId],
+    enabled: !!grantId,
+  });
 
   const form = useForm<UpdateGrantForm>({
     resolver: zodResolver(insertGrantSchema.partial()),
@@ -69,11 +72,6 @@ export default function EditGrant() {
     },
   });
 
-  const { data: grant, isLoading: isLoadingGrant } = useQuery({
-    queryKey: ['/api/grants', grantId],
-    enabled: !!grantId,
-  });
-
   const { data: scientists = [] } = useQuery({
     queryKey: ['/api/scientists']
   });
@@ -87,13 +85,10 @@ export default function EditGrant() {
     enabled: !!grantId,
   });
 
-  useEffect(() => {
-    if (grant && grant.id && initializedGrantId !== grant.id) {
-      const collaboratorsText = Array.isArray(grant.collaborators) 
-        ? grant.collaborators.join('\n')
-        : '';
-      setCollaboratorsInput(collaboratorsText);
 
+  // Populate form when grant data loads
+  useEffect(() => {
+    if (grant) {
       form.reset({
         projectNumber: grant.projectNumber ?? "",
         title: grant.title ?? "",
@@ -114,10 +109,8 @@ export default function EditGrant() {
         endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
         collaborators: grant.collaborators ?? [],
       });
-      
-      setInitializedGrantId(grant.id);
     }
-  }, [grant?.id]);
+  }, [grant]);
 
   useEffect(() => {
     if (grantSdrs) {
@@ -127,10 +120,7 @@ export default function EditGrant() {
 
   const updateGrantMutation = useMutation({
     mutationFn: async (data: UpdateGrantForm) => {
-      const collaborators = collaboratorsInput
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+      const collaborators = data.collaborators ?? [];
 
       const payload = { ...data, collaborators };
       const response = await fetch(`/api/grants/${grantId}`, {
@@ -682,19 +672,27 @@ export default function EditGrant() {
                   />
                 </div>
                 
-                <div>
-                  <label htmlFor="collaborators" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Collaborators (one per line)
-                  </label>
-                  <Textarea
-                    id="collaborators"
-                    value={collaboratorsInput}
-                    onChange={(e) => setCollaboratorsInput(e.target.value)}
-                    placeholder="Dr. John Smith, University of Example&#10;Dr. Jane Doe, Research Institute&#10;..."
-                    rows={3}
-                    className="w-full"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="collaborators"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Collaborators (one per line)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          value={Array.isArray(field.value) ? field.value.join('\n') : ""}
+                          onChange={(e) => {
+                            const lines = e.target.value.split('\n').filter(line => line.trim());
+                            field.onChange(lines);
+                          }}
+                          placeholder="Dr. John Smith, University of Example&#10;Dr. Jane Doe, Research Institute&#10;..."
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
