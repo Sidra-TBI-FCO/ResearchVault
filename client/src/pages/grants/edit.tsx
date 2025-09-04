@@ -88,7 +88,7 @@ export default function EditGrant() {
   });
 
   useEffect(() => {
-    if (grant) {
+    if (grant && grant.id) {
       const collaboratorsText = Array.isArray(grant.collaborators) 
         ? grant.collaborators.join('\n')
         : '';
@@ -115,7 +115,7 @@ export default function EditGrant() {
         collaborators: grant.collaborators || [],
       });
     }
-  }, [grant]);
+  }, [grant?.id, grant?.updatedAt]);
 
   useEffect(() => {
     if (grantSdrs) {
