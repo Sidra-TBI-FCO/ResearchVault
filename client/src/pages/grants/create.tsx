@@ -20,7 +20,7 @@ import { formatFullName } from "@/utils/nameUtils";
 
 const createGrantSchema = insertGrantSchema.extend({
   investigatorId: z.coerce.number().optional(),
-  investigatorType: z.enum(["lpi", "researcher"]).optional(),
+  investigatorType: z.enum(["researcher", "clinician"]).optional(),
   requestedAmount: z.string().optional(),
   awardedAmount: z.string().optional(),
   submittedYear: z.coerce.number().optional(),
@@ -50,7 +50,7 @@ export default function CreateGrant() {
       description: "",
       fundingAgency: "",
       collaborators: [],
-      investigatorType: "lpi",
+      investigatorType: "researcher",
     },
   });
 
@@ -68,8 +68,8 @@ export default function CreateGrant() {
         requestedAmount: data.requestedAmount ? parseFloat(data.requestedAmount) : undefined,
         awardedAmount: data.awardedAmount ? parseFloat(data.awardedAmount) : undefined,
         // Map investigator based on type
-        lpiId: data.investigatorType === "lpi" ? data.investigatorId : undefined,
-        researcherId: data.investigatorType === "researcher" ? data.investigatorId : undefined,
+        lpiId: data.investigatorType === "researcher" ? data.investigatorId : undefined,
+        researcherId: data.investigatorType === "clinician" ? data.investigatorId : undefined,
       };
 
       return apiRequest('/api/grants', {
@@ -162,12 +162,12 @@ export default function CreateGrant() {
                             className="flex flex-row space-x-6"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="lpi" id="lpi" />
-                              <Label htmlFor="lpi">LPI</Label>
+                              <RadioGroupItem value="researcher" id="researcher" />
+                              <Label htmlFor="researcher">Researcher</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="researcher" id="researcher" />
-                              <Label htmlFor="researcher">Researcher/Clinician</Label>
+                              <RadioGroupItem value="clinician" id="clinician" />
+                              <Label htmlFor="clinician">Clinician</Label>
                             </div>
                           </RadioGroup>
                         </FormControl>
@@ -182,12 +182,12 @@ export default function CreateGrant() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          {form.watch("investigatorType") === "lpi" ? "Lead Principal Investigator" : "Researcher/Clinician"}
+                          {form.watch("investigatorType") === "researcher" ? "Researcher" : "Clinician"}
                         </FormLabel>
                         <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={`Select ${form.watch("investigatorType") === "lpi" ? "LPI" : "researcher"}`} />
+                              <SelectValue placeholder={`Select ${form.watch("investigatorType") === "researcher" ? "researcher" : "clinician"}`} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
