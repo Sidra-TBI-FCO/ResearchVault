@@ -4326,6 +4326,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/research-activities/:id/ibc-applications', async (req: Request, res: Response) => {
+    try {
+      const researchActivityId = parseInt(req.params.id);
+      if (isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const ibcApplications = await storage.getResearchActivityIbcApplications(researchActivityId);
+      res.json(ibcApplications);
+    } catch (error) {
+      console.error('Error fetching research activity IBC applications:', error);
+      res.status(500).json({ message: "Failed to fetch research activity IBC applications" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

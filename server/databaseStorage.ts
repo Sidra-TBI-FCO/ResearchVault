@@ -1719,6 +1719,22 @@ export class DatabaseStorage implements IStorage {
       ));
     return result.rowCount > 0;
   }
+
+  async getResearchActivityIbcApplications(researchActivityId: number): Promise<{ id: number; ibcNumber: string; title: string; status: string; workflowStatus: string; }[]> {
+    const result = await db
+      .select({
+        id: ibcApplications.id,
+        ibcNumber: ibcApplications.ibcNumber,
+        title: ibcApplications.title,
+        status: ibcApplications.status,
+        workflowStatus: ibcApplications.workflowStatus,
+      })
+      .from(ibcApplicationResearchActivities)
+      .innerJoin(ibcApplications, eq(ibcApplicationResearchActivities.ibcApplicationId, ibcApplications.id))
+      .where(eq(ibcApplicationResearchActivities.researchActivityId, researchActivityId));
+
+    return result;
+  }
 }
 
 export const storage = new DatabaseStorage();

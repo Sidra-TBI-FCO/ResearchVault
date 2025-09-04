@@ -135,16 +135,15 @@ export default function ResearchActivityDetail() {
   
   // Fetch IBC applications for this research activity
   const { data: ibcApplications } = useQuery<IbcApplication[]>({
-    queryKey: ['/api/ibc-applications'],
+    queryKey: ['/api/research-activities', id, 'ibc-applications'],
     queryFn: async () => {
-      const response = await fetch('/api/ibc-applications');
+      const response = await fetch(`/api/research-activities/${id}/ibc-applications`);
       if (!response.ok) {
         throw new Error('Failed to fetch IBC applications');
       }
       return response.json();
     },
-    select: (data) => data.filter(ibc => ibc.research_activity_id === activity?.id),
-    enabled: !!activity?.id,
+    enabled: !!id,
   });
 
   if (activityLoading) {
