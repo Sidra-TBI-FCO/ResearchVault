@@ -590,10 +590,11 @@ export default function ResearchActivityDetail() {
                     </div>
                   </div>
                 )}
+
                 {ibcApplications && ibcApplications.length > 0 && (
                   <div className="border border-gray-200 rounded-lg p-3 space-y-3">
                     <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4 text-amber-600" />
+                      <Beaker className="h-4 w-4 text-purple-600" />
                       <span className="font-medium text-sm">IBC Applications</span>
                       <span className="text-xs text-gray-500">({ibcApplications.length})</span>
                     </div>
@@ -602,7 +603,7 @@ export default function ResearchActivityDetail() {
                         <Badge 
                           key={ibc.id}
                           variant="outline" 
-                          className="cursor-pointer rounded-sm bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition-colors"
+                          className="cursor-pointer rounded-sm bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-colors"
                           onClick={() => navigate(`/ibc-applications/${ibc.id}`)}
                         >
                           {ibc.ibcNumber}
