@@ -1,172 +1,157 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useRoute } from "wouter";
+import { ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, DollarSign } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { insertGrantSchema, type Grant, type Scientist } from "@shared/schema";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Skeleton } from "@/components/ui/skeleton";
+import { apiRequest } from "@/lib/queryClient";
 import { formatFullName } from "@/utils/nameUtils";
+import { insertGrantSchema, type InsertGrant } from "@shared/schema";
 
-const editGrantSchema = insertGrantSchema.extend({
-  investigatorId: z.coerce.number().optional(),
-  investigatorType: z.enum(["researcher", "clinician"]).optional(),
-  requestedAmount: z.string().optional(),
-  awardedAmount: z.string().optional(),
-  submittedYear: z.coerce.number().optional(),
-  awardedYear: z.coerce.number().optional(),
-  runningTimeYears: z.coerce.number().optional(),
-  currentGrantYear: z.string().optional(),
-  collaborators: z.array(z.string()).optional(),
-});
-
-type EditGrantForm = z.infer<typeof editGrantSchema>;
+type UpdateGrantForm = Partial<InsertGrant> & {
+  id: number;
+};
 
 export default function EditGrant() {
-  const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
+  const [, params] = useRoute("/grants/:id/edit");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [collaboratorsInput, setCollaboratorsInput] = useState("");
-  const id = parseInt(params.id);
 
-  const { data: grant, isLoading: grantLoading } = useQuery<Grant>({
-    queryKey: [`/api/grants/${id}`],
-    enabled: !!id,
-  });
+  const grantId = params?.id ? parseInt(params.id) : null;
 
-  const { data: scientists = [] } = useQuery<Scientist[]>({
-    queryKey: ['/api/scientists'],
-  });
-
-  const form = useForm<EditGrantForm>({
-    resolver: zodResolver(editGrantSchema),
+  const form = useForm<UpdateGrantForm>({
+    resolver: zodResolver(insertGrantSchema.partial()),
     defaultValues: {
       projectNumber: "",
       title: "",
-      cycle: "",
-      status: "submitted",
       description: "",
+      cycle: "",
+      status: "pending",
       fundingAgency: "",
+      investigatorType: "Researcher",
+      lpiId: undefined,
+      requestedAmount: "",
+      awardedAmount: "",
+      submittedYear: undefined,
+      awardedYear: undefined,
+      awarded: false,
+      runningTimeYears: undefined,
+      currentGrantYear: undefined,
+      startDate: "",
+      endDate: "",
       collaborators: [],
-      investigatorType: "researcher",
     },
   });
 
-  // Update form when grant data is loaded
+  const { data: grant, isLoading: isLoadingGrant } = useQuery({
+    queryKey: ['/api/grants', grantId],
+    enabled: !!grantId,
+  });
+
+  const { data: scientists = [] } = useQuery({
+    queryKey: ['/api/scientists']
+  });
+
   useEffect(() => {
     if (grant) {
-      // Determine investigator type and ID based on existing data
-      const investigatorType = grant.lpiId ? "researcher" : grant.researcherId ? "clinician" : "researcher";
-      const investigatorId = grant.lpiId || grant.researcherId;
+      const collaboratorsText = Array.isArray(grant.collaborators) 
+        ? grant.collaborators.join('\n')
+        : '';
+      setCollaboratorsInput(collaboratorsText);
 
       form.reset({
-        projectNumber: grant.projectNumber,
-        title: grant.title,
-        cycle: grant.cycle || "",
-        status: grant.status,
+        projectNumber: grant.projectNumber || "",
+        title: grant.title || "",
         description: grant.description || "",
+        cycle: grant.cycle || "",
+        status: grant.status || "pending",
         fundingAgency: grant.fundingAgency || "",
-        investigatorType,
-        investigatorId,
-        requestedAmount: grant.requestedAmount?.toString() || "",
-        awardedAmount: grant.awardedAmount?.toString() || "",
-        submittedYear: grant.submittedYear || undefined,
+        investigatorType: grant.investigatorType || "Researcher",
+        lpiId: grant.lpiId,
+        requestedAmount: grant.requestedAmount || "",
+        awardedAmount: grant.awardedAmount || "",
+        submittedYear: grant.submittedYear,
+        awardedYear: grant.awardedYear,
         awarded: grant.awarded || false,
-        awardedYear: grant.awardedYear || undefined,
-        runningTimeYears: grant.runningTimeYears || undefined,
-        currentGrantYear: grant.currentGrantYear || "",
+        runningTimeYears: grant.runningTimeYears,
+        currentGrantYear: grant.currentGrantYear,
         startDate: grant.startDate || "",
         endDate: grant.endDate || "",
+        collaborators: grant.collaborators || [],
       });
-
-      // Set collaborators input
-      if (grant.collaborators) {
-        setCollaboratorsInput(grant.collaborators.join('\n'));
-      }
     }
   }, [grant, form]);
 
   const updateGrantMutation = useMutation({
-    mutationFn: async (data: EditGrantForm) => {
-      // Process collaborators from textarea
+    mutationFn: async (data: UpdateGrantForm) => {
       const collaborators = collaboratorsInput
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
-      const grantData = {
-        ...data,
-        collaborators,
-        requestedAmount: data.requestedAmount ? parseFloat(data.requestedAmount) : undefined,
-        awardedAmount: data.awardedAmount ? parseFloat(data.awardedAmount) : undefined,
-        // Map investigator based on type
-        lpiId: data.investigatorType === "researcher" ? data.investigatorId : undefined,
-        researcherId: data.investigatorType === "clinician" ? data.investigatorId : undefined,
-      };
-
-      return apiRequest(`/api/grants/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(grantData),
+      const payload = { ...data, collaborators };
+      return apiRequest(`/api/grants/${grantId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/grants/${id}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/grants'] });
-      toast({ title: "Success", description: "Grant updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/grants', grantId] });
+      toast({
+        title: "Success",
+        description: "Grant updated successfully",
+      });
       navigate("/grants");
     },
     onError: (error: any) => {
-      toast({ 
-        title: "Error", 
-        description: error.message || "Failed to update grant", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update grant",
+        variant: "destructive"
       });
     },
   });
 
-  const handleSubmit = (data: EditGrantForm) => {
-    updateGrantMutation.mutate(data);
+  const handleSubmit = (data: UpdateGrantForm) => {
+    updateGrantMutation.mutate({ ...data, id: grantId! });
   };
 
-  if (grantLoading) {
-    return (
-      <div className="container mx-auto py-6">
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <div className="space-y-4">
-            {[...Array(8)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  if (!grantId) {
+    return <div>Invalid grant ID</div>;
+  }
+
+  if (isLoadingGrant) {
+    return <div>Loading...</div>;
   }
 
   if (!grant) {
-    return (
-      <div className="container mx-auto py-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Grant not found</h1>
-          <Button onClick={() => navigate("/grants")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Grants
-          </Button>
-        </div>
-      </div>
-    );
+    return <div>Grant not found</div>;
   }
 
   return (
@@ -184,291 +169,192 @@ export default function EditGrant() {
         <p className="text-gray-600 mt-1">Update grant information</p>
       </div>
 
-      <div className="max-w-4xl">
+      <div className="max-w-6xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Left Column */}
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Basic Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="projectNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Project Number *</FormLabel>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Main Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Grant Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="projectNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Number *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g., ARG01-0567-24MHS" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cycle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grant Cycle</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g., 2024-1" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <Input {...field} placeholder="e.g., ARG01-0567-24MHS" />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                          <SelectContent>
+                            <SelectItem value="submitted">Submitted</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Grant Title *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Enter the grant title" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grant Title *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter the grant title" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="cycle"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Grant Cycle</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="e.g., 2024-1" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="fundingAgency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Funding Agency</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g., NIH, NSF, KSAS" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="submitted">Submitted</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="fundingAgency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Funding Agency</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="e.g., NIH, NSF, KSAS" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Timeline & Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="submittedYear"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Submitted Year</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                placeholder="2024" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="awardedYear"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Awarded Year</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                placeholder="2024" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="awarded"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Grant Awarded</FormLabel>
-                            <FormDescription>
-                              Was this grant awarded?
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="runningTimeYears"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Running Time (Years)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                placeholder="3" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="currentGrantYear"
-                        render={({ field }) => {
-                          const runningTimeYears = form.watch("runningTimeYears");
-                          const yearOptions = runningTimeYears ? Array.from({ length: runningTimeYears }, (_, i) => i + 1) : [];
-                          
-                          return (
-                            <FormItem>
-                              <FormLabel>Year in Grant</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value || ""}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={runningTimeYears ? "Select year" : "Set running time first"} />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {yearOptions.map((year) => (
-                                    <SelectItem key={year} value={year.toString()}>
-                                      {year}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Second Column */}
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Investigator Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="investigatorType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Investigator Type</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              value={field.value}
-                              className="flex flex-row space-x-6"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="Researcher" id="researcher" />
-                                <Label htmlFor="researcher">Researcher</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="Clinician" id="clinician" />
-                                <Label htmlFor="clinician">Clinician</Label>
-                              </div>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lpiId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Lead Principal Investigator (LPI)</FormLabel>
-                          <Select 
-                            onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
-                            value={field.value?.toString() || ""}
+                  <FormField
+                    control={form.control}
+                    name="investigatorType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Investigator Type</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex flex-row space-x-6"
                           >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select LPI" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {scientists.map((scientist) => (
-                                <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                  {formatFullName(scientist)} - {scientist.jobTitle || 'No title'}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="Researcher" id="researcher" />
+                              <Label htmlFor="researcher">Researcher</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="Clinician" id="clinician" />
+                              <Label htmlFor="clinician">Clinician</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Financial Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="lpiId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lead Principal Investigator (LPI)</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                          value={field.value?.toString() || ""}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select LPI" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {scientists.map((scientist) => (
+                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                {formatFullName(scientist)} - {scientist.jobTitle || 'No title'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Brief description of the grant objectives and scope"
+                            rows={2}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Financial & Timeline Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Financial Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="requestedAmount"
@@ -506,45 +392,134 @@ export default function EditGrant() {
                         </FormItem>
                       )}
                     />
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Third Column */}
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Additional Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Timeline & Progress</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
                     <FormField
                       control={form.control}
-                      name="description"
+                      name="submittedYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>Submitted Year</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Input 
                               {...field} 
-                              placeholder="Brief description of the grant objectives and scope"
-                              rows={3}
+                              type="number" 
+                              placeholder="2024" 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </CardContent>
-                </Card>
-              </div>
+
+                    <FormField
+                      control={form.control}
+                      name="awardedYear"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Awarded Year</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              placeholder="2024" 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <FormField
+                      control={form.control}
+                      name="runningTimeYears"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration (Years)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              placeholder="3" 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="currentGrantYear"
+                      render={({ field }) => {
+                        const runningTimeYears = form.watch("runningTimeYears");
+                        const yearOptions = runningTimeYears ? Array.from({ length: runningTimeYears }, (_, i) => i + 1) : [];
+                        
+                        return (
+                          <FormItem>
+                            <FormLabel>Current Year</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value?.toString() || ""}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={runningTimeYears ? "Year" : "Set duration"} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {yearOptions.map((year) => (
+                                  <SelectItem key={year} value={year.toString()}>
+                                    {year}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="awarded"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm">Grant Awarded</FormLabel>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
             </div>
 
+            {/* Grant Dates & Collaborators */}
             <Card>
               <CardHeader>
                 <CardTitle>Grant Dates & Collaborators</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <FormField
                     control={form.control}
                     name="startDate"
