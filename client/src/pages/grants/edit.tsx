@@ -95,27 +95,27 @@ export default function EditGrant() {
       setCollaboratorsInput(collaboratorsText);
 
       form.reset({
-        projectNumber: grant.projectNumber || "",
-        title: grant.title || "",
-        description: grant.description || "",
-        cycle: grant.cycle || "",
-        status: grant.status || "pending",
-        fundingAgency: grant.fundingAgency || "",
-        investigatorType: grant.investigatorType || "Researcher",
-        lpiId: grant.lpiId,
-        requestedAmount: grant.requestedAmount || "",
-        awardedAmount: grant.awardedAmount || "",
-        submittedYear: grant.submittedYear,
-        awardedYear: grant.awardedYear,
-        awarded: grant.awarded || false,
-        runningTimeYears: grant.runningTimeYears,
-        currentGrantYear: grant.currentGrantYear,
+        projectNumber: grant.projectNumber ?? "",
+        title: grant.title ?? "",
+        description: grant.description ?? "",
+        cycle: grant.cycle ?? "",
+        status: grant.status ?? "pending",
+        fundingAgency: grant.fundingAgency ?? "",
+        investigatorType: grant.investigatorType ?? "Researcher",
+        lpiId: grant.lpiId ?? undefined,
+        requestedAmount: grant.requestedAmount ?? "",
+        awardedAmount: grant.awardedAmount ?? "",
+        submittedYear: grant.submittedYear ?? undefined,
+        awardedYear: grant.awardedYear ?? undefined,
+        awarded: grant.awarded ?? false,
+        runningTimeYears: grant.runningTimeYears ?? undefined,
+        currentGrantYear: grant.currentGrantYear ?? undefined,
         startDate: grant.startDate ? grant.startDate.split('T')[0] : "",
         endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
-        collaborators: grant.collaborators || [],
+        collaborators: grant.collaborators ?? [],
       });
     }
-  }, [grant?.id, grant?.updatedAt]);
+  }, [grant?.id]);
 
   useEffect(() => {
     if (grantSdrs) {
@@ -131,13 +131,17 @@ export default function EditGrant() {
         .filter(line => line.length > 0);
 
       const payload = { ...data, collaborators };
-      return apiRequest(`/api/grants/${grantId}`, {
+      const response = await fetch(`/api/grants/${grantId}`, {
         method: "PATCH",
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update grant');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/grants'] });
@@ -160,15 +164,17 @@ export default function EditGrant() {
   const handleSdrToggle = async (sdrId: number, isLinked: boolean) => {
     try {
       if (isLinked) {
-        await apiRequest(`/api/grants/${grantId}/research-activities/${sdrId}`, {
+        const response = await fetch(`/api/grants/${grantId}/research-activities/${sdrId}`, {
           method: "POST",
         });
+        if (!response.ok) throw new Error('Failed to link SDR');
         setLinkedSdrs(prev => [...prev, sdrId]);
         toast({ title: "Success", description: "SDR linked to grant successfully" });
       } else {
-        await apiRequest(`/api/grants/${grantId}/research-activities/${sdrId}`, {
+        const response = await fetch(`/api/grants/${grantId}/research-activities/${sdrId}`, {
           method: "DELETE",
         });
+        if (!response.ok) throw new Error('Failed to unlink SDR');
         setLinkedSdrs(prev => prev.filter(id => id !== sdrId));
         toast({ title: "Success", description: "SDR unlinked from grant successfully" });
       }
@@ -247,7 +253,7 @@ export default function EditGrant() {
                       <FormItem>
                         <FormLabel>Grant Cycle</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="e.g., 2024-1" />
+                          <Input {...field} placeholder="e.g., 2024-1" value={field.value ?? ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -304,7 +310,7 @@ export default function EditGrant() {
                       <FormItem>
                         <FormLabel>Funding Agency</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="e.g., NIH, NSF, KSAS" />
+                          <Input {...field} placeholder="e.g., NIH, NSF, KSAS" value={field.value ?? ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -320,7 +326,7 @@ export default function EditGrant() {
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
-                            value={field.value}
+                            value={field.value ?? ""}
                             className="flex flex-row space-x-6"
                           >
                             <div className="flex items-center space-x-2">
@@ -383,6 +389,7 @@ export default function EditGrant() {
                             {...field} 
                             placeholder="Brief description of the grant objectives and scope"
                             rows={2}
+                            value={field.value ?? ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -412,7 +419,8 @@ export default function EditGrant() {
                               {...field} 
                               type="number" 
                               step="0.01"
-                              placeholder="0.00" 
+                              placeholder="0.00"
+                              value={field.value ?? ""} 
                             />
                           </FormControl>
                           <FormMessage />
@@ -431,7 +439,8 @@ export default function EditGrant() {
                               {...field} 
                               type="number" 
                               step="0.01"
-                              placeholder="0.00" 
+                              placeholder="0.00"
+                              value={field.value ?? ""} 
                             />
                           </FormControl>
                           <FormMessage />
@@ -458,7 +467,8 @@ export default function EditGrant() {
                             <Input 
                               {...field} 
                               type="number" 
-                              placeholder="2024" 
+                              placeholder="2024"
+                              value={field.value ?? ""} 
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
                           </FormControl>
@@ -477,7 +487,8 @@ export default function EditGrant() {
                             <Input 
                               {...field} 
                               type="number" 
-                              placeholder="2024" 
+                              placeholder="2024"
+                              value={field.value ?? ""} 
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
                           </FormControl>
@@ -498,7 +509,8 @@ export default function EditGrant() {
                             <Input 
                               {...field} 
                               type="number" 
-                              placeholder="3" 
+                              placeholder="3"
+                              value={field.value ?? ""} 
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             />
                           </FormControl>
