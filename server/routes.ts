@@ -4159,7 +4159,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid grant ID" });
       }
 
-      console.log('Received grant update data:', JSON.stringify(req.body, null, 2));
       const validatedData = insertGrantSchema.partial().parse(req.body);
       const grant = await storage.updateGrant(id, validatedData);
       

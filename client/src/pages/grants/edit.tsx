@@ -112,7 +112,7 @@ export default function EditGrant() {
     e.preventDefault();
     
     const collaborators = Array.isArray(grant?.collaborators) 
-      ? grant.collaborators.join('\n') 
+      ? grant.collaborators 
       : formData.collaborators 
         ? formData.collaborators.split('\n').filter(line => line.trim())
         : [];
@@ -138,7 +138,6 @@ export default function EditGrant() {
       collaborators,
     };
 
-    console.log('Sending payload:', payload);
     updateGrantMutation.mutate(payload);
   };
 
