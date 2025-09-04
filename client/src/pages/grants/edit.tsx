@@ -69,12 +69,12 @@ export default function EditGrant() {
   });
 
 
-  // Load linked SDRs
+  // Load linked SDRs once
   useEffect(() => {
     if (grantSdrs) {
       setLinkedSdrs(grantSdrs.map((sdr: any) => sdr.id));
     }
-  }, [grantSdrs]);
+  }, [grantSdrs?.length]);
 
   const updateGrantMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -209,7 +209,7 @@ export default function EditGrant() {
                 Description
               </label>
               <Textarea
-                value={formData.description}
+                value={grant?.description || ""}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 placeholder="Brief description of the grant"
                 rows={3}
@@ -230,7 +230,7 @@ export default function EditGrant() {
                   Status
                 </label>
                 <Select
-                  value={formData.status}
+                  value={grant?.status || "pending"}
                   onValueChange={(value) => setFormData({...formData, status: value})}
                 >
                   <SelectTrigger>
@@ -251,7 +251,7 @@ export default function EditGrant() {
                   Funding Agency
                 </label>
                 <Input
-                  value={formData.fundingAgency}
+                  value={grant?.fundingAgency || ""}
                   onChange={(e) => setFormData({...formData, fundingAgency: e.target.value})}
                   placeholder="e.g., NIH, NSF, DOE"
                 />
@@ -264,7 +264,7 @@ export default function EditGrant() {
                   Investigator Type
                 </label>
                 <RadioGroup
-                  value={formData.investigatorType}
+                  value={grant?.investigatorType || "Researcher"}
                   onValueChange={(value) => setFormData({...formData, investigatorType: value})}
                   className="flex flex-row space-x-6"
                 >
@@ -284,7 +284,7 @@ export default function EditGrant() {
                   Lead Principal Investigator
                 </label>
                 <Select
-                  value={formData.lpiId}
+                  value={grant?.lpiId?.toString() || ""}
                   onValueChange={(value) => setFormData({...formData, lpiId: value})}
                 >
                   <SelectTrigger>
@@ -307,7 +307,7 @@ export default function EditGrant() {
                   Requested Amount
                 </label>
                 <Input
-                  value={formData.requestedAmount}
+                  value={grant?.requestedAmount || ""}
                   onChange={(e) => setFormData({...formData, requestedAmount: e.target.value})}
                   placeholder="$0.00"
                 />
@@ -318,7 +318,7 @@ export default function EditGrant() {
                   Awarded Amount
                 </label>
                 <Input
-                  value={formData.awardedAmount}
+                  value={grant?.awardedAmount || ""}
                   onChange={(e) => setFormData({...formData, awardedAmount: e.target.value})}
                   placeholder="$0.00"
                 />
@@ -332,7 +332,7 @@ export default function EditGrant() {
                 </label>
                 <Input
                   type="number"
-                  value={formData.submittedYear}
+                  value={grant?.submittedYear?.toString() || ""}
                   onChange={(e) => setFormData({...formData, submittedYear: e.target.value})}
                   placeholder="2024"
                 />
@@ -344,7 +344,7 @@ export default function EditGrant() {
                 </label>
                 <Input
                   type="number"
-                  value={formData.awardedYear}
+                  value={grant?.awardedYear?.toString() || ""}
                   onChange={(e) => setFormData({...formData, awardedYear: e.target.value})}
                   placeholder="2024"
                 />
@@ -356,7 +356,7 @@ export default function EditGrant() {
                 </label>
                 <Input
                   type="number"
-                  value={formData.runningTimeYears}
+                  value={grant?.runningTimeYears?.toString() || ""}
                   onChange={(e) => setFormData({...formData, runningTimeYears: e.target.value})}
                   placeholder="3"
                 />
@@ -368,7 +368,7 @@ export default function EditGrant() {
                 </label>
                 <Input
                   type="number"
-                  value={formData.currentGrantYear}
+                  value={grant?.currentGrantYear?.toString() || ""}
                   onChange={(e) => setFormData({...formData, currentGrantYear: e.target.value})}
                   placeholder="1"
                 />
@@ -380,13 +380,13 @@ export default function EditGrant() {
                 <label className="text-sm font-medium">Grant Awarded</label>
               </div>
               <Switch
-                checked={formData.awarded}
+                checked={grant?.awarded || false}
                 onCheckedChange={(checked) => setFormData({...formData, awarded: checked})}
               />
             </div>
 
             {/* SDR Linking Section - Only show when grant is awarded */}
-            {formData.awarded && (
+            {grant?.awarded && (
               <div className="mt-6 border-t pt-4">
                 <h3 className="text-lg font-medium mb-4">Linked Research Activities (SDRs)</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -431,7 +431,7 @@ export default function EditGrant() {
                 </label>
                 <Input
                   type="date"
-                  value={formData.startDate}
+                  value={grant?.startDate ? grant.startDate.split('T')[0] : ""}
                   onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                 />
               </div>
@@ -442,7 +442,7 @@ export default function EditGrant() {
                 </label>
                 <Input
                   type="date"
-                  value={formData.endDate}
+                  value={grant?.endDate ? grant.endDate.split('T')[0] : ""}
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
               </div>
@@ -453,7 +453,7 @@ export default function EditGrant() {
                 Collaborators (one per line)
               </label>
               <Textarea
-                value={formData.collaborators}
+                value={Array.isArray(grant?.collaborators) ? grant.collaborators.join('\n') : ""}
                 onChange={(e) => setFormData({...formData, collaborators: e.target.value})}
                 placeholder="Dr. John Smith, University of Example&#10;Dr. Jane Doe, Research Institute&#10;..."
                 rows={3}
