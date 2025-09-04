@@ -78,6 +78,7 @@ export default function EditGrant() {
 
   const updateGrantMutation = useMutation({
     mutationFn: async (data: any) => {
+      // First update the grant
       const response = await fetch(`/api/grants/${grantId}`, {
         method: "PUT",
         headers: {
@@ -88,11 +89,32 @@ export default function EditGrant() {
       if (!response.ok) {
         throw new Error('Failed to update grant');
       }
+
+      // Then handle SDR links - remove all existing links and add new ones
+      const currentLinkedResponse = await fetch(`/api/grants/${grantId}/research-activities`);
+      const currentLinked = await currentLinkedResponse.json();
+      
+      // Remove all existing links
+      for (const linkedSdr of currentLinked) {
+        await fetch(`/api/grants/${grantId}/research-activities/${linkedSdr.id}`, {
+          method: 'DELETE',
+        });
+      }
+      
+      // Add new links
+      for (const sdrId of linkedSdrs) {
+        await fetch(`/api/grants/${grantId}/research-activities/${sdrId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/grants'] });
       queryClient.invalidateQueries({ queryKey: [`/api/grants/${grantId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/grants/${grantId}/research-activities`] });
       toast({
         title: "Success",
         description: "Grant updated successfully",
