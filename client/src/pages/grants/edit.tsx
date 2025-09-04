@@ -111,17 +111,30 @@ export default function EditGrant() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const collaborators = formData.collaborators 
-      ? formData.collaborators.split('\n').filter(line => line.trim())
-      : [];
+    const collaborators = Array.isArray(grant?.collaborators) 
+      ? grant.collaborators.join('\n') 
+      : formData.collaborators 
+        ? formData.collaborators.split('\n').filter(line => line.trim())
+        : [];
 
     const payload = {
-      ...formData,
-      lpiId: formData.lpiId ? parseInt(formData.lpiId) : null,
-      submittedYear: formData.submittedYear ? parseInt(formData.submittedYear) : null,
-      awardedYear: formData.awardedYear ? parseInt(formData.awardedYear) : null,
-      runningTimeYears: formData.runningTimeYears ? parseInt(formData.runningTimeYears) : null,
-      currentGrantYear: formData.currentGrantYear ? parseInt(formData.currentGrantYear) : null,
+      projectNumber: grant?.projectNumber || formData.projectNumber,
+      title: grant?.title || formData.title,
+      description: grant?.description || formData.description,
+      cycle: grant?.cycle || formData.cycle,
+      status: grant?.status || formData.status,
+      fundingAgency: grant?.fundingAgency || formData.fundingAgency,
+      investigatorType: grant?.investigatorType || formData.investigatorType,
+      lpiId: grant?.lpiId || (formData.lpiId && formData.lpiId.trim() ? parseInt(formData.lpiId) : null),
+      requestedAmount: grant?.requestedAmount || formData.requestedAmount || null,
+      awardedAmount: grant?.awardedAmount || formData.awardedAmount || null,
+      submittedYear: grant?.submittedYear || (formData.submittedYear && formData.submittedYear.trim() ? parseInt(formData.submittedYear) : null),
+      awardedYear: grant?.awardedYear || (formData.awardedYear && formData.awardedYear.trim() ? parseInt(formData.awardedYear) : null),
+      awarded: grant?.awarded !== undefined ? grant.awarded : formData.awarded,
+      runningTimeYears: grant?.runningTimeYears || (formData.runningTimeYears && formData.runningTimeYears.trim() ? parseInt(formData.runningTimeYears) : null),
+      currentGrantYear: grant?.currentGrantYear || (formData.currentGrantYear && formData.currentGrantYear.trim() ? parseInt(formData.currentGrantYear) : null),
+      startDate: grant?.startDate ? grant.startDate.split('T')[0] : formData.startDate || null,
+      endDate: grant?.endDate ? grant.endDate.split('T')[0] : formData.endDate || null,
       collaborators,
     };
 
