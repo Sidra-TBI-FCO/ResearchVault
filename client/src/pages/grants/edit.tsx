@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,28 +48,30 @@ export default function EditGrant() {
     enabled: !!grantId,
   });
 
+  const defaultValues = useMemo(() => ({
+    projectNumber: grant?.projectNumber ?? "",
+    title: grant?.title ?? "",
+    description: grant?.description ?? "",
+    cycle: grant?.cycle ?? "",
+    status: grant?.status ?? "pending",
+    fundingAgency: grant?.fundingAgency ?? "",
+    investigatorType: grant?.investigatorType ?? "Researcher",
+    lpiId: grant?.lpiId ?? undefined,
+    requestedAmount: grant?.requestedAmount ?? "",
+    awardedAmount: grant?.awardedAmount ?? "",
+    submittedYear: grant?.submittedYear ?? undefined,
+    awardedYear: grant?.awardedYear ?? undefined,
+    awarded: grant?.awarded ?? false,
+    runningTimeYears: grant?.runningTimeYears ?? undefined,
+    currentGrantYear: grant?.currentGrantYear ?? undefined,
+    startDate: grant?.startDate ? grant.startDate.split('T')[0] : "",
+    endDate: grant?.endDate ? grant.endDate.split('T')[0] : "",
+    collaborators: grant?.collaborators ?? [],
+  }), [grant]);
+
   const form = useForm<UpdateGrantForm>({
     resolver: zodResolver(insertGrantSchema.partial()),
-    defaultValues: {
-      projectNumber: grant?.projectNumber ?? "",
-      title: grant?.title ?? "",
-      description: grant?.description ?? "",
-      cycle: grant?.cycle ?? "",
-      status: grant?.status ?? "pending",
-      fundingAgency: grant?.fundingAgency ?? "",
-      investigatorType: grant?.investigatorType ?? "Researcher",
-      lpiId: grant?.lpiId ?? undefined,
-      requestedAmount: grant?.requestedAmount ?? "",
-      awardedAmount: grant?.awardedAmount ?? "",
-      submittedYear: grant?.submittedYear ?? undefined,
-      awardedYear: grant?.awardedYear ?? undefined,
-      awarded: grant?.awarded ?? false,
-      runningTimeYears: grant?.runningTimeYears ?? undefined,
-      currentGrantYear: grant?.currentGrantYear ?? undefined,
-      startDate: grant?.startDate ? grant.startDate.split('T')[0] : "",
-      endDate: grant?.endDate ? grant.endDate.split('T')[0] : "",
-      collaborators: grant?.collaborators ?? [],
-    },
+    defaultValues,
   });
 
   const { data: scientists = [] } = useQuery({
