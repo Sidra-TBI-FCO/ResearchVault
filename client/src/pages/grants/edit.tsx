@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertGrantSchema, type Grant, type Scientist } from "@shared/schema";
@@ -82,6 +83,7 @@ export default function EditGrant() {
         requestedAmount: grant.requestedAmount?.toString() || "",
         awardedAmount: grant.awardedAmount?.toString() || "",
         submittedYear: grant.submittedYear || undefined,
+        awarded: grant.awarded || false,
         awardedYear: grant.awardedYear || undefined,
         runningTimeYears: grant.runningTimeYears || undefined,
         currentGrantYear: grant.currentGrantYear || "",
@@ -420,6 +422,27 @@ export default function EditGrant() {
                           />
                         </FormControl>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="awarded"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Awarded</FormLabel>
+                          <FormDescription>
+                            Was this grant awarded?
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />

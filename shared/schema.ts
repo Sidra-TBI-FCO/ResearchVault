@@ -943,6 +943,7 @@ export const grants = pgTable("grants", {
   requestedAmount: numeric("requested_amount", { precision: 12, scale: 2 }), // Amount requested
   awardedAmount: numeric("awarded_amount", { precision: 12, scale: 2 }), // Amount awarded
   submittedYear: integer("submitted_year"), // Year grant was submitted
+  awarded: boolean("awarded").default(false), // Whether the grant was awarded (Yes/No)
   awardedYear: integer("awarded_year"), // Year grant was awarded
   runningTimeYears: integer("running_time_years"), // How many years the grant has been running
   currentGrantYear: text("current_grant_year"), // What year we are in (e.g., "1/3", "2/5")
