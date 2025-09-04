@@ -55,6 +55,8 @@ export default function EditGrant() {
     enabled: !!grantId,
   });
 
+  console.log('Grant ID:', grantId, 'Loading:', isLoadingGrant, 'Data:', grant);
+
   const { data: scientists = [] } = useQuery({
     queryKey: ['/api/scientists']
   });
@@ -70,7 +72,9 @@ export default function EditGrant() {
 
   // Load grant data into form once
   useEffect(() => {
+    console.log('Grant data changed:', grant);
     if (grant) {
+      console.log('Setting form data with grant:', grant);
       setFormData({
         projectNumber: grant.projectNumber || "",
         title: grant.title || "",
