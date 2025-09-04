@@ -306,7 +306,7 @@ export default function GrantsList() {
                       PROJECT NO. <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="min-w-80">
+                  <TableHead>
                     <Button variant="ghost" onClick={() => handleSort("title")} className="h-8 p-0 font-semibold">
                       PROJECT TITLE <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
@@ -363,7 +363,7 @@ export default function GrantsList() {
                         {grant.projectNumber}
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-80">
+                        <div>
                           <div className="font-medium text-sm line-clamp-2">{grant.title}</div>
                           {grant.description && (
                             <div className="text-xs text-gray-500 mt-1 line-clamp-1">{grant.description}</div>
