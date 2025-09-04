@@ -74,7 +74,7 @@ export default function IbcApplicationDetail() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="p-6 space-y-6">
         <div className="flex items-center space-x-2 mb-6">
           <Skeleton className="h-6 w-6" />
           <Skeleton className="h-8 w-64" />
@@ -104,7 +104,7 @@ export default function IbcApplicationDetail() {
 
   if (!ibcApplication) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <div className="text-center py-12">
           <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Application not found</h3>
@@ -157,7 +157,7 @@ export default function IbcApplicationDetail() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">

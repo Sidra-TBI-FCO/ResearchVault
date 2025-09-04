@@ -115,7 +115,7 @@ export default function CreateIbcBoardMember() {
 
   if (scientistsLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />
@@ -126,7 +126,7 @@ export default function CreateIbcBoardMember() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center space-x-4">
         <Button
           variant="ghost"

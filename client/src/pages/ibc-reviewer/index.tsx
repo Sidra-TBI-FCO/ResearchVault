@@ -63,7 +63,7 @@ export default function IbcReviewerPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <div className="flex items-center space-x-2 mb-6">
           <Biohazard className="h-6 w-6" />
           <h1 className="text-2xl font-bold">IBC Reviewer Dashboard</h1>
@@ -78,7 +78,7 @@ export default function IbcReviewerPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center space-x-2">
         <Biohazard className="h-6 w-6" />
         <h1 className="text-2xl font-bold">IBC Reviewer Dashboard</h1>

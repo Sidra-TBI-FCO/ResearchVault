@@ -92,7 +92,7 @@ export default function IbcOfficePage() {
 
   if (applicationsLoading || boardMembersLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <div className="flex items-center space-x-2 mb-6">
           <Building className="h-6 w-6" />
           <h1 className="text-2xl font-bold">IBC Office Management</h1>
@@ -107,7 +107,7 @@ export default function IbcOfficePage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center space-x-2">
         <Building className="h-6 w-6" />
         <h1 className="text-2xl font-bold">IBC Office Management</h1>

@@ -121,7 +121,7 @@ export default function IbcReviewPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="h-32 bg-gray-200 rounded"></div>
@@ -133,7 +133,7 @@ export default function IbcReviewPage() {
 
   if (!application) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <Card>
           <CardContent className="text-center py-8">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -149,7 +149,7 @@ export default function IbcReviewPage() {
   const biosafetyBadge = getBiosafetyLevelBadge(application.biosafetyLevel);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">

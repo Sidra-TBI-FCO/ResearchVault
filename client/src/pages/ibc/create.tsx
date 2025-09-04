@@ -484,7 +484,7 @@ export default function CreateIbc() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="p-6 max-w-6xl mx-auto">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4 mb-4">

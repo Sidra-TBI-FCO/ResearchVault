@@ -167,7 +167,7 @@ export default function IbcProtocolDetailPage() {
 
   if (applicationLoading || !application) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6">
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />
@@ -225,7 +225,7 @@ export default function IbcProtocolDetailPage() {
 
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
