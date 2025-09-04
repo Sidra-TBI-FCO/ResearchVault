@@ -461,17 +461,6 @@ export default function EditGrant() {
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Current Grant Year
-                </label>
-                <Input
-                  type="number"
-                  value={grant?.currentGrantYear?.toString() || ""}
-                  onChange={(e) => setFormData({...formData, currentGrantYear: e.target.value})}
-                  placeholder="1"
-                />
-              </div>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3 mt-4">
