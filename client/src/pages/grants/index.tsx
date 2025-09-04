@@ -301,12 +301,12 @@ export default function GrantsList() {
                       FUNDING INSTITUTION <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-32">
+                  <TableHead className="w-40">
                     <Button variant="ghost" onClick={() => handleSort("projectNumber")} className="h-8 p-0 font-semibold">
                       PROJECT NO. <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="min-w-60">
+                  <TableHead className="min-w-80">
                     <Button variant="ghost" onClick={() => handleSort("title")} className="h-8 p-0 font-semibold">
                       PROJECT TITLE <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
