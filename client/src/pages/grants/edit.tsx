@@ -79,7 +79,7 @@ export default function EditGrant() {
   const updateGrantMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await fetch(`/api/grants/${grantId}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           'Content-Type': 'application/json'
         },
