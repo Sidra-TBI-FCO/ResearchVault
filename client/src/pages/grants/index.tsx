@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +50,7 @@ export default function GrantsList() {
   const [sortField, setSortField] = useState<string>("createdAt");
   const [sortDirection, setSortDirection] = useState<string>("desc");
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: grants, isLoading } = useQuery<EnhancedGrant[]>({
     queryKey: ['/api/grants'],
@@ -256,7 +257,7 @@ export default function GrantsList() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -354,7 +355,11 @@ export default function GrantsList() {
                   </TableRow>
                 ) : (
                   filteredAndSortedGrants?.map((grant) => (
-                    <TableRow key={grant.id} className="hover:bg-gray-50">
+                    <TableRow 
+                      key={grant.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/grants/${grant.id}/edit`)}
+                    >
                       <TableCell className="font-medium text-sm">
                         {grant.cycle || "—"}
                       </TableCell>
@@ -430,7 +435,7 @@ export default function GrantsList() {
                           {grant.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
