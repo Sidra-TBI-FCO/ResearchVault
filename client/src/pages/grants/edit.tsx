@@ -60,6 +60,9 @@ export default function EditGrant() {
     acceptanceDate: "",
     notes: "",
   });
+  
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: grant, isLoading: isLoadingGrant } = useQuery({
     queryKey: [`/api/grants/${grantId}`],
@@ -243,6 +246,7 @@ export default function EditGrant() {
         acceptanceDate: "",
         notes: "",
       });
+      setUploadedFile(null);
     },
     onError: (error: any) => {
       toast({
@@ -284,7 +288,77 @@ export default function EditGrant() {
     }
   };
 
-  const handleSubmitReport = (e: React.FormEvent) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: "Error",
+          description: "Only PDF files are allowed",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size must be less than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setUploadedFile(file);
+    }
+  };
+
+  const uploadFileToStorage = async (file: File): Promise<{filePath: string, fileName: string, fileSize: number}> => {
+    setIsUploading(true);
+    
+    try {
+      // Get upload URL
+      const uploadResponse = await fetch('/api/objects/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+      
+      const { uploadURL } = await uploadResponse.json();
+      
+      // Upload file to storage
+      const fileUploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+      
+      if (!fileUploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+      
+      // Extract object path from upload URL
+      const url = new URL(uploadURL);
+      const objectPath = url.pathname;
+      
+      return {
+        filePath: objectPath,
+        fileName: file.name,
+        fileSize: file.size,
+      };
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!reportFormData.reportTitle.trim()) {
@@ -296,6 +370,22 @@ export default function EditGrant() {
       return;
     }
 
+    let fileInfo = null;
+    
+    // Upload file if selected
+    if (uploadedFile) {
+      try {
+        fileInfo = await uploadFileToStorage(uploadedFile);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to upload PDF file",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const reportPayload = {
       reportTitle: reportFormData.reportTitle,
       reportPeriod: reportFormData.reportPeriod || null,
@@ -303,6 +393,9 @@ export default function EditGrant() {
       acceptanceDate: reportFormData.acceptanceDate || null,
       notes: reportFormData.notes || null,
       uploadedBy: 1, // TODO: Get from current user
+      filePath: fileInfo?.filePath || null,
+      fileName: fileInfo?.fileName || null,
+      fileSize: fileInfo?.fileSize || null,
     };
 
     createProgressReportMutation.mutate(reportPayload);
@@ -709,7 +802,11 @@ export default function EditGrant() {
                     </div>
                     <div className="flex items-center gap-2">
                       {report.filePath && (
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`/objects${report.filePath}`, '_blank')}
+                        >
                           <FileText className="h-4 w-4 mr-2" />
                           View PDF
                         </Button>
@@ -801,6 +898,34 @@ export default function EditGrant() {
             </div>
 
             <div>
+              <Label htmlFor="pdfFile">PDF Report File</Label>
+              <div className="space-y-2">
+                <Input
+                  id="pdfFile"
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileSelect}
+                  className="cursor-pointer"
+                />
+                {uploadedFile && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FileText className="h-4 w-4" />
+                    <span>{uploadedFile.name}</span>
+                    <span>({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    <button
+                      type="button"
+                      onClick={() => setUploadedFile(null)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">Only PDF files up to 10MB are allowed</p>
+              </div>
+            </div>
+
+            <div>
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
@@ -821,9 +946,9 @@ export default function EditGrant() {
               </Button>
               <Button 
                 type="submit"
-                disabled={createProgressReportMutation.isPending}
+                disabled={createProgressReportMutation.isPending || isUploading}
               >
-                {createProgressReportMutation.isPending ? "Adding..." : "Add Report"}
+                {isUploading ? "Uploading..." : createProgressReportMutation.isPending ? "Adding..." : "Add Report"}
               </Button>
             </div>
           </form>
