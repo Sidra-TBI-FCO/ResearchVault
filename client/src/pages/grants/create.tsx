@@ -114,7 +114,7 @@ export default function CreateGrant() {
       <div className="max-w-4xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Left Column */}
               <div className="space-y-4">
                 <Card>
@@ -327,11 +327,118 @@ export default function CreateGrant() {
                 </Card>
               </div>
 
-              {/* Right Column */}
+              {/* Second Column */}
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Investigator Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="investigatorType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Investigator Type</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              className="flex flex-row space-x-6"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Researcher" id="researcher" />
+                                <Label htmlFor="researcher">Researcher</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Clinician" id="clinician" />
+                                <Label htmlFor="clinician">Clinician</Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lpiId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lead Principal Investigator (LPI)</FormLabel>
+                          <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select LPI" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {scientists.map((scientist) => (
+                                <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                  {formatFullName(scientist)} - {scientist.jobTitle || 'No title'}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Financial Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="requestedAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Requested Amount</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01"
+                              placeholder="0.00" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="awardedAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Awarded Amount</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01"
+                              placeholder="0.00" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Third Column */}
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <FormField
