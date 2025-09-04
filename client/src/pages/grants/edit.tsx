@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,6 +42,7 @@ export default function EditGrant() {
   const queryClient = useQueryClient();
   const [collaboratorsInput, setCollaboratorsInput] = useState("");
   const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
+  const formInitialized = useRef(false);
 
   const grantId = params?.id ? parseInt(params.id) : null;
 
@@ -88,7 +89,7 @@ export default function EditGrant() {
   });
 
   useEffect(() => {
-    if (grant && grant.id) {
+    if (grant && grant.id && !formInitialized.current) {
       const collaboratorsText = Array.isArray(grant.collaborators) 
         ? grant.collaborators.join('\n')
         : '';
@@ -114,8 +115,10 @@ export default function EditGrant() {
         endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
         collaborators: grant.collaborators ?? [],
       });
+      
+      formInitialized.current = true;
     }
-  }, [grant?.id]);
+  }, [grant, form]);
 
   useEffect(() => {
     if (grantSdrs) {
@@ -197,11 +200,47 @@ export default function EditGrant() {
   }
 
   if (isLoadingGrant) {
-    return <div>Loading...</div>;
+    return (
+      <div className="py-6">
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/grants")}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Grants
+          </Button>
+          <h1 className="text-3xl font-bold text-gray-900">Edit Grant</h1>
+          <p className="text-gray-600 mt-1">Loading grant information...</p>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading grant data...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!grant) {
-    return <div>Grant not found</div>;
+    return (
+      <div className="py-6">
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/grants")}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Grants
+          </Button>
+          <h1 className="text-3xl font-bold text-gray-900">Edit Grant</h1>
+          <p className="text-red-600 mt-1">Grant not found</p>
+        </div>
+      </div>
+    );
   }
 
   return (
