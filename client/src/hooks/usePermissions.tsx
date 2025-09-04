@@ -37,13 +37,14 @@ const JOB_TITLES = [
   "PMO Officer",
   "IRB Officer",
   "IBC Officer",
-  "Outcome Officer"
+  "Outcome Officer",
+  "Grant Officer"
 ];
 
 const NAVIGATION_ITEMS = [
   "dashboard", "scientists", "facilities", "programs", "projects", "research-activities",
   "irb-applications", "irb-office", "irb-reviewer", "ibc-applications", "ibc-office", 
-  "ibc-reviewer", "data-management", "contracts", "publications", "outcome-office", "patents", "reports"
+  "ibc-reviewer", "data-management", "contracts", "publications", "outcome-office", "patents", "reports", "grants"
 ];
 
 const createDefaultPermissions = (): NavigationPermission[] => {
@@ -68,6 +69,22 @@ const createDefaultPermissions = (): NavigationPermission[] => {
             navItem === "contracts" || navItem === "patents") {
           defaultAccess = "hide";
         } else if (navItem === "reports" || navItem === "programs") {
+          defaultAccess = "view";
+        }
+      }
+      
+      // Grant Officer has specialized access
+      if (jobTitle === "Grant Officer") {
+        if (navItem.includes("-office") || navItem.includes("-reviewer")) {
+          // Hide other department offices/reviewer functions
+          if (navItem !== "grants") {
+            defaultAccess = "hide";
+          }
+        } else if (navItem === "grants" || navItem === "contracts" || navItem === "programs" || navItem === "projects") {
+          // Full access to grants and related areas
+          defaultAccess = "edit";
+        } else if (navItem === "reports" || navItem === "publications" || navItem === "patents") {
+          // View access to reports and research outputs
           defaultAccess = "view";
         }
       }

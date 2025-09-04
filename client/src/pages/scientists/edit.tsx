@@ -308,6 +308,8 @@ export default function EditScientist() {
                           <SelectItem value="PMO Officer">PMO Officer</SelectItem>
                           <SelectItem value="IRB Officer">IRB Officer</SelectItem>
                           <SelectItem value="IBC Officer">IBC Officer</SelectItem>
+                          <SelectItem value="Outcome Officer">Outcome Officer</SelectItem>
+                          <SelectItem value="Grant Officer">Grant Officer</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
