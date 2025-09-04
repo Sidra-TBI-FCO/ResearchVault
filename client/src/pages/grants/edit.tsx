@@ -239,6 +239,7 @@ export default function EditGrant() {
                   <SelectContent>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="in_review">In Review</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="awarded">Awarded</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
@@ -275,6 +276,10 @@ export default function EditGrant() {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Co-Investigator" id="co-investigator" />
                     <Label htmlFor="co-investigator">Co-Investigator</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Clinician" id="clinician" />
+                    <Label htmlFor="clinician">Clinician</Label>
                   </div>
                 </RadioGroup>
               </div>
