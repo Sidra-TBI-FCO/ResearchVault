@@ -110,8 +110,8 @@ export default function EditGrant() {
         awarded: grant.awarded || false,
         runningTimeYears: grant.runningTimeYears,
         currentGrantYear: grant.currentGrantYear,
-        startDate: grant.startDate || "",
-        endDate: grant.endDate || "",
+        startDate: grant.startDate ? grant.startDate.split('T')[0] : "",
+        endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
         collaborators: grant.collaborators || [],
       });
     }
