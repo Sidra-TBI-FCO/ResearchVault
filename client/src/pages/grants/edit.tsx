@@ -51,11 +51,9 @@ export default function EditGrant() {
   const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
 
   const { data: grant, isLoading: isLoadingGrant } = useQuery({
-    queryKey: ['/api/grants', grantId],
+    queryKey: [`/api/grants/${grantId}`],
     enabled: !!grantId,
   });
-
-  console.log('Grant ID:', grantId, 'Loading:', isLoadingGrant, 'Data:', grant);
 
   const { data: scientists = [] } = useQuery({
     queryKey: ['/api/scientists']
@@ -72,9 +70,7 @@ export default function EditGrant() {
 
   // Load grant data into form once
   useEffect(() => {
-    console.log('Grant data changed:', grant);
-    if (grant) {
-      console.log('Setting form data with grant:', grant);
+    if (grant && !Array.isArray(grant)) {
       setFormData({
         projectNumber: grant.projectNumber || "",
         title: grant.title || "",
@@ -121,7 +117,7 @@ export default function EditGrant() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/grants'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/grants', grantId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/grants/${grantId}`] });
       toast({
         title: "Success",
         description: "Grant updated successfully",
