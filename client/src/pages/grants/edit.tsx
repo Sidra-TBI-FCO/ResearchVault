@@ -486,18 +486,31 @@ export default function EditGrant() {
                   <FormField
                     control={form.control}
                     name="currentGrantYear"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Year in Grant</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="1/3" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const runningTimeYears = form.watch("runningTimeYears");
+                      const yearOptions = runningTimeYears ? Array.from({ length: runningTimeYears }, (_, i) => i + 1) : [];
+                      
+                      return (
+                        <FormItem>
+                          <FormLabel>Year in Grant</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={runningTimeYears ? "Select year" : "Set running time first"} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {yearOptions.map((year) => (
+                                <SelectItem key={year} value={year.toString()}>
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
