@@ -105,6 +105,12 @@ export default function GrantsList() {
     return statusColors[status.toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-700";
   };
 
+  const getInvestigatorType = (grant: EnhancedGrant) => {
+    if (grant.lpi) return "LPI";
+    if (grant.researcher) return "Clinician";
+    return "—";
+  };
+
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -144,12 +150,12 @@ export default function GrantsList() {
     let bValue: any = b[sortField as keyof Grant];
     
     // Handle nested properties
-    if (sortField === "lpiName") {
-      aValue = a.lpi ? `${a.lpi.firstName} ${a.lpi.lastName}` : "";
-      bValue = b.lpi ? `${b.lpi.firstName} ${b.lpi.lastName}` : "";
-    } else if (sortField === "researcherName") {
-      aValue = a.researcher ? `${a.researcher.firstName} ${a.researcher.lastName}` : "";
-      bValue = b.researcher ? `${b.researcher.firstName} ${b.researcher.lastName}` : "";
+    if (sortField === "investigatorType") {
+      aValue = getInvestigatorType(a);
+      bValue = getInvestigatorType(b);
+    } else if (sortField === "investigatorName") {
+      aValue = a.lpi ? `${a.lpi.firstName} ${a.lpi.lastName}` : a.researcher ? `${a.researcher.firstName} ${a.researcher.lastName}` : "";
+      bValue = b.lpi ? `${b.lpi.firstName} ${b.lpi.lastName}` : b.researcher ? `${b.researcher.firstName} ${b.researcher.lastName}` : "";
     }
     
     if (aValue === null || aValue === undefined) aValue = "";
@@ -271,14 +277,14 @@ export default function GrantsList() {
                       Project # <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-36">
-                    <Button variant="ghost" onClick={() => handleSort("lpiName")} className="h-8 p-0 font-semibold">
-                      LPI <ArrowUpDown className="ml-1 h-3 w-3" />
+                  <TableHead className="w-24">
+                    <Button variant="ghost" onClick={() => handleSort("investigatorType")} className="h-8 p-0 font-semibold">
+                      Type <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-36">
-                    <Button variant="ghost" onClick={() => handleSort("researcherName")} className="h-8 p-0 font-semibold">
-                      Clinician <ArrowUpDown className="ml-1 h-3 w-3" />
+                    <Button variant="ghost" onClick={() => handleSort("investigatorName")} className="h-8 p-0 font-semibold">
+                      Investigator <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
                   <TableHead className="min-w-60">
@@ -347,7 +353,7 @@ export default function GrantsList() {
               <TableBody>
                 {filteredAndSortedGrants?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={17} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={16} className="text-center py-8 text-gray-500">
                       {searchQuery || statusFilter !== "all" || yearFilter !== "all" 
                         ? "No grants match your filters." 
                         : "No grants found. Create your first grant to get started."}
@@ -366,6 +372,11 @@ export default function GrantsList() {
                       <TableCell className="font-mono text-xs">
                         {grant.projectNumber}
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-xs">
+                          {getInvestigatorType(grant)}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         {grant.lpi ? (
                           <div className="text-xs">
@@ -373,12 +384,7 @@ export default function GrantsList() {
                               {grant.lpi.honorificTitle} {grant.lpi.firstName} {grant.lpi.lastName}
                             </div>
                           </div>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {grant.researcher ? (
+                        ) : grant.researcher ? (
                           <div className="text-xs">
                             <div className="font-medium">
                               {grant.researcher.honorificTitle} {grant.researcher.firstName} {grant.researcher.lastName}
