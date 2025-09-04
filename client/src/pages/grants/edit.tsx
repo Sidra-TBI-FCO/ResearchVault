@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { insertGrantSchema, type Grant, type Scientist } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatFullName } from "@/utils/nameUtils";
 
 const editGrantSchema = insertGrantSchema.extend({
   investigatorId: z.coerce.number().optional(),
@@ -266,7 +267,7 @@ export default function EditGrant() {
                           <SelectContent>
                             {scientists.map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.honorificTitle} {scientist.firstName} {scientist.lastName}
+                                {formatFullName(scientist)} - {scientist.jobTitle || 'No title'}
                               </SelectItem>
                             ))}
                           </SelectContent>

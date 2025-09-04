@@ -16,6 +16,7 @@ import { ArrowLeft, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertGrantSchema, type Scientist } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { formatFullName } from "@/utils/nameUtils";
 
 const createGrantSchema = insertGrantSchema.extend({
   investigatorId: z.coerce.number().optional(),
@@ -192,7 +193,7 @@ export default function CreateGrant() {
                           <SelectContent>
                             {scientists.map((scientist) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.honorificTitle} {scientist.firstName} {scientist.lastName}
+                                {formatFullName(scientist)} - {scientist.jobTitle || 'No title'}
                               </SelectItem>
                             ))}
                           </SelectContent>
