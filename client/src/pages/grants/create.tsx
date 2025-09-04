@@ -113,10 +113,10 @@ export default function CreateGrant() {
 
       <div className="max-w-4xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Left Column */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export default function CreateGrant() {
                       Basic Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3">
                     <FormField
                       control={form.control}
                       name="projectNumber"
@@ -328,7 +328,7 @@ export default function CreateGrant() {
               </div>
 
               {/* Right Column */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Investigator Information</CardTitle>
@@ -450,7 +450,7 @@ export default function CreateGrant() {
                             <Textarea 
                               {...field} 
                               placeholder="Brief description of the grant objectives and scope"
-                              rows={4}
+                              rows={3}
                             />
                           </FormControl>
                           <FormMessage />
@@ -464,10 +464,10 @@ export default function CreateGrant() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Grant Dates</CardTitle>
+                <CardTitle>Grant Dates & Collaborators</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="startDate"
@@ -502,14 +502,7 @@ export default function CreateGrant() {
                     )}
                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Collaborators</CardTitle>
-              </CardHeader>
-              <CardContent>
+                
                 <div>
                   <label htmlFor="collaborators" className="text-sm font-medium text-gray-700 mb-2 block">
                     Collaborators (one per line)
@@ -519,7 +512,7 @@ export default function CreateGrant() {
                     value={collaboratorsInput}
                     onChange={(e) => setCollaboratorsInput(e.target.value)}
                     placeholder="Dr. John Smith, University of Example&#10;Dr. Jane Doe, Research Institute&#10;..."
-                    rows={4}
+                    rows={3}
                   />
                 </div>
               </CardContent>
