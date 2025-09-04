@@ -274,10 +274,6 @@ export default function EditGrant() {
                     <Label htmlFor="researcher">Researcher</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Co-Investigator" id="co-investigator" />
-                    <Label htmlFor="co-investigator">Co-Investigator</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Clinician" id="clinician" />
                     <Label htmlFor="clinician">Clinician</Label>
                   </div>
