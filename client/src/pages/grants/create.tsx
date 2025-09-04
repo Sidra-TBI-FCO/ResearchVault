@@ -164,7 +164,7 @@ export default function CreateGrant() {
                           >
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="researcher" id="researcher" />
-                              <Label htmlFor="researcher">Researcher</Label>
+                              <Label htmlFor="researcher">LPI</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="clinician" id="clinician" />
@@ -183,12 +183,12 @@ export default function CreateGrant() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          {form.watch("investigatorType") === "researcher" ? "Researcher" : "Clinician"}
+                          {form.watch("investigatorType") === "researcher" ? "LPI" : "Clinician"}
                         </FormLabel>
                         <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={`Select ${form.watch("investigatorType") === "researcher" ? "researcher" : "clinician"}`} />
+                              <SelectValue placeholder={`Select ${form.watch("investigatorType") === "researcher" ? "LPI" : "clinician"}`} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
