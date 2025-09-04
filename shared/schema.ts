@@ -948,6 +948,7 @@ export const grants = pgTable("grants", {
   runningTimeYears: integer("running_time_years"), // How many years the grant has been running
   currentGrantYear: text("current_grant_year"), // What year we are in (e.g., "1/3", "2/5")
   status: text("status").notNull().default("submitted"), // active, completed, cancelled, etc.
+  grantType: text("grant_type").default("Local"), // International or Local
   startDate: date("start_date"), // Grant start date
   endDate: date("end_date"), // Grant end date
   reportingIntervalMonths: integer("reporting_interval_months"), // Reporting interval in months

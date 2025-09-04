@@ -33,6 +33,7 @@ export default function EditGrant() {
     description: "",
     cycle: "",
     status: "pending",
+    grantType: "Local",
     fundingAgency: "",
     investigatorType: "Researcher",
     lpiId: "",
@@ -152,6 +153,7 @@ export default function EditGrant() {
       description: grant?.description || formData.description,
       cycle: grant?.cycle || formData.cycle,
       status: grant?.status || formData.status,
+      grantType: grant?.grantType || formData.grantType,
       fundingAgency: grant?.fundingAgency || formData.fundingAgency,
       investigatorType: grant?.investigatorType || formData.investigatorType,
       lpiId: grant?.lpiId || (formData.lpiId && formData.lpiId.trim() ? parseInt(formData.lpiId) : null),
@@ -304,20 +306,20 @@ export default function EditGrant() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Investigator Type
+                  Grant Type
                 </label>
                 <RadioGroup
-                  value={grant?.investigatorType || "Researcher"}
-                  onValueChange={(value) => setFormData({...formData, investigatorType: value})}
+                  value={grant?.grantType || "Local"}
+                  onValueChange={(value) => setFormData({...formData, grantType: value})}
                   className="flex flex-row space-x-6"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Researcher" id="researcher" />
-                    <Label htmlFor="researcher">Researcher</Label>
+                    <RadioGroupItem value="Local" id="local" />
+                    <Label htmlFor="local">Local</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Clinician" id="clinician" />
-                    <Label htmlFor="clinician">Clinician</Label>
+                    <RadioGroupItem value="International" id="international" />
+                    <Label htmlFor="international">International</Label>
                   </div>
                 </RadioGroup>
               </div>

@@ -126,8 +126,8 @@ export default function GrantsList() {
     return statusColors[status.toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-700";
   };
 
-  const getInvestigatorType = (grant: EnhancedGrant) => {
-    return grant.investigatorType || "—";
+  const getGrantType = (grant: EnhancedGrant) => {
+    return grant.grantType || "Local";
   };
 
   const handleSort = (field: string) => {
@@ -168,9 +168,9 @@ export default function GrantsList() {
     let bValue: any = b[sortField as keyof Grant];
     
     // Handle nested properties
-    if (sortField === "investigatorType") {
-      aValue = getInvestigatorType(a);
-      bValue = getInvestigatorType(b);
+    if (sortField === "grantType") {
+      aValue = getGrantType(a);
+      bValue = getGrantType(b);
     } else if (sortField === "investigatorName") {
       aValue = a.lpi ? `${a.lpi.firstName} ${a.lpi.lastName}` : "";
       bValue = b.lpi ? `${b.lpi.firstName} ${b.lpi.lastName}` : "";
@@ -287,7 +287,7 @@ export default function GrantsList() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-32">
-                    <Button variant="ghost" onClick={() => handleSort("investigatorType")} className="h-8 p-0 font-semibold">
+                    <Button variant="ghost" onClick={() => handleSort("grantType")} className="h-8 p-0 font-semibold">
                       TYPE OF GRANT <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
@@ -342,7 +342,7 @@ export default function GrantsList() {
                     >
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
-                          {getInvestigatorType(grant)}
+                          {getGrantType(grant)}
                         </Badge>
                       </TableCell>
                       <TableCell>
