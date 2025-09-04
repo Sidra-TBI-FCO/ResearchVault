@@ -2,14 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication, DataManagementPlan, Grant } from "@shared/schema";
+import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication, DataManagementPlan, Grant, Publication } from "@shared/schema";
 import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet, Edit, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatFullName } from "@/utils/nameUtils";
-import { usePublicationCount } from "@/hooks/use-publication-count";
 
 // Define interface for detail data
 interface ResearchActivityDetail extends ResearchActivity {
@@ -92,8 +91,19 @@ export default function ResearchActivityDetail() {
   );
   const leadScientist = leadScientistMember ? scientists?.find(s => s.id === leadScientistMember.scientistId) : null;
   
-  // Get the count of publications for this research activity
-  const { count: publicationCount } = usePublicationCount(activity?.id);
+  // Fetch publications for this research activity
+  const { data: publications, isLoading: publicationsLoading } = useQuery<Publication[]>({
+    queryKey: ['/api/publications'],
+    queryFn: async () => {
+      const response = await fetch('/api/publications');
+      if (!response.ok) {
+        throw new Error('Failed to fetch publications');
+      }
+      return response.json();
+    },
+    select: (data) => data.filter(pub => pub.researchActivityId === activity?.id),
+    enabled: !!activity?.id,
+  });
   
   // Fetch Data Management Plan for this research activity
   const { data: dmpData } = useQuery<DataManagementPlan[]>({
@@ -443,17 +453,71 @@ export default function ResearchActivityDetail() {
                     </Badge>
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => navigate(`/publications?researchActivityId=${activity.id}`)}
-                >
-                  <FileText className="h-4 w-4 mr-2" /> 
-                  <span className="flex-1 text-left">Publications</span>
-                  <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
-                    {publicationCount}
-                  </Badge>
-                </Button>
+                {/* Publications Section */}
+                {publicationsLoading ? (
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-sm">Publications</span>
+                      <Skeleton className="h-4 w-8" />
+                    </div>
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : publications && publications.length > 0 ? (
+                  <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-sm">Publications</span>
+                      <span className="text-xs text-gray-500">({publications.length})</span>
+                    </div>
+                    {publications.map((publication) => (
+                      <Button
+                        key={publication.id}
+                        variant="ghost"
+                        className="w-full justify-start p-2 h-auto text-left hover:bg-green-50"
+                        onClick={() => navigate(`/publications/${publication.id}`)}
+                      >
+                        <div className="flex flex-col items-start w-full">
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-medium text-sm text-green-600 truncate max-w-[200px]">
+                              {publication.doi || 'No DOI'}
+                            </span>
+                            <Badge variant="outline" className={`text-xs ${
+                              publication.status === 'published' ? 'bg-green-50 text-green-700 border-green-200' :
+                              publication.status === 'accepted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              publication.status === 'under_review' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                              publication.status === 'in_preparation' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                              'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}>
+                              {publication.status?.replace('_', ' ') || 'unknown'}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-gray-600 truncate w-full">{publication.title}</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">{publication.journal}</span>
+                            {publication.publicationYear && (
+                              <span className="text-xs text-blue-600 font-medium">
+                                {publication.publicationYear}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(`/publications?researchActivityId=${activity.id}`)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" /> 
+                    <span className="flex-1 text-left">Publications</span>
+                    <Badge variant="outline" className="ml-2 rounded-sm bg-green-50 text-green-700 border-green-200">
+                      0
+                    </Badge>
+                  </Button>
+                )}
                 
                 {/* Linked Grants Section */}
                 {grantsLoading ? (
