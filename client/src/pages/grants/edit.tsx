@@ -420,11 +420,11 @@ export default function EditGrant() {
                               className="flex flex-row space-x-6"
                             >
                               <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="researcher" id="researcher" />
-                                <Label htmlFor="researcher">LPI</Label>
+                                <RadioGroupItem value="Researcher" id="researcher" />
+                                <Label htmlFor="researcher">Researcher</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="clinician" id="clinician" />
+                                <RadioGroupItem value="Clinician" id="clinician" />
                                 <Label htmlFor="clinician">Clinician</Label>
                               </div>
                             </RadioGroup>
@@ -436,19 +436,17 @@ export default function EditGrant() {
 
                     <FormField
                       control={form.control}
-                      name="investigatorId"
+                      name="lpiId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            {form.watch("investigatorType") === "researcher" ? "LPI" : "Clinician"}
-                          </FormLabel>
+                          <FormLabel>Lead Principal Investigator (LPI)</FormLabel>
                           <Select 
                             onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
                             value={field.value?.toString() || ""}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={`Select ${form.watch("investigatorType") === "researcher" ? "LPI" : "clinician"}`} />
+                                <SelectValue placeholder="Select LPI" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
