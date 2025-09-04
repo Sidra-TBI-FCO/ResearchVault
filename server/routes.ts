@@ -4,6 +4,10 @@ import { storage } from "./databaseStorage";
 import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import {
+  ObjectStorageService,
+  ObjectNotFoundError,
+} from "./objectStorage";
+import {
   insertScientistSchema,
   insertResearchActivitySchema,
   insertProjectMemberSchema,
@@ -42,6 +46,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Database health check failed:", error);
       res.json(false);
+    }
+  });
+
+  // Object Storage Routes
+  app.post("/api/objects/upload", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error checking object access:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
     }
   });
 
