@@ -32,7 +32,8 @@ import {
   rolePermissions, RolePermission, InsertRolePermission,
   journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
   grants, Grant, InsertGrant,
-  grantResearchActivities, GrantResearchActivity, InsertGrantResearchActivity
+  grantResearchActivities, GrantResearchActivity, InsertGrantResearchActivity,
+  grantProgressReports, GrantProgressReport, InsertGrantProgressReport
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1734,6 +1735,44 @@ export class DatabaseStorage implements IStorage {
       .where(eq(ibcApplicationResearchActivities.researchActivityId, researchActivityId));
 
     return result;
+  }
+
+  // Grant Progress Reports operations
+  async getGrantProgressReports(grantId: number): Promise<GrantProgressReport[]> {
+    const result = await db
+      .select()
+      .from(grantProgressReports)
+      .where(eq(grantProgressReports.grantId, grantId))
+      .orderBy(desc(grantProgressReports.submissionDate));
+
+    return result;
+  }
+
+  async createGrantProgressReport(report: InsertGrantProgressReport): Promise<GrantProgressReport> {
+    const [newReport] = await db
+      .insert(grantProgressReports)
+      .values(report)
+      .returning();
+
+    return newReport;
+  }
+
+  async updateGrantProgressReport(id: number, report: Partial<InsertGrantProgressReport>): Promise<GrantProgressReport> {
+    const [updatedReport] = await db
+      .update(grantProgressReports)
+      .set({ ...report, updatedAt: sql`now()` })
+      .where(eq(grantProgressReports.id, id))
+      .returning();
+
+    return updatedReport;
+  }
+
+  async deleteGrantProgressReport(id: number): Promise<boolean> {
+    const result = await db
+      .delete(grantProgressReports)
+      .where(eq(grantProgressReports.id, id));
+
+    return result.rowCount > 0;
   }
 }
 

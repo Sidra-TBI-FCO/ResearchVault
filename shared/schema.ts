@@ -950,6 +950,7 @@ export const grants = pgTable("grants", {
   status: text("status").notNull().default("submitted"), // active, completed, cancelled, etc.
   startDate: date("start_date"), // Grant start date
   endDate: date("end_date"), // Grant end date
+  reportingIntervalMonths: integer("reporting_interval_months"), // Reporting interval in months
   collaborators: text("collaborators").array(), // Array of collaborator names/institutions
   description: text("description"), // Grant description/abstract
   fundingAgency: text("funding_agency"), // Funding source/agency
@@ -965,6 +966,32 @@ export const insertGrantSchema = createInsertSchema(grants).omit({
 
 export type InsertGrant = z.infer<typeof insertGrantSchema>;
 export type Grant = typeof grants.$inferSelect;
+
+// Grant Progress Reports schema
+export const grantProgressReports = pgTable("grant_progress_reports", {
+  id: serial("id").primaryKey(),
+  grantId: integer("grant_id").notNull(), // references grants.id
+  reportTitle: text("report_title").notNull(),
+  reportPeriod: text("report_period"), // e.g., "Q1 2024", "Year 1", etc.
+  submissionDate: date("submission_date"), // Date submitted to funding agency
+  acceptanceDate: date("acceptance_date"), // Date accepted/approved by funding agency
+  filePath: text("file_path"), // Path to uploaded PDF file
+  fileName: text("file_name"), // Original filename
+  fileSize: integer("file_size"), // File size in bytes
+  uploadedBy: integer("uploaded_by").notNull(), // references scientists.id
+  notes: text("notes"), // Additional notes about the report
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGrantProgressReportSchema = createInsertSchema(grantProgressReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGrantProgressReport = z.infer<typeof insertGrantProgressReportSchema>;
+export type GrantProgressReport = typeof grantProgressReports.$inferSelect;
 
 // Junction table for grants and research activities (many-to-many relationship)
 export const grantResearchActivities = pgTable("grant_research_activities", {

@@ -4341,6 +4341,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Grant Progress Reports endpoints
+  app.get('/api/grants/:id/progress-reports', async (req: Request, res: Response) => {
+    try {
+      const grantId = parseInt(req.params.id);
+      if (isNaN(grantId)) {
+        return res.status(400).json({ message: "Invalid grant ID" });
+      }
+
+      const progressReports = await storage.getGrantProgressReports(grantId);
+      res.json(progressReports);
+    } catch (error) {
+      console.error('Error fetching grant progress reports:', error);
+      res.status(500).json({ message: "Failed to fetch grant progress reports" });
+    }
+  });
+
+  app.post('/api/grants/:id/progress-reports', async (req: Request, res: Response) => {
+    try {
+      const grantId = parseInt(req.params.id);
+      if (isNaN(grantId)) {
+        return res.status(400).json({ message: "Invalid grant ID" });
+      }
+
+      const reportData = {
+        ...req.body,
+        grantId,
+        uploadedBy: 1 // TODO: Get from authenticated user
+      };
+
+      const newReport = await storage.createGrantProgressReport(reportData);
+      res.status(201).json(newReport);
+    } catch (error) {
+      console.error('Error creating grant progress report:', error);
+      res.status(500).json({ message: "Failed to create grant progress report" });
+    }
+  });
+
+  app.put('/api/grant-progress-reports/:id', async (req: Request, res: Response) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      if (isNaN(reportId)) {
+        return res.status(400).json({ message: "Invalid report ID" });
+      }
+
+      const updatedReport = await storage.updateGrantProgressReport(reportId, req.body);
+      res.json(updatedReport);
+    } catch (error) {
+      console.error('Error updating grant progress report:', error);
+      res.status(500).json({ message: "Failed to update grant progress report" });
+    }
+  });
+
+  app.delete('/api/grant-progress-reports/:id', async (req: Request, res: Response) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      if (isNaN(reportId)) {
+        return res.status(400).json({ message: "Invalid report ID" });
+      }
+
+      const success = await storage.deleteGrantProgressReport(reportId);
+      if (!success) {
+        return res.status(404).json({ message: "Progress report not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting grant progress report:', error);
+      res.status(500).json({ message: "Failed to delete grant progress report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

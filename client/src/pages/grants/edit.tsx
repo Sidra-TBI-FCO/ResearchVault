@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, DollarSign } from "lucide-react";
+import { ArrowLeft, DollarSign, Plus, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,10 +45,12 @@ export default function EditGrant() {
     currentGrantYear: "",
     startDate: "",
     endDate: "",
+    reportingIntervalMonths: "",
     collaborators: "",
   });
 
   const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
+  const [showAddReport, setShowAddReport] = useState(false);
 
   const { data: grant, isLoading: isLoadingGrant } = useQuery({
     queryKey: [`/api/grants/${grantId}`],
@@ -65,6 +67,11 @@ export default function EditGrant() {
 
   const { data: grantSdrs = [] } = useQuery({
     queryKey: [`/api/grants/${grantId}/research-activities`],
+    enabled: !!grantId,
+  });
+
+  const { data: progressReports = [] } = useQuery({
+    queryKey: [`/api/grants/${grantId}/progress-reports`],
     enabled: !!grantId,
   });
 
@@ -482,6 +489,20 @@ export default function EditGrant() {
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
               </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Reporting Interval (months)
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={grant?.reportingIntervalMonths || ""}
+                  onChange={(e) => setFormData({...formData, reportingIntervalMonths: parseInt(e.target.value) || null})}
+                  placeholder="e.g., 12 for annual reports"
+                />
+              </div>
             </div>
 
             <div>
@@ -495,6 +516,72 @@ export default function EditGrant() {
                 rows={3}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Progress Reports Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Progress Reports
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setShowAddReport(true)}
+                className="ml-4"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Report
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {progressReports && progressReports.length > 0 ? (
+              <div className="space-y-4">
+                {progressReports.map((report: any) => (
+                  <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-2">
+                        <h4 className="font-medium text-gray-900">{report.reportTitle}</h4>
+                        <span className="text-sm text-gray-500">{report.reportPeriod}</span>
+                      </div>
+                      <div className="flex gap-6 text-sm text-gray-600">
+                        <div>
+                          <span className="font-medium">Submitted: </span>
+                          {report.submissionDate ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
+                        </div>
+                        <div>
+                          <span className="font-medium">Accepted: </span>
+                          {report.acceptanceDate ? new Date(report.acceptanceDate).toLocaleDateString() : 'Pending'}
+                        </div>
+                      </div>
+                      {report.notes && (
+                        <div className="text-sm text-gray-500 mt-1">{report.notes}</div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {report.filePath && (
+                        <Button variant="outline" size="sm">
+                          <FileText className="h-4 w-4 mr-2" />
+                          View PDF
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteReport(report.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                No progress reports uploaded yet. Add your first report to get started.
+              </p>
+            )}
           </CardContent>
         </Card>
 
