@@ -32,7 +32,7 @@ export default function EditGrant() {
     title: "",
     description: "",
     cycle: "",
-    status: "pending",
+    status: "submitted",
     grantType: "Local",
     fundingAgency: "",
     investigatorType: "Researcher",
@@ -229,7 +229,7 @@ export default function EditGrant() {
                   Project Status
                 </label>
                 <Select
-                  value={grant?.status || "pending"}
+                  value={grant?.status || "submitted"}
                   onValueChange={(value) => setFormData({...formData, status: value})}
                 >
                   <SelectTrigger>
