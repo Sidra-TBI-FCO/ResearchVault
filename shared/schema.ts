@@ -938,7 +938,7 @@ export const grants = pgTable("grants", {
   cycle: text("cycle"), // Grant cycle (e.g., "2023-1")
   projectNumber: text("project_number").notNull().unique(), // Project identifier
   lpiId: integer("lpi_id"), // Lead Principal Investigator (references scientists.id)
-  researcherId: integer("researcher_id"), // Researcher/Clinician (references scientists.id)
+  investigatorType: text("investigator_type"), // "Researcher" or "Clinician"
   title: text("title").notNull(),
   requestedAmount: numeric("requested_amount", { precision: 12, scale: 2 }), // Amount requested
   awardedAmount: numeric("awarded_amount", { precision: 12, scale: 2 }), // Amount awarded

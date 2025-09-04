@@ -35,12 +35,6 @@ type EnhancedGrant = Grant & {
     lastName: string;
     honorificTitle: string;
   } | null;
-  researcher?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    honorificTitle: string;
-  } | null;
 };
 
 export default function GrantsList() {
@@ -106,9 +100,7 @@ export default function GrantsList() {
   };
 
   const getInvestigatorType = (grant: EnhancedGrant) => {
-    if (grant.lpi) return "LPI";
-    if (grant.researcher) return "Clinician";
-    return "—";
+    return grant.investigatorType || "—";
   };
 
   const handleSort = (field: string) => {
@@ -138,7 +130,6 @@ export default function GrantsList() {
         grant.title.toLowerCase().includes(query) ||
         grant.projectNumber.toLowerCase().includes(query) ||
         (grant.lpi && `${grant.lpi.firstName} ${grant.lpi.lastName}`.toLowerCase().includes(query)) ||
-        (grant.researcher && `${grant.researcher.firstName} ${grant.researcher.lastName}`.toLowerCase().includes(query)) ||
         (grant.fundingAgency && grant.fundingAgency.toLowerCase().includes(query)) ||
         (grant.description && grant.description.toLowerCase().includes(query))
       );
@@ -154,8 +145,8 @@ export default function GrantsList() {
       aValue = getInvestigatorType(a);
       bValue = getInvestigatorType(b);
     } else if (sortField === "investigatorName") {
-      aValue = a.lpi ? `${a.lpi.firstName} ${a.lpi.lastName}` : a.researcher ? `${a.researcher.firstName} ${a.researcher.lastName}` : "";
-      bValue = b.lpi ? `${b.lpi.firstName} ${b.lpi.lastName}` : b.researcher ? `${b.researcher.firstName} ${b.researcher.lastName}` : "";
+      aValue = a.lpi ? `${a.lpi.firstName} ${a.lpi.lastName}` : "";
+      bValue = b.lpi ? `${b.lpi.firstName} ${b.lpi.lastName}` : "";
     }
     
     if (aValue === null || aValue === undefined) aValue = "";
@@ -382,12 +373,6 @@ export default function GrantsList() {
                           <div className="text-xs">
                             <div className="font-medium">
                               {grant.lpi.honorificTitle} {grant.lpi.firstName} {grant.lpi.lastName}
-                            </div>
-                          </div>
-                        ) : grant.researcher ? (
-                          <div className="text-xs">
-                            <div className="font-medium">
-                              {grant.researcher.honorificTitle} {grant.researcher.firstName} {grant.researcher.lastName}
                             </div>
                           </div>
                         ) : (
