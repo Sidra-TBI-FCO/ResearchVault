@@ -54,11 +54,8 @@ export default function CreateGrant() {
       awardedAmount: "",
       submittedYear: undefined,
       awardedYear: undefined,
-      awarded: false,
       runningTimeYears: undefined,
       currentGrantYear: undefined,
-      startDate: "",
-      endDate: "",
       collaborators: [],
     },
   });
@@ -441,69 +438,16 @@ export default function CreateGrant() {
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="awarded"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-sm">Grant Awarded</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
                 </CardContent>
               </Card>
             </div>
 
-            {/* Grant Dates & Collaborators */}
+            {/* Collaborators */}
             <Card>
               <CardHeader>
-                <CardTitle>Grant Dates & Collaborators</CardTitle>
+                <CardTitle>Collaborators</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            type="date" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            type="date" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
                 <div>
                   <label htmlFor="collaborators" className="text-sm font-medium text-gray-700 mb-2 block">
                     Collaborators (one per line)
