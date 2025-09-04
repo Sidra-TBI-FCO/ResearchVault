@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication, DataManagementPlan } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet, Edit } from "lucide-react";
+import { Project, Scientist, ResearchActivity, IrbApplication, IbcApplication, DataManagementPlan, Grant } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Layers, Users, Building, Beaker, FileCheck, FileSpreadsheet, Edit, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -64,6 +64,19 @@ export default function ResearchActivityDetail() {
       const response = await fetch(`/api/research-activities/${id}/members`);
       if (!response.ok) {
         throw new Error('Failed to fetch team members');
+      }
+      return response.json();
+    },
+    enabled: !!id,
+  });
+
+  // Fetch linked grants for this research activity
+  const { data: linkedGrants, isLoading: grantsLoading } = useQuery<Grant[]>({
+    queryKey: ['/api/research-activities', id, 'grants'],
+    queryFn: async () => {
+      const response = await fetch(`/api/research-activities/${id}/grants`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch linked grants');
       }
       return response.json();
     },
@@ -441,6 +454,57 @@ export default function ResearchActivityDetail() {
                     {publicationCount}
                   </Badge>
                 </Button>
+                
+                {/* Linked Grants Section */}
+                {grantsLoading ? (
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-sm">Linked Grants</span>
+                      <Skeleton className="h-4 w-8" />
+                    </div>
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : linkedGrants && linkedGrants.length > 0 ? (
+                  <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-sm">Linked Grants</span>
+                      <span className="text-xs text-gray-500">({linkedGrants.length})</span>
+                    </div>
+                    {linkedGrants.map((grant) => (
+                      <Button
+                        key={grant.id}
+                        variant="ghost"
+                        className="w-full justify-start p-2 h-auto text-left hover:bg-blue-50"
+                        onClick={() => navigate(`/grants/${grant.id}/edit`)}
+                      >
+                        <div className="flex flex-col items-start w-full">
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-medium text-sm text-blue-600">{grant.projectNumber}</span>
+                            <Badge variant="outline" className={`text-xs ${
+                              grant.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' :
+                              grant.status === 'completed' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                              'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>
+                              {grant.status}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-gray-600 truncate w-full">{grant.title}</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">{grant.fundingAgency}</span>
+                            {grant.awardedAmount && (
+                              <span className="text-xs text-green-600 font-medium">
+                                ${parseFloat(grant.awardedAmount).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                ) : null}
+
                 {irbApplications && irbApplications.length > 0 && (
                   <div className="border border-gray-200 rounded-lg p-3 space-y-3">
                     <div className="flex items-center gap-2">
