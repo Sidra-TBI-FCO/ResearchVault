@@ -105,7 +105,7 @@ export default function CreateGrant() {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="py-6">
       <div className="mb-6">
         <Button 
           variant="ghost" 
@@ -119,7 +119,7 @@ export default function CreateGrant() {
         <p className="text-gray-600 mt-1">Add a new research grant to the system</p>
       </div>
 
-      <div className="max-w-6xl">
+      <div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Main Information Card */}
