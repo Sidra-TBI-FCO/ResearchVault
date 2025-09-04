@@ -286,84 +286,39 @@ export default function GrantsList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("cycle")} className="h-8 p-0 font-semibold">
-                      Cycle <ArrowUpDown className="ml-1 h-3 w-3" />
+                  <TableHead className="w-32">
+                    <Button variant="ghost" onClick={() => handleSort("investigatorType")} className="h-8 p-0 font-semibold">
+                      TYPE OF GRANT <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-48">
+                    <Button variant="ghost" onClick={() => handleSort("investigatorName")} className="h-8 p-0 font-semibold">
+                      LEAD PRINCIPAL INVESTIGATOR <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-40">
+                    <Button variant="ghost" onClick={() => handleSort("fundingAgency")} className="h-8 p-0 font-semibold">
+                      FUNDING INSTITUTION <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-32">
                     <Button variant="ghost" onClick={() => handleSort("projectNumber")} className="h-8 p-0 font-semibold">
-                      Project # <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-24">
-                    <Button variant="ghost" onClick={() => handleSort("investigatorType")} className="h-8 p-0 font-semibold">
-                      Type <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-36">
-                    <Button variant="ghost" onClick={() => handleSort("investigatorName")} className="h-8 p-0 font-semibold">
-                      Investigator <ArrowUpDown className="ml-1 h-3 w-3" />
+                      PROJECT NO. <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
                   <TableHead className="min-w-60">
                     <Button variant="ghost" onClick={() => handleSort("title")} className="h-8 p-0 font-semibold">
-                      Title <ArrowUpDown className="ml-1 h-3 w-3" />
+                      PROJECT TITLE <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-28">
-                    <Button variant="ghost" onClick={() => handleSort("requestedAmount")} className="h-8 p-0 font-semibold">
-                      Requested <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-28">
+                  <TableHead className="w-36">
                     <Button variant="ghost" onClick={() => handleSort("awardedAmount")} className="h-8 p-0 font-semibold">
-                      Awarded <ArrowUpDown className="ml-1 h-3 w-3" />
+                      AWARDED BUDGET <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("awarded")} className="h-8 p-0 font-semibold">
-                      Won <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("submittedYear")} className="h-8 p-0 font-semibold">
-                      Sub Year <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("awardedYear")} className="h-8 p-0 font-semibold">
-                      Award Year <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("runningTimeYears")} className="h-8 p-0 font-semibold">
-                      Duration <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("currentGrantYear")} className="h-8 p-0 font-semibold">
-                      Current <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-24">
-                    <Button variant="ghost" onClick={() => handleSort("fundingAgency")} className="h-8 p-0 font-semibold">
-                      Agency <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("startDate")} className="h-8 p-0 font-semibold">
-                      Start <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("endDate")} className="h-8 p-0 font-semibold">
-                      End <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-24">
+                  <TableHead className="w-28">
                     <Button variant="ghost" onClick={() => handleSort("status")} className="h-8 p-0 font-semibold">
-                      Status <ArrowUpDown className="ml-1 h-3 w-3" />
+                      STATUS <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-16"></TableHead>
@@ -372,7 +327,7 @@ export default function GrantsList() {
               <TableBody>
                 {filteredAndSortedGrants?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={16} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                       {searchQuery || statusFilter !== "all" || yearFilter !== "all" 
                         ? "No grants match your filters." 
                         : "No grants found. Create your first grant to get started."}
@@ -385,20 +340,14 @@ export default function GrantsList() {
                       className="hover:bg-gray-50 cursor-pointer"
                       onClick={() => navigate(`/grants/${grant.id}/edit`)}
                     >
-                      <TableCell className="font-medium text-sm">
-                        {grant.cycle || "—"}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {grant.projectNumber}
-                      </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell>
                         <Badge variant="outline" className="text-xs">
                           {getInvestigatorType(grant)}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         {grant.lpi ? (
-                          <div className="text-xs">
+                          <div className="text-sm">
                             <div className="font-medium">
                               {grant.lpi.honorificTitle} {grant.lpi.firstName} {grant.lpi.lastName}
                             </div>
@@ -407,27 +356,23 @@ export default function GrantsList() {
                           <span className="text-gray-400">—</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {grant.fundingAgency || "—"}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {grant.projectNumber}
+                      </TableCell>
                       <TableCell>
                         <div className="max-w-80">
-                          <div className="font-medium text-xs line-clamp-2">{grant.title}</div>
+                          <div className="font-medium text-sm line-clamp-2">{grant.title}</div>
                           {grant.description && (
                             <div className="text-xs text-gray-500 mt-1 line-clamp-1">{grant.description}</div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-mono text-xs">
-                        {formatCurrency(grant.requestedAmount)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-xs">
-                        {formatCurrency(grant.awardedAmount)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          {grant.awarded ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">Yes</Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-red-100 text-red-700 text-xs">No</Badge>
-                          )}
+                      <TableCell className="text-right font-mono text-sm">
+                        <div className="flex items-center justify-end gap-2">
+                          {formatCurrency(grant.awardedAmount)}
                           {grant.awarded && grantSdrCounts[grant.id] > 0 && (
                             <div className="flex items-center gap-1" title={`${grantSdrCounts[grant.id]} linked SDR${grantSdrCounts[grant.id] > 1 ? 's' : ''}`}>
                               <LinkIcon className="h-3 w-3 text-blue-600" />
@@ -435,27 +380,6 @@ export default function GrantsList() {
                             </div>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-center text-xs">
-                        {grant.submittedYear || "—"}
-                      </TableCell>
-                      <TableCell className="text-center text-xs">
-                        {grant.awardedYear || "—"}
-                      </TableCell>
-                      <TableCell className="text-center text-xs">
-                        {grant.runningTimeYears ? `${grant.runningTimeYears}y` : "—"}
-                      </TableCell>
-                      <TableCell className="text-center text-xs">
-                        {grant.currentGrantYear || "—"}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {grant.fundingAgency || "—"}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {formatDate(grant.startDate)}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {formatDate(grant.endDate)}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={getStatusColor(grant.status)}>
