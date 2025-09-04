@@ -176,14 +176,14 @@ export default function EditGrant() {
         : [];
 
     const payload = {
-      projectNumber: grant?.projectNumber || formData.projectNumber,
-      title: grant?.title || formData.title,
-      description: grant?.description || formData.description,
-      cycle: grant?.cycle || formData.cycle,
-      status: grant?.status || formData.status,
-      grantType: grant?.grantType || formData.grantType,
-      fundingAgency: grant?.fundingAgency || formData.fundingAgency,
-      investigatorType: grant?.investigatorType || formData.investigatorType,
+      projectNumber: formData.projectNumber || grant?.projectNumber,
+      title: formData.title || grant?.title,
+      description: formData.description || grant?.description,
+      cycle: formData.cycle || grant?.cycle,
+      status: formData.status || grant?.status,
+      grantType: formData.grantType || grant?.grantType,
+      fundingAgency: formData.fundingAgency || grant?.fundingAgency,
+      investigatorType: formData.investigatorType || grant?.investigatorType,
       lpiId: grant?.lpiId || (formData.lpiId && formData.lpiId.trim() ? parseInt(formData.lpiId) : null),
       requestedAmount: grant?.requestedAmount || formData.requestedAmount || null,
       awardedAmount: grant?.awardedAmount || formData.awardedAmount || null,
