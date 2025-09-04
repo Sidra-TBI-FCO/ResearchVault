@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, DollarSign, Plus, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, DollarSign, Plus, FileText, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -52,6 +53,13 @@ export default function EditGrant() {
 
   const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
   const [showAddReport, setShowAddReport] = useState(false);
+  const [reportFormData, setReportFormData] = useState({
+    reportTitle: "",
+    reportPeriod: "",
+    submissionDate: "",
+    acceptanceDate: "",
+    notes: "",
+  });
 
   const { data: grant, isLoading: isLoadingGrant } = useQuery({
     queryKey: [`/api/grants/${grantId}`],
@@ -206,6 +214,98 @@ export default function EditGrant() {
     } else {
       setLinkedSdrs(linkedSdrs.filter(id => id !== sdrId));
     }
+  };
+
+  // Progress Report Mutations
+  const createProgressReportMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch(`/api/grants/${grantId}/progress-reports`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create progress report');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/grants/${grantId}/progress-reports`] });
+      toast({
+        title: "Success",
+        description: "Progress report added successfully",
+      });
+      setShowAddReport(false);
+      setReportFormData({
+        reportTitle: "",
+        reportPeriod: "",
+        submissionDate: "",
+        acceptanceDate: "",
+        notes: "",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create progress report",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteProgressReportMutation = useMutation({
+    mutationFn: async (reportId: number) => {
+      const response = await fetch(`/api/grants/${grantId}/progress-reports/${reportId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete progress report');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/grants/${grantId}/progress-reports`] });
+      toast({
+        title: "Success",
+        description: "Progress report deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete progress report",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteReport = (reportId: number) => {
+    if (confirm("Are you sure you want to delete this progress report?")) {
+      deleteProgressReportMutation.mutate(reportId);
+    }
+  };
+
+  const handleSubmitReport = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!reportFormData.reportTitle.trim()) {
+      toast({
+        title: "Error",
+        description: "Report title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reportPayload = {
+      reportTitle: reportFormData.reportTitle,
+      reportPeriod: reportFormData.reportPeriod || null,
+      submissionDate: reportFormData.submissionDate || null,
+      acceptanceDate: reportFormData.acceptanceDate || null,
+      notes: reportFormData.notes || null,
+      uploadedBy: 1, // TODO: Get from current user
+    };
+
+    createProgressReportMutation.mutate(reportPayload);
   };
 
   if (isLoadingGrant) {
@@ -649,6 +749,86 @@ export default function EditGrant() {
           </Button>
         </div>
       </form>
+
+      {/* Progress Report Modal */}
+      <Dialog open={showAddReport} onOpenChange={setShowAddReport}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Progress Report</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitReport} className="space-y-4">
+            <div>
+              <Label htmlFor="reportTitle">Report Title *</Label>
+              <Input
+                id="reportTitle"
+                value={reportFormData.reportTitle}
+                onChange={(e) => setReportFormData({...reportFormData, reportTitle: e.target.value})}
+                placeholder="e.g., Q1 2024 Progress Report"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="reportPeriod">Report Period</Label>
+              <Input
+                id="reportPeriod"
+                value={reportFormData.reportPeriod}
+                onChange={(e) => setReportFormData({...reportFormData, reportPeriod: e.target.value})}
+                placeholder="e.g., Q1 2024, Year 1"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="submissionDate">Submission Date</Label>
+                <Input
+                  id="submissionDate"
+                  type="date"
+                  value={reportFormData.submissionDate}
+                  onChange={(e) => setReportFormData({...reportFormData, submissionDate: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="acceptanceDate">Acceptance Date</Label>
+                <Input
+                  id="acceptanceDate"
+                  type="date"
+                  value={reportFormData.acceptanceDate}
+                  onChange={(e) => setReportFormData({...reportFormData, acceptanceDate: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={reportFormData.notes}
+                onChange={(e) => setReportFormData({...reportFormData, notes: e.target.value})}
+                placeholder="Additional notes about this report..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setShowAddReport(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={createProgressReportMutation.isPending}
+              >
+                {createProgressReportMutation.isPending ? "Adding..." : "Add Report"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
