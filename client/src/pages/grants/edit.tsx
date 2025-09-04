@@ -404,6 +404,24 @@ export default function EditGrant() {
                   placeholder="$0.00"
                 />
               </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Investigator Type
+                </label>
+                <Select
+                  value={grant?.investigatorType || "Researcher"}
+                  onValueChange={(value) => setFormData({...formData, investigatorType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Researcher">Researcher</SelectItem>
+                    <SelectItem value="Clinician">Clinician</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
