@@ -84,6 +84,34 @@ export default function EditGrant() {
     }
   }, [grantSdrs?.length]);
 
+  // Update form data when grant data loads
+  useEffect(() => {
+    if (grant) {
+      setFormData({
+        projectNumber: grant.projectNumber || "",
+        title: grant.title || "",
+        description: grant.description || "",
+        cycle: grant.cycle || "",
+        status: grant.status || "submitted",
+        grantType: grant.grantType || "Local",
+        fundingAgency: grant.fundingAgency || "",
+        investigatorType: grant.investigatorType || "Researcher",
+        lpiId: grant.lpiId?.toString() || "",
+        requestedAmount: grant.requestedAmount?.toString() || "",
+        awardedAmount: grant.awardedAmount?.toString() || "",
+        submittedYear: grant.submittedYear?.toString() || "",
+        awardedYear: grant.awardedYear?.toString() || "",
+        awarded: grant.awarded || false,
+        runningTimeYears: grant.runningTimeYears?.toString() || "",
+        currentGrantYear: grant.currentGrantYear || "",
+        startDate: grant.startDate ? grant.startDate.split('T')[0] : "",
+        endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
+        reportingIntervalMonths: grant.reportingIntervalMonths?.toString() || "",
+        collaborators: Array.isArray(grant.collaborators) ? grant.collaborators.join('\n') : "",
+      });
+    }
+  }, [grant]);
+
   const updateGrantMutation = useMutation({
     mutationFn: async (data: any) => {
       // First update the grant
@@ -251,7 +279,7 @@ export default function EditGrant() {
                   Grant Type
                 </label>
                 <Select
-                  value={grant?.grantType || "Local"}
+                  value={formData.grantType}
                   onValueChange={(value) => setFormData({...formData, grantType: value})}
                 >
                   <SelectTrigger>
