@@ -50,26 +50,26 @@ export default function EditGrant() {
 
   const form = useForm<UpdateGrantForm>({
     resolver: zodResolver(insertGrantSchema.partial()),
-    defaultValues: {
-      projectNumber: "",
-      title: "",
-      description: "",
-      cycle: "",
-      status: "pending",
-      fundingAgency: "",
-      investigatorType: "Researcher",
-      lpiId: undefined,
-      requestedAmount: "",
-      awardedAmount: "",
-      submittedYear: undefined,
-      awardedYear: undefined,
-      awarded: false,
-      runningTimeYears: undefined,
-      currentGrantYear: undefined,
-      startDate: "",
-      endDate: "",
-      collaborators: [],
-    },
+    values: grant ? {
+      projectNumber: grant.projectNumber ?? "",
+      title: grant.title ?? "",
+      description: grant.description ?? "",
+      cycle: grant.cycle ?? "",
+      status: grant.status ?? "pending",
+      fundingAgency: grant.fundingAgency ?? "",
+      investigatorType: grant.investigatorType ?? "Researcher",
+      lpiId: grant.lpiId ?? undefined,
+      requestedAmount: grant.requestedAmount ?? "",
+      awardedAmount: grant.awardedAmount ?? "",
+      submittedYear: grant.submittedYear ?? undefined,
+      awardedYear: grant.awardedYear ?? undefined,
+      awarded: grant.awarded ?? false,
+      runningTimeYears: grant.runningTimeYears ?? undefined,
+      currentGrantYear: grant.currentGrantYear ?? undefined,
+      startDate: grant.startDate ? grant.startDate.split('T')[0] : "",
+      endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
+      collaborators: grant.collaborators ?? [],
+    } : undefined,
   });
 
   const { data: scientists = [] } = useQuery({
@@ -86,31 +86,6 @@ export default function EditGrant() {
   });
 
 
-  // Populate form when grant data loads
-  useEffect(() => {
-    if (grant) {
-      form.reset({
-        projectNumber: grant.projectNumber ?? "",
-        title: grant.title ?? "",
-        description: grant.description ?? "",
-        cycle: grant.cycle ?? "",
-        status: grant.status ?? "pending",
-        fundingAgency: grant.fundingAgency ?? "",
-        investigatorType: grant.investigatorType ?? "Researcher",
-        lpiId: grant.lpiId ?? undefined,
-        requestedAmount: grant.requestedAmount ?? "",
-        awardedAmount: grant.awardedAmount ?? "",
-        submittedYear: grant.submittedYear ?? undefined,
-        awardedYear: grant.awardedYear ?? undefined,
-        awarded: grant.awarded ?? false,
-        runningTimeYears: grant.runningTimeYears ?? undefined,
-        currentGrantYear: grant.currentGrantYear ?? undefined,
-        startDate: grant.startDate ? grant.startDate.split('T')[0] : "",
-        endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
-        collaborators: grant.collaborators ?? [],
-      });
-    }
-  }, [grant]);
 
   useEffect(() => {
     if (grantSdrs) {
