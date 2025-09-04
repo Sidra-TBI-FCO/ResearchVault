@@ -83,18 +83,54 @@ export default function RoleAccessConfig() {
     const defaultPermissions: NavigationPermission[] = [];
     JOB_TITLES.forEach((jobTitle) => {
       NAVIGATION_ITEMS.forEach((navItem) => {
+        // Set some realistic defaults for different roles
+        let defaultAccess: AccessLevel = "edit";
+        
+        // Investigators have limited access to office/reviewer functions
+        if (jobTitle === "Investigator") {
+          if (navItem.id.includes("-office") || navItem.id.includes("-reviewer")) {
+            defaultAccess = "hide";
+          } else if (navItem.id === "reports") {
+            defaultAccess = "view";
+          }
+        }
+        
+        // PhD Students have more restrictions
+        if (jobTitle === "PhD Student") {
+          if (navItem.id.includes("-office") || navItem.id.includes("-reviewer") || 
+              navItem.id === "contracts" || navItem.id === "patents") {
+            defaultAccess = "hide";
+          } else if (navItem.id === "reports" || navItem.id === "programs") {
+            defaultAccess = "view";
+          }
+        }
+        
+        // Grant Officer has specialized access
+        if (jobTitle === "Grant Officer") {
+          if (navItem.id.includes("-office") || navItem.id.includes("-reviewer")) {
+            // Hide other department offices/reviewer functions
+            defaultAccess = "hide";
+          } else if (navItem.id === "grants" || navItem.id === "contracts" || navItem.id === "programs" || navItem.id === "projects") {
+            // Full access to grants and related areas
+            defaultAccess = "edit";
+          } else if (navItem.id === "reports" || navItem.id === "publications" || navItem.id === "patents") {
+            // View access to reports and research outputs
+            defaultAccess = "view";
+          }
+        }
+        
         defaultPermissions.push({
           id: `${jobTitle}-${navItem.id}`,
           jobTitle,
           navigationItem: navItem.id,
-          accessLevel: "edit"
+          accessLevel: defaultAccess
         });
       });
     });
     setPermissions(defaultPermissions);
     toast({
       title: "Reset Complete",
-      description: "All navigation permissions have been reset to Edit (full access) defaults."
+      description: "All navigation permissions have been reset to defaults with role-appropriate access levels."
     });
   };
 

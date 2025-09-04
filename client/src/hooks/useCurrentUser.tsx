@@ -31,7 +31,6 @@ const DUMMY_USERS: DummyUser[] = [
   { id: 13, name: 'Jennifer Park (IRB)', email: 'jennifer.park@research.org', role: 'IRB Officer' },
   { id: 14, name: 'Lisa Wong (IBC)', email: 'lisa.wong@research.org', role: 'IBC Officer' },
   { id: 15, name: 'Sarah Mitchell', email: 'sarah.mitchell@example.com', role: 'Grant Officer' },
-  { id: 16, name: 'David Chen', email: 'david.chen@example.com', role: 'Grant Officer' },
 ];
 
 interface CurrentUserProviderProps {
