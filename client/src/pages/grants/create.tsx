@@ -10,14 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertGrantSchema, type Scientist } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
 const createGrantSchema = insertGrantSchema.extend({
-  lpiId: z.coerce.number().optional(),
-  researcherId: z.coerce.number().optional(),
+  investigatorId: z.coerce.number().optional(),
+  investigatorType: z.enum(["lpi", "researcher"]).optional(),
   requestedAmount: z.string().optional(),
   awardedAmount: z.string().optional(),
   submittedYear: z.coerce.number().optional(),
@@ -47,6 +49,7 @@ export default function CreateGrant() {
       description: "",
       fundingAgency: "",
       collaborators: [],
+      investigatorType: "lpi",
     },
   });
 
@@ -63,6 +66,9 @@ export default function CreateGrant() {
         collaborators,
         requestedAmount: data.requestedAmount ? parseFloat(data.requestedAmount) : undefined,
         awardedAmount: data.awardedAmount ? parseFloat(data.awardedAmount) : undefined,
+        // Map investigator based on type
+        lpiId: data.investigatorType === "lpi" ? data.investigatorId : undefined,
+        researcherId: data.investigatorType === "researcher" ? data.investigatorId : undefined,
       };
 
       return apiRequest('/api/grants', {
@@ -144,24 +150,26 @@ export default function CreateGrant() {
 
                   <FormField
                     control={form.control}
-                    name="lpiId"
+                    name="investigatorType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Lead Principal Investigator</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select LPI" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {scientists.map((scientist) => (
-                              <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                {scientist.honorificTitle} {scientist.firstName} {scientist.lastName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Investigator Type</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex flex-row space-x-6"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="lpi" id="lpi" />
+                              <Label htmlFor="lpi">LPI</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="researcher" id="researcher" />
+                              <Label htmlFor="researcher">Researcher/Clinician</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -169,14 +177,16 @@ export default function CreateGrant() {
 
                   <FormField
                     control={form.control}
-                    name="researcherId"
+                    name="investigatorId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Researcher/Clinician</FormLabel>
+                        <FormLabel>
+                          {form.watch("investigatorType") === "lpi" ? "Lead Principal Investigator" : "Researcher/Clinician"}
+                        </FormLabel>
                         <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select researcher" />
+                              <SelectValue placeholder={`Select ${form.watch("investigatorType") === "lpi" ? "LPI" : "researcher"}`} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
