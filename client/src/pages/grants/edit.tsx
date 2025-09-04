@@ -68,34 +68,6 @@ export default function EditGrant() {
     enabled: !!grantId,
   });
 
-  // Load grant data into form once - using a ref to prevent infinite loops
-  const hasLoadedRef = useRef(false);
-  
-  useEffect(() => {
-    if (grant && !Array.isArray(grant) && !hasLoadedRef.current) {
-      hasLoadedRef.current = true;
-      setFormData({
-        projectNumber: grant.projectNumber || "",
-        title: grant.title || "",
-        description: grant.description || "",
-        cycle: grant.cycle || "",
-        status: grant.status || "pending",
-        fundingAgency: grant.fundingAgency || "",
-        investigatorType: grant.investigatorType || "Researcher",
-        lpiId: grant.lpiId ? grant.lpiId.toString() : "",
-        requestedAmount: grant.requestedAmount || "",
-        awardedAmount: grant.awardedAmount || "",
-        submittedYear: grant.submittedYear ? grant.submittedYear.toString() : "",
-        awardedYear: grant.awardedYear ? grant.awardedYear.toString() : "",
-        awarded: grant.awarded || false,
-        runningTimeYears: grant.runningTimeYears ? grant.runningTimeYears.toString() : "",
-        currentGrantYear: grant.currentGrantYear ? grant.currentGrantYear.toString() : "",
-        startDate: grant.startDate ? grant.startDate.split('T')[0] : "",
-        endDate: grant.endDate ? grant.endDate.split('T')[0] : "",
-        collaborators: Array.isArray(grant.collaborators) ? grant.collaborators.join('\n') : "",
-      });
-    }
-  }, [grant]);
 
   // Load linked SDRs
   useEffect(() => {
@@ -200,7 +172,7 @@ export default function EditGrant() {
                   Project Number *
                 </label>
                 <Input
-                  value={formData.projectNumber}
+                  value={grant?.projectNumber || ""}
                   onChange={(e) => setFormData({...formData, projectNumber: e.target.value})}
                   placeholder="e.g., NIH-R01-123456"
                   required
@@ -212,7 +184,7 @@ export default function EditGrant() {
                   Cycle *
                 </label>
                 <Input
-                  value={formData.cycle}
+                  value={grant?.cycle || ""}
                   onChange={(e) => setFormData({...formData, cycle: e.target.value})}
                   placeholder="e.g., 2024-1"
                   required
@@ -225,7 +197,7 @@ export default function EditGrant() {
                 Title *
               </label>
               <Input
-                value={formData.title}
+                value={grant?.title || ""}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="Grant title"
                 required
