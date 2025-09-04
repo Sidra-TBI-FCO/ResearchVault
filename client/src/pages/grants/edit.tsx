@@ -26,7 +26,8 @@ const editGrantSchema = insertGrantSchema.extend({
   awardedAmount: z.string().optional(),
   submittedYear: z.coerce.number().optional(),
   awardedYear: z.coerce.number().optional(),
-  currentYear: z.coerce.number().optional(),
+  runningTimeYears: z.coerce.number().optional(),
+  currentGrantYear: z.string().optional(),
   collaborators: z.array(z.string()).optional(),
 });
 
@@ -82,7 +83,8 @@ export default function EditGrant() {
         awardedAmount: grant.awardedAmount?.toString() || "",
         submittedYear: grant.submittedYear || undefined,
         awardedYear: grant.awardedYear || undefined,
-        currentYear: grant.currentYear || undefined,
+        runningTimeYears: grant.runningTimeYears || undefined,
+        currentGrantYear: grant.currentGrantYear || "",
         startDate: grant.startDate || "",
         endDate: grant.endDate || "",
       });
@@ -403,7 +405,7 @@ export default function EditGrant() {
                 <CardTitle>Timeline</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <FormField
                     control={form.control}
                     name="submittedYear"
@@ -442,15 +444,32 @@ export default function EditGrant() {
 
                   <FormField
                     control={form.control}
-                    name="currentYear"
+                    name="runningTimeYears"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Current Year</FormLabel>
+                        <FormLabel>Running Time (Years)</FormLabel>
                         <FormControl>
                           <Input 
                             {...field} 
                             type="number" 
-                            placeholder="2024" 
+                            placeholder="3" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="currentGrantYear"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year in Grant</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="1/3" 
                           />
                         </FormControl>
                         <FormMessage />
