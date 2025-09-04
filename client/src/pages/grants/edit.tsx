@@ -289,7 +289,7 @@ export default function EditGrant() {
               />
             </div>
 
-            {/* Third Row: Lead Investigator, Awarded Amount, Start Date, End Date */}
+            {/* Third Row: Lead Investigator, Investigator Type, Running Time, Current Year */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -312,6 +312,50 @@ export default function EditGrant() {
                 </Select>
               </div>
 
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Investigator Type
+                </label>
+                <Select
+                  value={grant?.investigatorType || "Researcher"}
+                  onValueChange={(value) => setFormData({...formData, investigatorType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Researcher">Researcher</SelectItem>
+                    <SelectItem value="Clinician">Clinician</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Running Time (Years)
+                </label>
+                <Input
+                  type="number"
+                  value={grant?.runningTimeYears?.toString() || ""}
+                  onChange={(e) => setFormData({...formData, runningTimeYears: e.target.value})}
+                  placeholder="3"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Current Year
+                </label>
+                <Input
+                  value={grant?.currentGrantYear?.toString() || ""}
+                  onChange={(e) => setFormData({...formData, currentGrantYear: e.target.value})}
+                  placeholder="Year 3 of 4"
+                />
+              </div>
+            </div>
+
+            {/* Fourth Row: Awarded Amount, Start Date, End Date, Cycle */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Awarded Amount
@@ -342,20 +386,6 @@ export default function EditGrant() {
                   type="date"
                   value={grant?.endDate ? grant.endDate.split('T')[0] : ""}
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                />
-              </div>
-            </div>
-
-            {/* Current Year */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Current Year
-                </label>
-                <Input
-                  value={grant?.currentGrantYear?.toString() || ""}
-                  onChange={(e) => setFormData({...formData, currentGrantYear: e.target.value})}
-                  placeholder="Year 3 of 4"
                 />
               </div>
 
@@ -393,7 +423,7 @@ export default function EditGrant() {
             <CardTitle>Grant Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Requested Amount
@@ -405,26 +435,6 @@ export default function EditGrant() {
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Investigator Type
-                </label>
-                <Select
-                  value={grant?.investigatorType || "Researcher"}
-                  onValueChange={(value) => setFormData({...formData, investigatorType: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Researcher">Researcher</SelectItem>
-                    <SelectItem value="Clinician">Clinician</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Submitted Year
@@ -448,19 +458,6 @@ export default function EditGrant() {
                   placeholder="2024"
                 />
               </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Running Time (Years)
-                </label>
-                <Input
-                  type="number"
-                  value={grant?.runningTimeYears?.toString() || ""}
-                  onChange={(e) => setFormData({...formData, runningTimeYears: e.target.value})}
-                  placeholder="3"
-                />
-              </div>
-
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3 mt-4">
