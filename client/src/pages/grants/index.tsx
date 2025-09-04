@@ -243,7 +243,7 @@ export default function GrantsList() {
               Grants ({filteredAndSortedGrants?.length || 0})
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 pt-0 pb-6">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">

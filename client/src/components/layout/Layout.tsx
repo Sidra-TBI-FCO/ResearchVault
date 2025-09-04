@@ -55,8 +55,10 @@ export default function Layout({ children }: LayoutProps) {
         <Header onMenuClick={toggleMobileSidebar} />
         
         <main className="flex-1 overflow-y-auto p-6 bg-sidra-teal-light/10">
-          <DatabaseStatus />
-          {children}
+          <div className="min-h-0">
+            <DatabaseStatus />
+            {children}
+          </div>
         </main>
       </div>
     </div>
