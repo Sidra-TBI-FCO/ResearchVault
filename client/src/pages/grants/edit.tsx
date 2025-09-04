@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, DollarSign } from "lucide-react";
@@ -68,9 +68,12 @@ export default function EditGrant() {
     enabled: !!grantId,
   });
 
-  // Load grant data into form once
+  // Load grant data into form once - using a ref to prevent infinite loops
+  const hasLoadedRef = useRef(false);
+  
   useEffect(() => {
-    if (grant && !Array.isArray(grant)) {
+    if (grant && !Array.isArray(grant) && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
       setFormData({
         projectNumber: grant.projectNumber || "",
         title: grant.title || "",
@@ -92,7 +95,7 @@ export default function EditGrant() {
         collaborators: Array.isArray(grant.collaborators) ? grant.collaborators.join('\n') : "",
       });
     }
-  }, [grant?.id]);
+  }, [grant]);
 
   // Load linked SDRs
   useEffect(() => {
