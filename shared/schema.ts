@@ -965,3 +965,22 @@ export const insertGrantSchema = createInsertSchema(grants).omit({
 
 export type InsertGrant = z.infer<typeof insertGrantSchema>;
 export type Grant = typeof grants.$inferSelect;
+
+// Junction table for grants and research activities (many-to-many relationship)
+export const grantResearchActivities = pgTable("grant_research_activities", {
+  id: serial("id").primaryKey(),
+  grantId: integer("grant_id").notNull(), // references grants.id
+  researchActivityId: integer("research_activity_id").notNull(), // references research_activities.id
+  linkedDate: timestamp("linked_date").defaultNow(), // When the link was created
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGrantResearchActivitySchema = createInsertSchema(grantResearchActivities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGrantResearchActivity = z.infer<typeof insertGrantResearchActivitySchema>;
+export type GrantResearchActivity = typeof grantResearchActivities.$inferSelect;

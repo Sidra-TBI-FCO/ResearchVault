@@ -4256,6 +4256,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Grant-Research Activity relationship routes
+  app.get('/api/grants/:id/research-activities', async (req: Request, res: Response) => {
+    try {
+      const grantId = parseInt(req.params.id);
+      if (isNaN(grantId)) {
+        return res.status(400).json({ message: "Invalid grant ID" });
+      }
+
+      const researchActivities = await storage.getGrantResearchActivities(grantId);
+      res.json(researchActivities);
+    } catch (error) {
+      console.error('Error fetching grant research activities:', error);
+      res.status(500).json({ message: "Failed to fetch grant research activities" });
+    }
+  });
+
+  app.post('/api/grants/:grantId/research-activities/:researchActivityId', async (req: Request, res: Response) => {
+    try {
+      const grantId = parseInt(req.params.grantId);
+      const researchActivityId = parseInt(req.params.researchActivityId);
+      
+      if (isNaN(grantId) || isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid grant or research activity ID" });
+      }
+
+      const relationship = await storage.addGrantResearchActivity(grantId, researchActivityId);
+      res.status(201).json(relationship);
+    } catch (error) {
+      console.error('Error linking grant to research activity:', error);
+      res.status(500).json({ message: "Failed to link grant to research activity" });
+    }
+  });
+
+  app.delete('/api/grants/:grantId/research-activities/:researchActivityId', async (req: Request, res: Response) => {
+    try {
+      const grantId = parseInt(req.params.grantId);
+      const researchActivityId = parseInt(req.params.researchActivityId);
+      
+      if (isNaN(grantId) || isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid grant or research activity ID" });
+      }
+
+      const success = await storage.removeGrantResearchActivity(grantId, researchActivityId);
+      if (!success) {
+        return res.status(404).json({ message: "Relationship not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error unlinking grant from research activity:', error);
+      res.status(500).json({ message: "Failed to unlink grant from research activity" });
+    }
+  });
+
+  app.get('/api/research-activities/:id/grants', async (req: Request, res: Response) => {
+    try {
+      const researchActivityId = parseInt(req.params.id);
+      if (isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      const grants = await storage.getResearchActivityGrants(researchActivityId);
+      res.json(grants);
+    } catch (error) {
+      console.error('Error fetching research activity grants:', error);
+      res.status(500).json({ message: "Failed to fetch research activity grants" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

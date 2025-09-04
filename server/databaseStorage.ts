@@ -31,7 +31,8 @@ import {
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
   rolePermissions, RolePermission, InsertRolePermission,
   journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
-  grants, Grant, InsertGrant
+  grants, Grant, InsertGrant,
+  grantResearchActivities, GrantResearchActivity, InsertGrantResearchActivity
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1669,6 +1670,53 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGrant(id: number): Promise<boolean> {
     const result = await db.delete(grants).where(eq(grants.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Grant-Research Activity relationship operations
+  async getGrantResearchActivities(grantId: number): Promise<{ id: number; sdrNumber: string; title: string; status: string; }[]> {
+    const result = await db
+      .select({
+        id: researchActivities.id,
+        sdrNumber: researchActivities.sdrNumber,
+        title: researchActivities.title,
+        status: researchActivities.status
+      })
+      .from(grantResearchActivities)
+      .innerJoin(researchActivities, eq(grantResearchActivities.researchActivityId, researchActivities.id))
+      .where(eq(grantResearchActivities.grantId, grantId));
+    return result;
+  }
+
+  async getResearchActivityGrants(researchActivityId: number): Promise<{ id: number; projectNumber: string; title: string; status: string; }[]> {
+    const result = await db
+      .select({
+        id: grants.id,
+        projectNumber: grants.projectNumber,
+        title: grants.title,
+        status: grants.status
+      })
+      .from(grantResearchActivities)
+      .innerJoin(grants, eq(grantResearchActivities.grantId, grants.id))
+      .where(eq(grantResearchActivities.researchActivityId, researchActivityId));
+    return result;
+  }
+
+  async addGrantResearchActivity(grantId: number, researchActivityId: number): Promise<GrantResearchActivity> {
+    const [relationship] = await db
+      .insert(grantResearchActivities)
+      .values({ grantId, researchActivityId })
+      .returning();
+    return relationship;
+  }
+
+  async removeGrantResearchActivity(grantId: number, researchActivityId: number): Promise<boolean> {
+    const result = await db
+      .delete(grantResearchActivities)
+      .where(and(
+        eq(grantResearchActivities.grantId, grantId),
+        eq(grantResearchActivities.researchActivityId, researchActivityId)
+      ));
     return result.rowCount > 0;
   }
 }

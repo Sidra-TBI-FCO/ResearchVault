@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Grant } from "@shared/schema";
-import { Plus, Search, MoreHorizontal, Download, Filter, DollarSign, Calendar, ArrowUpDown } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Download, Filter, DollarSign, Calendar, ArrowUpDown, Link as LinkIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -35,6 +35,7 @@ type EnhancedGrant = Grant & {
     lastName: string;
     honorificTitle: string;
   } | null;
+  linkedSdrsCount?: number;
 };
 
 export default function GrantsList() {
@@ -48,6 +49,32 @@ export default function GrantsList() {
 
   const { data: grants, isLoading } = useQuery<EnhancedGrant[]>({
     queryKey: ['/api/grants'],
+  });
+
+  // Fetch SDR counts for awarded grants
+  const { data: grantSdrCounts = {} } = useQuery({
+    queryKey: ['/api/grants/sdr-counts'],
+    enabled: grants && grants.some(g => g.awarded),
+    queryFn: async () => {
+      const awardedGrants = grants?.filter(g => g.awarded) || [];
+      const counts: Record<number, number> = {};
+      
+      await Promise.all(
+        awardedGrants.map(async (grant) => {
+          try {
+            const response = await fetch(`/api/grants/${grant.id}/research-activities`);
+            if (response.ok) {
+              const sdrs = await response.json();
+              counts[grant.id] = sdrs.length;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch SDRs for grant ${grant.id}:`, error);
+          }
+        })
+      );
+      
+      return counts;
+    }
   });
 
   const deleteGrantMutation = useMutation({
@@ -395,11 +422,19 @@ export default function GrantsList() {
                         {formatCurrency(grant.awardedAmount)}
                       </TableCell>
                       <TableCell className="text-center">
-                        {grant.awarded ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">Yes</Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-red-100 text-red-700 text-xs">No</Badge>
-                        )}
+                        <div className="flex items-center justify-center gap-1">
+                          {grant.awarded ? (
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">Yes</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="bg-red-100 text-red-700 text-xs">No</Badge>
+                          )}
+                          {grant.awarded && grantSdrCounts[grant.id] > 0 && (
+                            <div className="flex items-center gap-1" title={`${grantSdrCounts[grant.id]} linked SDR${grantSdrCounts[grant.id] > 1 ? 's' : ''}`}>
+                              <LinkIcon className="h-3 w-3 text-blue-600" />
+                              <span className="text-xs text-blue-600">{grantSdrCounts[grant.id]}</span>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center text-xs">
                         {grant.submittedYear || "—"}

@@ -41,6 +41,7 @@ export default function EditGrant() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [collaboratorsInput, setCollaboratorsInput] = useState("");
+  const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
 
   const grantId = params?.id ? parseInt(params.id) : null;
 
@@ -77,6 +78,15 @@ export default function EditGrant() {
     queryKey: ['/api/scientists']
   });
 
+  const { data: researchActivities = [] } = useQuery({
+    queryKey: ['/api/research-activities']
+  });
+
+  const { data: grantSdrs = [] } = useQuery({
+    queryKey: [`/api/grants/${grantId}/research-activities`],
+    enabled: !!grantId,
+  });
+
   useEffect(() => {
     if (grant) {
       const collaboratorsText = Array.isArray(grant.collaborators) 
@@ -106,6 +116,12 @@ export default function EditGrant() {
       });
     }
   }, [grant, form]);
+
+  useEffect(() => {
+    if (grantSdrs) {
+      setLinkedSdrs(grantSdrs.map((sdr: any) => sdr.id));
+    }
+  }, [grantSdrs]);
 
   const updateGrantMutation = useMutation({
     mutationFn: async (data: UpdateGrantForm) => {
@@ -140,6 +156,31 @@ export default function EditGrant() {
       });
     },
   });
+
+  const handleSdrToggle = async (sdrId: number, isLinked: boolean) => {
+    try {
+      if (isLinked) {
+        await apiRequest(`/api/grants/${grantId}/research-activities/${sdrId}`, {
+          method: "POST",
+        });
+        setLinkedSdrs(prev => [...prev, sdrId]);
+        toast({ title: "Success", description: "SDR linked to grant successfully" });
+      } else {
+        await apiRequest(`/api/grants/${grantId}/research-activities/${sdrId}`, {
+          method: "DELETE",
+        });
+        setLinkedSdrs(prev => prev.filter(id => id !== sdrId));
+        toast({ title: "Success", description: "SDR unlinked from grant successfully" });
+      }
+      queryClient.invalidateQueries({ queryKey: [`/api/grants/${grantId}/research-activities`] });
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: isLinked ? "Failed to link SDR" : "Failed to unlink SDR", 
+        variant: "destructive" 
+      });
+    }
+  };
 
   const handleSubmit = (data: UpdateGrantForm) => {
     updateGrantMutation.mutate({ ...data, id: grantId! });
@@ -514,6 +555,37 @@ export default function EditGrant() {
                       </FormItem>
                     )}
                   />
+
+                  {/* SDR Linking Section - Only show when grant is awarded */}
+                  {form.watch("awarded") && (
+                    <div className="mt-6 border-t pt-4">
+                      <h3 className="text-lg font-medium mb-4">Linked Research Activities (SDRs)</h3>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {researchActivities.length > 0 ? (
+                          researchActivities.map((sdr: any) => {
+                            const isLinked = linkedSdrs.includes(sdr.id);
+                            return (
+                              <div key={sdr.id} className="flex items-center space-x-3 p-2 border rounded-lg hover:bg-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={isLinked}
+                                  onChange={(e) => handleSdrToggle(sdr.id, e.target.checked)}
+                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{sdr.sdrNumber}</div>
+                                  <div className="text-sm text-gray-500 truncate">{sdr.title}</div>
+                                  <div className="text-xs text-gray-400">{sdr.status}</div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-gray-500 text-sm">No research activities available to link.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

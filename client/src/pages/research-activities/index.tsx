@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users } from "lucide-react";
+import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users, Link as LinkIcon } from "lucide-react";
 import { formatFullName, getInitials } from "@/utils/nameUtils";
 
 interface Program {
@@ -109,6 +109,31 @@ export default function ResearchActivitiesList() {
 
   const { data: projectMembers } = useQuery<ProjectMember[]>({
     queryKey: ['/api/project-members'],
+  });
+
+  // Fetch linked grants for research activities
+  const { data: activityGrantCounts = {} } = useQuery({
+    queryKey: ['/api/research-activities/grant-counts'],
+    enabled: researchActivities && researchActivities.length > 0,
+    queryFn: async () => {
+      const counts: Record<number, any[]> = {};
+      
+      await Promise.all(
+        researchActivities!.map(async (activity) => {
+          try {
+            const response = await fetch(`/api/research-activities/${activity.id}/grants`);
+            if (response.ok) {
+              const grants = await response.json();
+              counts[activity.id] = grants;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch grants for activity ${activity.id}:`, error);
+          }
+        })
+      );
+      
+      return counts;
+    }
   });
 
   // Enhance research activities with related data
@@ -300,6 +325,24 @@ export default function ResearchActivitiesList() {
                           </div>
                         ) : (
                           <span className="text-gray-600">No funding source</span>
+                        )}
+                        
+                        {/* Linked Grants */}
+                        {activityGrantCounts[activity.id] && activityGrantCounts[activity.id].length > 0 && (
+                          <div className="mt-2 pt-2 border-t">
+                            <div className="flex items-center gap-1 text-xs text-blue-600">
+                              <LinkIcon className="h-3 w-3" />
+                              <span className="font-medium">Linked Grants:</span>
+                            </div>
+                            <div className="mt-1 space-y-1">
+                              {activityGrantCounts[activity.id].map((grant: any) => (
+                                <div key={grant.id} className="text-xs">
+                                  <span className="font-mono text-blue-600">{grant.projectNumber}</span>
+                                  <span className="text-gray-600"> - {grant.status}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </TableCell>
