@@ -311,13 +311,13 @@ export default function GrantsList() {
                       PROJECT TITLE <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-36">
-                    <Button variant="ghost" onClick={() => handleSort("awardedAmount")} className="h-8 p-0 font-semibold">
+                  <TableHead className="w-36 text-right">
+                    <Button variant="ghost" onClick={() => handleSort("awardedAmount")} className="h-8 p-0 font-semibold ml-auto">
                       AWARDED BUDGET <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-28">
-                    <Button variant="ghost" onClick={() => handleSort("status")} className="h-8 p-0 font-semibold">
+                  <TableHead className="w-28 text-right">
+                    <Button variant="ghost" onClick={() => handleSort("status")} className="h-8 p-0 font-semibold ml-auto">
                       STATUS <ArrowUpDown className="ml-1 h-3 w-3" />
                     </Button>
                   </TableHead>
@@ -381,7 +381,7 @@ export default function GrantsList() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                         <Badge variant="secondary" className={getStatusColor(grant.status)}>
                           {grant.status}
                         </Badge>
