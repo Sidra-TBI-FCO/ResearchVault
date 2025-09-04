@@ -138,6 +138,7 @@ export default function EditGrant() {
       collaborators,
     };
 
+    console.log('Sending payload:', payload);
     updateGrantMutation.mutate(payload);
   };
 
