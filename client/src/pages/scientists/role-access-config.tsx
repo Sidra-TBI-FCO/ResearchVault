@@ -25,7 +25,8 @@ const JOB_TITLES = [
   "PMO Officer",
   "IRB Officer",
   "IBC Officer",
-  "Outcome Officer"
+  "Outcome Officer",
+  "Grant Officer"
 ];
 
 const NAVIGATION_ITEMS = [
@@ -46,7 +47,8 @@ const NAVIGATION_ITEMS = [
   { id: "publications", name: "Publications", description: "Academic publications" },
   { id: "outcome-office", name: "Outcome Office", description: "Research outcomes and impact tracking" },
   { id: "patents", name: "Patents", description: "Intellectual property" },
-  { id: "reports", name: "Reports", description: "System reports and analytics" }
+  { id: "reports", name: "Reports", description: "System reports and analytics" },
+  { id: "grants", name: "Grants", description: "Research grants and funding" }
 ];
 
 export default function RoleAccessConfig() {
