@@ -132,7 +132,7 @@ export default function EditGrant() {
       awardedYear: grant?.awardedYear || (formData.awardedYear && formData.awardedYear.trim() ? parseInt(formData.awardedYear) : null),
       awarded: grant?.awarded !== undefined ? grant.awarded : formData.awarded,
       runningTimeYears: grant?.runningTimeYears || (formData.runningTimeYears && formData.runningTimeYears.trim() ? parseInt(formData.runningTimeYears) : null),
-      currentGrantYear: grant?.currentGrantYear || (formData.currentGrantYear && formData.currentGrantYear.trim() ? parseInt(formData.currentGrantYear) : null),
+      currentGrantYear: grant?.currentGrantYear || formData.currentGrantYear || null, // Keep as string!
       startDate: grant?.startDate ? grant.startDate.split('T')[0] : formData.startDate || null,
       endDate: grant?.endDate ? grant.endDate.split('T')[0] : formData.endDate || null,
       collaborators,
