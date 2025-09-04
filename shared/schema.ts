@@ -931,3 +931,35 @@ export const insertJournalImpactFactorSchema = createInsertSchema(journalImpactF
 
 export type InsertJournalImpactFactor = z.infer<typeof insertJournalImpactFactorSchema>;
 export type JournalImpactFactor = typeof journalImpactFactors.$inferSelect;
+
+// Grants schema
+export const grants = pgTable("grants", {
+  id: serial("id").primaryKey(),
+  cycle: text("cycle"), // Grant cycle (e.g., "2023-1")
+  projectNumber: text("project_number").notNull().unique(), // Project identifier
+  lpiId: integer("lpi_id"), // Lead Principal Investigator (references scientists.id)
+  researcherId: integer("researcher_id"), // Researcher/Clinician (references scientists.id)
+  title: text("title").notNull(),
+  requestedAmount: numeric("requested_amount", { precision: 12, scale: 2 }), // Amount requested
+  awardedAmount: numeric("awarded_amount", { precision: 12, scale: 2 }), // Amount awarded
+  submittedYear: integer("submitted_year"), // Year grant was submitted
+  awardedYear: integer("awarded_year"), // Year grant was awarded
+  currentYear: integer("current_year"), // Current year of the grant
+  status: text("status").notNull().default("submitted"), // active, completed, cancelled, etc.
+  startDate: date("start_date"), // Grant start date
+  endDate: date("end_date"), // Grant end date
+  collaborators: text("collaborators").array(), // Array of collaborator names/institutions
+  description: text("description"), // Grant description/abstract
+  fundingAgency: text("funding_agency"), // Funding source/agency
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGrantSchema = createInsertSchema(grants).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGrant = z.infer<typeof insertGrantSchema>;
+export type Grant = typeof grants.$inferSelect;

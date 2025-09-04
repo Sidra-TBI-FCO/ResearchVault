@@ -64,7 +64,8 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       "/publications": "publications",
       "/outcome-office": "outcome-office",
       "/patents": "patents",
-      "/reports": "reports"
+      "/reports": "reports",
+      "/grants": "grants"
     };
     return pathMap[href] || href.substring(1);
   };
@@ -162,6 +163,11 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           href: "/contracts",
           label: "Research Contracts",
           icon: <Handshake className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/grants",
+          label: "Grants Office",
+          icon: <PieChart className="w-4 h-4 mr-3" />
         }
       ]
     },

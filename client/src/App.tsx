@@ -105,6 +105,11 @@ import CreateContract from "@/pages/contracts/create";
 import ResearchContractDetail from "@/pages/research-contracts/detail";
 import EditResearchContract from "@/pages/research-contracts/edit";
 
+// Grants
+import GrantsList from "@/pages/grants";
+import CreateGrant from "@/pages/grants/create";
+import EditGrant from "@/pages/grants/edit";
+
 // Research Teams
 import TeamsList from "@/pages/teams";
 import TeamDetail from "@/pages/teams/detail";
@@ -218,6 +223,11 @@ function Router() {
         <Route path="/research-contracts/:id/edit" component={EditResearchContract} />
         <Route path="/research-contracts/:id" component={ResearchContractDetail} />
         <Route path="/contracts/:id" component={ResearchContractDetail} />
+        
+        {/* Grants */}
+        <Route path="/grants" component={GrantsList} />
+        <Route path="/grants/create" component={CreateGrant} />
+        <Route path="/grants/:id/edit" component={EditGrant} />
         
         {/* Research Teams */}
         <Route path="/teams" component={TeamsList} />

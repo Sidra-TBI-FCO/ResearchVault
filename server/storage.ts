@@ -19,7 +19,8 @@ import {
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
   rolePermissions, RolePermission, InsertRolePermission,
-  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor
+  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
+  grants, Grant, InsertGrant
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -194,6 +195,14 @@ export interface IStorage {
   createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor>;
   updateJournalImpactFactor(id: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined>;
   deleteJournalImpactFactor(id: number): Promise<boolean>;
+
+  // Grant operations
+  getGrants(): Promise<Grant[]>;
+  getGrant(id: number): Promise<Grant | undefined>;
+  getGrantByProjectNumber(projectNumber: string): Promise<Grant | undefined>;
+  createGrant(grant: InsertGrant): Promise<Grant>;
+  updateGrant(id: number, grant: Partial<InsertGrant>): Promise<Grant | undefined>;
+  deleteGrant(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

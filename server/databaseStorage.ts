@@ -30,7 +30,8 @@ import {
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
   rolePermissions, RolePermission, InsertRolePermission,
-  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor
+  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
+  grants, Grant, InsertGrant
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1634,6 +1635,40 @@ export class DatabaseStorage implements IStorage {
 
   async deleteJournalImpactFactor(id: number): Promise<boolean> {
     const result = await db.delete(journalImpactFactors).where(eq(journalImpactFactors.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Grant operations
+  async getGrants(): Promise<Grant[]> {
+    return await db.select().from(grants).orderBy(desc(grants.createdAt));
+  }
+
+  async getGrant(id: number): Promise<Grant | undefined> {
+    const [grant] = await db.select().from(grants).where(eq(grants.id, id));
+    return grant;
+  }
+
+  async getGrantByProjectNumber(projectNumber: string): Promise<Grant | undefined> {
+    const [grant] = await db.select().from(grants).where(eq(grants.projectNumber, projectNumber));
+    return grant;
+  }
+
+  async createGrant(grant: InsertGrant): Promise<Grant> {
+    const [newGrant] = await db.insert(grants).values(grant).returning();
+    return newGrant;
+  }
+
+  async updateGrant(id: number, grant: Partial<InsertGrant>): Promise<Grant | undefined> {
+    const [updatedGrant] = await db
+      .update(grants)
+      .set({ ...grant, updatedAt: sql`now()` })
+      .where(eq(grants.id, id))
+      .returning();
+    return updatedGrant;
+  }
+
+  async deleteGrant(id: number): Promise<boolean> {
+    const result = await db.delete(grants).where(eq(grants.id, id));
     return result.rowCount > 0;
   }
 }
