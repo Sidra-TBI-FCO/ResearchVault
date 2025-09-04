@@ -171,7 +171,7 @@ export default function GrantsList() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="py-6">
         <div className="space-y-6">
           <Skeleton className="h-8 w-64" />
           <div className="space-y-2">
@@ -185,8 +185,8 @@ export default function GrantsList() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="py-6">
+      <div className="flex justify-between items-center mb-6 px-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Grants Office</h1>
           <p className="text-gray-600 mt-1">Manage research grants and funding applications</p>
@@ -208,14 +208,15 @@ export default function GrantsList() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            Grants ({filteredAndSortedGrants?.length || 0})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="px-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Grants ({filteredAndSortedGrants?.length || 0})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">
@@ -455,7 +456,8 @@ export default function GrantsList() {
             </Table>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
