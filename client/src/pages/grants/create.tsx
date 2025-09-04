@@ -77,6 +77,9 @@ export default function CreateGrant() {
       const payload = { ...data, collaborators };
       return apiRequest(`/api/grants`, {
         method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(payload),
       });
     },
@@ -256,7 +259,9 @@ export default function CreateGrant() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {scientists.map((scientist) => (
+                            {scientists
+                              .filter((scientist: any) => scientist.staffType === 'scientific')
+                              .map((scientist: any) => (
                               <SelectItem key={scientist.id} value={scientist.id.toString()}>
                                 {formatFullName(scientist)} - {scientist.jobTitle || 'No title'}
                               </SelectItem>
