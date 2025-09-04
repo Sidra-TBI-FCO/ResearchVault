@@ -204,16 +204,17 @@ export default function EditGrant() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
+        {/* Basic Information - Overview */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* First Row: Project Number, Status, Grant Type, Funding Agency */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Project Number *
+                  Project Number
                 </label>
                 <Input
                   value={grant?.projectNumber || ""}
@@ -225,7 +226,142 @@ export default function EditGrant() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Cycle *
+                  Project Status
+                </label>
+                <Select
+                  value={grant?.status || "pending"}
+                  onValueChange={(value) => setFormData({...formData, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_review">In Review</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="awarded">Awarded</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Grant Type
+                </label>
+                <Select
+                  value={grant?.grantType || "Local"}
+                  onValueChange={(value) => setFormData({...formData, grantType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Local">Local</SelectItem>
+                    <SelectItem value="International">International</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Funding Agency
+                </label>
+                <Input
+                  value={grant?.fundingAgency || ""}
+                  onChange={(e) => setFormData({...formData, fundingAgency: e.target.value})}
+                  placeholder="e.g., NIH, NSF, DOE"
+                />
+              </div>
+            </div>
+
+            {/* Project Title - Full Width */}
+            <div className="mt-4">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Project Title
+              </label>
+              <Input
+                value={grant?.title || ""}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                placeholder="Grant title"
+                required
+              />
+            </div>
+
+            {/* Third Row: Lead Investigator, Awarded Amount, Start Date, End Date */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Lead Investigator
+                </label>
+                <Select
+                  value={grant?.lpiId?.toString() || ""}
+                  onValueChange={(value) => setFormData({...formData, lpiId: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select scientist" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scientists.map((scientist: any) => (
+                      <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                        {formatFullName(scientist)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Awarded Amount
+                </label>
+                <Input
+                  value={grant?.awardedAmount || ""}
+                  onChange={(e) => setFormData({...formData, awardedAmount: e.target.value})}
+                  placeholder="$626,565.00"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Start Date
+                </label>
+                <Input
+                  type="date"
+                  value={grant?.startDate ? grant.startDate.split('T')[0] : ""}
+                  onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  End Date
+                </label>
+                <Input
+                  type="date"
+                  value={grant?.endDate ? grant.endDate.split('T')[0] : ""}
+                  onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                />
+              </div>
+            </div>
+
+            {/* Current Year */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Current Year
+                </label>
+                <Input
+                  value={grant?.currentGrantYear?.toString() || ""}
+                  onChange={(e) => setFormData({...formData, currentGrantYear: e.target.value})}
+                  placeholder="Year 3 of 4"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Cycle
                 </label>
                 <Input
                   value={grant?.cycle || ""}
@@ -236,18 +372,7 @@ export default function EditGrant() {
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Title *
-              </label>
-              <Input
-                value={grant?.title || ""}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                placeholder="Grant title"
-                required
-              />
-            </div>
-
+            {/* Description */}
             <div className="mt-4">
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Description
@@ -271,100 +396,11 @@ export default function EditGrant() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Status
-                </label>
-                <Select
-                  value={grant?.status || "pending"}
-                  onValueChange={(value) => setFormData({...formData, status: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in_review">In Review</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="awarded">Awarded</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Funding Agency
-                </label>
-                <Input
-                  value={grant?.fundingAgency || ""}
-                  onChange={(e) => setFormData({...formData, fundingAgency: e.target.value})}
-                  placeholder="e.g., NIH, NSF, DOE"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Grant Type
-                </label>
-                <RadioGroup
-                  value={grant?.grantType || "Local"}
-                  onValueChange={(value) => setFormData({...formData, grantType: value})}
-                  className="flex flex-row space-x-6"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Local" id="local" />
-                    <Label htmlFor="local">Local</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="International" id="international" />
-                    <Label htmlFor="international">International</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Lead Principal Investigator
-                </label>
-                <Select
-                  value={grant?.lpiId?.toString() || ""}
-                  onValueChange={(value) => setFormData({...formData, lpiId: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select scientist" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {scientists.map((scientist: any) => (
-                      <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                        {formatFullName(scientist)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Requested Amount
                 </label>
                 <Input
                   value={grant?.requestedAmount || ""}
                   onChange={(e) => setFormData({...formData, requestedAmount: e.target.value})}
-                  placeholder="$0.00"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Awarded Amount
-                </label>
-                <Input
-                  value={grant?.awardedAmount || ""}
-                  onChange={(e) => setFormData({...formData, awardedAmount: e.target.value})}
                   placeholder="$0.00"
                 />
               </div>
@@ -463,35 +499,13 @@ export default function EditGrant() {
           </CardContent>
         </Card>
 
-        {/* Grant Dates & Collaborators */}
+        {/* Collaborators & Timeline */}
         <Card>
           <CardHeader>
-            <CardTitle>Grant Dates & Collaborators</CardTitle>
+            <CardTitle>Collaborators & Timeline</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Start Date
-                </label>
-                <Input
-                  type="date"
-                  value={grant?.startDate ? grant.startDate.split('T')[0] : ""}
-                  onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  End Date
-                </label>
-                <Input
-                  type="date"
-                  value={grant?.endDate ? grant.endDate.split('T')[0] : ""}
-                  onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                />
-              </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Reporting Interval (months)
