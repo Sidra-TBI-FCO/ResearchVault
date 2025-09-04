@@ -345,7 +345,7 @@ export default function EditGrant() {
                   Investigator Type
                 </label>
                 <Select
-                  value={grant?.investigatorType || "Researcher"}
+                  value={formData.investigatorType}
                   onValueChange={(value) => setFormData({...formData, investigatorType: value})}
                 >
                   <SelectTrigger>
