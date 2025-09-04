@@ -40,11 +40,10 @@ export default function EditGrant() {
   const [, params] = useRoute("/grants/:id/edit");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const grantId = params?.id ? parseInt(params.id) : null;
   const [collaboratorsInput, setCollaboratorsInput] = useState("");
   const [linkedSdrs, setLinkedSdrs] = useState<number[]>([]);
-  const formInitialized = useRef(false);
-
-  const grantId = params?.id ? parseInt(params.id) : null;
+  const [initializedGrantId, setInitializedGrantId] = useState<number | null>(null);
 
   const form = useForm<UpdateGrantForm>({
     resolver: zodResolver(insertGrantSchema.partial()),
@@ -89,7 +88,7 @@ export default function EditGrant() {
   });
 
   useEffect(() => {
-    if (grant && grant.id && !formInitialized.current) {
+    if (grant && grant.id && initializedGrantId !== grant.id) {
       const collaboratorsText = Array.isArray(grant.collaborators) 
         ? grant.collaborators.join('\n')
         : '';
@@ -116,9 +115,9 @@ export default function EditGrant() {
         collaborators: grant.collaborators ?? [],
       });
       
-      formInitialized.current = true;
+      setInitializedGrantId(grant.id);
     }
-  }, [grant, form]);
+  }, [grant?.id]);
 
   useEffect(() => {
     if (grantSdrs) {
