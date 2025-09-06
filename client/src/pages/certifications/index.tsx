@@ -1231,34 +1231,71 @@ export default function CertificationsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">OCR Service Provider</label>
-                  <Select 
-                    value={ocrConfig?.value?.provider || "ocr_space"}
-                    onValueChange={(value) => {
-                      // Update OCR provider
-                      fetch('/api/system-configurations/ocr_service', {
-                        method: 'PUT',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                          value: {
-                            provider: value,
-                            ocrSpaceApiKey: ocrConfig?.value?.ocrSpaceApiKey || 'helloworld',
-                            tesseractOptions: ocrConfig?.value?.tesseractOptions || { language: 'eng' }
-                          },
-                          updatedAt: new Date()
-                        })
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select OCR provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ocr_space">OCR.space (Recommended for PDFs)</SelectItem>
-                      <SelectItem value="tesseract">Tesseract.js (Local Processing)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/system-configurations/ocr_service', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              value: {
+                                provider: 'ocr_space',
+                                ocrSpaceApiKey: ocrConfig?.value?.ocrSpaceApiKey || 'helloworld',
+                                tesseractOptions: ocrConfig?.value?.tesseractOptions || { language: 'eng' }
+                              },
+                              updatedAt: new Date()
+                            })
+                          });
+                          if (response.ok) {
+                            queryClient.invalidateQueries({ queryKey: ['/api/system-configurations/ocr_service'] });
+                          }
+                        } catch (error) {
+                          console.error('Failed to update OCR provider:', error);
+                        }
+                      }}
+                      className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                        (ocrConfig?.value?.provider || 'ocr_space') === 'ocr_space'
+                          ? 'border-blue-500 bg-blue-50 text-blue-900'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-medium">OCR.space (Recommended for PDFs)</div>
+                      <div className="text-sm text-gray-600">External API service with high PDF accuracy</div>
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/system-configurations/ocr_service', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              value: {
+                                provider: 'tesseract',
+                                ocrSpaceApiKey: ocrConfig?.value?.ocrSpaceApiKey || 'helloworld',
+                                tesseractOptions: ocrConfig?.value?.tesseractOptions || { language: 'eng' }
+                              },
+                              updatedAt: new Date()
+                            })
+                          });
+                          if (response.ok) {
+                            queryClient.invalidateQueries({ queryKey: ['/api/system-configurations/ocr_service'] });
+                          }
+                        } catch (error) {
+                          console.error('Failed to update OCR provider:', error);
+                        }
+                      }}
+                      className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                        (ocrConfig?.value?.provider || 'ocr_space') === 'tesseract'
+                          ? 'border-blue-500 bg-blue-50 text-blue-900'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-medium">Tesseract.js (Local Processing)</div>
+                      <div className="text-sm text-gray-600">Free local OCR, no API limits</div>
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">OCR.space API Key</label>
