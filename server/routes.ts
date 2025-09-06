@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   processingStatus: 'failed',
                   errorMessage: detectedData.error,
                   processedAt: new Date(),
-                  processingTimeMs: Date.now() - startTime
+                  processingDuration: Date.now() - startTime
                 });
                 
                 results.push(detectedData);
@@ -442,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   processingStatus: parsedData.name ? 'completed' : 'failed',
                   hasExtractedText: !!extractedText,
                   parsedDataFields: Object.keys(parsedData).filter(k => parsedData[k] !== null),
-                  processingTimeMs: Date.now() - startTime
+                  processingDuration: Date.now() - startTime
                 });
                 
                 const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
@@ -452,7 +452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   extractedText: extractedText,
                   parsedData: parsedData,
                   processedAt: new Date(),
-                  processingTimeMs: Date.now() - startTime,
+                  processingDuration: Date.now() - startTime,
                   errorMessage: parsedData.name ? null : 'Certificate data could not be extracted - manual assignment may be required'
                 });
                 
@@ -473,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   documentType: 'unknown', // OCR failed, so document type unknown
                   errorMessage: 'No text could be extracted from the file',
                   processedAt: new Date(),
-                  processingTimeMs: Date.now() - startTime
+                  processingDuration: Date.now() - startTime
                 });
                 console.log('OCR failure update result:', updateResult ? 'SUCCESS' : 'FAILED');
               } catch (updateError) {
@@ -5715,6 +5715,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         return {
           ...entry,
+          uploadedAt: entry.createdAt, // Map createdAt to uploadedAt for UI
+          processingTimeMs: entry.processingDuration, // Map processingDuration to processingTimeMs for UI
           uploader: uploader ? {
             id: uploader.id,
             name: `${uploader.firstName} ${uploader.lastName}`,
@@ -5753,6 +5755,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const enhancedEntry = {
         ...entry,
+        uploadedAt: entry.createdAt, // Map createdAt to uploadedAt for UI
+        processingTimeMs: entry.processingDuration, // Map processingDuration to processingTimeMs for UI  
         uploader: uploader ? {
           id: uploader.id,
           name: `${uploader.firstName} ${uploader.lastName}`,
