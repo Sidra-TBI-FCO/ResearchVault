@@ -100,6 +100,10 @@ export default function CertificationsPage() {
     queryKey: ['/api/scientists'],
   });
 
+  const { data: ocrConfig } = useQuery({
+    queryKey: ['/api/system-configurations/ocr_service'],
+  });
+
   const processCertificatesMutation = useMutation({
     mutationFn: async (fileUrls: string[]) => {
       const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls });
@@ -246,7 +250,14 @@ export default function CertificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-sidra-primary">Certification Management</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight text-sidra-primary">Certification Management</h1>
+            {ocrConfig && (
+              <Badge variant="secondary" className="text-xs">
+                OCR: {ocrConfig.value === 'tesseract' ? 'Tesseract.js (Local)' : 'OCR.space (API)'}
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Manage CITI certifications and compliance requirements for research staff
           </p>
