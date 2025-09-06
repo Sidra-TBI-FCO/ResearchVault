@@ -82,16 +82,15 @@ export function ObjectUploader({
     const successfulFiles = uploadedFiles.filter(f => f.status === 'success');
 
     if (allDone && successfulFiles.length > 0) {
-      // Small delay to ensure state is settled
-      const timer = setTimeout(() => {
-        onComplete?.(successfulFiles.map(f => ({
-          url: f.url!,
-          fileName: f.file.name,
-          fileSize: f.file.size
-        })));
-      }, 100);
+      // Call onComplete only once by clearing uploadedFiles after completion
+      onComplete?.(successfulFiles.map(f => ({
+        url: f.url!,
+        fileName: f.file.name,
+        fileSize: f.file.size
+      })));
       
-      return () => clearTimeout(timer);
+      // Clear files to prevent duplicate calls
+      setUploadedFiles([]);
     }
   }, [uploadedFiles, onComplete]);
 

@@ -114,6 +114,7 @@ export default function CertificationsPage() {
   const [activeTab, setActiveTab] = useState("matrix");
   const [detectedFiles, setDetectedFiles] = useState<PendingCertification[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processedUrls, setProcessedUrls] = useState<Set<string>>(new Set());
   
   // PDF import history state
   const [historySearchTerm, setHistorySearchTerm] = useState("");
@@ -153,7 +154,19 @@ export default function CertificationsPage() {
 
   const processCertificatesMutation = useMutation({
     mutationFn: async (fileUrls: string[]) => {
-      const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls });
+      // Filter out URLs already being processed
+      const newUrls = fileUrls.filter(url => !processedUrls.has(url));
+      
+      if (newUrls.length === 0) {
+        console.log('All URLs already processed, skipping...');
+        return { results: [] };
+      }
+      
+      // Mark URLs as being processed
+      setProcessedUrls(prev => new Set([...prev, ...newUrls]));
+      
+      console.log('Processing new certificates with URLs:', newUrls);
+      const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls: newUrls });
       return response.json();
     },
     onSuccess: (data) => {
