@@ -523,36 +523,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Helper function to detect CITI document format
-  function detectCITIFormat(text: string): 'certificate' | 'report' {
-    // Certificate indicators
-    const certificateIndicators = [
-      /This is to certify that/i,
-      /Has completed the following CITI Program course/i,
-      /Generated on.*Verify at/i,
-      /CIT.*Collaborative Institutional Training Initiative/i
-    ];
-    
-    // Report indicators  
-    const reportIndicators = [
-      /COMPLETION REPORT - PART \d+ OF \d+/i,
-      /COURSEWORK REQUIREMENTS/i,
-      /• Institution Affiliation:/i,
-      /• Institution Email:/i,
-      /Transcript Report.*lists more recent quiz/i
-    ];
-    
-    const certificateScore = certificateIndicators.reduce((score, pattern) => 
-      score + (pattern.test(text) ? 1 : 0), 0);
-      
-    const reportScore = reportIndicators.reduce((score, pattern) => 
-      score + (pattern.test(text) ? 1 : 0), 0);
-    
-    console.log(`Format detection - Certificate: ${certificateScore}, Report: ${reportScore}`);
-    
-    return certificateScore > reportScore ? 'certificate' : 'report';
-  }
-
   // Helper function to parse CITI certificate text
   function parseCITICertificate(text: string, modules: any[]) {
     const result: any = {
@@ -567,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     try {
-      console.log('=== PARSING CITI DOCUMENT ===');
+      console.log('=== PARSING CITI CERTIFICATE ===');
       console.log('Raw text length:', text.length);
       console.log('Raw text sample (first 300 chars):', text.substring(0, 300));
       
@@ -576,44 +546,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(text);
       console.log('=== END FULL OCR TEXT ===');
       
-      // Detect document format first
-      const documentFormat = detectCITIFormat(text);
-      console.log('Detected document format:', documentFormat);
-      
       // Clean up text - remove extra whitespace and normalize
       const cleanText = text.replace(/\s+/g, ' ').trim();
       console.log('Cleaned text length:', cleanText.length);
       console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
-      
-      // Route to appropriate parsing logic
-      if (documentFormat === 'certificate') {
-        return parseCertificateFormat(text, cleanText, modules);
-      } else {
-        return parseReportFormat(text, cleanText, modules);
-      }
-    } catch (error) {
-      console.error('Error parsing CITI certificate:', error);
-      return result;
-    }
-  }
 
-  // Certificate format parser - clean, structured format
-  function parseCertificateFormat(text: string, cleanText: string, modules: any[]) {
-    console.log('=== PARSING CERTIFICATE FORMAT ===');
-    
-    const result: any = {
-      name: null,
-      courseName: null,
-      module: null,
-      completionDate: null,
-      expirationDate: null,
-      recordId: null,
-      institution: null,
-      isNewModule: false
-    };
-
-    // Extract completion date - match multiple formats
-    console.log('Searching for completion date...');
+      // Extract completion date - match multiple formats
+      console.log('Searching for completion date...');
       const completionMatch = 
         // Format 1: "Completion Date: 21-May-2022" (with colon)
         text.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
