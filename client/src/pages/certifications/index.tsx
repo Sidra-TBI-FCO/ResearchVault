@@ -540,14 +540,21 @@ export default function CertificationsPage() {
             <CardHeader>
               <CardTitle>Upload Certificates</CardTitle>
               <p className="text-muted-foreground">
-                Upload CITI certification PDFs for automatic processing and extraction of certification data.
+                {(ocrConfig?.value?.provider || 'ocr_space') === 'tesseract' 
+                  ? 'Upload CITI certificate PDFs or images (PNG, JPG) for automatic processing and extraction of certification data.'
+                  : 'Upload CITI certification PDFs for automatic processing and extraction of certification data.'
+                }
               </p>
             </CardHeader>
             <CardContent>
               <ObjectUploader
                 maxNumberOfFiles={10}
                 maxFileSize={10485760} // 10MB
-                acceptedFileTypes={['application/pdf']}
+                acceptedFileTypes={
+                  (ocrConfig?.value?.provider || 'ocr_space') === 'tesseract' 
+                    ? ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg']
+                    : ['application/pdf']
+                }
                 onComplete={(uploadedFiles) => {
                   try {
                     if (!uploadedFiles || !Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
@@ -1268,7 +1275,7 @@ export default function CertificationsPage() {
                       <div className="font-medium">OCR.space (Recommended for PDFs)</div>
                       <div className="text-sm text-gray-600">External API service with high PDF accuracy</div>
                       <div className="text-xs text-blue-700 mt-1">
-                        ✓ Best for CITI certificates • ✓ High accuracy • ⚠ Usage limits (180/hour)
+                        ✓ Best for CITI certificates • ✓ High accuracy • ⚠ Usage limits (180/hour) • PDF only
                       </div>
                     </button>
                     
@@ -1303,7 +1310,7 @@ export default function CertificationsPage() {
                       <div className="font-medium">Tesseract.js (Local Processing)</div>
                       <div className="text-sm text-gray-600">Free local OCR, no API limits</div>
                       <div className="text-xs text-gray-600 mt-1">
-                        ✓ Completely free • ✓ No limits • ⚠ Limited PDF support • ⚠ Lower accuracy
+                        ✓ Completely free • ✓ No limits • ✓ Supports images (PNG, JPG) • ⚠ Lower accuracy
                       </div>
                     </button>
                   </div>
@@ -1311,10 +1318,11 @@ export default function CertificationsPage() {
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="text-sm font-medium text-blue-900 mb-1">How This Affects Certificate Processing:</div>
                     <ul className="text-xs text-blue-800 space-y-1">
-                      <li>• <strong>Upload Impact:</strong> Selected service processes every PDF you upload</li>
+                      <li>• <strong>Upload Impact:</strong> Selected service processes every file you upload</li>
                       <li>• <strong>Data Extraction:</strong> Determines accuracy of name, date, and course detection</li>
                       <li>• <strong>Default:</strong> OCR.space is pre-configured and ready to use</li>
                       <li>• <strong>Switch Anytime:</strong> You can change providers without affecting existing certificates</li>
+                      <li>• <strong>File Types:</strong> OCR.space accepts PDFs only, Tesseract accepts PDFs and images</li>
                     </ul>
                   </div>
                 </div>
