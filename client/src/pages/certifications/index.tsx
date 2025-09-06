@@ -319,26 +319,26 @@ export default function CertificationsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="matrix" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            CITI Certification Matrix
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsTrigger value="matrix" className="flex items-center gap-1 px-2 text-xs md:text-sm">
+            <FileText className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">CITI </span>Matrix
           </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            Upload Certificates
+          <TabsTrigger value="upload" className="flex items-center gap-1 px-2 text-xs md:text-sm">
+            <Upload className="h-3 w-3 md:h-4 md:w-4" />
+            Upload
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Import History
+          <TabsTrigger value="history" className="flex items-center gap-1 px-2 text-xs md:text-sm">
+            <History className="h-3 w-3 md:h-4 md:w-4" />
+            History
           </TabsTrigger>
-          <TabsTrigger value="modules" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Manage Modules
+          <TabsTrigger value="modules" className="flex items-center gap-1 px-2 text-xs md:text-sm">
+            <Settings className="h-3 w-3 md:h-4 md:w-4" />
+            Modules
           </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Configuration
+          <TabsTrigger value="config" className="flex items-center gap-1 px-2 text-xs md:text-sm">
+            <Settings className="h-3 w-3 md:h-4 md:w-4" />
+            Config
           </TabsTrigger>
         </TabsList>
 
