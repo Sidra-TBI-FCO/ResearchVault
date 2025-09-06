@@ -109,15 +109,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let isPDF = false;
             
             // Always check content-type since signed URLs don't have reliable file extensions
+            let contentType = '';
+            let isValidFile = false;
+            
             try {
               console.log('Checking file type via HEAD request...');
               const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-              const contentType = headResponse.headers.get('content-type') || '';
+              contentType = headResponse.headers.get('content-type') || '';
               console.log(`Content-Type: ${contentType}`);
               
+              // Check for supported file types
               if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
                 isPDF = true;
+                isValidFile = true;
                 console.log('PDF detected via Content-Type');
+              } else if (
+                contentType.includes('image/') || 
+                contentType.includes('image/jpeg') || 
+                contentType.includes('image/jpg') || 
+                contentType.includes('image/png') || 
+                contentType.includes('image/gif') || 
+                contentType.includes('image/bmp') ||
+                contentType.includes('image/tiff')
+              ) {
+                isValidFile = true;
+                console.log('Image file detected via Content-Type');
+              } else {
+                console.log(`Unsupported file type: ${contentType}`);
+                // Mark as failed due to unsupported format
+                detectedData.status = 'error';
+                detectedData.error = `Unsupported file format: ${contentType}. Only PDF and image files are supported.`;
+                
+                // Update history entry with error
+                await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                  processingStatus: 'failed',
+                  errorMessage: detectedData.error,
+                  processedAt: new Date(),
+                  processingTimeMs: Date.now() - startTime
+                });
+                
+                results.push(detectedData);
+                continue; // Skip OCR processing for unsupported files
               }
             } catch (headerError) {
               console.log('Could not detect file type via headers, checking URL...');
@@ -128,11 +160,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const fileName = pathSegments[pathSegments.length - 1];
                 if (fileName && fileName.toLowerCase().includes('pdf')) {
                   isPDF = true;
+                  isValidFile = true;
                   console.log('PDF detected via filename in URL');
+                } else if (fileName && /\.(jpg|jpeg|png|gif|bmp|tiff)$/i.test(fileName)) {
+                  isValidFile = true;
+                  console.log('Image file detected via filename in URL');
+                } else {
+                  console.log('Could not detect valid file type from URL');
+                  detectedData.status = 'error';
+                  detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
+                  
+                  // Update history entry with error
+                  await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                    processingStatus: 'failed',
+                    errorMessage: detectedData.error,
+                    processedAt: new Date(),
+                    processingTimeMs: Date.now() - startTime
+                  });
+                  
+                  results.push(detectedData);
+                  continue; // Skip OCR processing
                 }
               } catch (urlError) {
-                console.log('Could not detect file type, assuming image format');
+                console.log('Could not detect file type from URL either');
+                detectedData.status = 'error';
+                detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
+                
+                // Update history entry with error
+                await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                  processingStatus: 'failed',
+                  errorMessage: detectedData.error,
+                  processedAt: new Date(),
+                  processingTimeMs: Date.now() - startTime
+                });
+                
+                results.push(detectedData);
+                continue; // Skip OCR processing
               }
+            }
+            
+            // Only proceed if we have a valid file type
+            if (!isValidFile) {
+              console.log('File type validation failed, skipping OCR processing');
+              continue;
             }
             
             // Force OCR.space for PDFs regardless of current setting
