@@ -144,43 +144,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Try to download and check file headers as last resort
                   console.log('Attempting to detect file type from file headers...');
                   try {
-                    const response = await fetch(fileUrl, { 
-                      method: 'HEAD',
-                      headers: { 'Range': 'bytes=0-20' } // Just get first few bytes
+                    // Try a small GET request to check file signature
+                    const sampleResponse = await fetch(fileUrl, { 
+                      headers: { 'Range': 'bytes=0-10' }
                     });
                     
-                    // If that fails, try a small GET request to check file signature
-                    if (!response.ok) {
-                      const sampleResponse = await fetch(fileUrl, { 
-                        headers: { 'Range': 'bytes=0-10' }
-                      });
-                      if (sampleResponse.ok) {
-                        const buffer = await sampleResponse.arrayBuffer();
-                        const bytes = new Uint8Array(buffer);
-                        
-                        // Check for PNG signature (89 50 4E 47)
-                        if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
-                          console.log('PNG file detected via file signature');
-                          isValidFile = true;
-                        }
-                        // Check for JPEG signature (FF D8 FF)
-                        else if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
-                          console.log('JPEG file detected via file signature');
-                          isValidFile = true;
-                        }
-                        // Check for PDF signature (%PDF)
-                        else if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
-                          console.log('PDF file detected via file signature');
-                          isPDF = true;
-                          isValidFile = true;
-                        } else {
-                          console.log('Unknown file type - assuming image format for OCR processing');
-                          isValidFile = true; // Default to allowing the file
-                        }
+                    if (sampleResponse.ok) {
+                      const buffer = await sampleResponse.arrayBuffer();
+                      const bytes = new Uint8Array(buffer);
+                      
+                      console.log(`File signature bytes: ${Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+                      
+                      // Check for PNG signature (89 50 4E 47)
+                      if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+                        console.log('PNG file detected via file signature');
+                        isValidFile = true;
                       }
+                      // Check for JPEG signature (FF D8 FF)
+                      else if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+                        console.log('JPEG file detected via file signature');
+                        isValidFile = true;
+                      }
+                      // Check for PDF signature (%PDF)
+                      else if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+                        console.log('PDF file detected via file signature');
+                        isPDF = true;
+                        isValidFile = true;
+                      } else {
+                        console.log('Unknown file signature - assuming image format for OCR processing');
+                        isValidFile = true; // Default to allowing the file for Tesseract
+                      }
+                    } else {
+                      console.log('Could not fetch file headers, assuming image format for Tesseract processing');
+                      isValidFile = true; // Default to allowing the file
                     }
                   } catch (detectionError) {
-                    console.log('File type detection failed, assuming image format');
+                    console.log('File signature detection failed, assuming image format');
                     isValidFile = true; // Default to allowing the file
                   }
                 }
