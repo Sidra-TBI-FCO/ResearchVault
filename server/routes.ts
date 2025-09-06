@@ -141,10 +141,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   isValidFile = true;
                   console.log('Image file detected via filename despite unknown content-type');
                 } else {
-                  // As last resort, assume PDF for certificate processing and try OCR
-                  console.log(`Assuming PDF format for certificate processing despite content-type: ${contentType}`);
-                  isPDF = true;
-                  isValidFile = true;
+                  // Try to download and check file headers as last resort
+                  console.log('Attempting to detect file type from file headers...');
+                  try {
+                    const response = await fetch(fileUrl, { 
+                      method: 'HEAD',
+                      headers: { 'Range': 'bytes=0-20' } // Just get first few bytes
+                    });
+                    
+                    // If that fails, try a small GET request to check file signature
+                    if (!response.ok) {
+                      const sampleResponse = await fetch(fileUrl, { 
+                        headers: { 'Range': 'bytes=0-10' }
+                      });
+                      if (sampleResponse.ok) {
+                        const buffer = await sampleResponse.arrayBuffer();
+                        const bytes = new Uint8Array(buffer);
+                        
+                        // Check for PNG signature (89 50 4E 47)
+                        if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+                          console.log('PNG file detected via file signature');
+                          isValidFile = true;
+                        }
+                        // Check for JPEG signature (FF D8 FF)
+                        else if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+                          console.log('JPEG file detected via file signature');
+                          isValidFile = true;
+                        }
+                        // Check for PDF signature (%PDF)
+                        else if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+                          console.log('PDF file detected via file signature');
+                          isPDF = true;
+                          isValidFile = true;
+                        } else {
+                          console.log('Unknown file type - assuming image format for OCR processing');
+                          isValidFile = true; // Default to allowing the file
+                        }
+                      }
+                    }
+                  } catch (detectionError) {
+                    console.log('File type detection failed, assuming image format');
+                    isValidFile = true; // Default to allowing the file
+                  }
                 }
               } catch (urlError) {
                 // If all detection fails, still try as PDF since user uploaded for certificate processing
@@ -357,9 +395,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log('Could not check file type for fallback decision');
               }
 
-              if (isPdfFile) {
-                console.log('PDF file detected - Attempting Tesseract fallback despite limited PDF support');
-                // Continue to Tesseract fallback - user has chosen this provider
+              if (isPdfFile && provider === 'tesseract') {
+                console.log('PDF file detected - Tesseract.js cannot process PDF files');
+                throw new Error('PDF files cannot be processed with Tesseract.js. Please either: 1) Switch to OCR.space in Config tab, or 2) Convert your PDF to an image (PNG, JPG) first.');
               }
 
               // Use Tesseract.js (supports images and limited PDF processing)
@@ -406,8 +444,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 try {
                   worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
                   
-                  // Add timeout to prevent hanging
-                  const recognitionPromise = worker.recognize(fileUrl);
+                  // Add timeout to prevent hanging and wrap recognition in additional error handling
+                  const recognitionPromise = worker.recognize(fileUrl).catch((err: any) => {
+                    console.error('Tesseract recognition failed:', err);
+                    throw new Error(`Image recognition failed: ${err?.message || 'Unknown error'}`);
+                  });
+                  
                   const timeoutPromise = new Promise((_, reject) => 
                     setTimeout(() => reject(new Error('OCR processing timed out after 60 seconds')), 60000)
                   );
