@@ -30,7 +30,10 @@ import {
   insertIbcBackboneSourceRoomSchema,
   insertIbcApplicationPpeSchema,
   insertRolePermissionSchema,
-  insertGrantSchema
+  insertGrantSchema,
+  insertCertificationModuleSchema,
+  insertCertificationSchema,
+  insertCertificationConfigurationSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -4441,6 +4444,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting grant progress report:', error);
       res.status(500).json({ message: "Failed to delete grant progress report" });
+    }
+  });
+
+  // Certification routes
+  app.get('/api/certification-modules', async (req: Request, res: Response) => {
+    try {
+      const modules = await storage.getCertificationModules();
+      res.json(modules);
+    } catch (error) {
+      console.error('Error fetching certification modules:', error);
+      res.status(500).json({ message: "Failed to fetch certification modules" });
+    }
+  });
+
+  app.post('/api/certification-modules', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCertificationModuleSchema.parse(req.body);
+      const module = await storage.createCertificationModule(validatedData);
+      res.status(201).json(module);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error creating certification module:', error);
+        res.status(500).json({ message: "Failed to create certification module" });
+      }
+    }
+  });
+
+  app.put('/api/certification-modules/:id', async (req: Request, res: Response) => {
+    try {
+      const moduleId = parseInt(req.params.id);
+      if (isNaN(moduleId)) {
+        return res.status(400).json({ message: "Invalid module ID" });
+      }
+
+      const validatedData = insertCertificationModuleSchema.partial().parse(req.body);
+      const module = await storage.updateCertificationModule(moduleId, validatedData);
+      res.json(module);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error updating certification module:', error);
+        res.status(500).json({ message: "Failed to update certification module" });
+      }
+    }
+  });
+
+  app.delete('/api/certification-modules/:id', async (req: Request, res: Response) => {
+    try {
+      const moduleId = parseInt(req.params.id);
+      if (isNaN(moduleId)) {
+        return res.status(400).json({ message: "Invalid module ID" });
+      }
+
+      const success = await storage.deleteCertificationModule(moduleId);
+      if (!success) {
+        return res.status(404).json({ message: "Certification module not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting certification module:', error);
+      res.status(500).json({ message: "Failed to delete certification module" });
+    }
+  });
+
+  // Certification routes
+  app.get('/api/certifications', async (req: Request, res: Response) => {
+    try {
+      const certifications = await storage.getCertifications();
+      res.json(certifications);
+    } catch (error) {
+      console.error('Error fetching certifications:', error);
+      res.status(500).json({ message: "Failed to fetch certifications" });
+    }
+  });
+
+  app.get('/api/certifications/matrix', async (req: Request, res: Response) => {
+    try {
+      const matrix = await storage.getCertificationMatrix();
+      res.json(matrix);
+    } catch (error) {
+      console.error('Error fetching certification matrix:', error);
+      res.status(500).json({ message: "Failed to fetch certification matrix" });
+    }
+  });
+
+  app.get('/api/certifications/scientist/:scientistId', async (req: Request, res: Response) => {
+    try {
+      const scientistId = parseInt(req.params.scientistId);
+      if (isNaN(scientistId)) {
+        return res.status(400).json({ message: "Invalid scientist ID" });
+      }
+
+      const certifications = await storage.getCertificationsByScientist(scientistId);
+      res.json(certifications);
+    } catch (error) {
+      console.error('Error fetching scientist certifications:', error);
+      res.status(500).json({ message: "Failed to fetch scientist certifications" });
+    }
+  });
+
+  app.post('/api/certifications', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCertificationSchema.parse(req.body);
+      const certification = await storage.createCertification(validatedData);
+      res.status(201).json(certification);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error creating certification:', error);
+        res.status(500).json({ message: "Failed to create certification" });
+      }
+    }
+  });
+
+  app.put('/api/certifications/:id', async (req: Request, res: Response) => {
+    try {
+      const certificationId = parseInt(req.params.id);
+      if (isNaN(certificationId)) {
+        return res.status(400).json({ message: "Invalid certification ID" });
+      }
+
+      const validatedData = insertCertificationSchema.partial().parse(req.body);
+      const certification = await storage.updateCertification(certificationId, validatedData);
+      res.json(certification);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error updating certification:', error);
+        res.status(500).json({ message: "Failed to update certification" });
+      }
+    }
+  });
+
+  app.delete('/api/certifications/:id', async (req: Request, res: Response) => {
+    try {
+      const certificationId = parseInt(req.params.id);
+      if (isNaN(certificationId)) {
+        return res.status(400).json({ message: "Invalid certification ID" });
+      }
+
+      const success = await storage.deleteCertification(certificationId);
+      if (!success) {
+        return res.status(404).json({ message: "Certification not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting certification:', error);
+      res.status(500).json({ message: "Failed to delete certification" });
+    }
+  });
+
+  // Certification configuration routes
+  app.get('/api/certification-config', async (req: Request, res: Response) => {
+    try {
+      const config = await storage.getCertificationConfiguration();
+      res.json(config || {});
+    } catch (error) {
+      console.error('Error fetching certification configuration:', error);
+      res.status(500).json({ message: "Failed to fetch certification configuration" });
+    }
+  });
+
+  app.post('/api/certification-config', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCertificationConfigurationSchema.parse(req.body);
+      const config = await storage.createCertificationConfiguration(validatedData);
+      res.status(201).json(config);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error creating certification configuration:', error);
+        res.status(500).json({ message: "Failed to create certification configuration" });
+      }
+    }
+  });
+
+  app.put('/api/certification-config/:id', async (req: Request, res: Response) => {
+    try {
+      const configId = parseInt(req.params.id);
+      if (isNaN(configId)) {
+        return res.status(400).json({ message: "Invalid config ID" });
+      }
+
+      const validatedData = insertCertificationConfigurationSchema.partial().parse(req.body);
+      const config = await storage.updateCertificationConfiguration(configId, validatedData);
+      res.json(config);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error updating certification configuration:', error);
+        res.status(500).json({ message: "Failed to update certification configuration" });
+      }
+    }
+  });
+
+  // OCR endpoint for PDF processing (stub for now)
+  app.post('/api/certifications/process-pdf', async (req: Request, res: Response) => {
+    try {
+      const { fileUrl, fileName } = req.body;
+      
+      // TODO: Implement OCR processing here
+      // For now, return a mock response
+      const extractedData = {
+        staffName: "Extracted Name",
+        moduleName: "Extracted Module",
+        startDate: "2024-01-01",
+        endDate: "2027-01-01",
+        confidence: 0.85
+      };
+
+      res.json({ 
+        success: true, 
+        extractedData,
+        message: "PDF processed successfully (mock implementation)" 
+      });
+    } catch (error) {
+      console.error('Error processing PDF:', error);
+      res.status(500).json({ message: "Failed to process PDF" });
     }
   });
 

@@ -33,7 +33,10 @@ import {
   journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
   grants, Grant, InsertGrant,
   grantResearchActivities, GrantResearchActivity, InsertGrantResearchActivity,
-  grantProgressReports, GrantProgressReport, InsertGrantProgressReport
+  grantProgressReports, GrantProgressReport, InsertGrantProgressReport,
+  certificationModules, CertificationModule, InsertCertificationModule,
+  certifications, Certification, InsertCertification,
+  certificationConfigurations, CertificationConfiguration, InsertCertificationConfiguration
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -85,7 +88,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProgram(id: number): Promise<boolean> {
     const result = await db.delete(programs).where(eq(programs.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Projects operations
@@ -123,7 +126,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: number): Promise<boolean> {
     const result = await db.delete(projects).where(eq(projects.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Scientist operations
@@ -173,7 +176,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteScientist(id: number): Promise<boolean> {
     const result = await db.delete(scientists).where(eq(scientists.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getStaff(): Promise<Scientist[]> {
@@ -246,7 +249,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteResearchActivity(id: number): Promise<boolean> {
     const result = await db.delete(researchActivities).where(eq(researchActivities.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
   
   // Project Members operations
@@ -272,7 +275,7 @@ export class DatabaseStorage implements IStorage {
           eq(projectMembers.scientistId, scientistId)
         )
       );
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Data Management Plan operations
@@ -309,7 +312,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDataManagementPlan(id: number): Promise<boolean> {
     const result = await db.delete(dataManagementPlans).where(eq(dataManagementPlans.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Publication operations
@@ -483,7 +486,7 @@ export class DatabaseStorage implements IStorage {
 
   async deletePublication(id: number): Promise<boolean> {
     const result = await db.delete(publications).where(eq(publications.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Manuscript History operations
@@ -659,7 +662,7 @@ export class DatabaseStorage implements IStorage {
         eq(publicationAuthors.publicationId, publicationId),
         eq(publicationAuthors.scientistId, scientistId)
       ));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async updatePublicationAuthor(publicationId: number, scientistId: number, updates: Partial<InsertPublicationAuthor>): Promise<PublicationAuthor | undefined> {
@@ -704,7 +707,7 @@ export class DatabaseStorage implements IStorage {
 
   async deletePatent(id: number): Promise<boolean> {
     const result = await db.delete(patents).where(eq(patents.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // IRB Application operations
@@ -742,7 +745,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIrbApplication(id: number): Promise<boolean> {
     const result = await db.delete(irbApplications).where(eq(irbApplications.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // IRB Submission operations
@@ -775,7 +778,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIrbSubmission(id: number): Promise<boolean> {
     const result = await db.delete(irbSubmissions).where(eq(irbSubmissions.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // IRB Document operations
@@ -812,7 +815,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIrbDocument(id: number): Promise<boolean> {
     const result = await db.delete(irbDocuments).where(eq(irbDocuments.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // IBC Application operations
@@ -892,7 +895,7 @@ export class DatabaseStorage implements IStorage {
           eq(ibcApplicationResearchActivities.researchActivityId, researchActivityId)
         )
       );
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async updateIbcApplication(id: number, application: Partial<InsertIbcApplication>): Promise<IbcApplication | undefined> {
@@ -910,7 +913,7 @@ export class DatabaseStorage implements IStorage {
     
     // Then delete the application
     const result = await db.delete(ibcApplications).where(eq(ibcApplications.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // IBC Application Comment operations
@@ -947,7 +950,7 @@ export class DatabaseStorage implements IStorage {
         eq(ibcApplicationRooms.applicationId, applicationId),
         eq(ibcApplicationRooms.roomId, roomId)
       ));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getIbcBackboneSourceRooms(applicationId: number): Promise<IbcBackboneSourceRoom[]> {
@@ -970,7 +973,7 @@ export class DatabaseStorage implements IStorage {
         eq(ibcBackboneSourceRooms.backboneSource, backboneSource),
         eq(ibcBackboneSourceRooms.roomId, roomId)
       ));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getIbcApplicationPpe(applicationId: number): Promise<IbcApplicationPpe[]> {
@@ -1003,7 +1006,7 @@ export class DatabaseStorage implements IStorage {
         eq(ibcApplicationPpe.roomId, roomId),
         eq(ibcApplicationPpe.ppeItem, ppeItem)
       ));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Research Contract operations
@@ -1041,7 +1044,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteResearchContract(id: number): Promise<boolean> {
     const result = await db.delete(researchContracts).where(eq(researchContracts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Dashboard operations
@@ -1207,7 +1210,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(irbBoardMembers)
       .where(eq(irbBoardMembers.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getActiveIrbBoardMembers(): Promise<(IrbBoardMember & { scientist: Scientist })[]> {
@@ -1288,7 +1291,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(ibcBoardMembers)
       .where(eq(ibcBoardMembers.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getActiveIbcBoardMembers(): Promise<(IbcBoardMember & { scientist: Scientist })[]> {
@@ -1343,7 +1346,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIbcSubmission(id: number): Promise<boolean> {
     const result = await db.delete(ibcSubmissions).where(eq(ibcSubmissions.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // IBC Documents
@@ -1378,7 +1381,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIbcDocument(id: number): Promise<boolean> {
     const result = await db.delete(ibcDocuments).where(eq(ibcDocuments.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Enhanced IBC Application methods with workflow support
@@ -1445,7 +1448,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBuilding(id: number): Promise<boolean> {
     const result = await db.delete(buildings).where(eq(buildings.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Room operations
@@ -1480,7 +1483,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRoom(id: number): Promise<boolean> {
     const result = await db.delete(rooms).where(eq(rooms.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Scientists filtering by role for room assignments
@@ -1637,7 +1640,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteJournalImpactFactor(id: number): Promise<boolean> {
     const result = await db.delete(journalImpactFactors).where(eq(journalImpactFactors.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Grant operations
@@ -1671,7 +1674,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGrant(id: number): Promise<boolean> {
     const result = await db.delete(grants).where(eq(grants.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Grant-Research Activity relationship operations
@@ -1718,7 +1721,7 @@ export class DatabaseStorage implements IStorage {
         eq(grantResearchActivities.grantId, grantId),
         eq(grantResearchActivities.researchActivityId, researchActivityId)
       ));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getResearchActivityIbcApplications(researchActivityId: number): Promise<{ id: number; ibcNumber: string; title: string; status: string; workflowStatus: string; }[]> {
@@ -1772,7 +1775,172 @@ export class DatabaseStorage implements IStorage {
       .delete(grantProgressReports)
       .where(eq(grantProgressReports.id, id));
 
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Certification Modules operations
+  async getCertificationModules(): Promise<CertificationModule[]> {
+    return await db
+      .select()
+      .from(certificationModules)
+      .where(eq(certificationModules.isActive, true))
+      .orderBy(asc(certificationModules.name));
+  }
+
+  async getCertificationModule(id: number): Promise<CertificationModule | undefined> {
+    const [module] = await db
+      .select()
+      .from(certificationModules)
+      .where(eq(certificationModules.id, id));
+    return module;
+  }
+
+  async createCertificationModule(module: InsertCertificationModule): Promise<CertificationModule> {
+    const [newModule] = await db
+      .insert(certificationModules)
+      .values(module)
+      .returning();
+    return newModule;
+  }
+
+  async updateCertificationModule(id: number, module: Partial<InsertCertificationModule>): Promise<CertificationModule> {
+    const [updatedModule] = await db
+      .update(certificationModules)
+      .set({ ...module, updatedAt: sql`now()` })
+      .where(eq(certificationModules.id, id))
+      .returning();
+    return updatedModule;
+  }
+
+  async deleteCertificationModule(id: number): Promise<boolean> {
+    const result = await db
+      .update(certificationModules)
+      .set({ isActive: false, updatedAt: sql`now()` })
+      .where(eq(certificationModules.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Certifications operations
+  async getCertifications(): Promise<Certification[]> {
+    return await db
+      .select()
+      .from(certifications)
+      .orderBy(desc(certifications.endDate));
+  }
+
+  async getCertificationsByScientist(scientistId: number): Promise<Certification[]> {
+    return await db
+      .select()
+      .from(certifications)
+      .where(eq(certifications.scientistId, scientistId))
+      .orderBy(desc(certifications.endDate));
+  }
+
+  async getCertificationsByModule(moduleId: number): Promise<Certification[]> {
+    return await db
+      .select()
+      .from(certifications)
+      .where(eq(certifications.moduleId, moduleId))
+      .orderBy(desc(certifications.endDate));
+  }
+
+  async getCertificationMatrix(): Promise<any[]> {
+    // Get all scientists first
+    const scientistsList = await db
+      .select({
+        id: scientists.id,
+        name: sql<string>`${scientists.honorificTitle} || ' ' || ${scientists.firstName} || ' ' || ${scientists.lastName}`,
+      })
+      .from(scientists)
+      .where(eq(scientists.staffType, "scientific"))
+      .orderBy(asc(scientists.lastName), asc(scientists.firstName));
+
+    // Get all active modules
+    const modulesList = await db
+      .select()
+      .from(certificationModules)
+      .where(eq(certificationModules.isActive, true))
+      .orderBy(asc(certificationModules.name));
+
+    // Get all certifications
+    const certificationsList = await db
+      .select()
+      .from(certifications);
+
+    // Build matrix data manually since crossJoin isn't available
+    const matrixData = [];
+    for (const scientist of scientistsList) {
+      for (const module of modulesList) {
+        const certification = certificationsList.find(
+          c => c.scientistId === scientist.id && c.moduleId === module.id
+        );
+        
+        matrixData.push({
+          scientistId: scientist.id,
+          scientistName: scientist.name,
+          moduleId: module.id,
+          moduleName: module.name,
+          certificationId: certification?.id || null,
+          startDate: certification?.startDate || null,
+          endDate: certification?.endDate || null,
+          certificateFilePath: certification?.certificateFilePath || null,
+          reportFilePath: certification?.reportFilePath || null,
+        });
+      }
+    }
+
+    return matrixData;
+  }
+
+  async createCertification(certification: InsertCertification): Promise<Certification> {
+    const [newCertification] = await db
+      .insert(certifications)
+      .values(certification)
+      .returning();
+    return newCertification;
+  }
+
+  async updateCertification(id: number, certification: Partial<InsertCertification>): Promise<Certification> {
+    const [updatedCertification] = await db
+      .update(certifications)
+      .set({ ...certification, updatedAt: sql`now()` })
+      .where(eq(certifications.id, id))
+      .returning();
+    return updatedCertification;
+  }
+
+  async deleteCertification(id: number): Promise<boolean> {
+    const result = await db
+      .delete(certifications)
+      .where(eq(certifications.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Certification Configuration operations
+  async getCertificationConfiguration(): Promise<CertificationConfiguration | undefined> {
+    const [config] = await db
+      .select()
+      .from(certificationConfigurations)
+      .orderBy(desc(certificationConfigurations.updatedAt))
+      .limit(1);
+    return config;
+  }
+
+  async createCertificationConfiguration(config: InsertCertificationConfiguration): Promise<CertificationConfiguration> {
+    const [newConfig] = await db
+      .insert(certificationConfigurations)
+      .values(config)
+      .returning();
+    return newConfig;
+  }
+
+  async updateCertificationConfiguration(id: number, config: Partial<InsertCertificationConfiguration>): Promise<CertificationConfiguration> {
+    const [updatedConfig] = await db
+      .update(certificationConfigurations)
+      .set({ ...config, updatedAt: sql`now()` })
+      .where(eq(certificationConfigurations.id, id))
+      .returning();
+    return updatedConfig;
   }
 }
 
