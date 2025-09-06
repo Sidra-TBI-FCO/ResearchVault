@@ -403,7 +403,7 @@ export default function CertificationsPage() {
               <h1 className="text-3xl font-bold tracking-tight text-sidra-primary">Certification Management</h1>
               {ocrConfig && (
                 <Badge variant="secondary" className="text-xs">
-                  OCR: {ocrConfig.value === 'tesseract' ? 'Tesseract.js (Local)' : 'OCR.space (API)'}
+                  OCR: {(ocrConfig.value?.provider || 'ocr_space') === 'tesseract' ? 'Tesseract.js (Local)' : 'OCR.space (API)'}
                 </Badge>
               )}
             </div>
