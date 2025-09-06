@@ -114,7 +114,7 @@ export default function CertificationsPage() {
   
   // PDF import history state
   const [historySearchTerm, setHistorySearchTerm] = useState("");
-  const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("all");
   const [historyDateFrom, setHistoryDateFrom] = useState<string>("");
   const [historyDateTo, setHistoryDateTo] = useState<string>("");
   
@@ -141,7 +141,7 @@ export default function CertificationsPage() {
   const { data: pdfHistory = [], isLoading: historyLoading, refetch: refetchHistory } = useQuery({
     queryKey: ['/api/pdf-import-history', {
       scientistName: historySearchTerm,
-      status: historyStatusFilter,
+      status: historyStatusFilter === 'all' ? '' : historyStatusFilter,
       dateFrom: historyDateFrom,
       dateTo: historyDateTo
     }],
@@ -741,7 +741,7 @@ export default function CertificationsPage() {
                       <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All statuses</SelectItem>
+                      <SelectItem value="all">All statuses</SelectItem>
                       <SelectItem value="processing">Processing</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="failed">Failed</SelectItem>
