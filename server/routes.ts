@@ -420,10 +420,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('=== PARSING CITI CERTIFICATE ===');
       console.log('Raw text length:', text.length);
+      console.log('Raw text sample (first 300 chars):', text.substring(0, 300));
       
       // Clean up text - remove extra whitespace and normalize
       const cleanText = text.replace(/\s+/g, ' ').trim();
       console.log('Cleaned text length:', cleanText.length);
+      console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
 
       // Extract completion date - more flexible patterns
       console.log('Searching for completion date...');
@@ -459,9 +461,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('No record ID match found');
       }
 
-      // Extract person name - improved patterns for different formats
+      // Extract person name - improved patterns for CITI certificates
       console.log('Searching for person name...');
-      let nameMatch = text.match(/Name:\s*([^\(\n\r]+)/i) ||
+      // Look for "Name: [Full Name] (ID: [number])" pattern first
+      let nameMatch = text.match(/Name:\s*([^\(\n\r]+)(?:\s*\(ID:|$)/i) ||
                      text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
       if (!nameMatch) {
         // Try alternative patterns
@@ -473,36 +476,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Found name:', result.name);
       } else {
         console.log('No name match found');
+        console.log('Text being searched for name (first 200 chars):', text.substring(0, 200));
       }
 
-      // Extract course name - improved patterns for CITI courses
-      let courseMatch = text.match(/CITI Program course:\s*\n\s*([^\n]+)/i) ||
+      // Extract course name - improved patterns for CITI courses  
+      console.log('Searching for course name...');
+      // Look for "Course: [Course Name]" or "CITI Program course: [Course Name]"
+      let courseMatch = text.match(/Course:\s*([^\n\r]+?)(?:\s*Stage|$)/i) ||
+                       text.match(/CITI Program course:\s*\n\s*([^\n]+)/i) ||
                        text.match(/CITI Program course:\s*([^\n\r]+)/i) ||
                        text.match(/following CITI[^:]*course:\s*([^\n\r]+)/i);
       
       if (!courseMatch) {
-        // Try to extract from curriculum group or course learner group
-        courseMatch = text.match(/CITI\s+([^(\n\r]+?)(?:\s*\(|$)/i);
+        // Try to extract Biosafety or other training series
+        courseMatch = text.match(/([^.\n]*(?:Biosafety|Training Series)[^.\n]*)/i) ||
+                     text.match(/Stage\s+\d+\s*-\s*([^\n\r]+)/i) ||
+                     text.match(/CITI\s+([^(\n\r]+?)(?:\s*\(|$)/i);
       }
 
       if (courseMatch) {
         result.courseName = courseMatch[1].trim().replace(/\s+/g, ' ');
+        console.log('Found course name:', result.courseName);
         
-        // Find matching module with improved matching
+        // Find matching module with improved matching for biosafety
         const module = modules.find(m => {
           const courseLower = result.courseName.toLowerCase();
           const moduleLower = m.name.toLowerCase();
           
           return moduleLower.includes(courseLower) ||
                  courseLower.includes(moduleLower) ||
-                 (courseLower.includes('conflict') && moduleLower.includes('conflict')) ||
                  (courseLower.includes('biosafety') && moduleLower.includes('biosafety')) ||
+                 (courseLower.includes('conflict') && moduleLower.includes('conflict')) ||
                  (courseLower.includes('animal') && moduleLower.includes('animal')) ||
                  (courseLower.includes('human') && moduleLower.includes('human'));
         });
         
+        console.log('Module matching results:');
+        console.log('Course name to match:', courseLower);
+        modules.forEach(m => {
+          const mLower = m.name.toLowerCase();
+          const matches = mLower.includes(courseLower) || courseLower.includes(mLower) || 
+                         (courseLower.includes('biosafety') && mLower.includes('biosafety'));
+          console.log(`Module "${m.name}" - match: ${matches}`);
+        });
+        
         result.module = module || null;
         result.isNewModule = !module;
+        
+        if (module) {
+          console.log('Matched with existing module:', module.name);
+        } else {
+          console.log('No matching module found, will create new placeholder');
+        }
+      } else {
+        console.log('No course name match found');
+        console.log('Text being searched for course (first 500 chars):', text.substring(0, 500));
       }
 
       // Extract institution - improved pattern
