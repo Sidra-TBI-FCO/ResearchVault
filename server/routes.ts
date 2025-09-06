@@ -968,24 +968,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notes
           } = cert;
 
-          // Debug logging for certificate data
-          console.log('🔍 Processing certificate for saving:', {
-            scientistId,
-            moduleId,
-            startDate,
-            endDate,
-            hasModule: !!cert.module,
-            certKeys: Object.keys(cert)
-          });
-
           // Validate required fields
           if (!scientistId || !moduleId || !startDate || !endDate) {
-            console.log('❌ Validation failed - Missing fields:', {
-              scientistId: scientistId || 'MISSING',
-              moduleId: moduleId || 'MISSING', 
-              startDate: startDate || 'MISSING',
-              endDate: endDate || 'MISSING'
-            });
             results.push({
               ...cert,
               status: 'error',
@@ -993,8 +977,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
             continue;
           }
-
-          console.log('✅ All validation passed, creating certification...');
 
           const certification = await storage.createCertification({
             scientistId,
@@ -1007,22 +989,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notes
           });
 
-          console.log('🎉 Certification created successfully with ID:', certification.id);
-          console.log('📋 Saved certification details:', {
-            id: certification.id,
-            scientistId: certification.scientistId,
-            moduleId: certification.moduleId,
-            startDate: certification.startDate,
-            endDate: certification.endDate
-          });
-
           results.push({
             ...cert,
             status: 'success',
             certificationId: certification.id
           });
         } catch (error: any) {
-          console.log('❌ Error creating certification:', error.message);
           results.push({
             ...cert,
             status: 'error',
@@ -1035,15 +1007,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const errorCount = results.filter(r => r.status === 'error').length;
 
       // Update PDF import history entries with save status
-      console.log('📝 Updating PDF import history with save status...');
       for (const cert of certifications) {
         const result = results.find(r => r.fileName === cert.fileName);
         const saveStatus = result?.status === 'success' ? 'saved' : 'not_saved';
         
         try {
-          // Find the history entry by filename and update save status
           await storage.updatePdfImportHistorySaveStatus(cert.fileName, saveStatus);
-          console.log(`Updated ${cert.fileName} with save status: ${saveStatus}`);
         } catch (error) {
           console.error(`Failed to update save status for ${cert.fileName}:`, error);
         }

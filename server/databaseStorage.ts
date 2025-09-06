@@ -1879,10 +1879,7 @@ export class DatabaseStorage implements IStorage {
         name: sql<string>`${scientists.honorificTitle} || ' ' || ${scientists.firstName} || ' ' || ${scientists.lastName}`,
       })
       .from(scientists)
-      .where(or(
-        eq(scientists.staffType, "scientific"),
-        eq(scientists.staffType, "staff")  // Include all staff types in certification matrix
-      ))
+      .where(eq(scientists.staffType, "scientific"))
       .orderBy(asc(scientists.lastName), asc(scientists.firstName));
 
     // Get all active modules
