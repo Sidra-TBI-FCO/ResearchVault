@@ -1,15 +1,17 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Settings, Upload, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Download, Settings, Upload, FileText, Check, X, AlertTriangle, Plus } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface CertificationMatrixItem {
   scientistId: number;
@@ -30,6 +32,25 @@ interface CertificationModule {
   isCore: boolean;
   expirationMonths: number;
   isActive: boolean;
+}
+
+interface DetectedCertificate {
+  fileName: string;
+  filePath: string;
+  originalUrl: string;
+  status: 'detected' | 'unrecognized' | 'error' | 'unknown';
+  moduleAbbreviation?: string;
+  year?: number;
+  module?: CertificationModule | null;
+  isNewModule?: boolean;
+  error?: string;
+}
+
+interface PendingCertification extends DetectedCertificate {
+  scientistId?: number;
+  startDate?: string;
+  endDate?: string;
+  notes?: string;
 }
 
 function getCertificationStatus(endDate: string | null): {
@@ -57,7 +78,10 @@ function getCertificationStatus(endDate: string | null): {
 export default function CertificationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("matrix");
+  const [detectedFiles, setDetectedFiles] = useState<PendingCertification[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: matrixData = [], isLoading: matrixLoading } = useQuery({
     queryKey: ['/api/certifications/matrix'],
@@ -67,9 +91,73 @@ export default function CertificationsPage() {
     queryKey: ['/api/certification-modules'],
   });
 
+  const { data: scientists = [] } = useQuery({
+    queryKey: ['/api/scientists'],
+  });
+
+  const processCertificatesMutation = useMutation({
+    mutationFn: async (fileUrls: string[]) => {
+      return apiRequest('/api/certificates/process-batch', {
+        method: 'POST',
+        body: { fileUrls }
+      });
+    },
+    onSuccess: (data) => {
+      setDetectedFiles(data.results.map((result: DetectedCertificate) => ({
+        ...result,
+        scientistId: undefined,
+        startDate: '',
+        endDate: '',
+        notes: ''
+      })));
+      toast({
+        title: "Files processed",
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Processing failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const confirmCertificationsMutation = useMutation({
+    mutationFn: async (certifications: PendingCertification[]) => {
+      return apiRequest('/api/certificates/confirm-batch', {
+        method: 'POST',
+        body: { certifications }
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/certifications/matrix'] });
+      setDetectedFiles([]);
+      toast({
+        title: "Certifications saved",
+        description: `${data.summary.successful} certifications added successfully`,
+      });
+      if (data.summary.failed > 0) {
+        toast({
+          title: "Some certifications failed",
+          description: `${data.summary.failed} certifications could not be processed`,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Save failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Transform matrix data for table display
-  const { scientists, moduleHeaders } = useMemo(() => {
-    if (!matrixData.length) return { scientists: [], moduleHeaders: [] };
+  const { matrixScientists, moduleHeaders } = useMemo(() => {
+    if (!matrixData.length) return { matrixScientists: [], moduleHeaders: [] };
 
     // Get unique scientists
     const scientistMap = new Map();
@@ -97,18 +185,18 @@ export default function CertificationsPage() {
     });
 
     return {
-      scientists: Array.from(scientistMap.values()),
+      matrixScientists: Array.from(scientistMap.values()),
       moduleHeaders: Array.from(moduleMap.values()),
     };
   }, [matrixData]);
 
   // Filter scientists based on search term
   const filteredScientists = useMemo(() => {
-    if (!searchTerm) return scientists;
-    return scientists.filter((scientist: any) =>
+    if (!searchTerm) return matrixScientists;
+    return matrixScientists.filter((scientist: any) =>
       scientist.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [scientists, searchTerm]);
+  }, [matrixScientists, searchTerm]);
 
   const handleCellClick = async (certification: CertificationMatrixItem) => {
     if (!certification.certificationId) return;
@@ -285,16 +373,16 @@ export default function CertificationsPage() {
             </CardHeader>
             <CardContent>
               <ObjectUploader
-                maxNumberOfFiles={5}
+                maxNumberOfFiles={10}
                 maxFileSize={10485760} // 10MB
                 acceptedFileTypes={['application/pdf']}
-                onComplete={(uploadedFiles) => {
-                  console.log('Files uploaded:', uploadedFiles);
-                  // TODO: Process uploaded files with OCR
-                  toast({
-                    title: "Files uploaded successfully",
-                    description: `${uploadedFiles.length} file(s) uploaded and ready for processing`,
-                  });
+                onComplete={(result) => {
+                  const fileUrls = result.successful.map((file: any) => file.uploadURL);
+                  if (fileUrls.length > 0) {
+                    setIsProcessing(true);
+                    processCertificatesMutation.mutate(fileUrls);
+                    setIsProcessing(false);
+                  }
                 }}
                 showDropzone={true}
               />
@@ -305,11 +393,180 @@ export default function CertificationsPage() {
                   <li>• Upload either CITI certificates or completion reports (both contain the required information)</li>
                   <li>• Files will be automatically processed to extract certification details</li>
                   <li>• Review and verify the extracted data before saving</li>
-                  <li>• Maximum 5 files per upload, 10MB each</li>
+                  <li>• Maximum 10 files per upload, 10MB each</li>
                 </ul>
               </div>
             </CardContent>
           </Card>
+
+          {detectedFiles.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Detected Certificates</CardTitle>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => setDetectedFiles([])}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Clear All
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        const validCerts = detectedFiles.filter(f => 
+                          f.status === 'detected' && f.scientistId && f.startDate && f.endDate && f.module
+                        );
+                        if (validCerts.length === 0) {
+                          toast({
+                            title: "No valid certifications",
+                            description: "Please complete all required fields for at least one certification",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        confirmCertificationsMutation.mutate(validCerts.map(cert => ({
+                          ...cert,
+                          moduleId: cert.module!.id,
+                          certificateFilePath: cert.filePath
+                        })));
+                      }}
+                      disabled={confirmCertificationsMutation.isPending}
+                      size="sm"
+                    >
+                      {confirmCertificationsMutation.isPending ? 'Saving...' : 'Save All Valid'}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Status</TableHead>
+                        <TableHead>File Name</TableHead>
+                        <TableHead>Module</TableHead>
+                        <TableHead>Scientist</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detectedFiles.map((file, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {file.status === 'detected' ? (
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                <Check className="h-3 w-3 mr-1" />
+                                Detected
+                              </Badge>
+                            ) : file.status === 'unrecognized' ? (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Unknown
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                <X className="h-3 w-3 mr-1" />
+                                Error
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs max-w-48">
+                            {file.fileName}
+                          </TableCell>
+                          <TableCell>
+                            {file.isNewModule ? (
+                              <Badge variant="outline" className="border-orange-500 text-orange-700">
+                                <Plus className="h-3 w-3 mr-1" />
+                                {file.moduleAbbreviation} (New)
+                              </Badge>
+                            ) : file.module ? (
+                              <span className="text-sm">{file.module.name}</span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={file.scientistId?.toString() || ""}
+                              onValueChange={(value) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], scientistId: parseInt(value) };
+                                setDetectedFiles(updated);
+                              }}
+                            >
+                              <SelectTrigger className="w-48">
+                                <SelectValue placeholder="Select scientist" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {scientists.map((scientist: any) => (
+                                  <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                    {scientist.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={file.startDate || ""}
+                              onChange={(e) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], startDate: e.target.value };
+                                setDetectedFiles(updated);
+                              }}
+                              className="w-36"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={file.endDate || ""}
+                              onChange={(e) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], endDate: e.target.value };
+                                setDetectedFiles(updated);
+                              }}
+                              className="w-36"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              placeholder="Record ID, Score, etc."
+                              value={file.notes || ""}
+                              onChange={(e) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], notes: e.target.value };
+                                setDetectedFiles(updated);
+                              }}
+                              className="w-48"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const updated = detectedFiles.filter((_, i) => i !== index);
+                                setDetectedFiles(updated);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="modules" className="space-y-6">

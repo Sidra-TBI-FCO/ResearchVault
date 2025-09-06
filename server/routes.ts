@@ -64,6 +64,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Certificate processing - batch detection
+  app.post("/api/certificates/process-batch", async (req, res) => {
+    try {
+      const { fileUrls } = req.body;
+      if (!fileUrls || !Array.isArray(fileUrls)) {
+        return res.status(400).json({ message: "File URLs array is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const modules = await storage.getCertificationModules();
+      const results = [];
+
+      for (const fileUrl of fileUrls) {
+        try {
+          const normalizedPath = objectStorageService.normalizeObjectEntityPath(fileUrl);
+          const pathParts = normalizedPath.split('/');
+          const fileName = pathParts[pathParts.length - 1];
+          
+          // Parse CITI certificate filename pattern: CITI_[MODULE]_[NAME]_[DATE]_[TYPE].pdf
+          const citiPattern = /CITI_([A-Z]+)_.*_(\d{4}).*\.(pdf|PDF)$/i;
+          const match = fileName.match(citiPattern);
+          
+          let detectedData: any = {
+            fileName,
+            filePath: normalizedPath,
+            originalUrl: fileUrl,
+            status: 'unknown',
+            moduleAbbreviation: null,
+            year: null,
+            module: null,
+            isNewModule: false
+          };
+
+          if (match) {
+            const [, moduleAbbr, year] = match;
+            const module = modules.find(m => 
+              m.name.toLowerCase().includes(moduleAbbr.toLowerCase()) ||
+              m.name.toLowerCase().startsWith(moduleAbbr.toLowerCase())
+            );
+
+            detectedData = {
+              ...detectedData,
+              status: 'detected',
+              moduleAbbreviation: moduleAbbr,
+              year: parseInt(year),
+              module: module || null,
+              isNewModule: !module
+            };
+          } else {
+            detectedData.status = 'unrecognized';
+          }
+
+          results.push(detectedData);
+        } catch (error: any) {
+          results.push({
+            fileName: fileUrl.split('/').pop(),
+            filePath: fileUrl,
+            originalUrl: fileUrl,
+            status: 'error',
+            error: error?.message || 'Unknown error'
+          });
+        }
+      }
+
+      res.json({
+        message: `Processed ${results.length} files`,
+        results
+      });
+    } catch (error) {
+      console.error("Error processing certificates:", error);
+      res.status(500).json({ message: "Failed to process certificates" });
+    }
+  });
+
+  // Certificate batch confirmation
+  app.post("/api/certificates/confirm-batch", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { certifications } = req.body;
+
+      if (!certifications || !Array.isArray(certifications)) {
+        return res.status(400).json({ message: "Certifications array is required" });
+      }
+
+      const results = [];
+      for (const cert of certifications) {
+        try {
+          const {
+            scientistId,
+            moduleId,
+            startDate,
+            endDate,
+            certificateFilePath,
+            reportFilePath,
+            notes
+          } = cert;
+
+          // Validate required fields
+          if (!scientistId || !moduleId || !startDate || !endDate) {
+            results.push({
+              ...cert,
+              status: 'error',
+              error: 'Missing required fields'
+            });
+            continue;
+          }
+
+          const certification = await storage.createCertification({
+            scientistId,
+            moduleId,
+            startDate,
+            endDate,
+            certificateFilePath,
+            reportFilePath,
+            uploadedBy: userId,
+            notes
+          });
+
+          results.push({
+            ...cert,
+            status: 'success',
+            certificationId: certification.id
+          });
+        } catch (error: any) {
+          results.push({
+            ...cert,
+            status: 'error',
+            error: error?.message || 'Unknown error'
+          });
+        }
+      }
+
+      const successCount = results.filter(r => r.status === 'success').length;
+      const errorCount = results.filter(r => r.status === 'error').length;
+
+      res.json({
+        message: `Processed ${results.length} certifications: ${successCount} successful, ${errorCount} failed`,
+        results,
+        summary: { total: results.length, successful: successCount, failed: errorCount }
+      });
+    } catch (error) {
+      console.error("Error confirming certifications:", error);
+      res.status(500).json({ message: "Failed to confirm certifications" });
+    }
+  });
+
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
