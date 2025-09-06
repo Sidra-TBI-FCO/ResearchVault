@@ -90,14 +90,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             // Get OCR service configuration
             const ocrConfig = await storage.getSystemConfiguration('ocr_service');
-            const ocrSettings = ocrConfig?.value as any || { provider: 'tesseract' };
+            const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' }; // Default to OCR.space for PDF support
+            
+            // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
+            let provider = ocrSettings.provider;
+            let fileExtension = '';
+            try {
+              const url = new URL(fileUrl);
+              const pathSegments = url.pathname.split('/');
+              const fileName = pathSegments[pathSegments.length - 1];
+              if (fileName && fileName.includes('.')) {
+                fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+              }
+            } catch (e) {
+              // Try to detect PDF from content-type if URL parsing fails
+              try {
+                const headResponse = await fetch(fileUrl, { method: 'HEAD' });
+                const contentType = headResponse.headers.get('content-type') || '';
+                if (contentType.includes('pdf')) {
+                  fileExtension = 'pdf';
+                }
+              } catch (headerError) {
+                console.log('Could not detect file type, using configured provider');
+              }
+            }
+            
+            if (fileExtension === 'pdf' && provider === 'tesseract') {
+              provider = 'ocr_space';
+              console.log('Switching to OCR.space for PDF processing');
+            }
             
             detectedData.status = 'processing';
-            console.log(`Processing OCR for file: ${fileUrl} using ${ocrSettings.provider}`);
+            console.log(`Processing OCR for file: ${fileUrl} using ${provider}`);
 
             let extractedText = '';
 
-            if (ocrSettings.provider === 'ocr_space') {
+            if (provider === 'ocr_space') {
               // Use OCR.space API
               const controller = new AbortController();
               const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -178,12 +206,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   console.log('Could not parse URL for format detection, proceeding with OCR attempt');
                 }
 
+                // Note: PDFs should have been automatically switched to OCR.space above
+                
                 const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'];
-                
-                if (fileExtension === 'pdf') {
-                  throw new Error('PDF files are not supported by Tesseract OCR. Please convert to an image format (PNG, JPEG) or use OCR.space service.');
-                }
-                
                 if (fileExtension && !supportedFormats.includes(fileExtension)) {
                   console.log(`Detected file format: ${fileExtension}, but proceeding with OCR attempt as detection may be inaccurate for signed URLs`);
                 }
