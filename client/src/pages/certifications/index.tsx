@@ -301,24 +301,25 @@ export default function CertificationsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-sidra-primary">Certification Management</h1>
-            {ocrConfig && (
-              <Badge variant="secondary" className="text-xs">
-                OCR: {ocrConfig.value === 'tesseract' ? 'Tesseract.js (Local)' : 'OCR.space (API)'}
-              </Badge>
-            )}
+    <div className="min-h-screen overflow-y-auto pb-8">
+      <div className="space-y-6 p-4 max-w-full">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight text-sidra-primary">Certification Management</h1>
+              {ocrConfig && (
+                <Badge variant="secondary" className="text-xs">
+                  OCR: {ocrConfig.value === 'tesseract' ? 'Tesseract.js (Local)' : 'OCR.space (API)'}
+                </Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground">
+              Manage CITI certifications and compliance requirements for research staff
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Manage CITI certifications and compliance requirements for research staff
-          </p>
         </div>
-      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
         <div className="w-full overflow-x-auto">
           <TabsList className="flex w-max min-w-full">
             <TabsTrigger value="matrix" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
@@ -1045,7 +1046,8 @@ export default function CertificationsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }
