@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, Settings, Upload, FileText, Check, X, AlertTriangle, Plus } from "lucide-react";
+import { Search, Download, Settings, Upload, FileText, Check, X, AlertTriangle, Plus, History, Filter } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +58,32 @@ interface PendingCertification extends DetectedCertificate {
   notes?: string;
 }
 
+interface PdfImportHistoryEntry {
+  id: number;
+  fileName: string;
+  fileUrl: string;
+  uploadedBy: number;
+  assignedScientistId?: number;
+  extractedText?: string;
+  extractedData?: any;
+  processingStatus: 'processing' | 'completed' | 'failed';
+  ocrProvider: string;
+  errorMessage?: string;
+  processingTimeMs?: number;
+  uploadedAt: string;
+  processedAt?: string;
+  uploader?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  assignedScientist?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
 function getCertificationStatus(endDate: string | null): {
   status: 'valid' | 'expiring' | 'expired' | 'never';
   color: string;
@@ -85,6 +111,13 @@ export default function CertificationsPage() {
   const [activeTab, setActiveTab] = useState("matrix");
   const [detectedFiles, setDetectedFiles] = useState<PendingCertification[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // PDF import history state
+  const [historySearchTerm, setHistorySearchTerm] = useState("");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("");
+  const [historyDateFrom, setHistoryDateFrom] = useState<string>("");
+  const [historyDateTo, setHistoryDateTo] = useState<string>("");
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -102,6 +135,17 @@ export default function CertificationsPage() {
 
   const { data: ocrConfig } = useQuery({
     queryKey: ['/api/system-configurations/ocr_service'],
+  });
+
+  // PDF import history query
+  const { data: pdfHistory = [], isLoading: historyLoading, refetch: refetchHistory } = useQuery({
+    queryKey: ['/api/pdf-import-history', {
+      scientistName: historySearchTerm,
+      status: historyStatusFilter,
+      dateFrom: historyDateFrom,
+      dateTo: historyDateTo
+    }],
+    enabled: activeTab === 'history'
   });
 
   const processCertificatesMutation = useMutation({
@@ -275,7 +319,7 @@ export default function CertificationsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="matrix" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             CITI Certification Matrix
@@ -283,6 +327,10 @@ export default function CertificationsPage() {
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
             Upload Certificates
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Import History
           </TabsTrigger>
           <TabsTrigger value="modules" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -651,6 +699,184 @@ export default function CertificationsPage() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>PDF Import History</CardTitle>
+                <Button 
+                  onClick={() => refetchHistory()} 
+                  variant="outline" 
+                  size="sm"
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+              <p className="text-muted-foreground">
+                View and search PDF processing history with OCR extraction results
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Search Staff/Course</label>
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name or course..."
+                      value={historySearchTerm}
+                      onChange={(e) => setHistorySearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <Select value={historyStatusFilter} onValueChange={setHistoryStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All statuses</SelectItem>
+                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date From</label>
+                  <Input
+                    type="date"
+                    value={historyDateFrom}
+                    onChange={(e) => setHistoryDateFrom(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date To</label>
+                  <Input
+                    type="date"
+                    value={historyDateTo}
+                    onChange={(e) => setHistoryDateTo(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sidra-primary"></div>
+                  <span className="ml-2">Loading history...</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>File Name</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Uploaded By</TableHead>
+                        <TableHead>OCR Provider</TableHead>
+                        <TableHead>Processing Time</TableHead>
+                        <TableHead>Upload Date</TableHead>
+                        <TableHead>Processed Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pdfHistory.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                            No PDF import history found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        pdfHistory.map((entry: PdfImportHistoryEntry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="font-mono text-sm max-w-48 truncate" title={entry.fileName}>
+                              {entry.fileName}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="secondary"
+                                className={
+                                  entry.processingStatus === 'completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : entry.processingStatus === 'failed'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-blue-100 text-blue-800'
+                                }
+                              >
+                                {entry.processingStatus === 'completed' && <Check className="h-3 w-3 mr-1" />}
+                                {entry.processingStatus === 'failed' && <X className="h-3 w-3 mr-1" />}
+                                {entry.processingStatus === 'processing' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                                {entry.processingStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {entry.uploader ? entry.uploader.name : 'Unknown'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {entry.ocrProvider}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {entry.processingTimeMs ? `${entry.processingTimeMs}ms` : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {format(parseISO(entry.uploadedAt), 'MMM dd, yyyy HH:mm')}
+                            </TableCell>
+                            <TableCell>
+                              {entry.processedAt ? format(parseISO(entry.processedAt), 'MMM dd, yyyy HH:mm') : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(entry.fileUrl, '_blank')}
+                                >
+                                  View PDF
+                                </Button>
+                                {entry.extractedText && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      alert(`OCR Extracted Text:\n\n${entry.extractedText?.substring(0, 800)}${entry.extractedText && entry.extractedText.length > 800 ? '...' : ''}`);
+                                    }}
+                                  >
+                                    View OCR
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">PDF Import History</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Track all PDF uploads and OCR processing results</li>
+                  <li>• Search by staff names, course names, or date ranges</li>
+                  <li>• View processing status and performance metrics</li>
+                  <li>• Access original PDFs and extracted OCR text</li>
+                  <li>• Filter by processing status (completed, failed, processing)</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="modules" className="space-y-6">
