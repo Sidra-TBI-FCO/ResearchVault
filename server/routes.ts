@@ -293,6 +293,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const ocrResult = await ocrResponse.json();
                   console.log('OCR.space API Response:', JSON.stringify(ocrResult, null, 2));
                   
+                  // Check for page limit error (E301) - reject files with >2 pages
+                  if (ocrResult.IsErroredOnProcessing === true) {
+                    const errorMessages = Array.isArray(ocrResult.ErrorMessage) ? ocrResult.ErrorMessage : [ocrResult.ErrorMessage];
+                    const hasPageLimitError = errorMessages.some((msg: string) => 
+                      msg && msg.includes('maximum page limit') && msg.includes('3')
+                    );
+                    
+                    if (hasPageLimitError) {
+                      console.error('Document exceeds 2-page limit, rejecting');
+                      throw new Error('Document rejected: CITI certificates should be 2 pages maximum. Multi-page merged reports are not supported. Please upload individual certificate reports only.');
+                    }
+                    
+                    console.error('OCR processing error:', errorMessages);
+                    throw new Error(errorMessages.join(', ') || 'OCR processing failed');
+                  }
+                  
                   if (ocrResult.IsErroredOnProcessing === false && ocrResult.ParsedResults?.length > 0) {
                     extractedText = ocrResult.ParsedResults[0].ParsedText;
                     console.log(`OCR Extracted Text Length: ${extractedText.length} characters`);
@@ -476,50 +492,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Cleaned text length:', cleanText.length);
       console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
 
-      // Extract completion date - match "Completion Date: 27-Mar-2025" format
+      // Extract completion date - match "Completion Date: 21-May-2022" format (more flexible patterns)
       console.log('Searching for completion date...');
-      const completionMatch = cleanText.match(/Completion Date:\s*(\d{2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Completion:\s*(\d{2}-\w{3}-\d{4})/i);
+      const completionMatch = text.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             text.match(/Completion Date\s+(\d{1,2}-\w{3}-\d{4})/i) ||
+                             text.match(/Completion:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Completion Date\s+(\d{1,2}-\w{3}-\d{4})/i);
       if (completionMatch) {
         result.completionDate = convertDateFormat(completionMatch[1]);
         console.log('Found completion date:', result.completionDate);
       } else {
         console.log('No completion date match found');
-        console.log('Date search text sample:', cleanText.substring(0, 200));
+        console.log('Date search text sample:', cleanText.substring(0, 300));
       }
 
-      // Extract expiration date - match "Expiration Date: 27-Mar-2026" format  
+      // Extract expiration date - match "Expiration Date: 20-May-2025" format (more flexible patterns)  
       console.log('Searching for expiration date...');
-      const expirationMatch = cleanText.match(/Expiration Date:\s*(\d{2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Expiration:\s*(\d{2}-\w{3}-\d{4})/i);
+      const expirationMatch = text.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             text.match(/Expiration Date\s+(\d{1,2}-\w{3}-\d{4})/i) ||
+                             text.match(/Expiration:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Expiration Date\s+(\d{1,2}-\w{3}-\d{4})/i);
       if (expirationMatch) {
         result.expirationDate = convertDateFormat(expirationMatch[1]);
         console.log('Found expiration date:', result.expirationDate);
       } else {
         console.log('No expiration date match found');
-        console.log('Date search text sample:', cleanText.substring(0, 200));
+        console.log('Date search text sample:', cleanText.substring(0, 300));
       }
 
-      // Extract record ID - match "Record ID: 68363655" format specifically
+      // Extract record ID - match "Record ID: 31911316" format specifically
       console.log('Searching for record ID...');
-      const recordMatch = cleanText.match(/Record ID:\s*(\d+)/i) ||
+      const recordIdMatch = text.match(/Record ID:\s*(\d+)/i) ||
+                           text.match(/Record ID\s+(\d+)/i) ||
+                           cleanText.match(/Record ID:\s*(\d+)/i) ||
                          cleanText.match(/Record ID\s+(\d+)/i) ||
                          cleanText.match(/Record:\s*(\d+)/i);
-      if (recordMatch) {
-        result.recordId = recordMatch[1];
+      if (recordIdMatch) {
+        result.recordId = recordIdMatch[1];
         console.log('Found record ID:', result.recordId);
       } else {
         console.log('No record ID match found');
-        console.log('ID search text sample:', cleanText.substring(0, 200));
+        console.log('ID search text sample:', text.substring(0, 500));
       }
 
       // Extract person name - improved patterns for CITI certificates
       console.log('Searching for person name...');
-      // Look for "Name: [Full Name] (ID: [number])" pattern first
-      let nameMatch = text.match(/Name:\s*([^\(\n\r]+)(?:\s*\(ID:|$)/i) ||
-                     text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
+      // Look for "Name: Apryl Sanchez (ID: 8085848)" pattern first
+      let nameMatch = text.match(/Name:\s*([^\(\n\r]+?)(?:\s*\(ID:|$)/i) ||
+                     text.match(/•\s*Name:\s*([^\(\n\r]+?)(?:\s*\(ID:|$)/i) ||
+                     text.match(/This is to certify that:\s*\n\s*([^\n]+)/i) ||
+                     cleanText.match(/Name:\s*([^\(\n\r]+?)(?:\s*\(ID:|$)/i);
       if (!nameMatch) {
         // Try alternative patterns
         nameMatch = text.match(/This is to certify that:\s*([^\n\r]+)/i) ||
@@ -530,7 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Found name:', result.name);
       } else {
         console.log('No name match found');
-        console.log('Text being searched for name (first 200 chars):', text.substring(0, 200));
+        console.log('Text being searched for name (first 500 chars):', text.substring(0, 500));
       }
 
       // Extract course name - improved patterns for CITI courses  
