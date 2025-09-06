@@ -551,17 +551,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Cleaned text length:', cleanText.length);
       console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
 
-      // Extract completion date - match "21-May-2022" format anywhere in text  
+      // Extract completion date - match multiple formats
       console.log('Searching for completion date...');
-      const completionMatch = text.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/•\s*Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/(\d{1,2}-\w{3}-20\d{2})/g)?.find(match => {
-                               // Look for completion date context nearby
-                               const matchIndex = text.indexOf(match);
-                               const context = text.substring(Math.max(0, matchIndex - 100), matchIndex + 100);
-                               return /completion/i.test(context);
-                             }) ||
-                             cleanText.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i);
+      const completionMatch = 
+        // Format 1: "Completion Date: 21-May-2022" (with colon)
+        text.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+        // Format 2: "Completion Date 15-Jul-2025" (no colon - new format)
+        text.match(/Completion Date\s+(\d{1,2}-\w{3}-\d{4})/i) ||
+        // Format 3: With bullet point
+        text.match(/•\s*Completion Date:?\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+        // Format 4: Context-based search for completion dates
+        text.match(/(\d{1,2}-\w{3}-20\d{2})/g)?.find(match => {
+          const matchIndex = text.indexOf(match);
+          const context = text.substring(Math.max(0, matchIndex - 100), matchIndex + 100);
+          return /completion/i.test(context);
+        });
       if (completionMatch) {
         const dateStr = Array.isArray(completionMatch) ? completionMatch[0] : completionMatch[1];
         result.completionDate = convertDateFormat(dateStr);
@@ -571,17 +575,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Date search text sample:', text.substring(0, 800));
       }
 
-      // Extract expiration date - match "20-May-2025" format anywhere in text
+      // Extract expiration date - match multiple formats  
       console.log('Searching for expiration date...');
-      const expirationMatch = text.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/•\s*Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/(\d{1,2}-\w{3}-20\d{2})/g)?.find(match => {
-                               // Look for expiration date context nearby
-                               const matchIndex = text.indexOf(match);
-                               const context = text.substring(Math.max(0, matchIndex - 100), matchIndex + 100);
-                               return /expir/i.test(context);
-                             }) ||
-                             cleanText.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i);
+      const expirationMatch = 
+        // Format 1: "Expiration Date: 20-May-2025" (with colon)
+        text.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+        // Format 2: "Expiration Date 15-Jul-2028" (no colon - new format)
+        text.match(/Expiration Date\s+(\d{1,2}-\w{3}-\d{4})/i) ||
+        // Format 3: With bullet point  
+        text.match(/•\s*Expiration Date:?\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+        // Format 4: Context-based search for expiration dates
+        text.match(/(\d{1,2}-\w{3}-20\d{2})/g)?.find(match => {
+          const matchIndex = text.indexOf(match);
+          const context = text.substring(Math.max(0, matchIndex - 100), matchIndex + 100);
+          return /expir/i.test(context);
+        });
       if (expirationMatch) {
         const dateStr = Array.isArray(expirationMatch) ? expirationMatch[0] : expirationMatch[1];
         result.expirationDate = convertDateFormat(dateStr);
