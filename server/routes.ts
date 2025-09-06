@@ -240,14 +240,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // OCR.space API uses GET with query parameters
                 const apiKey = process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld';
                 
-                // Download file first, then upload to OCR.space (more reliable than URL method)
-                console.log('Downloading file for OCR.space upload...');
-                const fileResponse = await fetch(fileUrl);
-                if (!fileResponse.ok) {
-                  throw new Error(`Failed to download file: ${fileResponse.status}`);
-                }
+                // Download file using GCS client (bypasses URL access restrictions)
+                console.log('Downloading file from GCS for OCR.space upload...');
                 
-                const fileBuffer = await fileResponse.arrayBuffer();
+                // Parse GCS URL to extract bucket and object name
+                // URL format: https://storage.googleapis.com/bucket-name/.private/uploads/filename?X-Goog-Algorithm=...
+                const urlParts = fileUrl.split('?')[0]; // Remove query params
+                const pathParts = urlParts.split('/');
+                const bucketName = pathParts[3]; // storage.googleapis.com/BUCKET/...
+                const objectName = pathParts.slice(4).join('/'); // Everything after bucket name
+                
+                console.log(`Downloading from bucket: ${bucketName}, object: ${objectName}`);
+                
+                // Import the GCS client
+                const { objectStorageClient } = await import('./objectStorage');
+                const bucket = objectStorageClient.bucket(bucketName);
+                const file = bucket.file(objectName);
+                
+                // Download file content
+                const [fileContent] = await file.download();
+                const fileBuffer = fileContent.buffer;
                 const fileBlob = new Blob([fileBuffer], { type: 'application/pdf' });
                 
                 console.log('Uploading file to OCR.space...', fileBlob.size, 'bytes');
