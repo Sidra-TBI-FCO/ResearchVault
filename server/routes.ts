@@ -86,44 +86,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             parsedData: null
           };
 
-          // Perform OCR on the PDF using OCR.space API
+          // Perform OCR on the PDF using free Tesseract.js
           try {
-            // Create AbortController for timeout handling
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            const { createWorker } = await import('tesseract.js');
+            
+            // Create Tesseract worker
+            const worker = await createWorker('eng');
+            
+            detectedData.status = 'processing';
+            console.log(`Processing OCR for file: ${fileUrl}`);
 
-            const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: new URLSearchParams({
-                'url': fileUrl,
-                'apikey': 'helloworld', // Free API key for testing
-                'language': 'eng',
-                'isOverlayRequired': 'false',
-                'filetype': 'PDF',
-                'detectOrientation': 'false',
-                'isCreateSearchablePdf': 'false',
-                'isSearchablePdfHideTextLayer': 'false',
-                'scale': 'true',
-                'isTable': 'false',
-                'OCREngine': '2' // Use engine 2 for better accuracy
-              }),
-              signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            if (ocrResponse.ok) {
-              const ocrResult = await ocrResponse.json();
+            try {
+              // Process the image/PDF with Tesseract
+              const { data: { text } } = await worker.recognize(fileUrl);
               
-              if (ocrResult.IsErroredOnProcessing === false && ocrResult.ParsedResults?.length > 0) {
-                const extractedText = ocrResult.ParsedResults[0].ParsedText;
-                detectedData.extractedText = extractedText;
+              if (text && text.trim().length > 0) {
+                detectedData.extractedText = text;
+                console.log(`OCR extracted ${text.length} characters`);
 
                 // Parse CITI certificate data from extracted text
-                const parsedData = parseCITICertificate(extractedText, modules);
+                const parsedData = parseCITICertificate(text, modules);
                 detectedData = {
                   ...detectedData,
                   ...parsedData,
@@ -131,24 +113,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 };
               } else {
                 detectedData.status = 'ocr_failed';
-                detectedData.error = ocrResult.ErrorMessage || 'OCR processing failed';
+                detectedData.error = 'No text could be extracted from the file';
               }
-            } else {
-              detectedData.status = 'ocr_failed';
-              detectedData.error = 'Failed to connect to OCR service';
+            } finally {
+              // Always terminate the worker to free memory
+              await worker.terminate();
             }
           } catch (ocrError: any) {
             console.error('OCR processing error:', ocrError);
             detectedData.status = 'ocr_failed';
-            if (ocrError.name === 'AbortError') {
-              detectedData.error = 'OCR request timed out after 30 seconds - try uploading again';
-            } else if (ocrError.cause?.code === 'UND_ERR_CONNECT_TIMEOUT') {
-              detectedData.error = 'Cannot connect to OCR service - network timeout. Please try again or contact support.';
-            } else {
-              detectedData.error = ocrError?.message || 'OCR service unavailable';
-            }
-            
-            // Add suggestion for manual processing
+            detectedData.error = `Free OCR processing failed: ${ocrError?.message || 'Unknown error'}`;
             detectedData.suggestion = 'OCR failed - file uploaded but data extraction was unsuccessful. You can still manually assign this certificate to a scientist.';
           }
 

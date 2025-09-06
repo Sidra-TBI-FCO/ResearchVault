@@ -414,11 +414,11 @@ export default function CertificationsPage() {
               />
               
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">OCR-Powered Upload</h4>
+                <h4 className="font-medium text-blue-900 mb-2">Free OCR-Powered Upload</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Upload CITI certificates or completion reports (PDF format)</li>
-                  <li>• Advanced OCR automatically extracts names, dates, courses, and record IDs</li>
-                  <li>• No manual data entry required - all information is parsed from PDF content</li>
+                  <li>• Open-source OCR automatically extracts names, dates, courses, and record IDs</li>
+                  <li>• Completely free - no API limits or external service dependencies</li>
                   <li>• Review extracted data and assign to scientists before saving</li>
                   <li>• Maximum 10 files per upload, 10MB each</li>
                 </ul>
