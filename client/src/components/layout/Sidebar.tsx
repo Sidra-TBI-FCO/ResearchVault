@@ -202,16 +202,6 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           icon: <TrendingUp className="w-4 h-4 mr-3" />
         }
       ]
-    },
-    {
-      title: "Administration",
-      items: [
-        { 
-          href: "/settings",
-          label: "System Settings",
-          icon: <Settings className="w-4 h-4 mr-3" />
-        }
-      ]
     }
   ];
 
