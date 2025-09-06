@@ -1231,7 +1231,26 @@ export default function CertificationsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">OCR Service Provider</label>
-                  <Select value={ocrConfig?.value?.provider || "ocr_space"}>
+                  <Select 
+                    value={ocrConfig?.value?.provider || "ocr_space"}
+                    onValueChange={(value) => {
+                      // Update OCR provider
+                      fetch('/api/system-configurations/ocr_service', {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          value: {
+                            provider: value,
+                            ocrSpaceApiKey: ocrConfig?.value?.ocrSpaceApiKey || 'helloworld',
+                            tesseractOptions: ocrConfig?.value?.tesseractOptions || { language: 'eng' }
+                          },
+                          updatedAt: new Date()
+                        })
+                      });
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select OCR provider" />
                     </SelectTrigger>
