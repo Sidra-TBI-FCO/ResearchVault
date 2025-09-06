@@ -319,25 +319,25 @@ export default function CertificationsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
-          <TabsTrigger value="matrix" className="flex items-center gap-1 px-2 text-xs md:text-sm">
-            <FileText className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">CITI </span>Matrix
+        <TabsList className="flex w-full overflow-x-auto scrollbar-hide">
+          <TabsTrigger value="matrix" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
+            <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">CITI </span>Matrix
           </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-1 px-2 text-xs md:text-sm">
-            <Upload className="h-3 w-3 md:h-4 md:w-4" />
+          <TabsTrigger value="upload" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
+            <Upload className="h-3 w-3 sm:h-4 sm:w-4" />
             Upload
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-1 px-2 text-xs md:text-sm">
-            <History className="h-3 w-3 md:h-4 md:w-4" />
+          <TabsTrigger value="history" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
+            <History className="h-3 w-3 sm:h-4 sm:w-4" />
             History
           </TabsTrigger>
-          <TabsTrigger value="modules" className="flex items-center gap-1 px-2 text-xs md:text-sm">
-            <Settings className="h-3 w-3 md:h-4 md:w-4" />
+          <TabsTrigger value="modules" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
+            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
             Modules
           </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-1 px-2 text-xs md:text-sm">
-            <Settings className="h-3 w-3 md:h-4 md:w-4" />
+          <TabsTrigger value="config" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
+            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
             Config
           </TabsTrigger>
         </TabsList>
