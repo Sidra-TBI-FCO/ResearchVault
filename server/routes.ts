@@ -466,38 +466,43 @@ Score: 97`;
       console.log('Cleaned text length:', cleanText.length);
       console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
 
-      // Extract completion date - more flexible patterns
+      // Extract completion date - match "Completion Date: 27-Mar-2025" format
       console.log('Searching for completion date...');
-      const completionMatch = cleanText.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i) ||
+      const completionMatch = cleanText.match(/Completion Date:\s*(\d{2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i) ||
                              cleanText.match(/Completion:\s*(\d{2}-\w{3}-\d{4})/i);
       if (completionMatch) {
         result.completionDate = convertDateFormat(completionMatch[1]);
         console.log('Found completion date:', result.completionDate);
       } else {
         console.log('No completion date match found');
+        console.log('Date search text sample:', cleanText.substring(0, 200));
       }
 
-      // Extract expiration date - more flexible patterns  
+      // Extract expiration date - match "Expiration Date: 27-Mar-2026" format  
       console.log('Searching for expiration date...');
-      const expirationMatch = cleanText.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i) ||
+      const expirationMatch = cleanText.match(/Expiration Date:\s*(\d{2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i) ||
                              cleanText.match(/Expiration:\s*(\d{2}-\w{3}-\d{4})/i);
       if (expirationMatch) {
         result.expirationDate = convertDateFormat(expirationMatch[1]);
         console.log('Found expiration date:', result.expirationDate);
       } else {
         console.log('No expiration date match found');
+        console.log('Date search text sample:', cleanText.substring(0, 200));
       }
 
-      // Extract record ID - more flexible patterns
+      // Extract record ID - match "Record ID: 68363655" format specifically
       console.log('Searching for record ID...');
-      const recordMatch = cleanText.match(/Record ID\s+(\d+)/i) ||
-                         cleanText.match(/Record:\s*(\d+)/i) ||
-                         cleanText.match(/ID[:\s]+(\d+)/i);
+      const recordMatch = cleanText.match(/Record ID:\s*(\d+)/i) ||
+                         cleanText.match(/Record ID\s+(\d+)/i) ||
+                         cleanText.match(/Record:\s*(\d+)/i);
       if (recordMatch) {
         result.recordId = recordMatch[1];
         console.log('Found record ID:', result.recordId);
       } else {
         console.log('No record ID match found');
+        console.log('ID search text sample:', cleanText.substring(0, 200));
       }
 
       // Extract person name - improved patterns for CITI certificates
@@ -537,9 +542,11 @@ Score: 97`;
         result.courseName = courseMatch[1].trim().replace(/\s+/g, ' ');
         console.log('Found course name:', result.courseName);
         
+        // Define variables for module matching
+        const courseLower = result.courseName.toLowerCase();
+        
         // Find matching module with improved matching for biosafety
         const module = modules.find(m => {
-          const courseLower = result.courseName.toLowerCase();
           const moduleLower = m.name.toLowerCase();
           
           return moduleLower.includes(courseLower) ||
