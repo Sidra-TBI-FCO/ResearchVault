@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await storage.updatePdfImportHistoryEntry(historyEntry.id, {
                   processingStatus: 'failed',
                   errorMessage: detectedData.error,
-                  processedAt: new Date(),
+                  
                   processingDuration: Date.now() - startTime
                 });
                 
@@ -192,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.updatePdfImportHistoryEntry(historyEntry.id, {
                 processingStatus: 'failed',
                 errorMessage: detectedData.error,
-                processedAt: new Date(),
+                
                 processingTimeMs: Date.now() - startTime
               });
               
@@ -451,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   documentType: parsedData.documentType || 'unknown',
                   extractedText: extractedText,
                   parsedData: parsedData,
-                  processedAt: new Date(),
+                  
                   processingDuration: Date.now() - startTime,
                   errorMessage: parsedData.name ? null : 'Certificate data could not be extracted - manual assignment may be required'
                 });
@@ -472,7 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   ocrProvider: provider, // Make sure OCR provider is saved
                   documentType: 'unknown', // OCR failed, so document type unknown
                   errorMessage: 'No text could be extracted from the file',
-                  processedAt: new Date(),
+                  
                   processingDuration: Date.now() - startTime
                 });
                 console.log('OCR failure update result:', updateResult ? 'SUCCESS' : 'FAILED');
@@ -494,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ocrProvider: provider, // Make sure OCR provider is saved
                 documentType: 'unknown', // OCR error, so document type unknown
                 errorMessage: `OCR processing failed: ${ocrError?.message || 'Unknown error'}`,
-                processedAt: new Date(),
+                
                 processingTimeMs: Date.now() - startTime
               });
               console.log('OCR error update result:', updateResult ? 'SUCCESS' : 'FAILED');
