@@ -294,9 +294,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // If OCR.space failed or wasn't used, try Tesseract.js as fallback
+            // If OCR.space failed or wasn't used, try Tesseract.js as fallback (only for image formats)
             if (!extractedText) {
-              // Use Tesseract.js (fallback)
+              // Check if this is a PDF file - if so, we can't use Tesseract as fallback
+              let isPdfFile = false;
+              try {
+                const headResponse = await fetch(fileUrl, { method: 'HEAD' });
+                const contentType = headResponse.headers.get('content-type') || '';
+                isPdfFile = contentType.includes('pdf') || contentType.includes('xml'); // XML returned for PDFs in some cases
+              } catch (headerError) {
+                console.log('Could not check file type for fallback decision');
+              }
+
+              if (isPdfFile) {
+                console.log('PDF file detected - Tesseract.js cannot process PDF files, only OCR.space supports PDFs');
+                throw new Error('PDF OCR processing failed - OCR.space returned E301 error and Tesseract.js cannot process PDF files');
+              }
+
+              // Use Tesseract.js (fallback for image files only)
+              console.log('Attempting Tesseract.js fallback for image file...');
               try {
                 // Check file format first - handle signed URLs properly
                 let fileExtension = '';
@@ -315,9 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       const headResponse = await fetch(fileUrl, { method: 'HEAD' });
                       const contentType = headResponse.headers.get('content-type') || '';
                       
-                      if (contentType.includes('pdf')) {
-                        fileExtension = 'pdf';
-                      } else if (contentType.includes('image/')) {
+                      if (contentType.includes('image/')) {
                         // Extract image format from content type
                         const imageType = contentType.split('/')[1]?.split(';')[0];
                         fileExtension = imageType || '';
@@ -330,11 +344,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   console.log('Could not parse URL for format detection, proceeding with OCR attempt');
                 }
 
-                // Note: PDFs should have been automatically switched to OCR.space above
-                
                 const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'];
                 if (fileExtension && !supportedFormats.includes(fileExtension)) {
-                  console.log(`Detected file format: ${fileExtension}, but proceeding with OCR attempt as detection may be inaccurate for signed URLs`);
+                  console.log(`Detected file format: ${fileExtension}, proceeding with OCR attempt as detection may be inaccurate for signed URLs`);
                 }
 
                 const { createWorker } = await import('tesseract.js');
