@@ -321,10 +321,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 } else {
                   const errorText = await ocrResponse.text();
                   console.error('OCR.space HTTP error:', ocrResponse.status, errorText);
+                  
+                  // Handle rate limiting specifically
+                  if (ocrResponse.status === 403) {
+                    try {
+                      const errorJson = JSON.parse(errorText);
+                      if (errorJson.ErrorMessage && errorJson.ErrorMessage.includes('180 number of times')) {
+                        throw new Error('OCR service rate limit exceeded. Please wait an hour before processing more certificates.');
+                      }
+                    } catch (e) {
+                      // If not JSON, continue with generic error
+                    }
+                  }
+                  
                   throw new Error(`Failed to connect to OCR.space service: ${ocrResponse.status}`);
                 }
               } catch (apiError: any) {
                 console.error('OCR.space failed:', apiError.message);
+                
+                // Don't fallback to Tesseract for rate limit errors
+                if (apiError.message && apiError.message.includes('rate limit')) {
+                  clearTimeout(timeoutId);
+                  throw new Error(apiError.message);
+                }
+                
                 console.log('Falling back to Tesseract.js...');
                 // Don't throw error yet, let it fall back to Tesseract
                 clearTimeout(timeoutId);
