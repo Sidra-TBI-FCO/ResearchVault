@@ -145,24 +145,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             } else {
               // Use Tesseract.js (default)
-              const { createWorker } = await import('tesseract.js');
-              let worker = null;
-              
               try {
-                worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
-                const { data: { text } } = await worker.recognize(fileUrl);
-                extractedText = text;
-              } catch (tesseractError: any) {
-                console.error('Tesseract.js error:', tesseractError);
-                throw new Error(`Tesseract OCR failed: ${tesseractError?.message || 'Unknown format or processing error'}`);
-              } finally {
-                if (worker) {
-                  try {
-                    await worker.terminate();
-                  } catch (terminateError) {
-                    console.error('Error terminating Tesseract worker:', terminateError);
+                const { createWorker } = await import('tesseract.js');
+                let worker = null;
+                
+                try {
+                  worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
+                  const { data: { text } } = await worker.recognize(fileUrl);
+                  extractedText = text;
+                } catch (tesseractError: any) {
+                  console.error('Tesseract.js error:', tesseractError);
+                  // Set extracted text to empty to trigger fallback handling
+                  extractedText = '';
+                  throw new Error(`Tesseract OCR failed: ${tesseractError?.message || 'Unsupported image format or processing error'}`);
+                } finally {
+                  if (worker) {
+                    try {
+                      await worker.terminate();
+                    } catch (terminateError) {
+                      console.error('Error terminating Tesseract worker:', terminateError);
+                    }
                   }
                 }
+              } catch (importError: any) {
+                console.error('Error importing Tesseract.js:', importError);
+                extractedText = '';
+                throw new Error(`Failed to load OCR library: ${importError?.message || 'OCR module not available'}`);
               }
             }
 
@@ -1213,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Enhance projects with lead scientist details
       const enhancedProjects = await Promise.all(projects.map(async (project) => {
-        const leadScientist = await storage.getScientist(project.leadScientistId);
+        const leadScientist = await storage.getScientist(project.principalInvestigatorId);
         return {
           ...project,
           leadScientist: leadScientist ? {
