@@ -111,6 +111,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(projects).where(eq(projects.programId, programId));
   }
 
+  async getProjectsForScientist(scientistId: number): Promise<Project[]> {
+    // Get projects where the scientist is the principal investigator
+    return await db.select().from(projects).where(eq(projects.principalInvestigatorId, scientistId));
+  }
+
   async createProject(project: InsertProject): Promise<Project> {
     const [newProject] = await db.insert(projects).values(project).returning();
     return newProject;
@@ -295,6 +300,16 @@ export class DatabaseStorage implements IStorage {
       .from(dataManagementPlans)
       .where(eq(dataManagementPlans.researchActivityId, researchActivityId));
     return plan;
+  }
+
+  async getDataManagementPlanForProject(projectId: number): Promise<DataManagementPlan | undefined> {
+    // Get data management plan for any research activity belonging to this project
+    const [plan] = await db
+      .select()
+      .from(dataManagementPlans)
+      .innerJoin(researchActivities, eq(dataManagementPlans.researchActivityId, researchActivities.id))
+      .where(eq(researchActivities.projectId, projectId));
+    return plan ? plan.data_management_plans : undefined;
   }
 
   async createDataManagementPlan(plan: InsertDataManagementPlan): Promise<DataManagementPlan> {
@@ -690,6 +705,16 @@ export class DatabaseStorage implements IStorage {
 
   async getPatentsForResearchActivity(researchActivityId: number): Promise<Patent[]> {
     return await db.select().from(patents).where(eq(patents.researchActivityId, researchActivityId));
+  }
+
+  async getPatentsForProject(projectId: number): Promise<Patent[]> {
+    // Get patents for any research activity belonging to this project
+    return await db
+      .select()
+      .from(patents)
+      .innerJoin(researchActivities, eq(patents.researchActivityId, researchActivities.id))
+      .where(eq(researchActivities.projectId, projectId))
+      .then(results => results.map(r => r.patents));
   }
 
   async createPatent(patent: InsertPatent): Promise<Patent> {

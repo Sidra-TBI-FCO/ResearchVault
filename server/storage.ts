@@ -44,6 +44,7 @@ export interface IStorage {
   getProject(id: number): Promise<Project | undefined>;
   getProjectByProjectId(projectId: string): Promise<Project | undefined>;
   getProjectsForProgram(programId: number): Promise<Project[]>;
+  getProjectsForScientist(scientistId: number): Promise<Project[]>;
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: number, project: Partial<InsertProject>): Promise<Project | undefined>;
   deleteProject(id: number): Promise<boolean>;
@@ -79,6 +80,7 @@ export interface IStorage {
   getDataManagementPlans(): Promise<DataManagementPlan[]>;
   getDataManagementPlan(id: number): Promise<DataManagementPlan | undefined>;
   getDataManagementPlanForResearchActivity(researchActivityId: number): Promise<DataManagementPlan | undefined>;
+  getDataManagementPlanForProject(projectId: number): Promise<DataManagementPlan | undefined>;
   createDataManagementPlan(plan: InsertDataManagementPlan): Promise<DataManagementPlan>;
   updateDataManagementPlan(id: number, plan: Partial<InsertDataManagementPlan>): Promise<DataManagementPlan | undefined>;
   deleteDataManagementPlan(id: number): Promise<boolean>;
@@ -102,6 +104,7 @@ export interface IStorage {
   getPatents(): Promise<Patent[]>;
   getPatent(id: number): Promise<Patent | undefined>;
   getPatentsForResearchActivity(researchActivityId: number): Promise<Patent[]>;
+  getPatentsForProject(projectId: number): Promise<Patent[]>;
   createPatent(patent: InsertPatent): Promise<Patent>;
   updatePatent(id: number, patent: Partial<InsertPatent>): Promise<Patent | undefined>;
   deletePatent(id: number): Promise<boolean>;
