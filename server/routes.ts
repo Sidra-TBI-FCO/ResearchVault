@@ -394,9 +394,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log('Could not check file type for fallback decision');
               }
 
-              if (isPdfFile && provider === 'tesseract') {
-                console.log('PDF file detected - Tesseract.js cannot process PDF files');
+              // Only block PDF processing if we're certain it's a PDF AND using Tesseract as primary choice
+              if (isPdfFile && provider === 'tesseract' && isPDF) {
+                console.log('Confirmed PDF file - Tesseract.js cannot process PDF files');
                 throw new Error('PDF files cannot be processed with Tesseract.js. Please either: 1) Switch to OCR.space in Config tab, or 2) Convert your PDF to an image (PNG, JPG) first.');
+              } else if (isPdfFile && provider === 'tesseract') {
+                console.log('File might be PDF but initial detection suggested image - attempting Tesseract processing');
               }
 
               // Use Tesseract.js (supports images and limited PDF processing)
