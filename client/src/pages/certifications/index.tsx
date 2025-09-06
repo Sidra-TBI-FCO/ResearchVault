@@ -160,9 +160,10 @@ export default function CertificationsPage() {
       // Check if we have valid results
       if (!data.results || data.results.length === 0) {
         toast({
-          title: "No certificates detected",
-          description: "No valid certificate data could be extracted. The OCR service may be unavailable.",
+          title: "OCR Service Unavailable",
+          description: "The OCR service has reached its hourly limit (180 requests per hour). Please wait about an hour and try again.",
           variant: "destructive",
+          duration: 10000,
         });
         return;
       }

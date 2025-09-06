@@ -324,13 +324,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   
                   // Handle rate limiting specifically
                   if (ocrResponse.status === 403) {
-                    try {
-                      const errorJson = JSON.parse(errorText);
-                      if (errorJson.ErrorMessage && errorJson.ErrorMessage.includes('180 number of times')) {
-                        throw new Error('OCR service rate limit exceeded. Please wait an hour before processing more certificates.');
-                      }
-                    } catch (e) {
-                      // If not JSON, continue with generic error
+                    if (errorText.includes('180 number of times')) {
+                      throw new Error('RATE_LIMIT: OCR service rate limit exceeded. Please wait about an hour before processing more certificates.');
                     }
                   }
                   
@@ -338,16 +333,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               } catch (apiError: any) {
                 console.error('OCR.space failed:', apiError.message);
+                clearTimeout(timeoutId);
                 
-                // Don't fallback to Tesseract for rate limit errors
-                if (apiError.message && apiError.message.includes('rate limit')) {
-                  clearTimeout(timeoutId);
-                  throw new Error(apiError.message);
+                // Don't fallback to Tesseract for rate limit errors or 403 errors
+                if (apiError.message && (apiError.message.includes('RATE_LIMIT') || apiError.message.includes('403'))) {
+                  throw new Error('OCR service temporarily unavailable (rate limit). Please wait about an hour and try again.');
                 }
                 
                 console.log('Falling back to Tesseract.js...');
                 // Don't throw error yet, let it fall back to Tesseract
-                clearTimeout(timeoutId);
                 extractedText = null; // Signal to use fallback
               }
             }
