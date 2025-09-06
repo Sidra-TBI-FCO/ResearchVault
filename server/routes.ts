@@ -382,28 +382,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // If OCR.space failed or wasn't used, try Tesseract.js as fallback (only for image formats)
+            // If OCR.space failed or wasn't used, try Tesseract.js (only for image formats)
             if (!extractedText) {
-              // Check if this is a PDF file - if so, we can't use Tesseract as fallback
-              let isPdfFile = false;
-              try {
-                const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-                const contentType = headResponse.headers.get('content-type') || '';
-                isPdfFile = contentType.includes('pdf') || contentType.includes('xml'); // XML returned for PDFs in some cases
-              } catch (headerError) {
-                console.log('Could not check file type for fallback decision');
-              }
-
-              // Only block PDF processing if we're certain it's a PDF AND using Tesseract as primary choice
-              if (isPdfFile && provider === 'tesseract' && isPDF) {
-                console.log('Confirmed PDF file - Tesseract.js cannot process PDF files');
+              // For Tesseract, only block if the initial detection confirmed it's a PDF
+              if (isPDF && provider === 'tesseract') {
+                console.log('Confirmed PDF file detected in initial scan - Tesseract.js cannot process PDF files');
                 throw new Error('PDF files cannot be processed with Tesseract.js. Please either: 1) Switch to OCR.space in Config tab, or 2) Convert your PDF to an image (PNG, JPG) first.');
-              } else if (isPdfFile && provider === 'tesseract') {
-                console.log('File might be PDF but initial detection suggested image - attempting Tesseract processing');
               }
+              
+              console.log('Proceeding with Tesseract.js processing for image file');
 
-              // Use Tesseract.js (supports images and limited PDF processing)
-              console.log(`Attempting Tesseract.js processing for ${isPdfFile ? 'PDF' : 'image'} file...`);
+              // Use Tesseract.js for image processing
+              console.log('Attempting Tesseract.js processing for image file...');
               try {
                 // Check file format first - handle signed URLs properly
                 let fileExtension = '';
