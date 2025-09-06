@@ -377,11 +377,35 @@ export default function CertificationsPage() {
                 maxFileSize={10485760} // 10MB
                 acceptedFileTypes={['application/pdf']}
                 onComplete={(result) => {
-                  const fileUrls = result.successful.map((file: any) => file.uploadURL);
-                  if (fileUrls.length > 0) {
-                    setIsProcessing(true);
-                    processCertificatesMutation.mutate(fileUrls);
-                    setIsProcessing(false);
+                  try {
+                    if (!result || !result.successful || !Array.isArray(result.successful)) {
+                      toast({
+                        title: "Upload error",
+                        description: "No files were successfully uploaded",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    const fileUrls = result.successful.map((file: any) => file.uploadURL);
+                    if (fileUrls.length > 0) {
+                      setIsProcessing(true);
+                      processCertificatesMutation.mutate(fileUrls);
+                      setIsProcessing(false);
+                    } else {
+                      toast({
+                        title: "No files to process",
+                        description: "No valid file URLs found from upload",
+                        variant: "destructive",
+                      });
+                    }
+                  } catch (error) {
+                    console.error('Upload processing error:', error);
+                    toast({
+                      title: "Upload processing failed",
+                      description: "There was an error processing the uploaded files",
+                      variant: "destructive",
+                    });
                   }
                 }}
                 showDropzone={true}
