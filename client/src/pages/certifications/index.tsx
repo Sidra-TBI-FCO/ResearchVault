@@ -157,18 +157,21 @@ export default function CertificationsPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      setDetectedFiles(data.results.map((result: DetectedCertificate) => {
+      setDetectedFiles(data.results.map((result: any) => {
         let matchedScientistId = undefined;
+        
+        // Extract parsed data from the result
+        const parsedData = result.parsedData || result;
         
         // Auto-match scientist by name if extracted name exists
         console.log('Auto-matching debug:', {
-          resultName: result.name,
+          resultName: parsedData.name,
           scientistsCount: scientists?.length || 0,
           scientists: scientists?.map(s => ({ id: s.id, firstName: s.firstName, lastName: s.lastName }))
         });
         
-        if (result.name && scientists && scientists.length > 0) {
-          const extractedName = result.name.toLowerCase().trim();
+        if (parsedData.name && scientists && scientists.length > 0) {
+          const extractedName = parsedData.name.toLowerCase().trim();
           
           // Try exact full name match first
           let matchedScientist = scientists.find(s => {
@@ -191,24 +194,33 @@ export default function CertificationsPage() {
           
           if (matchedScientist) {
             matchedScientistId = matchedScientist.id;
-            console.log(`✅ Auto-matched "${result.name}" to scientist: ${matchedScientist.firstName} ${matchedScientist.lastName} (ID: ${matchedScientist.id})`);
+            console.log(`✅ Auto-matched "${parsedData.name}" to scientist: ${matchedScientist.firstName} ${matchedScientist.lastName} (ID: ${matchedScientist.id})`);
           } else {
-            console.log(`❌ No scientist match found for: ${result.name}`);
+            console.log(`❌ No scientist match found for: ${parsedData.name}`);
             console.log('Available scientists:', scientists.map(s => `${s.firstName} ${s.lastName} (${s.id})`));
           }
         } else {
           console.log('❌ Auto-match skipped:', { 
-            hasName: !!result.name, 
+            hasName: !!parsedData.name, 
             scientistsAvailable: scientists?.length || 0 
           });
         }
         
         return {
-          ...result,
-          scientistId: matchedScientistId,
-          startDate: result.completionDate || '', // Use parsed completion date
-          endDate: result.expirationDate || '',   // Use parsed expiration date
-          notes: ''
+          fileName: result.fileName,
+          name: parsedData.name,
+          courseName: parsedData.courseName,
+          completionDate: parsedData.completionDate,
+          expirationDate: parsedData.expirationDate,
+          recordId: parsedData.recordId,
+          scientistId: matchedScientistId || parsedData.scientistId,
+          module: parsedData.module,
+          status: 'detected' as const,
+          notes: '',
+          filePath: result.filePath || '',
+          originalUrl: result.originalUrl || '',
+          startDate: parsedData.completionDate, // For backward compatibility
+          endDate: parsedData.expirationDate    // For backward compatibility
         };
       }));
       toast({
