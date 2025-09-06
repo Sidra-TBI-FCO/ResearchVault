@@ -86,43 +86,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
             parsedData: null
           };
 
-          // Perform OCR on the PDF using free Tesseract.js
+          // Get OCR configuration and perform OCR based on settings
           try {
-            const { createWorker } = await import('tesseract.js');
-            
-            // Create Tesseract worker
-            const worker = await createWorker('eng');
+            // Get OCR service configuration
+            const ocrConfig = await storage.getSystemConfiguration('ocr_service');
+            const ocrSettings = ocrConfig?.value as any || { provider: 'tesseract' };
             
             detectedData.status = 'processing';
-            console.log(`Processing OCR for file: ${fileUrl}`);
+            console.log(`Processing OCR for file: ${fileUrl} using ${ocrSettings.provider}`);
 
-            try {
-              // Process the image/PDF with Tesseract
-              const { data: { text } } = await worker.recognize(fileUrl);
-              
-              if (text && text.trim().length > 0) {
-                detectedData.extractedText = text;
-                console.log(`OCR extracted ${text.length} characters`);
+            let extractedText = '';
 
-                // Parse CITI certificate data from extracted text
-                const parsedData = parseCITICertificate(text, modules);
-                detectedData = {
-                  ...detectedData,
-                  ...parsedData,
-                  status: parsedData.name ? 'detected' : 'unrecognized'
-                };
-              } else {
-                detectedData.status = 'ocr_failed';
-                detectedData.error = 'No text could be extracted from the file';
+            if (ocrSettings.provider === 'ocr_space') {
+              // Use OCR.space API
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+              try {
+                const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: new URLSearchParams({
+                    'url': fileUrl,
+                    'apikey': ocrSettings.ocrSpaceApiKey || 'helloworld',
+                    'language': 'eng',
+                    'isOverlayRequired': 'false',
+                    'filetype': 'PDF',
+                    'detectOrientation': 'false',
+                    'isCreateSearchablePdf': 'false',
+                    'isSearchablePdfHideTextLayer': 'false',
+                    'scale': 'true',
+                    'isTable': 'false',
+                    'OCREngine': '2'
+                  }),
+                  signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (ocrResponse.ok) {
+                  const ocrResult = await ocrResponse.json();
+                  if (ocrResult.IsErroredOnProcessing === false && ocrResult.ParsedResults?.length > 0) {
+                    extractedText = ocrResult.ParsedResults[0].ParsedText;
+                  } else {
+                    throw new Error(ocrResult.ErrorMessage || 'OCR processing failed');
+                  }
+                } else {
+                  throw new Error('Failed to connect to OCR.space service');
+                }
+              } catch (apiError: any) {
+                if (apiError.name === 'AbortError') {
+                  throw new Error('OCR.space request timed out after 30 seconds');
+                } else {
+                  throw new Error(`OCR.space error: ${apiError.message}`);
+                }
+              } finally {
+                clearTimeout(timeoutId);
               }
-            } finally {
-              // Always terminate the worker to free memory
-              await worker.terminate();
+            } else {
+              // Use Tesseract.js (default)
+              const { createWorker } = await import('tesseract.js');
+              const worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
+              
+              try {
+                const { data: { text } } = await worker.recognize(fileUrl);
+                extractedText = text;
+              } finally {
+                await worker.terminate();
+              }
+            }
+
+            if (extractedText && extractedText.trim().length > 0) {
+              detectedData.extractedText = extractedText;
+              console.log(`OCR extracted ${extractedText.length} characters using ${ocrSettings.provider}`);
+
+              // Parse CITI certificate data from extracted text
+              const parsedData = parseCITICertificate(extractedText, modules);
+              detectedData = {
+                ...detectedData,
+                ...parsedData,
+                status: parsedData.name ? 'detected' : 'unrecognized'
+              };
+            } else {
+              detectedData.status = 'ocr_failed';
+              detectedData.error = 'No text could be extracted from the file';
             }
           } catch (ocrError: any) {
             console.error('OCR processing error:', ocrError);
             detectedData.status = 'ocr_failed';
-            detectedData.error = `Free OCR processing failed: ${ocrError?.message || 'Unknown error'}`;
+            detectedData.error = `OCR processing failed: ${ocrError?.message || 'Unknown error'}`;
             detectedData.suggestion = 'OCR failed - file uploaded but data extraction was unsuccessful. You can still manually assign this certificate to a scientist.';
           }
 
@@ -4939,6 +4991,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Error updating certification configuration:', error);
         res.status(500).json({ message: "Failed to update certification configuration" });
       }
+    }
+  });
+
+  // System Configuration endpoints
+  app.get('/api/system-configurations', authenticateUser, async (req, res) => {
+    try {
+      const configs = await storage.getSystemConfigurations();
+      res.json(configs);
+    } catch (error) {
+      console.error('Error fetching system configurations:', error);
+      res.status(500).json({ error: 'Failed to fetch configurations' });
+    }
+  });
+
+  app.get('/api/system-configurations/:key', authenticateUser, async (req, res) => {
+    try {
+      const config = await storage.getSystemConfiguration(req.params.key);
+      if (!config) {
+        return res.status(404).json({ error: 'Configuration not found' });
+      }
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching system configuration:', error);
+      res.status(500).json({ error: 'Failed to fetch configuration' });
+    }
+  });
+
+  app.post('/api/system-configurations', authenticateUser, async (req, res) => {
+    try {
+      const config = await storage.createSystemConfiguration(req.body);
+      res.status(201).json(config);
+    } catch (error) {
+      console.error('Error creating system configuration:', error);
+      res.status(500).json({ error: 'Failed to create configuration' });
+    }
+  });
+
+  app.put('/api/system-configurations/:key', authenticateUser, async (req, res) => {
+    try {
+      const config = await storage.updateSystemConfiguration(req.params.key, req.body);
+      if (!config) {
+        return res.status(404).json({ error: 'Configuration not found' });
+      }
+      res.json(config);
+    } catch (error) {
+      console.error('Error updating system configuration:', error);
+      res.status(500).json({ error: 'Failed to update configuration' });
+    }
+  });
+
+  app.delete('/api/system-configurations/:key', authenticateUser, async (req, res) => {
+    try {
+      const result = await storage.deleteSystemConfiguration(req.params.key);
+      if (!result) {
+        return res.status(404).json({ error: 'Configuration not found' });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting system configuration:', error);
+      res.status(500).json({ error: 'Failed to delete configuration' });
     }
   });
 
