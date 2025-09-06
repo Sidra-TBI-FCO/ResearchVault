@@ -624,8 +624,29 @@ export default function CertificationsPage() {
                                 className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors"
                                 onClick={() => {
                                   const errorMessage = file.error || file.errorDetails || 'OCR processing failed - no details available';
-                                  // Use alert for larger, more readable error display
-                                  alert(`OCR Processing Error\n\nFile: ${file.fileName}\n\nError Details:\n${errorMessage}`);
+                                  const fullErrorText = `OCR Processing Error\n\nFile: ${file.fileName}\n\nError Details:\n${errorMessage}`;
+                                  
+                                  // Create custom dialog with copy button
+                                  const copyToClipboard = () => {
+                                    navigator.clipboard.writeText(fullErrorText).then(() => {
+                                      alert('Error details copied to clipboard!');
+                                    }).catch(() => {
+                                      // Fallback for older browsers
+                                      const textArea = document.createElement('textarea');
+                                      textArea.value = fullErrorText;
+                                      document.body.appendChild(textArea);
+                                      textArea.select();
+                                      document.execCommand('copy');
+                                      document.body.removeChild(textArea);
+                                      alert('Error details copied to clipboard!');
+                                    });
+                                  };
+                                  
+                                  // Show confirm dialog with copy option
+                                  const userChoice = confirm(`${fullErrorText}\n\n📋 Click OK to copy error details to clipboard, Cancel to close.`);
+                                  if (userChoice) {
+                                    copyToClipboard();
+                                  }
                                 }}
                               >
                                 <X className="h-3 w-3 mr-1" />
