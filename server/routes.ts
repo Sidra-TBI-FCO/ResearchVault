@@ -235,10 +235,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               try {
                 const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'apikey': process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld'
+                  },
                   body: new URLSearchParams({
                     'url': fileUrl,
-                    'apikey': process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld',
                     'language': 'eng',
                     'isOverlayRequired': 'false',
                     'filetype': 'PDF',
