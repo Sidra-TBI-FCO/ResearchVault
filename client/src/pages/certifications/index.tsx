@@ -586,9 +586,13 @@ export default function CertificationsPage() {
                           return;
                         }
                         confirmCertificationsMutation.mutate(validCerts.map(cert => ({
-                          ...cert,
+                          fileName: cert.fileName,
+                          scientistId: cert.scientistId,
                           moduleId: cert.module!.id,
-                          certificateFilePath: cert.filePath
+                          startDate: cert.completionDate,
+                          endDate: cert.expirationDate,
+                          certificateFilePath: cert.filePath,
+                          notes: cert.notes || ''
                         })));
                       }}
                       disabled={confirmCertificationsMutation.isPending}
