@@ -543,20 +543,20 @@ export default function CertificationsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
+                <div className="overflow-x-auto overflow-y-auto max-h-96 md:max-h-none">
+                  <Table className="min-w-full">
+                    <TableHeader className="sticky top-0 bg-white shadow-sm">
                       <TableRow>
-                        <TableHead>Status</TableHead>
-                        <TableHead>File Name</TableHead>
-                        <TableHead>Extracted Name</TableHead>
-                        <TableHead>Course/Module</TableHead>
-                        <TableHead>Completion Date</TableHead>
-                        <TableHead>Record ID</TableHead>
-                        <TableHead>Assign to Scientist</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>End Date</TableHead>
-                        <TableHead>Action</TableHead>
+                        <TableHead className="min-w-24">Status</TableHead>
+                        <TableHead className="min-w-32">File Name</TableHead>
+                        <TableHead className="min-w-32">Extracted Name</TableHead>
+                        <TableHead className="min-w-36">Course/Module</TableHead>
+                        <TableHead className="min-w-28">Completion Date</TableHead>
+                        <TableHead className="min-w-24">Record ID</TableHead>
+                        <TableHead className="min-w-40">Assign to Scientist</TableHead>
+                        <TableHead className="min-w-28">Start Date</TableHead>
+                        <TableHead className="min-w-28">End Date</TableHead>
+                        <TableHead className="min-w-32">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -669,10 +669,11 @@ export default function CertificationsPage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="text-xs px-2 py-1 h-6 sm:h-8 sm:px-3 sm:py-1.5 sm:text-sm"
                                 onClick={() => {
                                   const updated = detectedFiles.filter((_, i) => i !== index);
                                   setDetectedFiles(updated);
@@ -684,6 +685,7 @@ export default function CertificationsPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="text-xs px-2 py-1 h-6 sm:h-8 sm:px-3 sm:py-1.5 sm:text-sm"
                                   onClick={() => {
                                     alert(`OCR Extracted Text:\n\n${file.extractedText?.substring(0, 800)}${file.extractedText && file.extractedText.length > 800 ? '...' : ''}`);
                                   }}
