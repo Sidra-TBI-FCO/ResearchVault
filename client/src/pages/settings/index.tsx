@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+// Removed RadioGroup - using custom implementation
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle, Settings as SettingsIcon, Eye, EyeOff } from "lucide-react";
 
