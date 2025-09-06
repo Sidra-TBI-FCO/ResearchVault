@@ -109,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             contentType = headResponse.headers.get('content-type') || '';
             console.log(`Content-Type: ${contentType}`);
             
-            // Check for supported file types
+            // Check for supported file types - be more lenient with detection
             if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
               isPDF = true;
               isValidFile = true;
@@ -126,21 +126,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
               isValidFile = true;
               console.log('Image file detected via Content-Type');
             } else {
-              console.log(`Unsupported file type: ${contentType}`);
-              // Mark as failed due to unsupported format
-              detectedData.status = 'error';
-              detectedData.error = `Unsupported file format: ${contentType}. Only PDF and image files are supported.`;
-              
-              // Update history entry with error
-              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                processingStatus: 'failed',
-                errorMessage: detectedData.error,
-                processedAt: new Date(),
-                processingTimeMs: Date.now() - startTime
-              });
-              
-              results.push(detectedData);
-              continue; // Skip OCR processing for unsupported files
+              // For unknown content types, try filename-based detection first
+              console.log(`Unknown content type: ${contentType}, checking filename...`);
+              try {
+                const url = new URL(fileUrl);
+                const pathSegments = url.pathname.split('/');
+                const fileName = pathSegments[pathSegments.length - 1];
+                
+                if (fileName && fileName.toLowerCase().includes('pdf')) {
+                  isPDF = true;
+                  isValidFile = true;
+                  console.log('PDF detected via filename despite unknown content-type');
+                } else if (fileName && /\.(jpg|jpeg|png|gif|bmp|tiff)$/i.test(fileName)) {
+                  isValidFile = true;
+                  console.log('Image file detected via filename despite unknown content-type');
+                } else {
+                  // As last resort, assume PDF for certificate processing and try OCR
+                  console.log(`Assuming PDF format for certificate processing despite content-type: ${contentType}`);
+                  isPDF = true;
+                  isValidFile = true;
+                }
+              } catch (urlError) {
+                // If all detection fails, still try as PDF since user uploaded for certificate processing
+                console.log('Filename detection failed, assuming PDF for certificate processing');
+                isPDF = true;
+                isValidFile = true;
+              }
             }
           } catch (headerError) {
             console.log('Could not detect file type via headers, checking URL...');
