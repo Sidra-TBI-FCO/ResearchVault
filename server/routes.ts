@@ -33,7 +33,8 @@ import {
   insertGrantSchema,
   insertCertificationModuleSchema,
   insertCertificationSchema,
-  insertCertificationConfigurationSchema
+  insertCertificationConfigurationSchema,
+  insertPdfImportHistorySchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -86,6 +87,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             parsedData: null
           };
 
+          const startTime = Date.now();
+          
+          // Create initial PDF import history entry
+          const historyEntry = await storage.createPdfImportHistoryEntry({
+            fileName: detectedData.fileName || 'unknown',
+            fileUrl: fileUrl,
+            uploadedBy: 1, // TODO: Get from session/auth
+            processingStatus: 'processing',
+            ocrProvider: 'unknown'
+          });
+
           // Get OCR configuration and perform OCR based on settings
           try {
             // Get OCR service configuration
@@ -94,30 +106,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
             let provider = ocrSettings.provider;
-            let fileExtension = '';
+            let isPDF = false;
+            
+            // Always check content-type since signed URLs don't have reliable file extensions
             try {
-              const url = new URL(fileUrl);
-              const pathSegments = url.pathname.split('/');
-              const fileName = pathSegments[pathSegments.length - 1];
-              if (fileName && fileName.includes('.')) {
-                fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+              console.log('Checking file type via HEAD request...');
+              const headResponse = await fetch(fileUrl, { method: 'HEAD' });
+              const contentType = headResponse.headers.get('content-type') || '';
+              console.log(`Content-Type: ${contentType}`);
+              
+              if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
+                isPDF = true;
+                console.log('PDF detected via Content-Type');
               }
-            } catch (e) {
-              // Try to detect PDF from content-type if URL parsing fails
+            } catch (headerError) {
+              console.log('Could not detect file type via headers, checking URL...');
+              // Fallback: try URL-based detection
               try {
-                const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-                const contentType = headResponse.headers.get('content-type') || '';
-                if (contentType.includes('pdf')) {
-                  fileExtension = 'pdf';
+                const url = new URL(fileUrl);
+                const pathSegments = url.pathname.split('/');
+                const fileName = pathSegments[pathSegments.length - 1];
+                if (fileName && fileName.toLowerCase().includes('pdf')) {
+                  isPDF = true;
+                  console.log('PDF detected via filename in URL');
                 }
-              } catch (headerError) {
-                console.log('Could not detect file type, using configured provider');
+              } catch (urlError) {
+                console.log('Could not detect file type, assuming image format');
               }
             }
             
-            if (fileExtension === 'pdf' && provider === 'tesseract') {
+            // Force OCR.space for PDFs regardless of current setting
+            if (isPDF) {
               provider = 'ocr_space';
-              console.log('Switching to OCR.space for PDF processing');
+              console.log('Forcing OCR.space for PDF processing');
             }
             
             detectedData.status = 'processing';
@@ -5169,6 +5190,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error processing PDF:', error);
       res.status(500).json({ message: "Failed to process PDF" });
+    }
+  });
+
+  // PDF Import History routes
+  app.get('/api/pdf-import-history', async (req: Request, res: Response) => {
+    try {
+      const { scientistName, courseName, dateFrom, dateTo, status, uploadedBy } = req.query;
+      
+      const filters: any = {};
+      if (scientistName) filters.scientistName = scientistName as string;
+      if (courseName) filters.courseName = courseName as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+      if (status) filters.status = status as string;
+      if (uploadedBy) filters.uploadedBy = parseInt(uploadedBy as string);
+      
+      const history = await storage.searchPdfImportHistory(filters);
+      
+      // Enhance with uploader information
+      const enhancedHistory = await Promise.all(history.map(async (entry) => {
+        const uploader = await storage.getScientist(entry.uploadedBy);
+        const assignedScientist = entry.assignedScientistId ? await storage.getScientist(entry.assignedScientistId) : null;
+        
+        return {
+          ...entry,
+          uploader: uploader ? {
+            id: uploader.id,
+            name: `${uploader.firstName} ${uploader.lastName}`,
+            email: uploader.email
+          } : null,
+          assignedScientist: assignedScientist ? {
+            id: assignedScientist.id,
+            name: `${assignedScientist.firstName} ${assignedScientist.lastName}`,
+            email: assignedScientist.email
+          } : null
+        };
+      }));
+      
+      res.json(enhancedHistory);
+    } catch (error) {
+      console.error("Error fetching PDF import history:", error);
+      res.status(500).json({ message: "Failed to fetch PDF import history" });
+    }
+  });
+
+  app.get('/api/pdf-import-history/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid history entry ID" });
+      }
+
+      const entry = await storage.getPdfImportHistoryEntry(id);
+      if (!entry) {
+        return res.status(404).json({ message: "PDF import history entry not found" });
+      }
+
+      // Enhance with additional information
+      const uploader = await storage.getScientist(entry.uploadedBy);
+      const assignedScientist = entry.assignedScientistId ? await storage.getScientist(entry.assignedScientistId) : null;
+
+      const enhancedEntry = {
+        ...entry,
+        uploader: uploader ? {
+          id: uploader.id,
+          name: `${uploader.firstName} ${uploader.lastName}`,
+          email: uploader.email
+        } : null,
+        assignedScientist: assignedScientist ? {
+          id: assignedScientist.id,
+          name: `${assignedScientist.firstName} ${assignedScientist.lastName}`,
+          email: assignedScientist.email
+        } : null
+      };
+
+      res.json(enhancedEntry);
+    } catch (error) {
+      console.error("Error fetching PDF import history entry:", error);
+      res.status(500).json({ message: "Failed to fetch PDF import history entry" });
     }
   });
 

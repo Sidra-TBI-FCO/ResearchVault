@@ -21,7 +21,8 @@ import {
   rolePermissions, RolePermission, InsertRolePermission,
   journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
   grants, Grant, InsertGrant,
-  systemConfigurations, SystemConfiguration, InsertSystemConfiguration
+  systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
+  pdfImportHistory, PdfImportHistory, InsertPdfImportHistory
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -214,6 +215,20 @@ export interface IStorage {
   createSystemConfiguration(config: InsertSystemConfiguration): Promise<SystemConfiguration>;
   updateSystemConfiguration(key: string, config: Partial<InsertSystemConfiguration>): Promise<SystemConfiguration | undefined>;
   deleteSystemConfiguration(key: string): Promise<boolean>;
+
+  // PDF Import History operations
+  getPdfImportHistory(): Promise<PdfImportHistory[]>;
+  getPdfImportHistoryEntry(id: number): Promise<PdfImportHistory | undefined>;
+  createPdfImportHistoryEntry(entry: InsertPdfImportHistory): Promise<PdfImportHistory>;
+  updatePdfImportHistoryEntry(id: number, entry: Partial<InsertPdfImportHistory>): Promise<PdfImportHistory | undefined>;
+  searchPdfImportHistory(filters: {
+    scientistName?: string;
+    courseName?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    status?: string;
+    uploadedBy?: number;
+  }): Promise<PdfImportHistory[]>;
 }
 
 export class MemStorage implements IStorage {

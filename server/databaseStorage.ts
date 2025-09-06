@@ -37,7 +37,8 @@ import {
   certificationModules, CertificationModule, InsertCertificationModule,
   certifications, Certification, InsertCertification,
   certificationConfigurations, CertificationConfiguration, InsertCertificationConfiguration,
-  systemConfigurations, SystemConfiguration, InsertSystemConfiguration
+  systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
+  pdfImportHistory, PdfImportHistory, InsertPdfImportHistory
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -2004,6 +2005,79 @@ export class DatabaseStorage implements IStorage {
       .delete(systemConfigurations)
       .where(eq(systemConfigurations.key, key));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // PDF Import History operations
+  async getPdfImportHistory(): Promise<PdfImportHistory[]> {
+    return await db.select().from(pdfImportHistory).orderBy(desc(pdfImportHistory.createdAt));
+  }
+
+  async getPdfImportHistoryEntry(id: number): Promise<PdfImportHistory | undefined> {
+    const [entry] = await db
+      .select()
+      .from(pdfImportHistory)
+      .where(eq(pdfImportHistory.id, id));
+    return entry;
+  }
+
+  async createPdfImportHistoryEntry(entry: InsertPdfImportHistory): Promise<PdfImportHistory> {
+    const [newEntry] = await db
+      .insert(pdfImportHistory)
+      .values(entry)
+      .returning();
+    return newEntry;
+  }
+
+  async updatePdfImportHistoryEntry(id: number, entry: Partial<InsertPdfImportHistory>): Promise<PdfImportHistory | undefined> {
+    const [updatedEntry] = await db
+      .update(pdfImportHistory)
+      .set({ ...entry, updatedAt: sql`now()` })
+      .where(eq(pdfImportHistory.id, id))
+      .returning();
+    return updatedEntry;
+  }
+
+  async searchPdfImportHistory(filters: {
+    scientistName?: string;
+    courseName?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    status?: string;
+    uploadedBy?: number;
+  }): Promise<PdfImportHistory[]> {
+    let query = db.select().from(pdfImportHistory);
+    
+    const conditions = [];
+    
+    if (filters.scientistName) {
+      conditions.push(ilike(pdfImportHistory.certificatePersonName, `%${filters.scientistName}%`));
+    }
+    
+    if (filters.courseName) {
+      conditions.push(ilike(pdfImportHistory.courseName, `%${filters.courseName}%`));
+    }
+    
+    if (filters.dateFrom) {
+      conditions.push(gte(pdfImportHistory.completionDate, filters.dateFrom));
+    }
+    
+    if (filters.dateTo) {
+      conditions.push(sql`${pdfImportHistory.completionDate} <= ${filters.dateTo}`);
+    }
+    
+    if (filters.status) {
+      conditions.push(eq(pdfImportHistory.processingStatus, filters.status));
+    }
+    
+    if (filters.uploadedBy) {
+      conditions.push(eq(pdfImportHistory.uploadedBy, filters.uploadedBy));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(pdfImportHistory.createdAt));
   }
 }
 

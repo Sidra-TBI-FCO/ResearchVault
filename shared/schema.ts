@@ -1106,3 +1106,38 @@ export const insertSystemConfigurationSchema = createInsertSchema(systemConfigur
 
 export type InsertSystemConfiguration = z.infer<typeof insertSystemConfigurationSchema>;
 export type SystemConfiguration = typeof systemConfigurations.$inferSelect;
+
+// PDF Import History - tracks all PDF processing attempts with OCR results
+export const pdfImportHistory = pgTable("pdf_import_history", {
+  id: serial("id").primaryKey(),
+  fileName: text("file_name").notNull(), // Original filename
+  fileUrl: text("file_url").notNull(), // Storage URL
+  fileSize: integer("file_size"), // File size in bytes
+  uploadedBy: integer("uploaded_by").notNull(), // references scientists.id (who uploaded)
+  processingStatus: text("processing_status").notNull().default("processing"), // processing, success, failed, ocr_failed
+  ocrProvider: text("ocr_provider"), // tesseract, ocr_space
+  extractedText: text("extracted_text"), // Full OCR extracted text
+  parsedData: json("parsed_data"), // Structured data extracted (name, course, dates, etc.)
+  errorMessage: text("error_message"), // Error details if processing failed
+  processingDuration: integer("processing_duration"), // Processing time in milliseconds
+  // Parsed certificate fields for easy searching
+  certificatePersonName: text("certificate_person_name"), // Name extracted from certificate
+  courseName: text("course_name"), // Course/module name
+  completionDate: date("completion_date"), // Date of completion
+  expirationDate: date("expiration_date"), // Date of expiration
+  recordId: text("record_id"), // Certificate record ID
+  institution: text("institution"), // Issuing institution
+  assignedScientistId: integer("assigned_scientist_id"), // Who the certificate was assigned to (if any)
+  notes: text("notes"), // Manual notes added by user
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPdfImportHistorySchema = createInsertSchema(pdfImportHistory).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPdfImportHistory = z.infer<typeof insertPdfImportHistorySchema>;
+export type PdfImportHistory = typeof pdfImportHistory.$inferSelect;
