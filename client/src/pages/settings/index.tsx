@@ -121,51 +121,75 @@ export default function Settings() {
             {/* Provider Selection */}
             <div className="space-y-3">
               <Label className="text-base font-medium">OCR Provider</Label>
-              <RadioGroup
-                value={currentConfig.provider}
-                onValueChange={handleProviderChange}
-                disabled={updateConfigMutation.isPending}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                    <RadioGroupItem value="tesseract" id="tesseract" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="tesseract" className="font-medium cursor-pointer">
-                          Tesseract.js (Recommended)
-                        </Label>
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Free, open-source OCR that runs locally. No API limits or external dependencies.
-                        Processes documents entirely within your system.
-                      </p>
-                      <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded mt-2 inline-block">
-                        ✓ Completely free • ✓ No rate limits • ✓ Privacy-focused
-                      </div>
-                    </div>
+              <div className="space-y-4">
+                <div 
+                  className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                    currentConfig.provider === 'tesseract' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => !updateConfigMutation.isPending && handleProviderChange('tesseract')}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    currentConfig.provider === 'tesseract' 
+                      ? 'border-blue-500 bg-blue-500' 
+                      : 'border-gray-300'
+                  }`}>
+                    {currentConfig.provider === 'tesseract' && (
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    )}
                   </div>
-
-                  <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                    <RadioGroupItem value="ocr_space" id="ocr_space" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="ocr_space" className="font-medium cursor-pointer">
-                          OCR.space
-                        </Label>
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        External API service with high accuracy. Free tier: 500 requests/day.
-                        Requires internet connection and sends data to external servers.
-                      </p>
-                      <div className="text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded mt-2 inline-block">
-                        ⚠ Usage limits • ⚠ External service • ⚠ Data privacy considerations
-                      </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        Tesseract.js (Recommended)
+                      </span>
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Free, open-source OCR that runs locally. No API limits or external dependencies.
+                      Processes documents entirely within your system.
+                    </p>
+                    <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded mt-2 inline-block">
+                      ✓ Completely free • ✓ No rate limits • ✓ Privacy-focused
                     </div>
                   </div>
                 </div>
-              </RadioGroup>
+
+                <div 
+                  className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                    currentConfig.provider === 'ocr_space' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => !updateConfigMutation.isPending && handleProviderChange('ocr_space')}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    currentConfig.provider === 'ocr_space' 
+                      ? 'border-blue-500 bg-blue-500' 
+                      : 'border-gray-300'
+                  }`}>
+                    {currentConfig.provider === 'ocr_space' && (
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        OCR.space
+                      </span>
+                      <AlertCircle className="h-4 w-4 text-orange-500" />
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      External API service with high accuracy. Free tier: 500 requests/day.
+                      Requires internet connection and sends data to external servers.
+                    </p>
+                    <div className="text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded mt-2 inline-block">
+                      ⚠ Usage limits • ⚠ External service • ⚠ Data privacy considerations
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* OCR.space API Key Configuration */}
