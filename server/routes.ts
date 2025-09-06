@@ -217,10 +217,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           try {
             
-            // Force OCR.space for PDFs regardless of current setting
-            if (isPDF) {
-              provider = 'ocr_space';
-              console.log('Forcing OCR.space for PDF processing');
+            // Use the configured OCR provider, but warn if using Tesseract for PDFs
+            if (isPDF && provider === 'tesseract') {
+              console.log('Warning: Using Tesseract for PDF processing - may have limited accuracy');
             }
             
             detectedData.status = 'processing';
@@ -359,12 +358,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
 
               if (isPdfFile) {
-                console.log('PDF file detected - Tesseract.js cannot process PDF files, only OCR.space supports PDFs');
-                throw new Error('PDF OCR processing failed - OCR.space returned E301 error and Tesseract.js cannot process PDF files');
+                console.log('PDF file detected - Attempting Tesseract fallback despite limited PDF support');
+                // Continue to Tesseract fallback - user has chosen this provider
               }
 
-              // Use Tesseract.js (fallback for image files only)
-              console.log('Attempting Tesseract.js fallback for image file...');
+              // Use Tesseract.js (supports images and limited PDF processing)
+              console.log(`Attempting Tesseract.js processing for ${isPdfFile ? 'PDF' : 'image'} file...`);
               try {
                 // Check file format first - handle signed URLs properly
                 let fileExtension = '';
