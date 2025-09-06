@@ -76,21 +76,17 @@ export function ObjectUploader({
     }
   }, [uploadedFiles]);
 
-  // Handle completion callback (fixes React warning)
+  // Handle completion callback 
   useEffect(() => {
     const allDone = uploadedFiles.length > 0 && uploadedFiles.every(f => f.status === 'success' || f.status === 'error');
     const successfulFiles = uploadedFiles.filter(f => f.status === 'success');
 
     if (allDone && successfulFiles.length > 0) {
-      // Call onComplete only once by clearing uploadedFiles after completion
       onComplete?.(successfulFiles.map(f => ({
         url: f.url!,
         fileName: f.file.name,
         fileSize: f.file.size
       })));
-      
-      // Clear files to prevent duplicate calls
-      setUploadedFiles([]);
     }
   }, [uploadedFiles, onComplete]);
 
