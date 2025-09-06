@@ -575,7 +575,7 @@ export default function CertificationsPage() {
                     <Button 
                       onClick={() => {
                         const validCerts = detectedFiles.filter(f => 
-                          f.status === 'detected' && f.name && f.scientistId && f.startDate && f.endDate && f.module
+                          f.status === 'detected' && f.name && f.scientistId && f.completionDate && f.expirationDate && f.module
                         );
                         if (validCerts.length === 0) {
                           toast({
