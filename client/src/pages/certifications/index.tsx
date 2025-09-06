@@ -12,6 +12,7 @@ import { format, differenceInDays, parseISO } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatFullName } from "@/utils/nameUtils";
 
 interface CertificationMatrixItem {
   scientistId: number;
@@ -723,7 +724,7 @@ export default function CertificationsPage() {
                               <SelectContent>
                                 {scientists.map((scientist: any) => (
                                   <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                    {scientist.firstName} {scientist.lastName}
+                                    {formatFullName(scientist)}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
