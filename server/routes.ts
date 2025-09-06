@@ -1008,6 +1008,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
 
           console.log('🎉 Certification created successfully with ID:', certification.id);
+          console.log('📋 Saved certification details:', {
+            id: certification.id,
+            scientistId: certification.scientistId,
+            moduleId: certification.moduleId,
+            startDate: certification.startDate,
+            endDate: certification.endDate
+          });
 
           results.push({
             ...cert,
