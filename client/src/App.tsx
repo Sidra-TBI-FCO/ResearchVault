@@ -120,8 +120,7 @@ import ReportsPage from "@/pages/reports";
 // Certifications
 import CertificationsPage from "@/pages/certifications";
 
-// Settings
-import SettingsPage from "@/pages/settings";
+// Settings page removed
 
 function Router() {
   return (
@@ -245,8 +244,7 @@ function Router() {
         {/* Reports */}
         <Route path="/reports" component={ReportsPage} />
         
-        {/* Settings */}
-        <Route path="/settings" component={SettingsPage} />
+        {/* Settings page removed */}
         
         {/* Fallback to 404 */}
         <Route component={NotFound} />
