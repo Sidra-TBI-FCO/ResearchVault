@@ -969,9 +969,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } = cert;
 
           // Debug logging for certificate data
-          console.log('Processing certificate:', {
+          console.log('🔍 Processing certificate for saving:', {
             scientistId,
-            moduleId: cert.module?.id,
+            moduleId,
             startDate,
             endDate,
             hasModule: !!cert.module,
@@ -980,11 +980,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Validate required fields
           if (!scientistId || !moduleId || !startDate || !endDate) {
-            console.log('Validation failed:', {
-              hasScientistId: !!scientistId,
-              hasModuleId: !!moduleId,
-              hasStartDate: !!startDate,
-              hasEndDate: !!endDate
+            console.log('❌ Validation failed - Missing fields:', {
+              scientistId: scientistId || 'MISSING',
+              moduleId: moduleId || 'MISSING', 
+              startDate: startDate || 'MISSING',
+              endDate: endDate || 'MISSING'
             });
             results.push({
               ...cert,
@@ -993,6 +993,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
             continue;
           }
+
+          console.log('✅ All validation passed, creating certification...');
 
           const certification = await storage.createCertification({
             scientistId,
