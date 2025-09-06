@@ -448,6 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
                   processingStatus: parsedData.name ? 'completed' : 'failed',
                   ocrProvider: provider, // Make sure OCR provider is saved
+                  documentType: parsedData.documentType || 'unknown',
                   extractedText: extractedText,
                   parsedData: parsedData,
                   processedAt: new Date(),
@@ -469,6 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
                   processingStatus: 'failed',
                   ocrProvider: provider, // Make sure OCR provider is saved
+                  documentType: 'unknown', // OCR failed, so document type unknown
                   errorMessage: 'No text could be extracted from the file',
                   processedAt: new Date(),
                   processingTimeMs: Date.now() - startTime
@@ -490,6 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
                 processingStatus: 'failed',
                 ocrProvider: provider, // Make sure OCR provider is saved
+                documentType: 'unknown', // OCR error, so document type unknown
                 errorMessage: `OCR processing failed: ${ocrError?.message || 'Unknown error'}`,
                 processedAt: new Date(),
                 processingTimeMs: Date.now() - startTime
@@ -570,15 +573,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documentType = detectCITIDocumentType(text);
       console.log('Detected document type:', documentType);
 
+      let parsedResult;
       switch (documentType) {
         case 'certificate':
-          return parseCITICertificateFormat(text, modules);
+          parsedResult = parseCITICertificateFormat(text, modules);
+          break;
         case 'report':
-          return parseCITIReportFormat(text, modules);
+          parsedResult = parseCITIReportFormat(text, modules);
+          break;
         default:
           console.log('Unknown document type, trying certificate format as fallback');
-          return parseCITICertificateFormat(text, modules);
+          parsedResult = parseCITICertificateFormat(text, modules);
       }
+
+      // Add document type to the result
+      return {
+        ...parsedResult,
+        documentType: documentType
+      };
     } catch (error) {
       console.error('Error parsing CITI document:', error);
       return result;
