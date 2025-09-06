@@ -206,8 +206,8 @@ export default function CertificationsPage() {
         return {
           ...result,
           scientistId: matchedScientistId,
-          startDate: '',
-          endDate: '',
+          startDate: result.completionDate || '', // Use parsed completion date
+          endDate: result.expirationDate || '',   // Use parsed expiration date
           notes: ''
         };
       }));
