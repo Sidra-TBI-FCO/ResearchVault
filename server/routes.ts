@@ -98,91 +98,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ocrProvider: 'unknown'
           });
 
-          // Get OCR configuration and perform OCR based on settings
+          // Check file type first, before attempting any OCR
+          let contentType = '';
+          let isPDF = false;
+          let isValidFile = false;
+          
           try {
-            // Get OCR service configuration
-            const ocrConfig = await storage.getSystemConfiguration('ocr_service');
-            const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' }; // Default to OCR.space for PDF support
+            console.log('Checking file type via HEAD request...');
+            const headResponse = await fetch(fileUrl, { method: 'HEAD' });
+            contentType = headResponse.headers.get('content-type') || '';
+            console.log(`Content-Type: ${contentType}`);
             
-            // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
-            let provider = ocrSettings.provider;
-            let isPDF = false;
-            
-            // Always check content-type since signed URLs don't have reliable file extensions
-            let contentType = '';
-            let isValidFile = false;
-            
-            try {
-              console.log('Checking file type via HEAD request...');
-              const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-              contentType = headResponse.headers.get('content-type') || '';
-              console.log(`Content-Type: ${contentType}`);
+            // Check for supported file types
+            if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
+              isPDF = true;
+              isValidFile = true;
+              console.log('PDF detected via Content-Type');
+            } else if (
+              contentType.includes('image/') || 
+              contentType.includes('image/jpeg') || 
+              contentType.includes('image/jpg') || 
+              contentType.includes('image/png') || 
+              contentType.includes('image/gif') || 
+              contentType.includes('image/bmp') ||
+              contentType.includes('image/tiff')
+            ) {
+              isValidFile = true;
+              console.log('Image file detected via Content-Type');
+            } else {
+              console.log(`Unsupported file type: ${contentType}`);
+              // Mark as failed due to unsupported format
+              detectedData.status = 'error';
+              detectedData.error = `Unsupported file format: ${contentType}. Only PDF and image files are supported.`;
               
-              // Check for supported file types
-              if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
+              // Update history entry with error
+              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                processingStatus: 'failed',
+                errorMessage: detectedData.error,
+                processedAt: new Date(),
+                processingTimeMs: Date.now() - startTime
+              });
+              
+              results.push(detectedData);
+              continue; // Skip OCR processing for unsupported files
+            }
+          } catch (headerError) {
+            console.log('Could not detect file type via headers, checking URL...');
+            // Fallback: try URL-based detection
+            try {
+              const url = new URL(fileUrl);
+              const pathSegments = url.pathname.split('/');
+              const fileName = pathSegments[pathSegments.length - 1];
+              if (fileName && fileName.toLowerCase().includes('pdf')) {
                 isPDF = true;
                 isValidFile = true;
-                console.log('PDF detected via Content-Type');
-              } else if (
-                contentType.includes('image/') || 
-                contentType.includes('image/jpeg') || 
-                contentType.includes('image/jpg') || 
-                contentType.includes('image/png') || 
-                contentType.includes('image/gif') || 
-                contentType.includes('image/bmp') ||
-                contentType.includes('image/tiff')
-              ) {
+                console.log('PDF detected via filename in URL');
+              } else if (fileName && /\.(jpg|jpeg|png|gif|bmp|tiff)$/i.test(fileName)) {
                 isValidFile = true;
-                console.log('Image file detected via Content-Type');
+                console.log('Image file detected via filename in URL');
               } else {
-                console.log(`Unsupported file type: ${contentType}`);
-                // Mark as failed due to unsupported format
-                detectedData.status = 'error';
-                detectedData.error = `Unsupported file format: ${contentType}. Only PDF and image files are supported.`;
-                
-                // Update history entry with error
-                await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                  processingStatus: 'failed',
-                  errorMessage: detectedData.error,
-                  processedAt: new Date(),
-                  processingTimeMs: Date.now() - startTime
-                });
-                
-                results.push(detectedData);
-                continue; // Skip OCR processing for unsupported files
-              }
-            } catch (headerError) {
-              console.log('Could not detect file type via headers, checking URL...');
-              // Fallback: try URL-based detection
-              try {
-                const url = new URL(fileUrl);
-                const pathSegments = url.pathname.split('/');
-                const fileName = pathSegments[pathSegments.length - 1];
-                if (fileName && fileName.toLowerCase().includes('pdf')) {
-                  isPDF = true;
-                  isValidFile = true;
-                  console.log('PDF detected via filename in URL');
-                } else if (fileName && /\.(jpg|jpeg|png|gif|bmp|tiff)$/i.test(fileName)) {
-                  isValidFile = true;
-                  console.log('Image file detected via filename in URL');
-                } else {
-                  console.log('Could not detect valid file type from URL');
-                  detectedData.status = 'error';
-                  detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
-                  
-                  // Update history entry with error
-                  await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                    processingStatus: 'failed',
-                    errorMessage: detectedData.error,
-                    processedAt: new Date(),
-                    processingTimeMs: Date.now() - startTime
-                  });
-                  
-                  results.push(detectedData);
-                  continue; // Skip OCR processing
-                }
-              } catch (urlError) {
-                console.log('Could not detect file type from URL either');
+                console.log('Could not detect valid file type from URL');
                 detectedData.status = 'error';
                 detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
                 
@@ -197,13 +172,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 results.push(detectedData);
                 continue; // Skip OCR processing
               }
+            } catch (urlError) {
+              console.log('Could not detect file type from URL either');
+              detectedData.status = 'error';
+              detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
+              
+              // Update history entry with error
+              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                processingStatus: 'failed',
+                errorMessage: detectedData.error,
+                processedAt: new Date(),
+                processingTimeMs: Date.now() - startTime
+              });
+              
+              results.push(detectedData);
+              continue; // Skip OCR processing
             }
+          }
+          
+          // Only proceed if we have a valid file type
+          if (!isValidFile) {
+            console.log('File type validation failed, skipping OCR processing');
+            continue;
+          }
+
+          // Get OCR configuration and perform OCR based on settings
+          try {
+            // Get OCR service configuration
+            const ocrConfig = await storage.getSystemConfiguration('ocr_service');
+            const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' }; // Default to OCR.space for PDF support
             
-            // Only proceed if we have a valid file type
-            if (!isValidFile) {
-              console.log('File type validation failed, skipping OCR processing');
-              continue;
-            }
+            // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
+            let provider = ocrSettings.provider;
             
             // Force OCR.space for PDFs regardless of current setting
             if (isPDF) {
