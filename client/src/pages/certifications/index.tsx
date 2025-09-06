@@ -154,14 +154,16 @@ export default function CertificationsPage() {
   const processCertificatesMutation = useMutation({
     mutationFn: async (fileUrls: string[]) => {
       const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls });
-      return response.json();
+      const data = await response.json();
+      console.log('Process batch response:', data);
+      return data;
     },
     onSuccess: (data) => {
       setDetectedFiles(data.results.map((result: any) => {
         let matchedScientistId = undefined;
         
-        // Extract parsed data from the result
-        const parsedData = result.parsedData || result;
+        // Extract parsed data directly from result since process-batch returns the parsed structure
+        const parsedData = result;
         
         // Auto-match scientist by name if extracted name exists
         console.log('Auto-matching debug:', {
