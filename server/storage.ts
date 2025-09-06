@@ -20,7 +20,8 @@ import {
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
   rolePermissions, RolePermission, InsertRolePermission,
   journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
-  grants, Grant, InsertGrant
+  grants, Grant, InsertGrant,
+  systemConfigurations, SystemConfiguration, InsertSystemConfiguration
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -203,6 +204,13 @@ export interface IStorage {
   createGrant(grant: InsertGrant): Promise<Grant>;
   updateGrant(id: number, grant: Partial<InsertGrant>): Promise<Grant | undefined>;
   deleteGrant(id: number): Promise<boolean>;
+
+  // System Configuration operations
+  getSystemConfigurations(): Promise<SystemConfiguration[]>;
+  getSystemConfiguration(key: string): Promise<SystemConfiguration | undefined>;
+  createSystemConfiguration(config: InsertSystemConfiguration): Promise<SystemConfiguration>;
+  updateSystemConfiguration(key: string, config: Partial<InsertSystemConfiguration>): Promise<SystemConfiguration | undefined>;
+  deleteSystemConfiguration(key: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

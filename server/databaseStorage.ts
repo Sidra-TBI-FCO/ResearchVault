@@ -36,7 +36,8 @@ import {
   grantProgressReports, GrantProgressReport, InsertGrantProgressReport,
   certificationModules, CertificationModule, InsertCertificationModule,
   certifications, Certification, InsertCertification,
-  certificationConfigurations, CertificationConfiguration, InsertCertificationConfiguration
+  certificationConfigurations, CertificationConfiguration, InsertCertificationConfiguration,
+  systemConfigurations, SystemConfiguration, InsertSystemConfiguration
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -1941,6 +1942,43 @@ export class DatabaseStorage implements IStorage {
       .where(eq(certificationConfigurations.id, id))
       .returning();
     return updatedConfig;
+  }
+
+  // System Configuration operations
+  async getSystemConfigurations(): Promise<SystemConfiguration[]> {
+    return await db.select().from(systemConfigurations).orderBy(asc(systemConfigurations.category), asc(systemConfigurations.key));
+  }
+
+  async getSystemConfiguration(key: string): Promise<SystemConfiguration | undefined> {
+    const [config] = await db
+      .select()
+      .from(systemConfigurations)
+      .where(eq(systemConfigurations.key, key));
+    return config;
+  }
+
+  async createSystemConfiguration(config: InsertSystemConfiguration): Promise<SystemConfiguration> {
+    const [newConfig] = await db
+      .insert(systemConfigurations)
+      .values(config)
+      .returning();
+    return newConfig;
+  }
+
+  async updateSystemConfiguration(key: string, config: Partial<InsertSystemConfiguration>): Promise<SystemConfiguration | undefined> {
+    const [updatedConfig] = await db
+      .update(systemConfigurations)
+      .set({ ...config, updatedAt: sql`now()` })
+      .where(eq(systemConfigurations.key, key))
+      .returning();
+    return updatedConfig;
+  }
+
+  async deleteSystemConfiguration(key: string): Promise<boolean> {
+    const result = await db
+      .delete(systemConfigurations)
+      .where(eq(systemConfigurations.key, key));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

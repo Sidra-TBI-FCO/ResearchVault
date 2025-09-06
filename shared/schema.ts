@@ -1085,3 +1085,24 @@ export const insertCertificationConfigurationSchema = createInsertSchema(certifi
 
 export type InsertCertificationConfiguration = z.infer<typeof insertCertificationConfigurationSchema>;
 export type CertificationConfiguration = typeof certificationConfigurations.$inferSelect;
+
+// System configurations for OCR and other global settings
+export const systemConfigurations = pgTable("system_configurations", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(), // Configuration key (e.g., "ocr_service")
+  value: json("value").notNull(), // Configuration value (JSON for flexibility)
+  description: text("description"), // Human-readable description
+  category: text("category").notNull().default("general"), // Category for grouping (ocr, email, etc.)
+  isUserConfigurable: boolean("is_user_configurable").notNull().default(true), // Whether users can modify this setting
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSystemConfigurationSchema = createInsertSchema(systemConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSystemConfiguration = z.infer<typeof insertSystemConfigurationSchema>;
+export type SystemConfiguration = typeof systemConfigurations.$inferSelect;
