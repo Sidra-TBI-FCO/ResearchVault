@@ -578,6 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         default:
           console.log('Unknown document type, trying certificate format as fallback');
           return parseCITICertificateFormat(text, modules);
+      }
     } catch (error) {
       console.error('Error parsing CITI document:', error);
       return result;

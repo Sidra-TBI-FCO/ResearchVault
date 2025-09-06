@@ -1116,6 +1116,7 @@ export const pdfImportHistory = pgTable("pdf_import_history", {
   uploadedBy: integer("uploaded_by").notNull(), // references scientists.id (who uploaded)
   processingStatus: text("processing_status").notNull().default("processing"), // processing, success, failed, ocr_failed
   ocrProvider: text("ocr_provider"), // tesseract, ocr_space
+  documentType: text("document_type"), // certificate, report, unknown
   extractedText: text("extracted_text"), // Full OCR extracted text
   parsedData: json("parsed_data"), // Structured data extracted (name, course, dates, etc.)
   errorMessage: text("error_message"), // Error details if processing failed
