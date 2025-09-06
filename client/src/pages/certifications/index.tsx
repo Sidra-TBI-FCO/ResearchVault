@@ -232,16 +232,22 @@ export default function CertificationsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/certifications/matrix'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pdf-import-history'] }); // Refresh history
       setDetectedFiles([]);
+      
+      // Show detailed success message
       toast({
-        title: "Certifications saved",
-        description: `${data.summary.successful} certifications added successfully`,
+        title: "✅ Certifications Saved Successfully!",
+        description: `${data.summary.successful} certification${data.summary.successful === 1 ? '' : 's'} added to the system`,
+        duration: 5000,
       });
+      
       if (data.summary.failed > 0) {
         toast({
-          title: "Some certifications failed",
-          description: `${data.summary.failed} certifications could not be processed`,
+          title: "⚠️ Some Certifications Failed",
+          description: `${data.summary.failed} certification${data.summary.failed === 1 ? '' : 's'} could not be processed. Check the details above.`,
           variant: "destructive",
+          duration: 8000,
         });
       }
     },
@@ -895,6 +901,7 @@ export default function CertificationsPage() {
                         <TableHead>File Name</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Document Type</TableHead>
+                        <TableHead>Save Status</TableHead>
                         <TableHead>Detected Fields</TableHead>
                         <TableHead>Uploaded By</TableHead>
                         <TableHead>OCR Provider</TableHead>
@@ -995,6 +1002,22 @@ export default function CertificationsPage() {
                                   {entry.documentType === 'certificate' ? '📜 Certificate' : 
                                    entry.documentType === 'report' ? '📋 Report' : 
                                    '❓ Unknown'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant="outline" 
+                                  className={
+                                    entry.saveStatus === 'saved'
+                                      ? 'bg-green-50 text-green-700 border-green-200'
+                                      : entry.saveStatus === 'not_saved'
+                                      ? 'bg-red-50 text-red-700 border-red-200'
+                                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                                  }
+                                >
+                                  {entry.saveStatus === 'saved' ? '✅ Saved' : 
+                                   entry.saveStatus === 'not_saved' ? '❌ Not Saved' : 
+                                   '⏳ Pending'}
                                 </Badge>
                               </TableCell>
                               <TableCell className="max-w-48">

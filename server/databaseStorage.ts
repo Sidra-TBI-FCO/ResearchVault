@@ -2079,6 +2079,15 @@ export class DatabaseStorage implements IStorage {
     
     return await query.orderBy(desc(pdfImportHistory.createdAt));
   }
+
+  async updatePdfImportHistorySaveStatus(fileName: string, saveStatus: string): Promise<PdfImportHistory | undefined> {
+    const [updatedEntry] = await db
+      .update(pdfImportHistory)
+      .set({ saveStatus, updatedAt: sql`now()` })
+      .where(eq(pdfImportHistory.fileName, fileName))
+      .returning();
+    return updatedEntry;
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -1121,6 +1121,7 @@ export const pdfImportHistory = pgTable("pdf_import_history", {
   parsedData: json("parsed_data"), // Structured data extracted (name, course, dates, etc.)
   errorMessage: text("error_message"), // Error details if processing failed
   processingDuration: integer("processing_duration"), // Processing time in milliseconds
+  saveStatus: text("save_status"), // 'saved', 'not_saved', 'pending' - tracks if certificate was saved to certifications table
   // Parsed certificate fields for easy searching
   certificatePersonName: text("certificate_person_name"), // Name extracted from certificate
   courseName: text("course_name"), // Course/module name

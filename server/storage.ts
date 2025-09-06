@@ -229,6 +229,8 @@ export interface IStorage {
     status?: string;
     uploadedBy?: number;
   }): Promise<PdfImportHistory[]>;
+  
+  updatePdfImportHistorySaveStatus(fileName: string, saveStatus: string): Promise<PdfImportHistory | undefined>;
 }
 
 export class MemStorage implements IStorage {
