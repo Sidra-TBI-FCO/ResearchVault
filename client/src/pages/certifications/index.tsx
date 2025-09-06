@@ -154,22 +154,11 @@ export default function CertificationsPage() {
   const processCertificatesMutation = useMutation({
     mutationFn: async (fileUrls: string[]) => {
       const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls });
-      const data = await response.json();
-      console.log('Process batch response:', data);
-      return data;
+      return response.json();
     },
     onSuccess: (data) => {
-      console.log('=== PROCESS BATCH RESPONSE ===');
-      console.log('data:', data);
-      console.log('data.results:', data.results);
-      if (data.results?.[0]) {
-        console.log('First result keys:', Object.keys(data.results[0]));
-        console.log('First result:', data.results[0]);
-      }
-      
       // Transform the results to match the frontend PendingCertification structure
       setDetectedFiles(data.results.map((result: any) => {
-        console.log('Processing result:', result);
         
         // The result should contain the parsed certificate data directly
         return {
@@ -552,38 +541,9 @@ export default function CertificationsPage() {
                     </Button>
                     <Button 
                       onClick={() => {
-                        console.log('=== SAVE DEBUG ===');
-                        console.log('detectedFiles:', detectedFiles);
-                        detectedFiles.forEach((f, i) => {
-                          console.log(`File ${i}:`, {
-                            status: f.status,
-                            name: f.name,
-                            scientistId: f.scientistId,
-                            completionDate: f.completionDate,
-                            expirationDate: f.expirationDate,
-                            module: f.module
-                          });
-                        });
-                        
                         const validCerts = detectedFiles.filter(f => 
                           f.status === 'detected' && f.name && f.scientistId && f.completionDate && f.expirationDate && f.module
                         );
-                        
-                        console.log('validCerts after filter:', validCerts.length);
-                        console.log('validCerts:', validCerts);
-                        
-                        const certificationPayload = validCerts.map(cert => ({
-                          fileName: cert.fileName || 'certificate.pdf',
-                          scientistId: cert.scientistId,
-                          moduleId: cert.module!.id,
-                          startDate: cert.completionDate,
-                          endDate: cert.expirationDate,
-                          certificateFilePath: cert.filePath || cert.originalUrl || 'certificate.pdf',
-                          notes: cert.notes || ''
-                        }));
-                        
-                        console.log('=== SAVE PAYLOAD ===');
-                        console.log('certificationPayload:', certificationPayload);
                         
                         if (validCerts.length === 0) {
                           toast({
@@ -593,7 +553,15 @@ export default function CertificationsPage() {
                           });
                           return;
                         }
-                        confirmCertificationsMutation.mutate(certificationPayload);
+                        confirmCertificationsMutation.mutate(validCerts.map(cert => ({
+                          fileName: cert.fileName || 'certificate.pdf',
+                          scientistId: cert.scientistId,
+                          moduleId: cert.module!.id,
+                          startDate: cert.completionDate,
+                          endDate: cert.expirationDate,
+                          certificateFilePath: cert.filePath || cert.originalUrl || 'certificate.pdf',
+                          notes: cert.notes || ''
+                        })));
                       }}
                       disabled={confirmCertificationsMutation.isPending}
                       size="sm"

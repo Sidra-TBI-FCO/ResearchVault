@@ -76,6 +76,25 @@ export function ObjectUploader({
     }
   }, [uploadedFiles]);
 
+  // Handle completion callback (fixes React warning)
+  useEffect(() => {
+    const allDone = uploadedFiles.length > 0 && uploadedFiles.every(f => f.status === 'success' || f.status === 'error');
+    const successfulFiles = uploadedFiles.filter(f => f.status === 'success');
+
+    if (allDone && successfulFiles.length > 0) {
+      // Small delay to ensure state is settled
+      const timer = setTimeout(() => {
+        onComplete?.(successfulFiles.map(f => ({
+          url: f.url!,
+          fileName: f.file.name,
+          fileSize: f.file.size
+        })));
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [uploadedFiles, onComplete]);
+
   const handleFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     
@@ -150,23 +169,7 @@ export function ObjectUploader({
         )
       );
 
-      // Check if all files are done and call onComplete
-      setTimeout(() => {
-        setUploadedFiles(currentFiles => {
-          const allDone = currentFiles.every(f => f.status === 'success' || f.status === 'error');
-          const successfulFiles = currentFiles.filter(f => f.status === 'success');
-
-          if (allDone && successfulFiles.length > 0) {
-            onComplete?.(successfulFiles.map(f => ({
-              url: f.url!,
-              fileName: f.file.name,
-              fileSize: f.file.size
-            })));
-          }
-          
-          return currentFiles;
-        });
-      }, 100);
+      // Note: onComplete will be called by useEffect watching uploadedFiles
 
     } catch (error) {
       console.error('Upload error:', error);
