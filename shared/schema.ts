@@ -1012,3 +1012,76 @@ export const insertGrantResearchActivitySchema = createInsertSchema(grantResearc
 
 export type InsertGrantResearchActivity = z.infer<typeof insertGrantResearchActivitySchema>;
 export type GrantResearchActivity = typeof grantResearchActivities.$inferSelect;
+
+// Certification modules (core/optional modules configuration)
+export const certificationModules = pgTable("certification_modules", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Module name (e.g., "Human Subjects Research", "Biosafety")
+  description: text("description"), // Module description
+  isCore: boolean("is_core").notNull().default(false), // Whether this is a mandatory core module
+  expirationMonths: integer("expiration_months").notNull().default(36), // How many months before expiration
+  isActive: boolean("is_active").notNull().default(true), // Whether this module is currently active
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCertificationModuleSchema = createInsertSchema(certificationModules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCertificationModule = z.infer<typeof insertCertificationModuleSchema>;
+export type CertificationModule = typeof certificationModules.$inferSelect;
+
+// Individual certifications
+export const certifications = pgTable("certifications", {
+  id: serial("id").primaryKey(),
+  scientistId: integer("scientist_id").notNull(), // references scientists.id
+  moduleId: integer("module_id").notNull(), // references certification_modules.id
+  startDate: date("start_date").notNull(), // Certification start date
+  endDate: date("end_date").notNull(), // Certification expiration date
+  certificateFilePath: text("certificate_file_path"), // Path to certificate PDF
+  certificateFileName: text("certificate_file_name"), // Original certificate filename
+  reportFilePath: text("report_file_path"), // Path to report PDF
+  reportFileName: text("report_file_name"), // Original report filename
+  extractedData: json("extracted_data"), // OCR extracted data for debugging/verification
+  uploadedBy: integer("uploaded_by").notNull(), // references scientists.id
+  notes: text("notes"), // Additional notes
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCertificationSchema = createInsertSchema(certifications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCertification = z.infer<typeof insertCertificationSchema>;
+export type Certification = typeof certifications.$inferSelect;
+
+// Certification system configuration
+export const certificationConfigurations = pgTable("certification_configurations", {
+  id: serial("id").primaryKey(),
+  institutionName: text("institution_name"), // Institution name for CITI API
+  citiApiKey: text("citi_api_key"), // CITI API key (encrypted)
+  citiApiSecret: text("citi_api_secret"), // CITI API secret (encrypted)
+  citiApiEndpoint: text("citi_api_endpoint"), // CITI API endpoint URL
+  notificationRecipients: json("notification_recipients").default([]), // Who receives expiration notifications
+  notificationDays: json("notification_days").default([30, 7]), // Days before expiration to send notifications
+  emailEnabled: boolean("email_enabled").notNull().default(true), // Whether to send email notifications
+  autoImportEnabled: boolean("auto_import_enabled").notNull().default(false), // Whether to auto-import from CITI API
+  lastSyncDate: timestamp("last_sync_date"), // Last successful CITI API sync
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCertificationConfigurationSchema = createInsertSchema(certificationConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCertificationConfiguration = z.infer<typeof insertCertificationConfigurationSchema>;
+export type CertificationConfiguration = typeof certificationConfigurations.$inferSelect;
