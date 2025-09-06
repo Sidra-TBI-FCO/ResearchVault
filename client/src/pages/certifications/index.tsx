@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Download, Settings, Upload, FileText } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useToast } from "@/hooks/use-toast";
 
 interface CertificationMatrixItem {
   scientistId: number;
@@ -55,6 +57,7 @@ function getCertificationStatus(endDate: string | null): {
 export default function CertificationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("matrix");
+  const { toast } = useToast();
 
   const { data: matrixData = [], isLoading: matrixLoading } = useQuery({
     queryKey: ['/api/certifications/matrix'],
@@ -276,15 +279,34 @@ export default function CertificationsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Upload Certificates</CardTitle>
+              <p className="text-muted-foreground">
+                Upload CITI certification PDFs for automatic processing and extraction of certification data.
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Upload CITI Certificates</h3>
-                <p className="text-muted-foreground mb-4">
-                  Drag and drop PDF files or click to browse. Supports both certificates and reports.
-                </p>
-                <Button>Browse Files</Button>
+              <ObjectUploader
+                maxNumberOfFiles={5}
+                maxFileSize={10485760} // 10MB
+                acceptedFileTypes={['application/pdf']}
+                onComplete={(uploadedFiles) => {
+                  console.log('Files uploaded:', uploadedFiles);
+                  // TODO: Process uploaded files with OCR
+                  toast({
+                    title: "Files uploaded successfully",
+                    description: `${uploadedFiles.length} file(s) uploaded and ready for processing`,
+                  });
+                }}
+                showDropzone={true}
+              />
+              
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">Upload Instructions</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Upload either CITI certificates or completion reports (both contain the required information)</li>
+                  <li>• Files will be automatically processed to extract certification details</li>
+                  <li>• Review and verify the extracted data before saving</li>
+                  <li>• Maximum 5 files per upload, 10MB each</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
