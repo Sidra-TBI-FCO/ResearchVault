@@ -88,6 +88,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Perform OCR on the PDF using OCR.space API
           try {
+            // Create AbortController for timeout handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
             const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
               method: 'POST',
               headers: {
@@ -103,9 +107,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 'isCreateSearchablePdf': 'false',
                 'isSearchablePdfHideTextLayer': 'false',
                 'scale': 'true',
-                'isTable': 'false'
-              })
+                'isTable': 'false',
+                'OCREngine': '2' // Use engine 2 for better accuracy
+              }),
+              signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (ocrResponse.ok) {
               const ocrResult = await ocrResponse.json();
@@ -132,7 +140,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (ocrError: any) {
             console.error('OCR processing error:', ocrError);
             detectedData.status = 'ocr_failed';
-            detectedData.error = ocrError?.message || 'OCR service unavailable';
+            if (ocrError.name === 'AbortError') {
+              detectedData.error = 'OCR request timed out after 30 seconds - try uploading again';
+            } else if (ocrError.cause?.code === 'UND_ERR_CONNECT_TIMEOUT') {
+              detectedData.error = 'Cannot connect to OCR service - network timeout. Please try again or contact support.';
+            } else {
+              detectedData.error = ocrError?.message || 'OCR service unavailable';
+            }
+            
+            // Add suggestion for manual processing
+            detectedData.suggestion = 'OCR failed - file uploaded but data extraction was unsuccessful. You can still manually assign this certificate to a scientist.';
           }
 
           results.push(detectedData);
@@ -171,49 +188,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     try {
-      // Extract completion date
-      const completionMatch = text.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i);
+      // Clean up text - remove extra whitespace and normalize
+      const cleanText = text.replace(/\s+/g, ' ').trim();
+
+      // Extract completion date - more flexible patterns
+      const completionMatch = cleanText.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Completion:\s*(\d{2}-\w{3}-\d{4})/i);
       if (completionMatch) {
         result.completionDate = convertDateFormat(completionMatch[1]);
       }
 
-      // Extract expiration date
-      const expirationMatch = text.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i);
+      // Extract expiration date - more flexible patterns  
+      const expirationMatch = cleanText.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i) ||
+                             cleanText.match(/Expiration:\s*(\d{2}-\w{3}-\d{4})/i);
       if (expirationMatch) {
         result.expirationDate = convertDateFormat(expirationMatch[1]);
       }
 
-      // Extract record ID
-      const recordMatch = text.match(/Record ID\s+(\d+)/i);
+      // Extract record ID - more flexible patterns
+      const recordMatch = cleanText.match(/Record ID\s+(\d+)/i) ||
+                         cleanText.match(/Record:\s*(\d+)/i) ||
+                         cleanText.match(/ID[:\s]+(\d+)/i);
       if (recordMatch) {
         result.recordId = recordMatch[1];
       }
 
-      // Extract person name (usually after "This is to certify that:")
-      const nameMatch = text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
+      // Extract person name - improved patterns for different formats
+      let nameMatch = text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
+      if (!nameMatch) {
+        // Try alternative patterns
+        nameMatch = text.match(/This is to certify that:\s*([^\n\r]+)/i) ||
+                   text.match(/certify that[:\s]*([^\n\r]+)/i);
+      }
       if (nameMatch) {
-        result.name = nameMatch[1].trim();
+        result.name = nameMatch[1].trim().replace(/\s+/g, ' ');
       }
 
-      // Extract course name (CITI program course)
-      const courseMatch = text.match(/CITI Program course:\s*\n\s*([^\n]+)/i) || 
-                         text.match(/CITI\s+([^(]+)/i);
+      // Extract course name - improved patterns for CITI courses
+      let courseMatch = text.match(/CITI Program course:\s*\n\s*([^\n]+)/i) ||
+                       text.match(/CITI Program course:\s*([^\n\r]+)/i) ||
+                       text.match(/following CITI[^:]*course:\s*([^\n\r]+)/i);
+      
+      if (!courseMatch) {
+        // Try to extract from curriculum group or course learner group
+        courseMatch = text.match(/CITI\s+([^(\n\r]+?)(?:\s*\(|$)/i);
+      }
+
       if (courseMatch) {
-        result.courseName = courseMatch[1].trim();
+        result.courseName = courseMatch[1].trim().replace(/\s+/g, ' ');
         
-        // Find matching module
-        const module = modules.find(m => 
-          m.name.toLowerCase().includes(result.courseName.toLowerCase()) ||
-          result.courseName.toLowerCase().includes(m.name.toLowerCase()) ||
-          (result.courseName.toLowerCase().includes('conflict') && m.name.toLowerCase().includes('conflict'))
-        );
+        // Find matching module with improved matching
+        const module = modules.find(m => {
+          const courseLower = result.courseName.toLowerCase();
+          const moduleLower = m.name.toLowerCase();
+          
+          return moduleLower.includes(courseLower) ||
+                 courseLower.includes(moduleLower) ||
+                 (courseLower.includes('conflict') && moduleLower.includes('conflict')) ||
+                 (courseLower.includes('biosafety') && moduleLower.includes('biosafety')) ||
+                 (courseLower.includes('animal') && moduleLower.includes('animal')) ||
+                 (courseLower.includes('human') && moduleLower.includes('human'));
+        });
         
         result.module = module || null;
         result.isNewModule = !module;
       }
 
-      // Extract institution
-      const institutionMatch = text.match(/Under requirements set by:\s*\n\s*([^\n]+)/i);
+      // Extract institution - improved pattern
+      const institutionMatch = text.match(/Under requirements set by:\s*\n\s*([^\n]+)/i) ||
+                              text.match(/requirements set by:\s*([^\n\r]+)/i);
       if (institutionMatch) {
         result.institution = institutionMatch[1].trim();
       }
@@ -240,6 +283,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return dateStr; // Return original if conversion fails
     }
   }
+
+  // Test endpoint for parsing certificate text (for debugging)
+  app.post("/api/certificates/test-parse", async (req, res) => {
+    try {
+      const { sampleText } = req.body;
+      if (!sampleText) {
+        return res.status(400).json({ message: "Sample text is required" });
+      }
+
+      const modules = await storage.getCertificationModules();
+      const parsedData = parseCITICertificate(sampleText, modules);
+      
+      res.json({
+        message: "Text parsing test completed",
+        input: sampleText.substring(0, 200) + "...",
+        parsed: parsedData
+      });
+    } catch (error) {
+      console.error("Error testing certificate parsing:", error);
+      res.status(500).json({ message: "Failed to test parsing" });
+    }
+  });
 
   // Certificate batch confirmation
   app.post("/api/certificates/confirm-batch", async (req: any, res) => {
