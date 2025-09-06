@@ -429,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Parse CITI certificate data from extracted text
               console.log('Starting certificate parsing...');
               console.log('Available modules:', modules.map(m => m.name));
-              const parsedData = parseCITICertificate(extractedText, modules);
+              const parsedData = await parseCITICertificate(extractedText, modules);
               console.log('Parsing result:', JSON.stringify(parsedData, null, 2));
               detectedData = {
                 ...detectedData,
@@ -546,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Helper function to parse CITI certificate text (router function)
-  function parseCITICertificate(text: string, modules: any[]) {
+  async function parseCITICertificate(text: string, modules: any[]) {
     const result: any = {
       name: null,
       courseName: null,
@@ -578,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parsedResult = parseCITICertificateFormat(text, modules);
           break;
         case 'report':
-          parsedResult = parseCITIReportFormat(text, modules);
+          parsedResult = await parseCITIReportFormat(text, modules);
           break;
         default:
           console.log('Unknown document type, trying certificate format as fallback');
@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Certificate format parser - for documents with "This is to certify that:"
-  function parseCITICertificateFormat(text: string, modules: any[]) {
+  async function parseCITICertificateFormat(text: string, modules: any[]) {
     const result: any = {
       name: null,
       courseName: null,
@@ -805,11 +805,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error parsing certificate text:', parseError);
     }
 
+    // Look up scientist ID by name if name was extracted
+    if (result.name) {
+      try {
+        console.log('Looking up scientist for name:', result.name);
+        const allScientists = await storage.getScientists();
+        
+        // Split extracted name into first and last name
+        const nameParts = result.name.trim().split(/\s+/);
+        if (nameParts.length >= 2) {
+          const firstName = nameParts[0];
+          const lastName = nameParts[nameParts.length - 1];
+          
+          // Find scientist by exact first/last name match
+          const matchedScientist = allScientists.find(scientist => 
+            scientist.firstName.toLowerCase() === firstName.toLowerCase() && 
+            scientist.lastName.toLowerCase() === lastName.toLowerCase()
+          );
+          
+          if (matchedScientist) {
+            result.scientistId = matchedScientist.id;
+            console.log(`Found scientist match: ${result.name} -> ID ${matchedScientist.id}`);
+          } else {
+            console.log(`No scientist found for name: ${result.name} (${firstName} ${lastName})`);
+            result.scientistId = null;
+          }
+        }
+      } catch (lookupError) {
+        console.error('Error looking up scientist:', lookupError);
+        result.scientistId = null;
+      }
+    }
+
     return result;
   }
 
   // Report format parser - for documents with "COMPLETION REPORT"
-  function parseCITIReportFormat(text: string, modules: any[]) {
+  async function parseCITIReportFormat(text: string, modules: any[]) {
     const result: any = {
       name: null,
       courseName: null,
@@ -903,6 +935,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error parsing report format:', parseError);
     }
 
+    // Look up scientist ID by name if name was extracted (same logic as certificate format)
+    if (result.name) {
+      try {
+        console.log('Looking up scientist for name:', result.name);
+        const allScientists = await storage.getScientists();
+        
+        // Split extracted name into first and last name
+        const nameParts = result.name.trim().split(/\s+/);
+        if (nameParts.length >= 2) {
+          const firstName = nameParts[0];
+          const lastName = nameParts[nameParts.length - 1];
+          
+          // Find scientist by exact first/last name match
+          const matchedScientist = allScientists.find(scientist => 
+            scientist.firstName.toLowerCase() === firstName.toLowerCase() && 
+            scientist.lastName.toLowerCase() === lastName.toLowerCase()
+          );
+          
+          if (matchedScientist) {
+            result.scientistId = matchedScientist.id;
+            console.log(`Found scientist match: ${result.name} -> ID ${matchedScientist.id}`);
+          } else {
+            console.log(`No scientist found for name: ${result.name} (${firstName} ${lastName})`);
+            result.scientistId = null;
+          }
+        }
+      } catch (lookupError) {
+        console.error('Error looking up scientist:', lookupError);
+        result.scientistId = null;
+      }
+    }
+
     return result;
   }
 
@@ -931,7 +995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const modules = await storage.getCertificationModules();
-      const parsedData = parseCITICertificate(sampleText, modules);
+      const parsedData = await parseCITICertificate(sampleText, modules);
       
       res.json({
         message: "Text parsing test completed",
