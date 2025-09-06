@@ -507,26 +507,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Define variables for module matching
         const courseLower = result.courseName.toLowerCase();
         
-        // Find matching module with improved matching for biosafety
+        // Find matching module with enhanced matching for both formats
         const module = modules.find(m => {
           const moduleLower = m.name.toLowerCase();
           
-          return moduleLower.includes(courseLower) ||
-                 courseLower.includes(moduleLower) ||
-                 (courseLower.includes('biosafety') && moduleLower.includes('biosafety')) ||
-                 (courseLower.includes('conflict') && moduleLower.includes('conflict')) ||
-                 (courseLower.includes('animal') && moduleLower.includes('animal')) ||
-                 (courseLower.includes('human') && moduleLower.includes('human'));
+          // Direct matches
+          if (moduleLower.includes(courseLower) || courseLower.includes(moduleLower)) {
+            return true;
+          }
+          
+          // Enhanced matching for specific patterns
+          const keywordMatches = [
+            // Biosafety variations
+            (courseLower.includes('biosafety') && moduleLower.includes('biosafety')),
+            // Biomedical research variations - handle "Basic/Refresher" vs "Basic"
+            (courseLower.includes('biomedical') && moduleLower.includes('biomedical') && 
+             courseLower.includes('basic') && moduleLower.includes('basic')),
+            // Conflict of interest
+            (courseLower.includes('conflict') && moduleLower.includes('conflict')),
+            // Animal-related courses
+            (courseLower.includes('animal') && moduleLower.includes('animal')),
+            // Human subjects
+            (courseLower.includes('human') && moduleLower.includes('human')),
+            // RCR - Responsible Conduct
+            (courseLower.includes('responsible conduct') && moduleLower.includes('responsible conduct')),
+            // IACUC
+            (courseLower.includes('iacuc') && moduleLower.includes('iacuc')),
+            // BCT - Biomedical Conduct
+            (courseLower.includes('biomedical') && moduleLower.includes('biomedical') && 
+             courseLower.includes('conduct') && moduleLower.includes('conduct'))
+          ];
+          
+          return keywordMatches.some(match => match);
         });
         
         console.log('Module matching results:');
         console.log('Course name to match:', courseLower);
-        modules.forEach(m => {
+        const matchedModule = modules.find(m => {
           const mLower = m.name.toLowerCase();
-          const matches = mLower.includes(courseLower) || courseLower.includes(mLower) || 
-                         (courseLower.includes('biosafety') && mLower.includes('biosafety'));
-          console.log(`Module "${m.name}" - match: ${matches}`);
+          const directMatch = mLower.includes(courseLower) || courseLower.includes(mLower);
+          const biomedicalMatch = courseLower.includes('biomedical') && mLower.includes('biomedical') && 
+                                 courseLower.includes('basic') && mLower.includes('basic');
+          const biosafetyMatch = courseLower.includes('biosafety') && mLower.includes('biosafety');
+          return directMatch || biomedicalMatch || biosafetyMatch;
         });
+        
+        if (matchedModule) {
+          console.log(`Found matching module: ${matchedModule.name}`);
+        } else {
+          console.log('No matching module found, will create new placeholder');
+        }
         
         result.module = module || null;
         result.isNewModule = !module;
