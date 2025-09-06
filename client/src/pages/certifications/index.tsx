@@ -1010,7 +1010,7 @@ export default function CertificationsPage() {
                   <Input 
                     type="password" 
                     placeholder="Enter your OCR.space API key"
-                    defaultValue={process.env.OCR_SPACE_API_KEY ? "••••••••••••••••" : ""}
+                    defaultValue="••••••••••••••••"
                   />
                   <p className="text-xs text-muted-foreground">
                     Get your free API key from <a href="https://ocr.space/ocrapi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">ocr.space/ocrapi</a> (25,000 requests/month free)
@@ -1026,7 +1026,7 @@ export default function CertificationsPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-green-800">
-                      {process.env.OCR_SPACE_API_KEY ? 'API key configured via environment variable' : 'No API key configured'}
+                      API key configured via environment variable
                     </span>
                   </div>
                 </div>
