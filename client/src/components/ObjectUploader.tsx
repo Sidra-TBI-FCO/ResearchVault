@@ -133,18 +133,31 @@ export function ObjectUploader({
         )
       );
 
-      // Call onComplete if all files are done
-      const updatedFiles = uploadedFiles.map(f => 
-        f.file === uploadFile.file ? { ...f, status: 'success' as const, url: uploadURL } : f
-      );
+      // Check if all files are done and call onComplete
+      setTimeout(() => {
+        setUploadedFiles(currentFiles => {
+          const allDone = currentFiles.every(f => f.status === 'success' || f.status === 'error');
+          const successfulFiles = currentFiles.filter(f => f.status === 'success');
+          
+          console.log('Upload check:', { 
+            allDone, 
+            successfulCount: successfulFiles.length, 
+            totalCount: currentFiles.length,
+            statuses: currentFiles.map(f => f.status)
+          });
 
-      if (updatedFiles.every(f => f.status === 'success')) {
-        onComplete?.(updatedFiles.map(f => ({
-          url: f.url!,
-          fileName: f.file.name,
-          fileSize: f.file.size
-        })));
-      }
+          if (allDone && successfulFiles.length > 0) {
+            console.log('Calling onComplete with files:', successfulFiles);
+            onComplete?.(successfulFiles.map(f => ({
+              url: f.url!,
+              fileName: f.file.name,
+              fileSize: f.file.size
+            })));
+          }
+          
+          return currentFiles;
+        });
+      }, 100);
 
     } catch (error) {
       console.error('Upload error:', error);
