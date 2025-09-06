@@ -38,10 +38,15 @@ interface DetectedCertificate {
   fileName: string;
   filePath: string;
   originalUrl: string;
-  status: 'detected' | 'unrecognized' | 'error' | 'unknown';
-  moduleAbbreviation?: string;
-  year?: number;
+  status: 'detected' | 'unrecognized' | 'error' | 'unknown' | 'processing' | 'ocr_failed';
+  extractedText?: string;
+  name?: string;
+  courseName?: string;
   module?: CertificationModule | null;
+  completionDate?: string;
+  expirationDate?: string;
+  recordId?: string;
+  institution?: string;
   isNewModule?: boolean;
   error?: string;
 }
@@ -409,11 +414,12 @@ export default function CertificationsPage() {
               />
               
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">Upload Instructions</h4>
+                <h4 className="font-medium text-blue-900 mb-2">OCR-Powered Upload</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Upload either CITI certificates or completion reports (both contain the required information)</li>
-                  <li>• Files will be automatically processed to extract certification details</li>
-                  <li>• Review and verify the extracted data before saving</li>
+                  <li>• Upload CITI certificates or completion reports (PDF format)</li>
+                  <li>• Advanced OCR automatically extracts names, dates, courses, and record IDs</li>
+                  <li>• No manual data entry required - all information is parsed from PDF content</li>
+                  <li>• Review extracted data and assign to scientists before saving</li>
                   <li>• Maximum 10 files per upload, 10MB each</li>
                 </ul>
               </div>
@@ -424,7 +430,7 @@ export default function CertificationsPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Detected Certificates</CardTitle>
+                  <CardTitle>OCR Processing Results</CardTitle>
                   <div className="flex gap-2">
                     <Button 
                       onClick={() => setDetectedFiles([])}
@@ -436,7 +442,7 @@ export default function CertificationsPage() {
                     <Button 
                       onClick={() => {
                         const validCerts = detectedFiles.filter(f => 
-                          f.status === 'detected' && f.scientistId && f.startDate && f.endDate && f.module
+                          f.status === 'detected' && f.name && f.scientistId && f.startDate && f.endDate && f.module
                         );
                         if (validCerts.length === 0) {
                           toast({
@@ -467,11 +473,13 @@ export default function CertificationsPage() {
                       <TableRow>
                         <TableHead>Status</TableHead>
                         <TableHead>File Name</TableHead>
-                        <TableHead>Module</TableHead>
-                        <TableHead>Scientist</TableHead>
+                        <TableHead>Extracted Name</TableHead>
+                        <TableHead>Course/Module</TableHead>
+                        <TableHead>Completion Date</TableHead>
+                        <TableHead>Record ID</TableHead>
+                        <TableHead>Assign to Scientist</TableHead>
                         <TableHead>Start Date</TableHead>
                         <TableHead>End Date</TableHead>
-                        <TableHead>Notes</TableHead>
                         <TableHead>Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -482,31 +490,57 @@ export default function CertificationsPage() {
                             {file.status === 'detected' ? (
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
                                 <Check className="h-3 w-3 mr-1" />
-                                Detected
+                                OCR Success
                               </Badge>
-                            ) : file.status === 'unrecognized' ? (
+                            ) : file.status === 'ocr_failed' ? (
+                              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                <X className="h-3 w-3 mr-1" />
+                                OCR Failed
+                              </Badge>
+                            ) : file.status === 'processing' ? (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                Processing...
+                              </Badge>
+                            ) : (
                               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Unknown
                               </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="bg-red-100 text-red-800">
-                                <X className="h-3 w-3 mr-1" />
-                                Error
-                              </Badge>
                             )}
                           </TableCell>
-                          <TableCell className="font-mono text-xs max-w-48">
+                          <TableCell className="font-mono text-xs max-w-48 truncate" title={file.fileName}>
                             {file.fileName}
                           </TableCell>
+                          <TableCell className="max-w-40">
+                            {file.name ? (
+                              <span className="text-sm font-medium text-green-700" title={file.name}>
+                                {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="max-w-40">
+                            {file.module ? (
+                              <span className="text-sm text-green-600">{file.module.name}</span>
+                            ) : file.courseName ? (
+                              <span className="text-sm text-amber-600" title={file.courseName}>
+                                {file.courseName.length > 25 ? `${file.courseName.substring(0, 25)}...` : file.courseName}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
                           <TableCell>
-                            {file.isNewModule ? (
-                              <Badge variant="outline" className="border-orange-500 text-orange-700">
-                                <Plus className="h-3 w-3 mr-1" />
-                                {file.moduleAbbreviation} (New)
-                              </Badge>
-                            ) : file.module ? (
-                              <span className="text-sm">{file.module.name}</span>
+                            {file.completionDate ? (
+                              <span className="text-sm text-blue-600">{file.completionDate}</span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {file.recordId ? (
+                              <span className="text-sm font-mono text-purple-600">{file.recordId}</span>
                             ) : (
                               <span className="text-muted-foreground text-sm">-</span>
                             )}
@@ -535,50 +569,53 @@ export default function CertificationsPage() {
                           <TableCell>
                             <Input
                               type="date"
-                              value={file.startDate || ""}
+                              value={file.startDate || file.completionDate || ""}
                               onChange={(e) => {
                                 const updated = [...detectedFiles];
                                 updated[index] = { ...updated[index], startDate: e.target.value };
                                 setDetectedFiles(updated);
                               }}
                               className="w-36"
+                              placeholder="Start date"
                             />
                           </TableCell>
                           <TableCell>
                             <Input
                               type="date"
-                              value={file.endDate || ""}
+                              value={file.endDate || file.expirationDate || ""}
                               onChange={(e) => {
                                 const updated = [...detectedFiles];
                                 updated[index] = { ...updated[index], endDate: e.target.value };
                                 setDetectedFiles(updated);
                               }}
                               className="w-36"
+                              placeholder="End date"
                             />
                           </TableCell>
                           <TableCell>
-                            <Input
-                              placeholder="Record ID, Score, etc."
-                              value={file.notes || ""}
-                              onChange={(e) => {
-                                const updated = [...detectedFiles];
-                                updated[index] = { ...updated[index], notes: e.target.value };
-                                setDetectedFiles(updated);
-                              }}
-                              className="w-48"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const updated = detectedFiles.filter((_, i) => i !== index);
-                                setDetectedFiles(updated);
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const updated = detectedFiles.filter((_, i) => i !== index);
+                                  setDetectedFiles(updated);
+                                }}
+                              >
+                                Remove
+                              </Button>
+                              {file.extractedText && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    alert(`OCR Extracted Text:\n\n${file.extractedText?.substring(0, 800)}${file.extractedText && file.extractedText.length > 800 ? '...' : ''}`);
+                                  }}
+                                >
+                                  View OCR
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
