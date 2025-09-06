@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -43,6 +43,7 @@ export function ObjectUploader({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
+  const pendingUploadsRef = useRef<Set<File>>(new Set());
 
   const validateFile = (file: File): string | null => {
     if (file.size > maxFileSize) {
@@ -56,7 +57,26 @@ export function ObjectUploader({
     return null;
   };
 
-  const handleFiles = async (files: FileList | File[]) => {
+  // Handle uploads when new files are added
+  useEffect(() => {
+    const filesToUpload = uploadedFiles.filter(f => 
+      f.status === 'pending' && !pendingUploadsRef.current.has(f.file)
+    );
+
+    if (filesToUpload.length > 0) {
+      // Mark files as being processed
+      filesToUpload.forEach(f => pendingUploadsRef.current.add(f.file));
+      
+      // Start uploads asynchronously
+      filesToUpload.forEach(uploadFile => {
+        uploadSingleFile(uploadFile).finally(() => {
+          pendingUploadsRef.current.delete(uploadFile.file);
+        });
+      });
+    }
+  }, [uploadedFiles]);
+
+  const handleFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     
     if (uploadedFiles.length + fileArray.length > maxNumberOfFiles) {
@@ -87,11 +107,8 @@ export function ObjectUploader({
       });
     }
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-    
-    // Start uploading files
-    for (const uploadFile of newFiles) {
-      await uploadSingleFile(uploadFile);
+    if (newFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...newFiles]);
     }
   };
 
