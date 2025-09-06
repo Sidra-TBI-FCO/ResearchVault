@@ -319,28 +319,30 @@ export default function CertificationsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="flex w-full overflow-x-auto scrollbar-hide">
-          <TabsTrigger value="matrix" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
-            <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline">CITI </span>Matrix
-          </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
-            <Upload className="h-3 w-3 sm:h-4 sm:w-4" />
-            Upload
-          </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
-            <History className="h-3 w-3 sm:h-4 sm:w-4" />
-            History
-          </TabsTrigger>
-          <TabsTrigger value="modules" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
-            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-            Modules
-          </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-1 px-1 sm:px-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
-            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-            Config
-          </TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="flex w-max min-w-full">
+            <TabsTrigger value="matrix" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
+              <FileText className="h-3 w-3" />
+              Matrix
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
+              <Upload className="h-3 w-3" />
+              Upload
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
+              <History className="h-3 w-3" />
+              History
+            </TabsTrigger>
+            <TabsTrigger value="modules" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
+              <Settings className="h-3 w-3" />
+              Modules
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
+              <Settings className="h-3 w-3" />
+              Config
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="matrix" className="space-y-6">
           <Card>
