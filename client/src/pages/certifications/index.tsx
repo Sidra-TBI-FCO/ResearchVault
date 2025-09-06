@@ -542,10 +542,10 @@ export default function CertificationsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto overflow-y-auto max-h-96 md:max-h-none">
+              <CardContent className="p-2 sm:p-6">
+                <div className="overflow-auto max-h-[60vh] sm:max-h-[70vh] md:max-h-none border rounded-md">
                   <Table className="min-w-full">
-                    <TableHeader className="sticky top-0 bg-white shadow-sm">
+                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                       <TableRow>
                         <TableHead className="min-w-24">Status</TableHead>
                         <TableHead className="min-w-32">File Name</TableHead>
@@ -778,9 +778,9 @@ export default function CertificationsPage() {
                   <span className="ml-2">Loading history...</span>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
+                <div className="overflow-auto max-h-[60vh] sm:max-h-[70vh] md:max-h-none border rounded-md">
+                  <Table className="min-w-full">
+                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                       <TableRow>
                         <TableHead>File Name</TableHead>
                         <TableHead>Status</TableHead>
