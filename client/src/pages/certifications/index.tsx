@@ -1014,12 +1014,15 @@ export default function CertificationsPage() {
                                   className={
                                     entry.saveStatus === 'saved'
                                       ? 'bg-green-50 text-green-700 border-green-200'
+                                      : entry.saveStatus === 'duplicate'
+                                      ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
                                       : entry.saveStatus === 'not_saved'
                                       ? 'bg-red-50 text-red-700 border-red-200'
                                       : 'bg-gray-50 text-gray-600 border-gray-200'
                                   }
                                 >
                                   {entry.saveStatus === 'saved' ? '✅ Saved' : 
+                                   entry.saveStatus === 'duplicate' ? '🔄 Duplicate' :
                                    entry.saveStatus === 'not_saved' ? '❌ Not Saved' : 
                                    '⏳ Pending'}
                                 </Badge>

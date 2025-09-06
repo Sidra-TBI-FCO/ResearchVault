@@ -1088,7 +1088,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update PDF import history entries with save status
       for (const cert of certifications) {
         const result = results.find(r => r.fileName === cert.fileName);
-        const saveStatus = result?.status === 'success' ? 'saved' : 'not_saved';
+        let saveStatus = 'not_saved';
+        
+        if (result?.status === 'success') {
+          saveStatus = 'saved';
+        } else if (result?.error?.includes('already exists')) {
+          saveStatus = 'duplicate';
+        }
         
         try {
           await storage.updatePdfImportHistorySaveStatus(cert.fileName, saveStatus);
