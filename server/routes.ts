@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Certificate processing - batch detection
+  // Certificate processing - batch detection with OCR
   app.post("/api/certificates/process-batch", async (req, res) => {
     try {
       const { fileUrls } = req.body;
@@ -72,48 +72,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "File URLs array is required" });
       }
 
-      const objectStorageService = new ObjectStorageService();
       const modules = await storage.getCertificationModules();
       const results = [];
 
       for (const fileUrl of fileUrls) {
         try {
-          const normalizedPath = objectStorageService.normalizeObjectEntityPath(fileUrl);
-          const pathParts = normalizedPath.split('/');
-          const fileName = pathParts[pathParts.length - 1];
-          
-          // Parse CITI certificate filename pattern: CITI_[MODULE]_[NAME]_[DATE]_[TYPE].pdf
-          const citiPattern = /CITI_([A-Z]+)_.*_(\d{4}).*\.(pdf|PDF)$/i;
-          const match = fileName.match(citiPattern);
-          
           let detectedData: any = {
-            fileName,
-            filePath: normalizedPath,
+            fileName: fileUrl.split('/').pop(),
+            filePath: fileUrl,
             originalUrl: fileUrl,
-            status: 'unknown',
-            moduleAbbreviation: null,
-            year: null,
-            module: null,
-            isNewModule: false
+            status: 'processing',
+            extractedText: null,
+            parsedData: null
           };
 
-          if (match) {
-            const [, moduleAbbr, year] = match;
-            const module = modules.find(m => 
-              m.name.toLowerCase().includes(moduleAbbr.toLowerCase()) ||
-              m.name.toLowerCase().startsWith(moduleAbbr.toLowerCase())
-            );
+          // Perform OCR on the PDF using OCR.space API
+          try {
+            const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                'url': fileUrl,
+                'apikey': 'helloworld', // Free API key for testing
+                'language': 'eng',
+                'isOverlayRequired': 'false',
+                'filetype': 'PDF',
+                'detectOrientation': 'false',
+                'isCreateSearchablePdf': 'false',
+                'isSearchablePdfHideTextLayer': 'false',
+                'scale': 'true',
+                'isTable': 'false'
+              })
+            });
 
-            detectedData = {
-              ...detectedData,
-              status: 'detected',
-              moduleAbbreviation: moduleAbbr,
-              year: parseInt(year),
-              module: module || null,
-              isNewModule: !module
-            };
-          } else {
-            detectedData.status = 'unrecognized';
+            if (ocrResponse.ok) {
+              const ocrResult = await ocrResponse.json();
+              
+              if (ocrResult.IsErroredOnProcessing === false && ocrResult.ParsedResults?.length > 0) {
+                const extractedText = ocrResult.ParsedResults[0].ParsedText;
+                detectedData.extractedText = extractedText;
+
+                // Parse CITI certificate data from extracted text
+                const parsedData = parseCITICertificate(extractedText, modules);
+                detectedData = {
+                  ...detectedData,
+                  ...parsedData,
+                  status: parsedData.name ? 'detected' : 'unrecognized'
+                };
+              } else {
+                detectedData.status = 'ocr_failed';
+                detectedData.error = ocrResult.ErrorMessage || 'OCR processing failed';
+              }
+            } else {
+              detectedData.status = 'ocr_failed';
+              detectedData.error = 'Failed to connect to OCR service';
+            }
+          } catch (ocrError: any) {
+            console.error('OCR processing error:', ocrError);
+            detectedData.status = 'ocr_failed';
+            detectedData.error = ocrError?.message || 'OCR service unavailable';
           }
 
           results.push(detectedData);
@@ -129,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        message: `Processed ${results.length} files`,
+        message: `Processed ${results.length} files with OCR`,
         results
       });
     } catch (error) {
@@ -137,6 +156,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to process certificates" });
     }
   });
+
+  // Helper function to parse CITI certificate text
+  function parseCITICertificate(text: string, modules: any[]) {
+    const result: any = {
+      name: null,
+      courseName: null,
+      module: null,
+      completionDate: null,
+      expirationDate: null,
+      recordId: null,
+      institution: null,
+      isNewModule: false
+    };
+
+    try {
+      // Extract completion date
+      const completionMatch = text.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i);
+      if (completionMatch) {
+        result.completionDate = convertDateFormat(completionMatch[1]);
+      }
+
+      // Extract expiration date
+      const expirationMatch = text.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i);
+      if (expirationMatch) {
+        result.expirationDate = convertDateFormat(expirationMatch[1]);
+      }
+
+      // Extract record ID
+      const recordMatch = text.match(/Record ID\s+(\d+)/i);
+      if (recordMatch) {
+        result.recordId = recordMatch[1];
+      }
+
+      // Extract person name (usually after "This is to certify that:")
+      const nameMatch = text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
+      if (nameMatch) {
+        result.name = nameMatch[1].trim();
+      }
+
+      // Extract course name (CITI program course)
+      const courseMatch = text.match(/CITI Program course:\s*\n\s*([^\n]+)/i) || 
+                         text.match(/CITI\s+([^(]+)/i);
+      if (courseMatch) {
+        result.courseName = courseMatch[1].trim();
+        
+        // Find matching module
+        const module = modules.find(m => 
+          m.name.toLowerCase().includes(result.courseName.toLowerCase()) ||
+          result.courseName.toLowerCase().includes(m.name.toLowerCase()) ||
+          (result.courseName.toLowerCase().includes('conflict') && m.name.toLowerCase().includes('conflict'))
+        );
+        
+        result.module = module || null;
+        result.isNewModule = !module;
+      }
+
+      // Extract institution
+      const institutionMatch = text.match(/Under requirements set by:\s*\n\s*([^\n]+)/i);
+      if (institutionMatch) {
+        result.institution = institutionMatch[1].trim();
+      }
+
+    } catch (parseError) {
+      console.error('Error parsing certificate text:', parseError);
+    }
+
+    return result;
+  }
+
+  // Helper function to convert date format from "05-Mar-2025" to "2025-03-05"
+  function convertDateFormat(dateStr: string): string {
+    try {
+      const months: { [key: string]: string } = {
+        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+      };
+      
+      const [day, month, year] = dateStr.split('-');
+      return `${year}-${months[month]}-${day.padStart(2, '0')}`;
+    } catch (error) {
+      return dateStr; // Return original if conversion fails
+    }
+  }
 
   // Certificate batch confirmation
   app.post("/api/certificates/confirm-batch", async (req: any, res) => {
