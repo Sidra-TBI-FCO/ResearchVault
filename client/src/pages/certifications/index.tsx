@@ -164,13 +164,21 @@ export default function CertificationsPage() {
   const { matrixScientists, moduleHeaders } = useMemo(() => {
     if (!matrixData.length) return { matrixScientists: [], moduleHeaders: [] };
 
+    // Create scientist lookup map for job titles
+    const scientistLookup = new Map();
+    scientists.forEach((scientist: any) => {
+      scientistLookup.set(scientist.id, scientist);
+    });
+
     // Get unique scientists
     const scientistMap = new Map();
     matrixData.forEach((item: CertificationMatrixItem) => {
       if (!scientistMap.has(item.scientistId)) {
+        const scientistData = scientistLookup.get(item.scientistId);
         scientistMap.set(item.scientistId, {
           id: item.scientistId,
           name: item.scientistName,
+          jobTitle: scientistData?.jobTitle || null,
           certifications: new Map(),
         });
       }
@@ -193,13 +201,15 @@ export default function CertificationsPage() {
       matrixScientists: Array.from(scientistMap.values()),
       moduleHeaders: Array.from(moduleMap.values()),
     };
-  }, [matrixData]);
+  }, [matrixData, scientists]);
 
   // Filter scientists based on search term
   const filteredScientists = useMemo(() => {
     if (!searchTerm) return matrixScientists;
+    const term = searchTerm.toLowerCase();
     return matrixScientists.filter((scientist: any) =>
-      scientist.name.toLowerCase().includes(searchTerm.toLowerCase())
+      scientist.name.toLowerCase().includes(term) ||
+      (scientist.jobTitle && scientist.jobTitle.toLowerCase().includes(term))
     );
   }, [matrixScientists, searchTerm]);
 
@@ -341,7 +351,12 @@ export default function CertificationsPage() {
                     {filteredScientists.map((scientist: any) => (
                       <TableRow key={scientist.id}>
                         <TableCell className="sticky left-0 bg-white font-medium">
-                          {scientist.name}
+                          <div>
+                            <div>{scientist.name}</div>
+                            {scientist.jobTitle && (
+                              <div className="text-xs text-gray-500 mt-1">{scientist.jobTitle}</div>
+                            )}
+                          </div>
                         </TableCell>
                         {moduleHeaders.map((module: any) => {
                           const certification = scientist.certifications.get(module.id);
