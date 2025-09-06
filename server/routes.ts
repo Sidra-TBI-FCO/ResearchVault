@@ -256,13 +256,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
                 if (ocrResponse.ok) {
                   const ocrResult = await ocrResponse.json();
+                  console.log('OCR.space API Response:', JSON.stringify(ocrResult, null, 2));
+                  
                   if (ocrResult.IsErroredOnProcessing === false && ocrResult.ParsedResults?.length > 0) {
                     extractedText = ocrResult.ParsedResults[0].ParsedText;
+                    console.log(`OCR Extracted Text Length: ${extractedText.length} characters`);
+                    console.log('First 500 characters of extracted text:', extractedText.substring(0, 500));
                   } else {
+                    console.error('OCR processing error:', ocrResult.ErrorMessage || ocrResult);
                     throw new Error(ocrResult.ErrorMessage || 'OCR processing failed');
                   }
                 } else {
-                  throw new Error('Failed to connect to OCR.space service');
+                  const errorText = await ocrResponse.text();
+                  console.error('OCR.space HTTP error:', ocrResponse.status, errorText);
+                  throw new Error(`Failed to connect to OCR.space service: ${ocrResponse.status}`);
                 }
               } catch (apiError: any) {
                 if (apiError.name === 'AbortError') {
@@ -355,7 +362,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`OCR extracted ${extractedText.length} characters using ${ocrSettings.provider}`);
 
               // Parse CITI certificate data from extracted text
+              console.log('Starting certificate parsing...');
+              console.log('Available modules:', modules.map(m => m.name));
               const parsedData = parseCITICertificate(extractedText, modules);
+              console.log('Parsing result:', JSON.stringify(parsedData, null, 2));
               detectedData = {
                 ...detectedData,
                 ...parsedData,
@@ -408,33 +418,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     try {
+      console.log('=== PARSING CITI CERTIFICATE ===');
+      console.log('Raw text length:', text.length);
+      
       // Clean up text - remove extra whitespace and normalize
       const cleanText = text.replace(/\s+/g, ' ').trim();
+      console.log('Cleaned text length:', cleanText.length);
 
       // Extract completion date - more flexible patterns
+      console.log('Searching for completion date...');
       const completionMatch = cleanText.match(/Completion Date\s+(\d{2}-\w{3}-\d{4})/i) ||
                              cleanText.match(/Completion:\s*(\d{2}-\w{3}-\d{4})/i);
       if (completionMatch) {
         result.completionDate = convertDateFormat(completionMatch[1]);
+        console.log('Found completion date:', result.completionDate);
+      } else {
+        console.log('No completion date match found');
       }
 
       // Extract expiration date - more flexible patterns  
+      console.log('Searching for expiration date...');
       const expirationMatch = cleanText.match(/Expiration Date\s+(\d{2}-\w{3}-\d{4})/i) ||
                              cleanText.match(/Expiration:\s*(\d{2}-\w{3}-\d{4})/i);
       if (expirationMatch) {
         result.expirationDate = convertDateFormat(expirationMatch[1]);
+        console.log('Found expiration date:', result.expirationDate);
+      } else {
+        console.log('No expiration date match found');
       }
 
       // Extract record ID - more flexible patterns
+      console.log('Searching for record ID...');
       const recordMatch = cleanText.match(/Record ID\s+(\d+)/i) ||
                          cleanText.match(/Record:\s*(\d+)/i) ||
                          cleanText.match(/ID[:\s]+(\d+)/i);
       if (recordMatch) {
         result.recordId = recordMatch[1];
+        console.log('Found record ID:', result.recordId);
+      } else {
+        console.log('No record ID match found');
       }
 
       // Extract person name - improved patterns for different formats
-      let nameMatch = text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
+      console.log('Searching for person name...');
+      let nameMatch = text.match(/Name:\s*([^\(\n\r]+)/i) ||
+                     text.match(/This is to certify that:\s*\n\s*([^\n]+)/i);
       if (!nameMatch) {
         // Try alternative patterns
         nameMatch = text.match(/This is to certify that:\s*([^\n\r]+)/i) ||
@@ -442,6 +470,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (nameMatch) {
         result.name = nameMatch[1].trim().replace(/\s+/g, ' ');
+        console.log('Found name:', result.name);
+      } else {
+        console.log('No name match found');
       }
 
       // Extract course name - improved patterns for CITI courses
