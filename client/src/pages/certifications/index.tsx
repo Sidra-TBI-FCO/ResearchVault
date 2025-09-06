@@ -1030,9 +1030,6 @@ export default function CertificationsPage() {
                     </span>
                   </div>
                 </div>
-                <Button className="w-full" disabled>
-                  Test OCR Connection
-                </Button>
               </CardContent>
             </Card>
 
@@ -1094,38 +1091,6 @@ export default function CertificationsPage() {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="flex items-center gap-3 p-3 border rounded">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div>
-                    <div className="font-medium text-sm">Object Storage</div>
-                    <div className="text-xs text-muted-foreground">Connected</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 border rounded">
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  <div>
-                    <div className="font-medium text-sm">CITI API</div>
-                    <div className="text-xs text-muted-foreground">Not Configured</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 border rounded">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div>
-                    <div className="font-medium text-sm">Database</div>
-                    <div className="text-xs text-muted-foreground">Connected</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
         </Tabs>
       </div>
