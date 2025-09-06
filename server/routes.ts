@@ -240,21 +240,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // OCR.space API uses GET with query parameters
                 const apiKey = process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld';
                 
-                const queryParams = new URLSearchParams({
-                  'url': fileUrl,
-                  'apikey': apiKey,
-                  'language': 'eng',
-                  'isOverlayRequired': 'false',
-                  'filetype': 'PDF',
-                  'detectOrientation': 'false',
-                  'isCreateSearchablePdf': 'false',
-                  'isSearchablePdfHideTextLayer': 'false',
-                  'scale': 'true',
-                  'isTable': 'false',
-                  'OCREngine': '2'
-                });
-
-                const ocrUrl = `https://api.ocr.space/parse/imageurl?${queryParams.toString()}`;
                 // Download file first, then upload to OCR.space (more reliable than URL method)
                 console.log('Downloading file for OCR.space upload...');
                 const fileResponse = await fetch(fileUrl);
