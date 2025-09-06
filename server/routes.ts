@@ -437,25 +437,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
               };
 
               // Update history entry with parsed data
-              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                processingStatus: parsedData.name ? 'completed' : 'failed',
-                extractedText: extractedText,
-                parsedData: parsedData,
-                processedAt: new Date(),
-                processingTimeMs: Date.now() - startTime,
-                errorMessage: parsedData.name ? null : 'Certificate data could not be extracted - manual assignment may be required'
-              });
+              try {
+                console.log(`Updating history entry ${historyEntry.id} with parsed data:`, {
+                  processingStatus: parsedData.name ? 'completed' : 'failed',
+                  hasExtractedText: !!extractedText,
+                  parsedDataFields: Object.keys(parsedData).filter(k => parsedData[k] !== null),
+                  processingTimeMs: Date.now() - startTime
+                });
+                
+                const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                  processingStatus: parsedData.name ? 'completed' : 'failed',
+                  ocrProvider: provider, // Make sure OCR provider is saved
+                  extractedText: extractedText,
+                  parsedData: parsedData,
+                  processedAt: new Date(),
+                  processingTimeMs: Date.now() - startTime,
+                  errorMessage: parsedData.name ? null : 'Certificate data could not be extracted - manual assignment may be required'
+                });
+                
+                console.log('History entry update result:', updateResult ? 'SUCCESS' : 'FAILED');
+              } catch (updateError) {
+                console.error('Failed to update history entry:', updateError);
+              }
             } else {
               detectedData.status = 'ocr_failed';
               detectedData.error = 'No text could be extracted from the file';
               
               // Update history entry with OCR failure
-              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                processingStatus: 'failed',
-                errorMessage: 'No text could be extracted from the file',
-                processedAt: new Date(),
-                processingTimeMs: Date.now() - startTime
-              });
+              try {
+                console.log(`Updating history entry ${historyEntry.id} with OCR failure`);
+                const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                  processingStatus: 'failed',
+                  ocrProvider: provider, // Make sure OCR provider is saved
+                  errorMessage: 'No text could be extracted from the file',
+                  processedAt: new Date(),
+                  processingTimeMs: Date.now() - startTime
+                });
+                console.log('OCR failure update result:', updateResult ? 'SUCCESS' : 'FAILED');
+              } catch (updateError) {
+                console.error('Failed to update history entry with OCR failure:', updateError);
+              }
             }
           } catch (ocrError: any) {
             console.error('OCR processing error:', ocrError);
@@ -464,12 +485,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             detectedData.suggestion = 'OCR failed - file uploaded but data extraction was unsuccessful. You can still manually assign this certificate to a scientist.';
             
             // Update history entry with OCR error
-            await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-              processingStatus: 'failed',
-              errorMessage: `OCR processing failed: ${ocrError?.message || 'Unknown error'}`,
-              processedAt: new Date(),
-              processingTimeMs: Date.now() - startTime
-            });
+            try {
+              console.log(`Updating history entry ${historyEntry.id} with OCR error:`, ocrError?.message);
+              const updateResult = await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                processingStatus: 'failed',
+                ocrProvider: provider, // Make sure OCR provider is saved
+                errorMessage: `OCR processing failed: ${ocrError?.message || 'Unknown error'}`,
+                processedAt: new Date(),
+                processingTimeMs: Date.now() - startTime
+              });
+              console.log('OCR error update result:', updateResult ? 'SUCCESS' : 'FAILED');
+            } catch (updateError) {
+              console.error('Failed to update history entry with OCR error:', updateError);
+            }
           }
 
           results.push(detectedData);
@@ -512,6 +540,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('=== PARSING CITI CERTIFICATE ===');
       console.log('Raw text length:', text.length);
       console.log('Raw text sample (first 300 chars):', text.substring(0, 300));
+      
+      // DEBUG: Print full text to see actual OCR output structure
+      console.log('=== FULL OCR TEXT DEBUG ===');
+      console.log(text);
+      console.log('=== END FULL OCR TEXT ===');
       
       // Clean up text - remove extra whitespace and normalize
       const cleanText = text.replace(/\s+/g, ' ').trim();
