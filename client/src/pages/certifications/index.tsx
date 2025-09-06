@@ -1225,12 +1225,17 @@ export default function CertificationsPage() {
               <CardHeader>
                 <CardTitle>OCR Configuration</CardTitle>
                 <p className="text-muted-foreground">
-                  Configure OCR service for PDF certificate processing
+                  Choose which OCR (Optical Character Recognition) service extracts text from uploaded CITI certificate PDFs. This determines how the system reads and processes certificate data.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">OCR Service Provider</label>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium">OCR Service Provider</label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This setting affects all future certificate uploads. Currently selected option processes all new PDFs.
+                    </p>
+                  </div>
                   <div className="space-y-2">
                     <button
                       onClick={async () => {
@@ -1262,6 +1267,9 @@ export default function CertificationsPage() {
                     >
                       <div className="font-medium">OCR.space (Recommended for PDFs)</div>
                       <div className="text-sm text-gray-600">External API service with high PDF accuracy</div>
+                      <div className="text-xs text-blue-700 mt-1">
+                        ✓ Best for CITI certificates • ✓ High accuracy • ⚠ Usage limits (180/hour)
+                      </div>
                     </button>
                     
                     <button
@@ -1294,7 +1302,20 @@ export default function CertificationsPage() {
                     >
                       <div className="font-medium">Tesseract.js (Local Processing)</div>
                       <div className="text-sm text-gray-600">Free local OCR, no API limits</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        ✓ Completely free • ✓ No limits • ⚠ Limited PDF support • ⚠ Lower accuracy
+                      </div>
                     </button>
+                  </div>
+                  
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-sm font-medium text-blue-900 mb-1">How This Affects Certificate Processing:</div>
+                    <ul className="text-xs text-blue-800 space-y-1">
+                      <li>• <strong>Upload Impact:</strong> Selected service processes every PDF you upload</li>
+                      <li>• <strong>Data Extraction:</strong> Determines accuracy of name, date, and course detection</li>
+                      <li>• <strong>Default:</strong> OCR.space is pre-configured and ready to use</li>
+                      <li>• <strong>Switch Anytime:</strong> You can change providers without affecting existing certificates</li>
+                    </ul>
                   </div>
                 </div>
                 <div className="space-y-2">
