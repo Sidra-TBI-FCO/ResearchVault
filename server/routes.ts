@@ -255,11 +255,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 });
 
                 const ocrUrl = `https://api.ocr.space/parse/imageurl?${queryParams.toString()}`;
-                console.log('Making GET request to OCR.space...');
-                console.log('Request URL length:', ocrUrl.length);
+                // Download file first, then upload to OCR.space (more reliable than URL method)
+                console.log('Downloading file for OCR.space upload...');
+                const fileResponse = await fetch(fileUrl);
+                if (!fileResponse.ok) {
+                  throw new Error(`Failed to download file: ${fileResponse.status}`);
+                }
                 
-                const ocrResponse = await fetch(ocrUrl, {
-                  method: 'GET',
+                const fileBuffer = await fileResponse.arrayBuffer();
+                const fileBlob = new Blob([fileBuffer], { type: 'application/pdf' });
+                
+                console.log('Uploading file to OCR.space...', fileBlob.size, 'bytes');
+                
+                // Use file upload instead of URL method (more reliable)
+                const formData = new FormData();
+                formData.append('file', fileBlob, 'certificate.pdf');
+                formData.append('apikey', apiKey);
+                formData.append('language', 'eng');
+                formData.append('isOverlayRequired', 'false');
+                formData.append('filetype', 'PDF');
+                formData.append('detectOrientation', 'false');
+                formData.append('isCreateSearchablePdf', 'false');
+                formData.append('isSearchablePdfHideTextLayer', 'false');
+                formData.append('scale', 'true');
+                formData.append('isTable', 'false');
+                formData.append('OCREngine', '2');
+
+                const ocrResponse = await fetch('https://api.ocr.space/parse/image', {
+                  method: 'POST',
+                  body: formData,
                   signal: controller.signal
                 });
                 
