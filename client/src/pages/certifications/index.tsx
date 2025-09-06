@@ -70,6 +70,7 @@ interface PdfImportHistoryEntry {
   extractedData?: any;
   processingStatus: 'processing' | 'completed' | 'failed';
   ocrProvider: string;
+  documentType?: string; // certificate, report, unknown
   errorMessage?: string;
   processingTimeMs?: number;
   uploadedAt: string;
@@ -893,6 +894,7 @@ export default function CertificationsPage() {
                       <TableRow>
                         <TableHead>File Name</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Document Type</TableHead>
                         <TableHead>Detected Fields</TableHead>
                         <TableHead>Uploaded By</TableHead>
                         <TableHead>OCR Provider</TableHead>
@@ -904,7 +906,7 @@ export default function CertificationsPage() {
                     <TableBody>
                       {pdfHistory.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                             No PDF import history found
                           </TableCell>
                         </TableRow>
@@ -977,6 +979,22 @@ export default function CertificationsPage() {
                                    actualStatus === 'ocr_failed' ? 'OCR Failed' : 
                                    actualStatus === 'unrecognized' ? 'No Data Found' : 
                                    'Processing...'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant="outline" 
+                                  className={
+                                    entry.documentType === 'certificate'
+                                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                      : entry.documentType === 'report'
+                                      ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                                  }
+                                >
+                                  {entry.documentType === 'certificate' ? '📜 Certificate' : 
+                                   entry.documentType === 'report' ? '📋 Report' : 
+                                   '❓ Unknown'}
                                 </Badge>
                               </TableCell>
                               <TableCell className="max-w-48">
