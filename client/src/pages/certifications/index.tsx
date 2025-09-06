@@ -1012,9 +1012,9 @@ export default function CertificationsPage() {
                                     )}
                                     {(parsedData.completionDate || parsedData.expirationDate) && (
                                       <div className="text-gray-600 truncate">
-                                        📅 {parsedData.completionDate && format(parseISO(parsedData.completionDate), 'MMM dd, yyyy')} 
+                                        📅 {parsedData.completionDate && format(new Date(parsedData.completionDate), 'MMM dd, yyyy')} 
                                         {parsedData.completionDate && parsedData.expirationDate && ' - '}
-                                        {parsedData.expirationDate && format(parseISO(parsedData.expirationDate), 'MMM dd, yyyy')}
+                                        {parsedData.expirationDate && format(new Date(parsedData.expirationDate), 'MMM dd, yyyy')}
                                       </div>
                                     )}
                                   </div>
