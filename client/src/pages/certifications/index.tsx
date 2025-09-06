@@ -832,7 +832,7 @@ export default function CertificationsPage() {
                               {entry.processingTimeMs ? `${entry.processingTimeMs}ms` : '-'}
                             </TableCell>
                             <TableCell>
-                              {format(parseISO(entry.uploadedAt), 'MMM dd, yyyy HH:mm')}
+                              {entry.uploadedAt ? format(parseISO(entry.uploadedAt), 'MMM dd, yyyy HH:mm') : '-'}
                             </TableCell>
                             <TableCell>
                               {entry.processedAt ? format(parseISO(entry.processedAt), 'MMM dd, yyyy HH:mm') : '-'}
