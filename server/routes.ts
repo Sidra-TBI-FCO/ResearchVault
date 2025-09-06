@@ -4995,7 +4995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // System Configuration endpoints
-  app.get('/api/system-configurations', authenticateUser, async (req, res) => {
+  app.get('/api/system-configurations', async (req, res) => {
     try {
       const configs = await storage.getSystemConfigurations();
       res.json(configs);
@@ -5005,7 +5005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/system-configurations/:key', authenticateUser, async (req, res) => {
+  app.get('/api/system-configurations/:key', async (req, res) => {
     try {
       const config = await storage.getSystemConfiguration(req.params.key);
       if (!config) {
@@ -5018,7 +5018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/system-configurations', authenticateUser, async (req, res) => {
+  app.post('/api/system-configurations', async (req, res) => {
     try {
       const config = await storage.createSystemConfiguration(req.body);
       res.status(201).json(config);
@@ -5028,7 +5028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/system-configurations/:key', authenticateUser, async (req, res) => {
+  app.put('/api/system-configurations/:key', async (req, res) => {
     try {
       const config = await storage.updateSystemConfiguration(req.params.key, req.body);
       if (!config) {
@@ -5041,7 +5041,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/system-configurations/:key', authenticateUser, async (req, res) => {
+  app.delete('/api/system-configurations/:key', async (req, res) => {
     try {
       const result = await storage.deleteSystemConfiguration(req.params.key);
       if (!result) {

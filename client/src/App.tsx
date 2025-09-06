@@ -120,6 +120,9 @@ import ReportsPage from "@/pages/reports";
 // Certifications
 import CertificationsPage from "@/pages/certifications";
 
+// Settings
+import SettingsPage from "@/pages/settings";
+
 function Router() {
   return (
     <Layout>
@@ -241,6 +244,9 @@ function Router() {
         
         {/* Reports */}
         <Route path="/reports" component={ReportsPage} />
+        
+        {/* Settings */}
+        <Route path="/settings" component={SettingsPage} />
         
         {/* Fallback to 404 */}
         <Route component={NotFound} />

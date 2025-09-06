@@ -66,7 +66,8 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       "/patents": "patents",
       "/reports": "reports",
       "/grants": "grants",
-      "/certifications": "certifications"
+      "/certifications": "certifications",
+      "/settings": "settings"
     };
     return pathMap[href] || href.substring(1);
   };
@@ -199,6 +200,16 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           href: "/reports",
           label: "Reports",
           icon: <TrendingUp className="w-4 h-4 mr-3" />
+        }
+      ]
+    },
+    {
+      title: "Administration",
+      items: [
+        { 
+          href: "/settings",
+          label: "System Settings",
+          icon: <Settings className="w-4 h-4 mr-3" />
         }
       ]
     }
