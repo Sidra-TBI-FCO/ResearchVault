@@ -376,9 +376,9 @@ export default function CertificationsPage() {
                 maxNumberOfFiles={10}
                 maxFileSize={10485760} // 10MB
                 acceptedFileTypes={['application/pdf']}
-                onComplete={(result) => {
+                onComplete={(uploadedFiles) => {
                   try {
-                    if (!result || !result.successful || !Array.isArray(result.successful)) {
+                    if (!uploadedFiles || !Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
                       toast({
                         title: "Upload error",
                         description: "No files were successfully uploaded",
@@ -387,7 +387,10 @@ export default function CertificationsPage() {
                       return;
                     }
                     
-                    const fileUrls = result.successful.map((file: any) => file.uploadURL);
+                    const fileUrls = uploadedFiles.map(file => file.url);
+                    console.log('Uploaded files:', uploadedFiles);
+                    console.log('File URLs:', fileUrls);
+                    
                     if (fileUrls.length > 0) {
                       setIsProcessing(true);
                       processCertificatesMutation.mutate(fileUrls);
