@@ -233,10 +233,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const timeoutId = setTimeout(() => controller.abort(), 30000);
 
               try {
-                // OCR.space requires the API key in the body, not headers
+                console.log('Attempting OCR.space API call...');
+                console.log('API Key available:', !!(process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey));
+                console.log('File URL length:', fileUrl.length);
+                
+                // Try the correct OCR.space API endpoint and format
+                const apiKey = process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld';
+                
                 const formData = new URLSearchParams({
                   'url': fileUrl,
-                  'apikey': process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld',
+                  'apikey': apiKey,
                   'language': 'eng',
                   'isOverlayRequired': 'false',
                   'filetype': 'PDF',
@@ -248,6 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   'OCREngine': '2'
                 });
 
+                console.log('Making request to OCR.space...');
                 const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
                   method: 'POST',
                   headers: { 
@@ -256,6 +263,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   body: formData,
                   signal: controller.signal
                 });
+                
+                console.log('OCR.space response status:', ocrResponse.status);
+                console.log('OCR.space response headers:', Object.fromEntries(ocrResponse.headers.entries()));
 
                 clearTimeout(timeoutId);
 
