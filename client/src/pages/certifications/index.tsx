@@ -223,19 +223,43 @@ export default function CertificationsPage() {
       }
       
       if (errorCount > 0) {
-        toast({
-          title: "Some files failed",
-          description: `Could not extract data from ${errorCount} file${errorCount > 1 ? 's' : ''}. Check OCR service status.`,
-          variant: "destructive",
-        });
+        // Check if any errors are rate limit related
+        const hasRateLimitError = processedFiles.some(f => 
+          f.status === 'error' && f.notes && f.notes.includes('rate limit')
+        );
+        
+        if (hasRateLimitError) {
+          toast({
+            title: "OCR Service Rate Limit Reached",
+            description: "The OCR service has reached its hourly limit (180 requests per hour). Please wait about an hour and try again.",
+            variant: "destructive",
+            duration: 10000,
+          });
+        } else {
+          toast({
+            title: "Some files failed",
+            description: `Could not extract data from ${errorCount} file${errorCount > 1 ? 's' : ''}. Check OCR service status.`,
+            variant: "destructive",
+          });
+        }
       }
     },
     onError: (error: Error) => {
-      toast({
-        title: "Processing failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Check if it's a rate limit error
+      if (error.message.includes('rate limit') || error.message.includes('180')) {
+        toast({
+          title: "OCR Service Rate Limit Reached",
+          description: "The OCR service has reached its hourly limit (180 requests per hour). Please wait about an hour and try again.",
+          variant: "destructive",
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "Processing failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   });
 
