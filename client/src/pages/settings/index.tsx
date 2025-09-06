@@ -47,25 +47,21 @@ export default function Settings() {
       
       if (ocrConfig) {
         // Update existing configuration
-        return await apiRequest(`/api/system-configurations/ocr_service`, {
-          method: 'PUT',
-          body: {
-            value: updatedConfig,
-            updatedAt: new Date()
-          }
+        const response = await apiRequest('PUT', `/api/system-configurations/ocr_service`, {
+          value: updatedConfig,
+          updatedAt: new Date()
         });
+        return response.json();
       } else {
         // Create new configuration
-        return await apiRequest('/api/system-configurations', {
-          method: 'POST',
-          body: {
-            key: 'ocr_service',
-            value: updatedConfig,
-            description: 'OCR service configuration - choose between Tesseract.js (free) or OCR.space (external API)',
-            category: 'ocr',
-            isUserConfigurable: true
-          }
+        const response = await apiRequest('POST', '/api/system-configurations', {
+          key: 'ocr_service',
+          value: updatedConfig,
+          description: 'OCR service configuration - choose between Tesseract.js (free) or OCR.space (external API)',
+          category: 'ocr',
+          isUserConfigurable: true
         });
+        return response.json();
       }
     },
     onSuccess: () => {
