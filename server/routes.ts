@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                   body: new URLSearchParams({
                     'url': fileUrl,
-                    'apikey': ocrSettings.ocrSpaceApiKey || 'helloworld',
+                    'apikey': process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld',
                     'language': 'eng',
                     'isOverlayRequired': 'false',
                     'filetype': 'PDF',

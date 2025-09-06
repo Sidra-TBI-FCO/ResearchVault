@@ -589,38 +589,68 @@ export default function CertificationsPage() {
                             {file.fileName}
                           </TableCell>
                           <TableCell className="max-w-40">
-                            {file.name ? (
-                              <span className="text-sm font-medium text-green-700" title={file.name}>
-                                {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">-</span>
-                            )}
+                            <Input
+                              value={file.name || ""}
+                              onChange={(e) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], name: e.target.value };
+                                setDetectedFiles(updated);
+                              }}
+                              className="w-36"
+                              placeholder="Person name"
+                            />
                           </TableCell>
                           <TableCell className="max-w-40">
-                            {file.module ? (
-                              <span className="text-sm text-green-600">{file.module.name}</span>
-                            ) : file.courseName ? (
-                              <span className="text-sm text-amber-600" title={file.courseName}>
-                                {file.courseName.length > 25 ? `${file.courseName.substring(0, 25)}...` : file.courseName}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">-</span>
+                            <Select
+                              value={file.module?.id?.toString() || ""}
+                              onValueChange={(value) => {
+                                const updated = [...detectedFiles];
+                                const selectedModule = modules.find(m => m.id.toString() === value);
+                                updated[index] = { ...updated[index], module: selectedModule || null };
+                                setDetectedFiles(updated);
+                              }}
+                            >
+                              <SelectTrigger className="w-48">
+                                <SelectValue placeholder="Select module" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {modules.map((module: CertificationModule) => (
+                                  <SelectItem key={module.id} value={module.id.toString()}>
+                                    {module.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {file.courseName && !file.module && (
+                              <div className="text-xs text-amber-600 mt-1" title={file.courseName}>
+                                Detected: {file.courseName.length > 20 ? `${file.courseName.substring(0, 20)}...` : file.courseName}
+                              </div>
                             )}
                           </TableCell>
                           <TableCell>
-                            {file.completionDate ? (
-                              <span className="text-sm text-blue-600">{file.completionDate}</span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">-</span>
-                            )}
+                            <Input
+                              type="date"
+                              value={file.completionDate || ""}
+                              onChange={(e) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], completionDate: e.target.value };
+                                setDetectedFiles(updated);
+                              }}
+                              className="w-36"
+                              placeholder="Completion date"
+                            />
                           </TableCell>
                           <TableCell>
-                            {file.recordId ? (
-                              <span className="text-sm font-mono text-purple-600">{file.recordId}</span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">-</span>
-                            )}
+                            <Input
+                              value={file.recordId || ""}
+                              onChange={(e) => {
+                                const updated = [...detectedFiles];
+                                updated[index] = { ...updated[index], recordId: e.target.value };
+                                setDetectedFiles(updated);
+                              }}
+                              className="w-24"
+                              placeholder="Record ID"
+                            />
                           </TableCell>
                           <TableCell>
                             <Select
