@@ -146,12 +146,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               // Use Tesseract.js (default)
               try {
+                // Check file format first
+                const fileExtension = fileUrl.split('.').pop()?.toLowerCase();
+                const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'];
+                
+                if (fileExtension === 'pdf') {
+                  throw new Error('PDF files are not supported by Tesseract OCR. Please convert to an image format (PNG, JPEG) or use OCR.space service.');
+                }
+                
+                if (fileExtension && !supportedFormats.includes(fileExtension)) {
+                  throw new Error(`File format '${fileExtension}' is not supported. Supported formats: ${supportedFormats.join(', ')}`);
+                }
+
                 const { createWorker } = await import('tesseract.js');
                 let worker = null;
                 
                 try {
                   worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
-                  const { data: { text } } = await worker.recognize(fileUrl);
+                  
+                  // Add timeout to prevent hanging
+                  const recognitionPromise = worker.recognize(fileUrl);
+                  const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('OCR processing timed out after 60 seconds')), 60000)
+                  );
+                  
+                  const { data: { text } } = await Promise.race([recognitionPromise, timeoutPromise]) as any;
                   extractedText = text;
                 } catch (tesseractError: any) {
                   console.error('Tesseract.js error:', tesseractError);

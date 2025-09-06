@@ -5,6 +5,27 @@ import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { createHash } from "crypto";
 
+// Global error handlers to prevent crashes from worker processes
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  if (error.message && error.message.includes('tesseract')) {
+    console.error('Tesseract worker error caught - continuing operation');
+    return; // Don't crash the process for Tesseract errors
+  }
+  // For other uncaught exceptions, we might want to crash
+  console.error('Fatal error, exiting process');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  if (reason && typeof reason === 'object' && 'message' in reason && 
+      typeof reason.message === 'string' && reason.message.includes('tesseract')) {
+    console.error('Tesseract worker rejection caught - continuing operation');
+    return; // Don't crash the process for Tesseract errors
+  }
+});
+
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: false }));
