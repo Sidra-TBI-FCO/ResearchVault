@@ -346,17 +346,130 @@ export default function CertificationsPage() {
         </TabsContent>
 
         <TabsContent value="config" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>CITI API Configuration</CardTitle>
+                <p className="text-muted-foreground">
+                  Configure automatic data import from CITI Program
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Institution Name</label>
+                  <Input placeholder="Your Institution Name" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">API Endpoint</label>
+                  <Input placeholder="https://api.citiprogram.org/..." />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">API Key</label>
+                  <Input type="password" placeholder="Enter API key" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">API Secret</label>
+                  <Input type="password" placeholder="Enter API secret" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="auto-import" className="rounded" />
+                  <label htmlFor="auto-import" className="text-sm">
+                    Enable automatic daily import
+                  </label>
+                </div>
+                <Button className="w-full">
+                  Test Connection & Save
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <p className="text-muted-foreground">
+                  Configure expiration alerts and reminders
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Notification Recipients</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="notify-scientist" className="rounded" defaultChecked />
+                      <label htmlFor="notify-scientist" className="text-sm">Scientist</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="notify-supervisor" className="rounded" defaultChecked />
+                      <label htmlFor="notify-supervisor" className="text-sm">Line Manager</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="notify-admin" className="rounded" />
+                      <label htmlFor="notify-admin" className="text-sm">Admin Office</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Reminder Schedule</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="remind-30" className="rounded" defaultChecked />
+                      <label htmlFor="remind-30" className="text-sm">30 days before expiration</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="remind-7" className="rounded" defaultChecked />
+                      <label htmlFor="remind-7" className="text-sm">7 days before expiration</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="remind-1" className="rounded" />
+                      <label htmlFor="remind-1" className="text-sm">1 day before expiration</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="email-enabled" className="rounded" defaultChecked />
+                  <label htmlFor="email-enabled" className="text-sm">
+                    Enable email notifications
+                  </label>
+                </div>
+
+                <Button className="w-full" variant="outline">
+                  Save Notification Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>System Configuration</CardTitle>
+              <CardTitle>System Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Configuration Panel</h3>
-                <p className="text-muted-foreground">
-                  Configure CITI API settings, notification preferences, and system options.
-                </p>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="flex items-center gap-3 p-3 border rounded">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div>
+                    <div className="font-medium text-sm">Object Storage</div>
+                    <div className="text-xs text-muted-foreground">Connected</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 border rounded">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                  <div>
+                    <div className="font-medium text-sm">CITI API</div>
+                    <div className="text-xs text-muted-foreground">Not Configured</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 border rounded">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div>
+                    <div className="font-medium text-sm">Database</div>
+                    <div className="text-xs text-muted-foreground">Connected</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
