@@ -968,12 +968,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notes
           } = cert;
 
+          // Debug logging for certificate data
+          console.log('Processing certificate:', {
+            scientistId,
+            moduleId: cert.module?.id,
+            startDate,
+            endDate,
+            hasModule: !!cert.module,
+            certKeys: Object.keys(cert)
+          });
+
           // Validate required fields
           if (!scientistId || !moduleId || !startDate || !endDate) {
+            console.log('Validation failed:', {
+              hasScientistId: !!scientistId,
+              hasModuleId: !!moduleId,
+              hasStartDate: !!startDate,
+              hasEndDate: !!endDate
+            });
             results.push({
               ...cert,
               status: 'error',
-              error: 'Missing required fields'
+              error: `Missing required fields: ${!scientistId ? 'scientistId ' : ''}${!moduleId ? 'moduleId ' : ''}${!startDate ? 'startDate ' : ''}${!endDate ? 'endDate ' : ''}`
             });
             continue;
           }
