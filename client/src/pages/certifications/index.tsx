@@ -159,29 +159,46 @@ export default function CertificationsPage() {
         let matchedScientistId = undefined;
         
         // Auto-match scientist by name if extracted name exists
-        if (result.name && scientists.length > 0) {
+        console.log('Auto-matching debug:', {
+          resultName: result.name,
+          scientistsCount: scientists?.length || 0,
+          scientists: scientists?.map(s => ({ id: s.id, firstName: s.firstName, lastName: s.lastName }))
+        });
+        
+        if (result.name && scientists && scientists.length > 0) {
           const extractedName = result.name.toLowerCase().trim();
           
           // Try exact full name match first
           let matchedScientist = scientists.find(s => {
             const fullName = `${s.firstName} ${s.lastName}`.toLowerCase().trim();
-            return fullName === extractedName;
+            const matches = fullName === extractedName;
+            console.log(`Comparing "${fullName}" with "${extractedName}": ${matches}`);
+            return matches;
           });
           
           // If no exact match, try last name match
           if (!matchedScientist) {
             const extractedLastName = extractedName.split(' ').pop() || '';
-            matchedScientist = scientists.find(s => 
-              s.lastName.toLowerCase().trim() === extractedLastName
-            );
+            console.log(`Trying last name match: "${extractedLastName}"`);
+            matchedScientist = scientists.find(s => {
+              const matches = s.lastName.toLowerCase().trim() === extractedLastName;
+              console.log(`Last name "${s.lastName}" matches "${extractedLastName}": ${matches}`);
+              return matches;
+            });
           }
           
           if (matchedScientist) {
             matchedScientistId = matchedScientist.id;
-            console.log(`Auto-matched "${result.name}" to scientist: ${matchedScientist.firstName} ${matchedScientist.lastName} (ID: ${matchedScientist.id})`);
+            console.log(`✅ Auto-matched "${result.name}" to scientist: ${matchedScientist.firstName} ${matchedScientist.lastName} (ID: ${matchedScientist.id})`);
           } else {
-            console.log(`No scientist match found for: ${result.name}`);
+            console.log(`❌ No scientist match found for: ${result.name}`);
+            console.log('Available scientists:', scientists.map(s => `${s.firstName} ${s.lastName} (${s.id})`));
           }
+        } else {
+          console.log('❌ Auto-match skipped:', { 
+            hasName: !!result.name, 
+            scientistsAvailable: scientists?.length || 0 
+          });
         }
         
         return {
