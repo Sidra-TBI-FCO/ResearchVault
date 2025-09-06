@@ -723,7 +723,7 @@ export default function CertificationsPage() {
                               <SelectContent>
                                 {scientists.map((scientist: any) => (
                                   <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                                    {scientist.name}
+                                    {scientist.firstName} {scientist.lastName}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
