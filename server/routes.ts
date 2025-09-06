@@ -404,6 +404,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint for certificate parsing
+  app.post('/api/certifications/test-parsing', async (req: Request, res: Response) => {
+    try {
+      console.log('=== TESTING CERTIFICATE PARSING ===');
+      
+      // Simulated CITI certificate text based on the PDF format
+      const testText = `Name: Apryl Sanchez (ID: 8085848)
+Record ID: 68363655
+Course: Biosafety Complete Training Series
+Stage 1 - Biosafety/Biosecurity
+Completion Date: 27-Mar-2025
+Expiration Date: 27-Mar-2026
+Score: 97`;
+
+      console.log('Testing with simulated certificate text:', testText);
+      
+      // Test storage connection first
+      console.log('Testing storage connection...');
+      const modules = await storage.getCertificationModules();
+      console.log('Modules loaded:', modules.length);
+      
+      // Test the parsing function
+      console.log('Starting parsing function...');
+      const parsedResult = parseCITICertificate(testText, modules);
+      console.log('Parsing completed');
+      
+      res.json({
+        message: 'Parsing test completed',
+        testText: testText,
+        parsedResult: parsedResult,
+        availableModules: modules.map(m => m.name)
+      });
+      
+    } catch (error) {
+      console.error('Test parsing error:', error);
+      res.status(500).json({ error: `Test parsing failed: ${error.message}` });
+    }
+  });
+
   // Helper function to parse CITI certificate text
   function parseCITICertificate(text: string, modules: any[]) {
     const result: any = {
