@@ -146,8 +146,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               // Use Tesseract.js (default)
               try {
-                // Check file format first
-                const fileExtension = fileUrl.split('.').pop()?.toLowerCase();
+                // Check file format first - handle signed URLs properly
+                let fileExtension = '';
+                try {
+                  // For signed URLs, try to extract the original filename or use Content-Type
+                  const url = new URL(fileUrl);
+                  const pathSegments = url.pathname.split('/');
+                  const fileName = pathSegments[pathSegments.length - 1];
+                  
+                  // If we have a clean filename with extension, use it
+                  if (fileName && fileName.includes('.')) {
+                    fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+                  } else {
+                    // For signed URLs without clear extensions, try to fetch headers
+                    try {
+                      const headResponse = await fetch(fileUrl, { method: 'HEAD' });
+                      const contentType = headResponse.headers.get('content-type') || '';
+                      
+                      if (contentType.includes('pdf')) {
+                        fileExtension = 'pdf';
+                      } else if (contentType.includes('image/')) {
+                        // Extract image format from content type
+                        const imageType = contentType.split('/')[1]?.split(';')[0];
+                        fileExtension = imageType || '';
+                      }
+                    } catch (headerError) {
+                      console.log('Could not fetch file headers, proceeding with OCR attempt');
+                    }
+                  }
+                } catch (urlError) {
+                  console.log('Could not parse URL for format detection, proceeding with OCR attempt');
+                }
+
                 const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'];
                 
                 if (fileExtension === 'pdf') {
@@ -155,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
                 
                 if (fileExtension && !supportedFormats.includes(fileExtension)) {
-                  throw new Error(`File format '${fileExtension}' is not supported. Supported formats: ${supportedFormats.join(', ')}`);
+                  console.log(`Detected file format: ${fileExtension}, but proceeding with OCR attempt as detection may be inaccurate for signed URLs`);
                 }
 
                 const { createWorker } = await import('tesseract.js');
