@@ -237,10 +237,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log('API Key available:', !!(process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey));
                 console.log('File URL length:', fileUrl.length);
                 
-                // Try the correct OCR.space API endpoint and format
+                // OCR.space API uses GET with query parameters
                 const apiKey = process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld';
                 
-                const formData = new URLSearchParams({
+                const queryParams = new URLSearchParams({
                   'url': fileUrl,
                   'apikey': apiKey,
                   'language': 'eng',
@@ -254,13 +254,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   'OCREngine': '2'
                 });
 
-                console.log('Making request to OCR.space...');
-                const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
-                  method: 'POST',
-                  headers: { 
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                  },
-                  body: formData,
+                const ocrUrl = `https://api.ocr.space/parse/imageurl?${queryParams.toString()}`;
+                console.log('Making GET request to OCR.space...');
+                console.log('Request URL length:', ocrUrl.length);
+                
+                const ocrResponse = await fetch(ocrUrl, {
+                  method: 'GET',
                   signal: controller.signal
                 });
                 
