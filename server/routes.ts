@@ -146,13 +146,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               // Use Tesseract.js (default)
               const { createWorker } = await import('tesseract.js');
-              const worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
+              let worker = null;
               
               try {
+                worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
                 const { data: { text } } = await worker.recognize(fileUrl);
                 extractedText = text;
+              } catch (tesseractError: any) {
+                console.error('Tesseract.js error:', tesseractError);
+                throw new Error(`Tesseract OCR failed: ${tesseractError?.message || 'Unknown format or processing error'}`);
               } finally {
-                await worker.terminate();
+                if (worker) {
+                  try {
+                    await worker.terminate();
+                  } catch (terminateError) {
+                    console.error('Error terminating Tesseract worker:', terminateError);
+                  }
+                }
               }
             }
 
