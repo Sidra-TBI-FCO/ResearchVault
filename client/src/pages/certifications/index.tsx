@@ -159,70 +159,34 @@ export default function CertificationsPage() {
       return data;
     },
     onSuccess: (data) => {
+      console.log('=== PROCESS BATCH RESPONSE ===');
+      console.log('data:', data);
+      console.log('data.results:', data.results);
+      if (data.results?.[0]) {
+        console.log('First result keys:', Object.keys(data.results[0]));
+        console.log('First result:', data.results[0]);
+      }
+      
+      // Transform the results to match the frontend PendingCertification structure
       setDetectedFiles(data.results.map((result: any) => {
-        let matchedScientistId = undefined;
+        console.log('Processing result:', result);
         
-        // Extract parsed data directly from result since process-batch returns the parsed structure
-        const parsedData = result;
-        
-        // Auto-match scientist by name if extracted name exists
-        console.log('Auto-matching debug:', {
-          resultName: parsedData.name,
-          scientistsCount: scientists?.length || 0,
-          scientists: scientists?.map(s => ({ id: s.id, firstName: s.firstName, lastName: s.lastName }))
-        });
-        
-        if (parsedData.name && scientists && scientists.length > 0) {
-          const extractedName = parsedData.name.toLowerCase().trim();
-          
-          // Try exact full name match first
-          let matchedScientist = scientists.find(s => {
-            const fullName = `${s.firstName} ${s.lastName}`.toLowerCase().trim();
-            const matches = fullName === extractedName;
-            console.log(`Comparing "${fullName}" with "${extractedName}": ${matches}`);
-            return matches;
-          });
-          
-          // If no exact match, try last name match
-          if (!matchedScientist) {
-            const extractedLastName = extractedName.split(' ').pop() || '';
-            console.log(`Trying last name match: "${extractedLastName}"`);
-            matchedScientist = scientists.find(s => {
-              const matches = s.lastName.toLowerCase().trim() === extractedLastName;
-              console.log(`Last name "${s.lastName}" matches "${extractedLastName}": ${matches}`);
-              return matches;
-            });
-          }
-          
-          if (matchedScientist) {
-            matchedScientistId = matchedScientist.id;
-            console.log(`✅ Auto-matched "${parsedData.name}" to scientist: ${matchedScientist.firstName} ${matchedScientist.lastName} (ID: ${matchedScientist.id})`);
-          } else {
-            console.log(`❌ No scientist match found for: ${parsedData.name}`);
-            console.log('Available scientists:', scientists.map(s => `${s.firstName} ${s.lastName} (${s.id})`));
-          }
-        } else {
-          console.log('❌ Auto-match skipped:', { 
-            hasName: !!parsedData.name, 
-            scientistsAvailable: scientists?.length || 0 
-          });
-        }
-        
+        // The result should contain the parsed certificate data directly
         return {
-          fileName: result.fileName,
-          name: parsedData.name,
-          courseName: parsedData.courseName,
-          completionDate: parsedData.completionDate,
-          expirationDate: parsedData.expirationDate,
-          recordId: parsedData.recordId,
-          scientistId: matchedScientistId || parsedData.scientistId,
-          module: parsedData.module,
+          fileName: result.fileName || 'certificate.pdf',
+          name: result.name,
+          courseName: result.courseName,
+          completionDate: result.completionDate,
+          expirationDate: result.expirationDate,
+          recordId: result.recordId,
+          scientistId: result.scientistId,
+          module: result.module,
           status: 'detected' as const,
           notes: '',
           filePath: result.filePath || '',
           originalUrl: result.originalUrl || '',
-          startDate: parsedData.completionDate, // For backward compatibility
-          endDate: parsedData.expirationDate    // For backward compatibility
+          startDate: result.completionDate, // For backward compatibility
+          endDate: result.expirationDate    // For backward compatibility
         };
       }));
       toast({
