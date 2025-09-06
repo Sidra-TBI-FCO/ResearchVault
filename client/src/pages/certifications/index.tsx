@@ -606,11 +606,8 @@ export default function CertificationsPage() {
                                 className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors"
                                 onClick={() => {
                                   const errorMessage = file.error || file.errorDetails || 'OCR processing failed - no details available';
-                                  toast({
-                                    title: "OCR Processing Error",
-                                    description: `File: ${file.fileName}\nError: ${errorMessage}`,
-                                    variant: "destructive",
-                                  });
+                                  // Use alert for larger, more readable error display
+                                  alert(`OCR Processing Error\n\nFile: ${file.fileName}\n\nError Details:\n${errorMessage}`);
                                 }}
                               >
                                 <X className="h-3 w-3 mr-1" />
