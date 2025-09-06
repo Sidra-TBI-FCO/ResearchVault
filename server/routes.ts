@@ -423,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (extractedText && extractedText.trim().length > 0) {
               detectedData.extractedText = extractedText;
-              console.log(`OCR extracted ${extractedText.length} characters using ${ocrSettings.provider}`);
+              console.log(`OCR extracted ${extractedText.length} characters using ${provider}`);
 
               // Parse CITI certificate data from extracted text
               console.log('Starting certificate parsing...');
@@ -435,15 +435,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...parsedData,
                 status: parsedData.name ? 'detected' : 'unrecognized'
               };
+
+              // Update history entry with parsed data
+              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                processingStatus: parsedData.name ? 'completed' : 'failed',
+                extractedText: extractedText,
+                parsedData: parsedData,
+                processedAt: new Date(),
+                processingTimeMs: Date.now() - startTime,
+                errorMessage: parsedData.name ? null : 'Certificate data could not be extracted - manual assignment may be required'
+              });
             } else {
               detectedData.status = 'ocr_failed';
               detectedData.error = 'No text could be extracted from the file';
+              
+              // Update history entry with OCR failure
+              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+                processingStatus: 'failed',
+                errorMessage: 'No text could be extracted from the file',
+                processedAt: new Date(),
+                processingTimeMs: Date.now() - startTime
+              });
             }
           } catch (ocrError: any) {
             console.error('OCR processing error:', ocrError);
             detectedData.status = 'ocr_failed';
             detectedData.error = `OCR processing failed: ${ocrError?.message || 'Unknown error'}`;
             detectedData.suggestion = 'OCR failed - file uploaded but data extraction was unsuccessful. You can still manually assign this certificate to a scientist.';
+            
+            // Update history entry with OCR error
+            await storage.updatePdfImportHistoryEntry(historyEntry.id, {
+              processingStatus: 'failed',
+              errorMessage: `OCR processing failed: ${ocrError?.message || 'Unknown error'}`,
+              processedAt: new Date(),
+              processingTimeMs: Date.now() - startTime
+            });
           }
 
           results.push(detectedData);
@@ -492,65 +518,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Cleaned text length:', cleanText.length);
       console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
 
-      // Extract completion date - match "Completion Date: 21-May-2022" format (more flexible patterns)
+      // Extract completion date - match "21-May-2022" format anywhere in text  
       console.log('Searching for completion date...');
       const completionMatch = text.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/Completion Date\s+(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/Completion:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Completion Date\s+(\d{1,2}-\w{3}-\d{4})/i);
+                             text.match(/•\s*Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             text.match(/(\d{1,2}-\w{3}-20\d{2})/g)?.find(match => {
+                               // Look for completion date context nearby
+                               const matchIndex = text.indexOf(match);
+                               const context = text.substring(Math.max(0, matchIndex - 100), matchIndex + 100);
+                               return /completion/i.test(context);
+                             }) ||
+                             cleanText.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i);
       if (completionMatch) {
-        result.completionDate = convertDateFormat(completionMatch[1]);
+        const dateStr = Array.isArray(completionMatch) ? completionMatch[0] : completionMatch[1];
+        result.completionDate = convertDateFormat(dateStr);
         console.log('Found completion date:', result.completionDate);
       } else {
         console.log('No completion date match found');
-        console.log('Date search text sample:', cleanText.substring(0, 300));
+        console.log('Date search text sample:', text.substring(0, 800));
       }
 
-      // Extract expiration date - match "Expiration Date: 20-May-2025" format (more flexible patterns)  
+      // Extract expiration date - match "20-May-2025" format anywhere in text
       console.log('Searching for expiration date...');
       const expirationMatch = text.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/Expiration Date\s+(\d{1,2}-\w{3}-\d{4})/i) ||
-                             text.match(/Expiration:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
-                             cleanText.match(/Expiration Date\s+(\d{1,2}-\w{3}-\d{4})/i);
+                             text.match(/•\s*Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i) ||
+                             text.match(/(\d{1,2}-\w{3}-20\d{2})/g)?.find(match => {
+                               // Look for expiration date context nearby
+                               const matchIndex = text.indexOf(match);
+                               const context = text.substring(Math.max(0, matchIndex - 100), matchIndex + 100);
+                               return /expir/i.test(context);
+                             }) ||
+                             cleanText.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i);
       if (expirationMatch) {
-        result.expirationDate = convertDateFormat(expirationMatch[1]);
+        const dateStr = Array.isArray(expirationMatch) ? expirationMatch[0] : expirationMatch[1];
+        result.expirationDate = convertDateFormat(dateStr);
         console.log('Found expiration date:', result.expirationDate);
       } else {
         console.log('No expiration date match found');
-        console.log('Date search text sample:', cleanText.substring(0, 300));
+        console.log('Date search text sample:', text.substring(0, 800));
       }
 
-      // Extract record ID - match "Record ID: 31911316" format specifically
+      // Extract record ID - match "31911316" format with Record ID context
       console.log('Searching for record ID...');
       const recordIdMatch = text.match(/Record ID:\s*(\d+)/i) ||
+                           text.match(/•\s*Record ID:\s*(\d+)/i) ||
                            text.match(/Record ID\s+(\d+)/i) ||
-                           cleanText.match(/Record ID:\s*(\d+)/i) ||
-                         cleanText.match(/Record ID\s+(\d+)/i) ||
-                         cleanText.match(/Record:\s*(\d+)/i);
+                           text.match(/(\d{8})/g)?.find(match => {
+                             // Look for 8-digit number with Record ID context nearby
+                             const matchIndex = text.indexOf(match);
+                             const context = text.substring(Math.max(0, matchIndex - 50), matchIndex + 50);
+                             return /record/i.test(context);
+                           }) ||
+                           cleanText.match(/Record ID:\s*(\d+)/i);
       if (recordIdMatch) {
-        result.recordId = recordIdMatch[1];
+        const idStr = Array.isArray(recordIdMatch) ? recordIdMatch[0] : recordIdMatch[1];
+        result.recordId = idStr.replace(/\D/g, ''); // Remove any non-digits
         console.log('Found record ID:', result.recordId);
       } else {
         console.log('No record ID match found');
-        console.log('ID search text sample:', text.substring(0, 500));
+        console.log('ID search text sample:', text.substring(0, 800));
       }
 
       // Extract person name - improved patterns for CITI certificates
       console.log('Searching for person name...');
-      // Look for "Name: Apryl Sanchez (ID: 8085848)" pattern first
-      let nameMatch = text.match(/Name:\s*([^\(\n\r]+?)(?:\s*\(ID:|$)/i) ||
-                     text.match(/•\s*Name:\s*([^\(\n\r]+?)(?:\s*\(ID:|$)/i) ||
-                     text.match(/This is to certify that:\s*\n\s*([^\n]+)/i) ||
-                     cleanText.match(/Name:\s*([^\(\n\r]+?)(?:\s*\(ID:|$)/i);
-      if (!nameMatch) {
-        // Try alternative patterns
-        nameMatch = text.match(/This is to certify that:\s*([^\n\r]+)/i) ||
-                   text.match(/certify that[:\s]*([^\n\r]+)/i);
-      }
+      // Look for "Name: Apryl Sanchez (ID: 8085848)" pattern - handle OCR mangled text
+      let nameMatch = text.match(/([A-Z][a-z]+\s+[A-Z][a-z]+)\s*\(ID:\s*\d+\)/i) ||  // "Apryl Sanchez (ID: 8085848)"
+                     text.match(/Name:\s*([A-Z][a-z]+\s+[A-Z][a-z]+)/i) ||            // "Name: Apryl Sanchez"
+                     text.match(/•\s*Name:\s*([A-Z][a-z]+\s+[A-Z][a-z]+)/i) ||       // "• Name: Apryl Sanchez"
+                     cleanText.match(/([A-Z][a-z]+\s+[A-Z][a-z]+)\s*\(ID:\s*\d+\)/i) || // Clean text version
+                     text.match(/This is to certify that:\s*([A-Z][a-z]+\s+[A-Z][a-z]+)/i);
+
+      // Fix for OCR mangled text - extract just the name part if we found a longer match
       if (nameMatch) {
-        result.name = nameMatch[1].trim().replace(/\s+/g, ' ');
+        let extractedName = nameMatch[1].trim();
+        // If the extracted name contains extra text, try to clean it
+        const nameOnly = extractedName.match(/([A-Z][a-z]+\s+[A-Z][a-z]+)$/);
+        if (nameOnly) {
+          extractedName = nameOnly[1];
+        }
+        result.name = extractedName.replace(/\s+/g, ' ');
         console.log('Found name:', result.name);
       } else {
         console.log('No name match found');
