@@ -155,13 +155,43 @@ export default function CertificationsPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      setDetectedFiles(data.results.map((result: DetectedCertificate) => ({
-        ...result,
-        scientistId: undefined,
-        startDate: '',
-        endDate: '',
-        notes: ''
-      })));
+      setDetectedFiles(data.results.map((result: DetectedCertificate) => {
+        let matchedScientistId = undefined;
+        
+        // Auto-match scientist by name if extracted name exists
+        if (result.name && scientists.length > 0) {
+          const extractedName = result.name.toLowerCase().trim();
+          
+          // Try exact full name match first
+          let matchedScientist = scientists.find(s => {
+            const fullName = `${s.firstName} ${s.lastName}`.toLowerCase().trim();
+            return fullName === extractedName;
+          });
+          
+          // If no exact match, try last name match
+          if (!matchedScientist) {
+            const extractedLastName = extractedName.split(' ').pop() || '';
+            matchedScientist = scientists.find(s => 
+              s.lastName.toLowerCase().trim() === extractedLastName
+            );
+          }
+          
+          if (matchedScientist) {
+            matchedScientistId = matchedScientist.id;
+            console.log(`Auto-matched "${result.name}" to scientist: ${matchedScientist.firstName} ${matchedScientist.lastName} (ID: ${matchedScientist.id})`);
+          } else {
+            console.log(`No scientist match found for: ${result.name}`);
+          }
+        }
+        
+        return {
+          ...result,
+          scientistId: matchedScientistId,
+          startDate: '',
+          endDate: '',
+          notes: ''
+        };
+      }));
       toast({
         title: "Files processed",
         description: data.message,
