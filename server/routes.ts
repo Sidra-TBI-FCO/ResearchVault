@@ -208,13 +208,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Get OCR configuration and perform OCR based on settings
+          // Get OCR service configuration outside try block to ensure provider is available in catch blocks
+          const ocrConfig = await storage.getSystemConfiguration('ocr_service');
+          const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' }; // Default to OCR.space for PDF support
+          
+          // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
+          let provider = ocrSettings.provider;
+
           try {
-            // Get OCR service configuration
-            const ocrConfig = await storage.getSystemConfiguration('ocr_service');
-            const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' }; // Default to OCR.space for PDF support
-            
-            // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
-            let provider = ocrSettings.provider;
             
             // Force OCR.space for PDFs regardless of current setting
             if (isPDF) {
@@ -475,7 +476,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   
                   processingDuration: Date.now() - startTime
                 });
-                console.log('OCR failure update result:', updateResult ? 'SUCCESS' : 'FAILED');
               } catch (updateError) {
                 console.error('Failed to update history entry with OCR failure:', updateError);
               }
@@ -495,9 +495,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 documentType: 'unknown', // OCR error, so document type unknown
                 errorMessage: `OCR processing failed: ${ocrError?.message || 'Unknown error'}`,
                 
-                processingTimeMs: Date.now() - startTime
+                processingDuration: Date.now() - startTime
               });
-              console.log('OCR error update result:', updateResult ? 'SUCCESS' : 'FAILED');
             } catch (updateError) {
               console.error('Failed to update history entry with OCR error:', updateError);
             }
