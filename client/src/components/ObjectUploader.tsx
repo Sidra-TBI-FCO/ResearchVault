@@ -76,27 +76,43 @@ export function ObjectUploader({
     }
   }, [uploadedFiles]);
 
-  // Handle completion callback with ref to prevent infinite loops
-  const completionCalledRef = useRef<Set<string>>(new Set());
+  // Track if completion has been called for this batch
+  const hasCalledCompleteRef = useRef(false);
+  const previousFilesRef = useRef<string>('');
   
   useEffect(() => {
-    const allDone = uploadedFiles.length > 0 && uploadedFiles.every(f => f.status === 'success' || f.status === 'error');
+    // Only check when we have files
+    if (uploadedFiles.length === 0) {
+      hasCalledCompleteRef.current = false;
+      previousFilesRef.current = '';
+      return;
+    }
+    
+    const allDone = uploadedFiles.every(f => f.status === 'success' || f.status === 'error');
     const successfulFiles = uploadedFiles.filter(f => f.status === 'success');
-
-    if (allDone && successfulFiles.length > 0) {
-      // Create a unique key for this completion
-      const completionKey = successfulFiles.map(f => f.url).sort().join(',');
+    
+    // Create a unique key for this batch of files
+    const currentFilesKey = uploadedFiles.map(f => `${f.file.name}-${f.status}`).sort().join(',');
+    
+    // Only call onComplete if:
+    // 1. All files are done
+    // 2. We have successful files
+    // 3. We haven't already called it for this exact batch
+    // 4. The files have changed from the previous render
+    if (allDone && successfulFiles.length > 0 && !hasCalledCompleteRef.current && currentFilesKey !== previousFilesRef.current) {
+      hasCalledCompleteRef.current = true;
+      previousFilesRef.current = currentFilesKey;
       
-      if (!completionCalledRef.current.has(completionKey)) {
-        completionCalledRef.current.add(completionKey);
+      // Use setTimeout to break out of React's render cycle
+      setTimeout(() => {
         onComplete?.(successfulFiles.map(f => ({
           url: f.url!,
           fileName: f.file.name,
           fileSize: f.file.size
         })));
-      }
+      }, 0);
     }
-  }, [uploadedFiles, onComplete]);
+  }, [uploadedFiles]); // Remove onComplete from deps to prevent loops
 
   const handleFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);

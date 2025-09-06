@@ -157,31 +157,77 @@ export default function CertificationsPage() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Check if we have valid results
+      if (!data.results || data.results.length === 0) {
+        toast({
+          title: "No certificates detected",
+          description: "No valid certificate data could be extracted. The OCR service may be unavailable.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Transform the results to match the frontend PendingCertification structure
-      setDetectedFiles(data.results.map((result: any) => {
+      const processedFiles = data.results.map((result: any) => {
+        // Check if we actually got data or just an error
+        if (!result.name && !result.courseName && !result.completionDate) {
+          return {
+            fileName: result.fileName || 'certificate.pdf',
+            name: '',
+            courseName: '',
+            completionDate: '',
+            expirationDate: '',
+            recordId: '',
+            scientistId: null,
+            module: null,
+            status: 'error' as const,
+            notes: result.error || 'OCR extraction failed',
+            filePath: result.filePath || '',
+            originalUrl: result.originalUrl || '',
+            startDate: '',
+            endDate: ''
+          };
+        }
         
-        // The result should contain the parsed certificate data directly
+        // Valid certificate data
         return {
           fileName: result.fileName || 'certificate.pdf',
-          name: result.name,
-          courseName: result.courseName,
-          completionDate: result.completionDate,
-          expirationDate: result.expirationDate,
-          recordId: result.recordId,
+          name: result.name || '',
+          courseName: result.courseName || '',
+          completionDate: result.completionDate || '',
+          expirationDate: result.expirationDate || '',
+          recordId: result.recordId || '',
           scientistId: result.scientistId,
           module: result.module,
           status: 'detected' as const,
           notes: '',
           filePath: result.filePath || '',
           originalUrl: result.originalUrl || '',
-          startDate: result.completionDate, // For backward compatibility
-          endDate: result.expirationDate    // For backward compatibility
+          startDate: result.completionDate || '',
+          endDate: result.expirationDate || ''
         };
-      }));
-      toast({
-        title: "Files processed",
-        description: data.message,
       });
+      
+      setDetectedFiles(processedFiles);
+      
+      // Show appropriate message based on results
+      const successCount = processedFiles.filter(f => f.status === 'detected').length;
+      const errorCount = processedFiles.filter(f => f.status === 'error').length;
+      
+      if (successCount > 0) {
+        toast({
+          title: "Files processed",
+          description: `Successfully extracted data from ${successCount} certificate${successCount > 1 ? 's' : ''}`,
+        });
+      }
+      
+      if (errorCount > 0) {
+        toast({
+          title: "Some files failed",
+          description: `Could not extract data from ${errorCount} file${errorCount > 1 ? 's' : ''}. Check OCR service status.`,
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
