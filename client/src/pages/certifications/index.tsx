@@ -588,9 +588,25 @@ export default function CertificationsPage() {
                     </Button>
                     <Button 
                       onClick={() => {
+                        console.log('=== SAVE DEBUG ===');
+                        console.log('detectedFiles:', detectedFiles);
+                        detectedFiles.forEach((f, i) => {
+                          console.log(`File ${i}:`, {
+                            status: f.status,
+                            name: f.name,
+                            scientistId: f.scientistId,
+                            completionDate: f.completionDate,
+                            expirationDate: f.expirationDate,
+                            module: f.module
+                          });
+                        });
+                        
                         const validCerts = detectedFiles.filter(f => 
                           f.status === 'detected' && f.name && f.scientistId && f.completionDate && f.expirationDate && f.module
                         );
+                        
+                        console.log('validCerts after filter:', validCerts.length);
+                        console.log('validCerts:', validCerts);
                         if (validCerts.length === 0) {
                           toast({
                             title: "No valid certifications",
