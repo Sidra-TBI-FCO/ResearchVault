@@ -567,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return /completion/i.test(context);
         });
       if (completionMatch) {
-        const dateStr = Array.isArray(completionMatch) ? completionMatch[0] : completionMatch[1];
+        const dateStr = completionMatch[1] || completionMatch[0]; // Use captured group, fallback to full match
         result.completionDate = convertDateFormat(dateStr);
         console.log('Found completion date:', result.completionDate);
       } else {
@@ -591,7 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return /expir/i.test(context);
         });
       if (expirationMatch) {
-        const dateStr = Array.isArray(expirationMatch) ? expirationMatch[0] : expirationMatch[1];
+        const dateStr = expirationMatch[1] || expirationMatch[0]; // Use captured group, fallback to full match  
         result.expirationDate = convertDateFormat(dateStr);
         console.log('Found expiration date:', result.expirationDate);
       } else {

@@ -910,9 +910,9 @@ export default function CertificationsPage() {
                         </TableRow>
                       ) : (
                         pdfHistory.map((entry: PdfImportHistoryEntry) => {
-                          // Parse the detected data from parsedData JSON
+                          // Parse the detected data from parsedData JSON  
                           const parsedData = entry.parsedData || {};
-                          const hasDetectedData = parsedData.name || parsedData.course || parsedData.startDate || parsedData.endDate;
+                          const hasDetectedData = parsedData.name || parsedData.courseName || parsedData.completionDate || parsedData.expirationDate;
                           
                           // Determine actual status based on data detection
                           const getActualStatus = () => {
@@ -987,16 +987,16 @@ export default function CertificationsPage() {
                                         👤 {parsedData.name}
                                       </div>
                                     )}
-                                    {parsedData.course && (
-                                      <div className="text-blue-600 truncate" title={parsedData.course}>
-                                        📚 {parsedData.course}
+                                    {parsedData.courseName && (
+                                      <div className="text-blue-600 truncate" title={parsedData.courseName}>
+                                        📚 {parsedData.courseName}
                                       </div>
                                     )}
-                                    {(parsedData.startDate || parsedData.endDate) && (
+                                    {(parsedData.completionDate || parsedData.expirationDate) && (
                                       <div className="text-gray-600 truncate">
-                                        📅 {parsedData.startDate && format(parseISO(parsedData.startDate), 'MMM dd, yyyy')} 
-                                        {parsedData.startDate && parsedData.endDate && ' - '}
-                                        {parsedData.endDate && format(parseISO(parsedData.endDate), 'MMM dd, yyyy')}
+                                        📅 {parsedData.completionDate && format(parseISO(parsedData.completionDate), 'MMM dd, yyyy')} 
+                                        {parsedData.completionDate && parsedData.expirationDate && ' - '}
+                                        {parsedData.expirationDate && format(parseISO(parsedData.expirationDate), 'MMM dd, yyyy')}
                                       </div>
                                     )}
                                   </div>
