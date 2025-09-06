@@ -117,6 +117,9 @@ import TeamDetail from "@/pages/teams/detail";
 // Reports
 import ReportsPage from "@/pages/reports";
 
+// Certifications
+import CertificationsPage from "@/pages/certifications";
+
 function Router() {
   return (
     <Layout>
@@ -232,6 +235,9 @@ function Router() {
         {/* Research Teams */}
         <Route path="/teams" component={TeamsList} />
         <Route path="/teams/:id" component={TeamDetail} />
+        
+        {/* Certifications */}
+        <Route path="/certifications" component={CertificationsPage} />
         
         {/* Reports */}
         <Route path="/reports" component={ReportsPage} />
