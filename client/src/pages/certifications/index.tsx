@@ -600,12 +600,12 @@ export default function CertificationsPage() {
                           return;
                         }
                         confirmCertificationsMutation.mutate(validCerts.map(cert => ({
-                          fileName: cert.fileName,
+                          fileName: cert.fileName || 'certificate.pdf',
                           scientistId: cert.scientistId,
                           moduleId: cert.module!.id,
                           startDate: cert.completionDate,
                           endDate: cert.expirationDate,
-                          certificateFilePath: cert.filePath,
+                          certificateFilePath: cert.filePath || cert.originalUrl || 'certificate.pdf',
                           notes: cert.notes || ''
                         })));
                       }}
