@@ -233,24 +233,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const timeoutId = setTimeout(() => controller.abort(), 30000);
 
               try {
+                // OCR.space requires the API key in the body, not headers
+                const formData = new URLSearchParams({
+                  'url': fileUrl,
+                  'apikey': process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld',
+                  'language': 'eng',
+                  'isOverlayRequired': 'false',
+                  'filetype': 'PDF',
+                  'detectOrientation': 'false',
+                  'isCreateSearchablePdf': 'false',
+                  'isSearchablePdfHideTextLayer': 'false',
+                  'scale': 'true',
+                  'isTable': 'false',
+                  'OCREngine': '2'
+                });
+
                 const ocrResponse = await fetch('https://api.ocr.space/parse/imageurl', {
                   method: 'POST',
                   headers: { 
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'apikey': process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld'
+                    'Content-Type': 'application/x-www-form-urlencoded'
                   },
-                  body: new URLSearchParams({
-                    'url': fileUrl,
-                    'language': 'eng',
-                    'isOverlayRequired': 'false',
-                    'filetype': 'PDF',
-                    'detectOrientation': 'false',
-                    'isCreateSearchablePdf': 'false',
-                    'isSearchablePdfHideTextLayer': 'false',
-                    'scale': 'true',
-                    'isTable': 'false',
-                    'OCREngine': '2'
-                  }),
+                  body: formData,
                   signal: controller.signal
                 });
 
