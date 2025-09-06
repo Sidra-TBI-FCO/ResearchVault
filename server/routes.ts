@@ -523,7 +523,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Helper function to parse CITI certificate text
+  // Helper function to detect CITI document type
+  function detectCITIDocumentType(text: string): 'certificate' | 'report' | 'unknown' {
+    // Certificate format indicators
+    if (text.includes('This is to certify that:') || 
+        text.includes('Has completed the following CITI Program course:') ||
+        text.includes('Collaborative Institutional Training Initiative')) {
+      return 'certificate';
+    }
+    
+    // Report format indicators  
+    if (text.includes('COMPLETION REPORT') || 
+        text.includes('COURSEWORK REQUIREMENTS') ||
+        text.includes('Part 1 of 2') || 
+        text.includes('Part 2 of 2')) {
+      return 'report';
+    }
+    
+    return 'unknown';
+  }
+
+  // Helper function to parse CITI certificate text (router function)
   function parseCITICertificate(text: string, modules: any[]) {
     const result: any = {
       name: null,
@@ -537,7 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     try {
-      console.log('=== PARSING CITI CERTIFICATE ===');
+      console.log('=== PARSING CITI DOCUMENT ===');
       console.log('Raw text length:', text.length);
       console.log('Raw text sample (first 300 chars):', text.substring(0, 300));
       
@@ -545,11 +565,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('=== FULL OCR TEXT DEBUG ===');
       console.log(text);
       console.log('=== END FULL OCR TEXT ===');
+
+      // Detect document type and route to appropriate parser
+      const documentType = detectCITIDocumentType(text);
+      console.log('Detected document type:', documentType);
+
+      switch (documentType) {
+        case 'certificate':
+          return parseCITICertificateFormat(text, modules);
+        case 'report':
+          return parseCITIReportFormat(text, modules);
+        default:
+          console.log('Unknown document type, trying certificate format as fallback');
+          return parseCITICertificateFormat(text, modules);
+    } catch (error) {
+      console.error('Error parsing CITI document:', error);
+      return result;
+    }
+  }
+
+  // Certificate format parser - for documents with "This is to certify that:"
+  function parseCITICertificateFormat(text: string, modules: any[]) {
+    const result: any = {
+      name: null,
+      courseName: null,
+      module: null,
+      completionDate: null,
+      expirationDate: null,
+      recordId: null,
+      institution: null,
+      isNewModule: false
+    };
+
+    try {
+      console.log('=== PARSING CERTIFICATE FORMAT ===');
       
       // Clean up text - remove extra whitespace and normalize
       const cleanText = text.replace(/\s+/g, ' ').trim();
-      console.log('Cleaned text length:', cleanText.length);
-      console.log('Cleaned text sample (first 300 chars):', cleanText.substring(0, 300));
 
       // Extract completion date - match multiple formats
       console.log('Searching for completion date...');
@@ -739,6 +791,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (parseError) {
       console.error('Error parsing certificate text:', parseError);
+    }
+
+    return result;
+  }
+
+  // Report format parser - for documents with "COMPLETION REPORT"
+  function parseCITIReportFormat(text: string, modules: any[]) {
+    const result: any = {
+      name: null,
+      courseName: null,
+      module: null,
+      completionDate: null,
+      expirationDate: null,
+      recordId: null,
+      institution: null,
+      isNewModule: false
+    };
+
+    try {
+      console.log('=== PARSING REPORT FORMAT ===');
+      
+      // Clean up text - remove extra whitespace and normalize
+      const cleanText = text.replace(/\s+/g, ' ').trim();
+
+      // Report format specific patterns
+      // Name extraction - usually appears after bullet points and contact info
+      console.log('Searching for person name in report format...');
+      const nameMatch = text.match(/Phone:\s*([A-Za-z\s]+?)(?:\s+\([^)]*\))?$/m) ||
+                       text.match(/•\s*Phone:\s*.*?\n\s*([A-Za-z\s]+)/i) ||
+                       text.match(/Institution Unit:\s*•\s*Phone:\s*(.+?)(?:\s|$)/i) ||
+                       text.match(/([A-Za-z]+\s+[A-Za-z]+)(?:\s+\([^)]*\))?(?:\s*$)/m);
+      
+      if (nameMatch) {
+        const rawName = nameMatch[1].trim();
+        // Clean up the name - remove extra whitespace and validate
+        if (rawName.length > 2 && rawName.length < 50 && /^[A-Za-z\s]+$/.test(rawName)) {
+          result.name = rawName;
+          console.log('Found name in report format:', result.name);
+        }
+      }
+
+      // Course name extraction - different pattern for reports
+      console.log('Searching for course name in report format...');
+      const reportCourseMatch = text.match(/COURSEWORK REQUIREMENTS[\s\S]*?([A-Za-z][^•\n]+?)(?:\s*•|\s*$)/i) ||
+                               text.match(/Course:\s*([^•\n]+)/i) ||
+                               text.match(/Training[\s\S]*?-\s*([^•\n]+)/i);
+      
+      if (reportCourseMatch) {
+        result.courseName = reportCourseMatch[1].trim();
+        console.log('Found course name in report format:', result.courseName);
+        
+        // Try to match with existing modules
+        const courseLower = result.courseName.toLowerCase();
+        const module = modules.find(m => {
+          const mLower = m.name.toLowerCase();
+          return mLower.includes(courseLower) || courseLower.includes(mLower) ||
+                 (courseLower.includes('basic') && mLower.includes('basic')) ||
+                 (courseLower.includes('biosafety') && mLower.includes('biosafety'));
+        });
+        
+        result.module = module || null;
+        result.isNewModule = !module;
+      }
+
+      // Date extraction for report format - usually no explicit completion/expiration labels
+      console.log('Searching for dates in report format...');
+      const allDates = text.match(/(\d{1,2}-\w{3}-20\d{2})/g);
+      if (allDates && allDates.length > 0) {
+        // First date is usually completion, second (if exists) is expiration
+        result.completionDate = convertDateFormat(allDates[0]);
+        console.log('Found completion date in report format:', result.completionDate);
+        
+        if (allDates.length > 1) {
+          result.expirationDate = convertDateFormat(allDates[1]);
+          console.log('Found expiration date in report format:', result.expirationDate);
+        }
+      }
+
+      // Record ID extraction for reports - similar pattern but may be in different location
+      console.log('Searching for record ID in report format...');
+      const reportIdMatch = text.match(/(\d{8})/g)?.find(match => {
+        // In reports, ID might be at the end or with different context
+        return match.length === 8; // 8-digit CITI record IDs
+      });
+      
+      if (reportIdMatch) {
+        result.recordId = reportIdMatch;
+        console.log('Found record ID in report format:', result.recordId);
+      }
+
+      // Institution extraction
+      const institutionMatch = text.match(/Institution:\s*([^\n\r•]+)/i);
+      if (institutionMatch) {
+        result.institution = institutionMatch[1].trim();
+      }
+
+    } catch (parseError) {
+      console.error('Error parsing report format:', parseError);
     }
 
     return result;
