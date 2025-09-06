@@ -575,14 +575,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let parsedResult;
       switch (documentType) {
         case 'certificate':
-          parsedResult = parseCITICertificateFormat(text, modules);
+          parsedResult = await parseCITICertificateFormat(text, modules);
           break;
         case 'report':
           parsedResult = await parseCITIReportFormat(text, modules);
           break;
         default:
           console.log('Unknown document type, trying certificate format as fallback');
-          parsedResult = parseCITICertificateFormat(text, modules);
+          parsedResult = await parseCITICertificateFormat(text, modules);
       }
 
       // Add document type to the result
