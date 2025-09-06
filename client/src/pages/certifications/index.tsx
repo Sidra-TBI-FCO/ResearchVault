@@ -893,11 +893,11 @@ export default function CertificationsPage() {
                       <TableRow>
                         <TableHead>File Name</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Detected Fields</TableHead>
                         <TableHead>Uploaded By</TableHead>
                         <TableHead>OCR Provider</TableHead>
                         <TableHead>Processing Time</TableHead>
                         <TableHead>Upload Date</TableHead>
-                        <TableHead>Processed Date</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -909,77 +909,140 @@ export default function CertificationsPage() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        pdfHistory.map((entry: PdfImportHistoryEntry) => (
-                          <TableRow key={entry.id}>
-                            <TableCell className="font-mono text-sm max-w-48 truncate" title={entry.fileName}>
-                              {entry.fileName}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="secondary"
-                                className={
-                                  entry.processingStatus === 'completed'
-                                    ? 'bg-green-100 text-green-800'
-                                    : entry.processingStatus === 'failed'
-                                    ? 'bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors'
-                                    : 'bg-blue-100 text-blue-800'
-                                }
-                                onClick={entry.processingStatus === 'failed' ? () => {
-                                  const errorMessage = entry.errorMessage || 'Processing failed - no details available';
-                                  toast({
-                                    title: "Processing Error",
-                                    description: `File: ${entry.fileName}\nProvider: ${entry.ocrProvider}\nError: ${errorMessage}`,
-                                    variant: "destructive",
-                                  });
-                                } : undefined}
-                              >
-                                {entry.processingStatus === 'completed' && <Check className="h-3 w-3 mr-1" />}
-                                {entry.processingStatus === 'failed' && <X className="h-3 w-3 mr-1" />}
-                                {entry.processingStatus === 'processing' && <AlertTriangle className="h-3 w-3 mr-1" />}
-                                {entry.processingStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {entry.uploader ? entry.uploader.name : 'Unknown'}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs">
-                                {entry.ocrProvider}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {entry.processingTimeMs ? `${entry.processingTimeMs}ms` : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {entry.uploadedAt ? format(parseISO(entry.uploadedAt), 'MMM dd, yyyy HH:mm') : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {entry.processedAt ? format(parseISO(entry.processedAt), 'MMM dd, yyyy HH:mm') : '-'}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => window.open(entry.fileUrl, '_blank')}
+                        pdfHistory.map((entry: PdfImportHistoryEntry) => {
+                          // Parse the detected data from parsedData JSON
+                          const parsedData = entry.parsedData || {};
+                          const hasDetectedData = parsedData.name || parsedData.course || parsedData.startDate || parsedData.endDate;
+                          
+                          // Determine actual status based on data detection
+                          const getActualStatus = () => {
+                            if (entry.processingStatus === 'processing') return 'processing';
+                            if (entry.processingStatus === 'failed') return 'ocr_failed';
+                            if (entry.processingStatus === 'ocr_failed') return 'ocr_failed';
+                            if (hasDetectedData) return 'detected';
+                            return 'unrecognized';
+                          };
+                          
+                          const actualStatus = getActualStatus();
+                          
+                          return (
+                            <TableRow key={entry.id}>
+                              <TableCell className="font-mono text-sm max-w-48 truncate" title={entry.fileName}>
+                                {entry.fileName}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="secondary"
+                                  className={
+                                    actualStatus === 'detected'
+                                      ? 'bg-green-100 text-green-800'
+                                      : actualStatus === 'ocr_failed'
+                                      ? 'bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors'
+                                      : actualStatus === 'unrecognized'
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-blue-100 text-blue-800'
+                                  }
+                                  onClick={actualStatus === 'ocr_failed' ? () => {
+                                    const errorMessage = entry.errorMessage || 'OCR processing failed - no details available';
+                                    const fullErrorText = `OCR Processing Error\n\nFile: ${entry.fileName}\nProvider: ${entry.ocrProvider}\n\nError Details:\n${errorMessage}`;
+                                    
+                                    // Create custom dialog with copy button
+                                    const copyToClipboard = () => {
+                                      navigator.clipboard.writeText(fullErrorText).then(() => {
+                                        alert('Error details copied to clipboard!');
+                                      }).catch(() => {
+                                        // Fallback for older browsers
+                                        const textArea = document.createElement('textarea');
+                                        textArea.value = fullErrorText;
+                                        document.body.appendChild(textArea);
+                                        textArea.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(textArea);
+                                        alert('Error details copied to clipboard!');
+                                      });
+                                    };
+                                    
+                                    // Show confirm dialog with copy option
+                                    const userChoice = confirm(`${fullErrorText}\n\n📋 Click OK to copy error details to clipboard, Cancel to close.`);
+                                    if (userChoice) {
+                                      copyToClipboard();
+                                    }
+                                  } : undefined}
                                 >
-                                  View PDF
-                                </Button>
-                                {entry.extractedText && (
+                                  {actualStatus === 'detected' && <Check className="h-3 w-3 mr-1" />}
+                                  {actualStatus === 'ocr_failed' && <X className="h-3 w-3 mr-1" />}
+                                  {actualStatus === 'unrecognized' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                                  {actualStatus === 'processing' && <div className="h-3 w-3 mr-1 animate-spin rounded-full border-b-2 border-blue-600"></div>}
+                                  {actualStatus === 'detected' ? 'Data Detected' : 
+                                   actualStatus === 'ocr_failed' ? 'OCR Failed' : 
+                                   actualStatus === 'unrecognized' ? 'No Data Found' : 
+                                   'Processing...'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="max-w-48">
+                                {hasDetectedData ? (
+                                  <div className="text-sm space-y-1">
+                                    {parsedData.name && (
+                                      <div className="font-medium text-green-700 truncate" title={parsedData.name}>
+                                        👤 {parsedData.name}
+                                      </div>
+                                    )}
+                                    {parsedData.course && (
+                                      <div className="text-blue-600 truncate" title={parsedData.course}>
+                                        📚 {parsedData.course}
+                                      </div>
+                                    )}
+                                    {(parsedData.startDate || parsedData.endDate) && (
+                                      <div className="text-gray-600 truncate">
+                                        📅 {parsedData.startDate && format(parseISO(parsedData.startDate), 'MMM dd, yyyy')} 
+                                        {parsedData.startDate && parsedData.endDate && ' - '}
+                                        {parsedData.endDate && format(parseISO(parsedData.endDate), 'MMM dd, yyyy')}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 text-sm">No data detected</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {entry.uploader ? entry.uploader.name : 'Unknown'}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs">
+                                  {entry.ocrProvider || 'Unknown'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {entry.processingTimeMs ? `${entry.processingTimeMs}ms` : '-'}
+                              </TableCell>
+                              <TableCell>
+                                {entry.uploadedAt ? format(parseISO(entry.uploadedAt), 'MMM dd, yyyy HH:mm') : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
-                                      alert(`OCR Extracted Text:\n\n${entry.extractedText?.substring(0, 800)}${entry.extractedText && entry.extractedText.length > 800 ? '...' : ''}`);
-                                    }}
+                                    onClick={() => window.open(entry.fileUrl, '_blank')}
                                   >
-                                    View OCR
+                                    View PDF
                                   </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                                  {entry.extractedText && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        alert(`OCR Extracted Text:\n\n${entry.extractedText?.substring(0, 800)}${entry.extractedText && entry.extractedText.length > 800 ? '...' : ''}`);
+                                      }}
+                                    >
+                                      View OCR
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
