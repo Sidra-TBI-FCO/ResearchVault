@@ -97,10 +97,8 @@ export default function CertificationsPage() {
 
   const processCertificatesMutation = useMutation({
     mutationFn: async (fileUrls: string[]) => {
-      return apiRequest('/api/certificates/process-batch', {
-        method: 'POST',
-        body: { fileUrls }
-      });
+      const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls });
+      return response.json();
     },
     onSuccess: (data) => {
       setDetectedFiles(data.results.map((result: DetectedCertificate) => ({
@@ -126,10 +124,8 @@ export default function CertificationsPage() {
 
   const confirmCertificationsMutation = useMutation({
     mutationFn: async (certifications: PendingCertification[]) => {
-      return apiRequest('/api/certificates/confirm-batch', {
-        method: 'POST',
-        body: { certifications }
-      });
+      const response = await apiRequest('POST', '/api/certificates/confirm-batch', { certifications });
+      return response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/certifications/matrix'] });
@@ -388,8 +384,6 @@ export default function CertificationsPage() {
                     }
                     
                     const fileUrls = uploadedFiles.map(file => file.url);
-                    console.log('Uploaded files:', uploadedFiles);
-                    console.log('File URLs:', fileUrls);
                     
                     if (fileUrls.length > 0) {
                       setIsProcessing(true);

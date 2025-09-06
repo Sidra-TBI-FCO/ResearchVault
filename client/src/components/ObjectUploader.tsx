@@ -138,16 +138,8 @@ export function ObjectUploader({
         setUploadedFiles(currentFiles => {
           const allDone = currentFiles.every(f => f.status === 'success' || f.status === 'error');
           const successfulFiles = currentFiles.filter(f => f.status === 'success');
-          
-          console.log('Upload check:', { 
-            allDone, 
-            successfulCount: successfulFiles.length, 
-            totalCount: currentFiles.length,
-            statuses: currentFiles.map(f => f.status)
-          });
 
           if (allDone && successfulFiles.length > 0) {
-            console.log('Calling onComplete with files:', successfulFiles);
             onComplete?.(successfulFiles.map(f => ({
               url: f.url!,
               fileName: f.file.name,
