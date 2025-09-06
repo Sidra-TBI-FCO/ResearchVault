@@ -40,6 +40,7 @@ interface DetectedCertificate {
   originalUrl: string;
   status: 'detected' | 'unrecognized' | 'error' | 'unknown' | 'processing' | 'ocr_failed';
   extractedText?: string;
+  errorDetails?: string;
   name?: string;
   courseName?: string;
   module?: CertificationModule | null;
@@ -570,7 +571,18 @@ export default function CertificationsPage() {
                                 OCR Success
                               </Badge>
                             ) : file.status === 'ocr_failed' ? (
-                              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                              <Badge 
+                                variant="secondary" 
+                                className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors"
+                                onClick={() => {
+                                  const errorMessage = file.error || file.errorDetails || 'OCR processing failed - no details available';
+                                  toast({
+                                    title: "OCR Processing Error",
+                                    description: `File: ${file.fileName}\nError: ${errorMessage}`,
+                                    variant: "destructive",
+                                  });
+                                }}
+                              >
                                 <X className="h-3 w-3 mr-1" />
                                 OCR Failed
                               </Badge>
@@ -843,9 +855,17 @@ export default function CertificationsPage() {
                                   entry.processingStatus === 'completed'
                                     ? 'bg-green-100 text-green-800'
                                     : entry.processingStatus === 'failed'
-                                    ? 'bg-red-100 text-red-800'
+                                    ? 'bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors'
                                     : 'bg-blue-100 text-blue-800'
                                 }
+                                onClick={entry.processingStatus === 'failed' ? () => {
+                                  const errorMessage = entry.errorMessage || 'Processing failed - no details available';
+                                  toast({
+                                    title: "Processing Error",
+                                    description: `File: ${entry.fileName}\nProvider: ${entry.ocrProvider}\nError: ${errorMessage}`,
+                                    variant: "destructive",
+                                  });
+                                } : undefined}
                               >
                                 {entry.processingStatus === 'completed' && <Check className="h-3 w-3 mr-1" />}
                                 {entry.processingStatus === 'failed' && <X className="h-3 w-3 mr-1" />}

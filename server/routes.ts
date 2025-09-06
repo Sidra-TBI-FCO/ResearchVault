@@ -286,16 +286,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   throw new Error(`Failed to connect to OCR.space service: ${ocrResponse.status}`);
                 }
               } catch (apiError: any) {
-                if (apiError.name === 'AbortError') {
-                  throw new Error('OCR.space request timed out after 30 seconds');
-                } else {
-                  throw new Error(`OCR.space error: ${apiError.message}`);
-                }
-              } finally {
+                console.error('OCR.space failed:', apiError.message);
+                console.log('Falling back to Tesseract.js...');
+                // Don't throw error yet, let it fall back to Tesseract
                 clearTimeout(timeoutId);
+                extractedText = null; // Signal to use fallback
               }
-            } else {
-              // Use Tesseract.js (default)
+            }
+
+            // If OCR.space failed or wasn't used, try Tesseract.js as fallback
+            if (!extractedText) {
+              // Use Tesseract.js (fallback)
               try {
                 // Check file format first - handle signed URLs properly
                 let fileExtension = '';
