@@ -948,7 +948,7 @@ export default function CertificationsPage() {
         </TabsContent>
 
         <TabsContent value="config" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle>CITI API Configuration</CardTitle>
@@ -981,6 +981,57 @@ export default function CertificationsPage() {
                 </div>
                 <Button className="w-full">
                   Test Connection & Save
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>OCR Configuration</CardTitle>
+                <p className="text-muted-foreground">
+                  Configure OCR service for PDF certificate processing
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">OCR Service Provider</label>
+                  <Select value={ocrConfig?.value?.provider || "ocr_space"}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select OCR provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ocr_space">OCR.space (Recommended for PDFs)</SelectItem>
+                      <SelectItem value="tesseract">Tesseract.js (Local Processing)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">OCR.space API Key</label>
+                  <Input 
+                    type="password" 
+                    placeholder="Enter your OCR.space API key"
+                    defaultValue={process.env.OCR_SPACE_API_KEY ? "••••••••••••••••" : ""}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Get your free API key from <a href="https://ocr.space/ocrapi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">ocr.space/ocrapi</a> (25,000 requests/month free)
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="pdf-processing" className="rounded" defaultChecked disabled />
+                  <label htmlFor="pdf-processing" className="text-sm text-muted-foreground">
+                    Automatic PDF processing enabled
+                  </label>
+                </div>
+                <div className="p-3 bg-green-50 rounded-md border border-green-200">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-green-800">
+                      {process.env.OCR_SPACE_API_KEY ? 'API key configured via environment variable' : 'No API key configured'}
+                    </span>
+                  </div>
+                </div>
+                <Button className="w-full" disabled>
+                  Test OCR Connection
                 </Button>
               </CardContent>
             </Card>
