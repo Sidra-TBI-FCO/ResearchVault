@@ -1041,6 +1041,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
 
+          // Check for duplicate certificate (same scientist, module, and start date)
+          const existingCertifications = await storage.getCertificationsByScientist(scientistId);
+          const duplicateCert = existingCertifications.find(existing => 
+            existing.moduleId === moduleId && 
+            existing.startDate === startDate
+          );
+          
+          if (duplicateCert) {
+            results.push({
+              ...cert,
+              status: 'error',
+              error: `Certificate already exists for this person and module with the same start date (${startDate}). Please check existing records.`
+            });
+            continue;
+          }
+
           const certification = await storage.createCertification({
             scientistId,
             moduleId,
