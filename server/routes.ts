@@ -2277,8 +2277,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...member,
           scientist: scientist ? {
             id: scientist.id,
-            name: scientist.name,
-            title: scientist.title,
+            firstName: scientist.firstName,
+            lastName: scientist.lastName,
+            honorificTitle: scientist.honorificTitle,
+            jobTitle: scientist.jobTitle,
             email: scientist.email,
             staffId: scientist.staffId,
             profileImageInitials: scientist.profileImageInitials
