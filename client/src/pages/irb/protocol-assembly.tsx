@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IrbApplication, ResearchActivity, Scientist, ProjectMember } from "@shared/schema";
+import { formatFullName } from "@/utils/nameUtils";
 
 interface DocumentUpload {
   id: string;
@@ -639,7 +640,7 @@ export default function ProtocolAssembly() {
                         <option value="">Choose from SDR team members...</option>
                         {availableScientists.map((member) => (
                           <option key={member.scientistId} value={member.scientistId}>
-                            {member.scientist?.name} - {member.role}
+                            {member.scientist ? formatFullName(member.scientist) : 'Unknown'} - {member.role}
                           </option>
                         ))}
                       </select>
