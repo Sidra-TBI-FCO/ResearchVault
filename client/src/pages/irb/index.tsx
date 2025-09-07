@@ -152,9 +152,9 @@ export default function IrbList() {
                       )}
                       {application.workflowStatus === 'draft' && (
                         <div className="mt-2">
-                          <Link href={`/irb/${application.id}/submit`}>
+                          <Link href={`/irb/${application.id}/assembly`}>
                             <Button size="sm" variant="outline" className="text-xs">
-                              Complete Submission
+                              Assemble Protocol
                             </Button>
                           </Link>
                         </div>
