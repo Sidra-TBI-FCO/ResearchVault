@@ -127,7 +127,7 @@ export default function CreateIrb() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 md:pb-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={() => navigate("/irb")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
