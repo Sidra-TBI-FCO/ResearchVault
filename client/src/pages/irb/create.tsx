@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { formatFullName } from "@/utils/nameUtils";
 
 // Extend the insert schema with additional validations
 const createIrbApplicationSchema = z.object({
@@ -149,8 +150,8 @@ export default function CreateIrb() {
                   <div>
                     <h3 className="font-medium text-blue-900">IRB Application Process</h3>
                     <p className="text-sm text-blue-800 mt-1">
-                      Start by selecting the Principal Investigator, then choose from their active research activities (SDRs). 
-                      Important dates (submission, approval, expiration) are automatically set based on workflow actions.
+                      Start by selecting the Principal Investigator first, then choose from their active research activities (SDRs). 
+                      The research activities list will be filtered based on your PI selection.
                     </p>
                   </div>
                 </div>
@@ -165,6 +166,38 @@ export default function CreateIrb() {
                       <FormControl>
                         <Input placeholder="e.g. Human Cell Line Testing for CRISPR Cancer Therapy" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="principalInvestigatorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Principal Investigator</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString() || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a PI" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {piLoading ? (
+                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
+                          ) : (
+                            principalInvestigators?.map((pi) => (
+                              <SelectItem key={pi.id} value={pi.id.toString()}>
+                                {formatFullName(pi)}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -192,38 +225,6 @@ export default function CreateIrb() {
                             researchActivities?.map((activity) => (
                               <SelectItem key={activity.id} value={activity.id.toString()}>
                                 {activity.sdrNumber} - {activity.title}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="principalInvestigatorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Principal Investigator</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a PI" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {piLoading ? (
-                            <SelectItem value="loading" disabled>Loading PIs...</SelectItem>
-                          ) : (
-                            principalInvestigators?.map((pi) => (
-                              <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
                               </SelectItem>
                             ))
                           )}
