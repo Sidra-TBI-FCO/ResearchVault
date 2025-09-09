@@ -115,29 +115,16 @@ export default function StaffList() {
           <div className="flex items-center gap-3">
             {canEdit && (
               <Link href="/scientists/role-access-config">
-                <button 
-                  className="px-4 py-2 rounded-lg border border-sidra-teal text-sidra-teal transition-colors hover:bg-sidra-teal hover:text-white"
-                >
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                   Configure Role Based Access
-                </button>
+                </Button>
               </Link>
             )}
             {canEdit && (
               <Link href="/scientists/create">
-                <button 
-                  className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 create-button"
-                  style={{ 
-                    backgroundColor: '#2D9C95',
-                    color: 'white',
-                    opacity: '1',
-                    visibility: 'visible',
-                    display: 'block'
-                  }}
-                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#238B7A'}
-                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#2D9C95'}
-                >
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                   Add Staff Member
-                </button>
+                </Button>
               </Link>
             )}
           </div>

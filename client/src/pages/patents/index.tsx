@@ -30,11 +30,11 @@ export default function PatentsList() {
   };
 
   const statusColors = {
-    filed: "bg-blue-100 text-blue-700",
-    granted: "bg-green-100 text-green-700",
-    pending: "bg-yellow-100 text-yellow-700",
-    rejected: "bg-red-100 text-red-600",
-    "in preparation": "bg-purple-100 text-purple-600"
+    filed: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    granted: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    rejected: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    "in preparation": "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
   };
 
   const filteredPatents = patents?.filter(patent => {
@@ -51,20 +51,9 @@ export default function PatentsList() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-neutral-400">Patents</h1>
         <Link href="/patents/create">
-          <button 
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-            style={{ 
-              backgroundColor: '#2D9C95',
-              color: 'white',
-              opacity: '1',
-              visibility: 'visible',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-          >
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             Add Patent
-          </button>
+          </Button>
         </Link>
       </div>
 

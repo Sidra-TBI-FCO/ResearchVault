@@ -69,20 +69,9 @@ export default function IrbList() {
             </Button>
           </Link>
           <Link href="/irb/create">
-            <button 
-              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-              style={{ 
-                backgroundColor: '#2D9C95',
-                color: 'white',
-                opacity: '1',
-                visibility: 'visible',
-                display: 'block'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#238B7A'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#2D9C95'}
-            >
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               New Application
-            </button>
+            </Button>
           </Link>
         </div>
       </div>

@@ -93,20 +93,9 @@ export default function ProgramsList() {
           <h1 className="text-2xl font-semibold text-neutral-400">Research Programs (PRM)</h1>
           {canEdit && (
             <Link href="/programs/create">
-              <button 
-                className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 create-button"
-                style={{ 
-                  backgroundColor: '#2D9C95',
-                  color: 'white',
-                  opacity: '1',
-                  visibility: 'visible',
-                  display: 'block'
-                }}
-                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#238B7A'}
-                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#2D9C95'}
-              >
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                 New Program
-              </button>
+              </Button>
             </Link>
           )}
         </div>

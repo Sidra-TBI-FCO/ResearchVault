@@ -119,38 +119,16 @@ export default function FacilitiesList() {
           {canEdit && (
             <div className="flex gap-2">
               <Link href="/facilities/buildings/create">
-                <button 
-                  className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2 create-button"
-                  style={{ 
-                    backgroundColor: '#2D9C95',
-                    color: 'white',
-                    opacity: '1',
-                    visibility: 'visible',
-                    display: 'flex'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#238B7A'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D9C95'}
-                >
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   Add Building
-                </button>
+                </Button>
               </Link>
               <Link href="/facilities/rooms/create">
-                <button 
-                  className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center gap-2 create-button"
-                  style={{ 
-                    backgroundColor: '#6366F1',
-                    color: 'white',
-                    opacity: '1',
-                    visibility: 'visible',
-                    display: 'flex'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5B5BF7'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6366F1'}
-                >
+                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   Add Room
-                </button>
+                </Button>
               </Link>
             </div>
           )}
