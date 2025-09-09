@@ -418,7 +418,11 @@ export default function CertificationsPage() {
           <TabsList className="flex w-max min-w-full">
             <TabsTrigger value="matrix" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
               <FileText className="h-3 w-3" />
-              Matrix
+              CITI Matrix
+            </TabsTrigger>
+            <TabsTrigger value="lab-training" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
+              <FileText className="h-3 w-3" />
+              Lab Training
             </TabsTrigger>
             <TabsTrigger value="upload" className="flex items-center gap-1 px-2 text-xs whitespace-nowrap">
               <Upload className="h-3 w-3" />
@@ -443,7 +447,7 @@ export default function CertificationsPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Certification Status Matrix</CardTitle>
+                <CardTitle>CITI Matrix</CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
