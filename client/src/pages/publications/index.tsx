@@ -57,12 +57,12 @@ export default function PublicationsList() {
   };
 
   const statusColors = {
-    published: "bg-green-100 text-green-700",
-    "published *": "bg-green-600 text-white",
-    submitted: "bg-yellow-100 text-yellow-700",
-    "in preparation": "bg-blue-100 text-blue-600",
-    rejected: "bg-red-100 text-red-600",
-    "under review": "bg-purple-100 text-purple-600"
+    published: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    "published *": "bg-green-600 text-white dark:bg-green-700 dark:text-green-100",
+    submitted: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    "in preparation": "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    rejected: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    "under review": "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
   };
 
   const filteredPublications = publications?.filter(publication => {

@@ -30,15 +30,15 @@ export function PermissionWrapper({
     return (
       <div className="space-y-4">
         {showReadOnlyBanner && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
             <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">View Only Mode</span>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+              <Eye className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">View Only Mode</span>
+              <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
                 Read Only
               </Badge>
             </div>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-primary/80 mt-1">
               You have view-only access to this section. Contact an administrator to request edit permissions.
             </p>
           </div>

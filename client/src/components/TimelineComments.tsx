@@ -58,10 +58,10 @@ export default function TimelineComments({
         type: 'status',
         element: (
           <div className="flex items-center space-x-2">
-            <FileText className="h-4 w-4 text-gray-500" />
+            <FileText className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-sm font-medium">Draft Created</p>
-              <p className="text-sm text-gray-500">Protocol saved as draft</p>
+              <p className="text-sm text-muted-foreground">Protocol saved as draft</p>
             </div>
           </div>
         )

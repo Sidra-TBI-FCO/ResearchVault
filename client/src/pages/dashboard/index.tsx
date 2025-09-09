@@ -34,7 +34,7 @@ export default function Dashboard() {
           </Select>
           
           <Link href="/research-activities/create">
-            <Button className="bg-primary-500 text-white">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Plus className="h-4 w-4 mr-1" /> New Research Activity
             </Button>
           </Link>
