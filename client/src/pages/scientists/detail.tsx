@@ -343,16 +343,16 @@ export default function ScientistDetail() {
                               [
                                 { module: 'BRB', status: 'valid', expiryDate: '2025-12-15', color: 'green' },
                                 { module: 'COL', status: 'valid', expiryDate: '2025-11-20', color: 'green' },
-                                { module: 'RCR', status: 'expiring', expiryDate: '2025-01-10', color: 'orange' }
+                                { module: 'RCR', status: 'expiring', expiryDate: '2025-09-25', color: 'orange' }
                               ],
                               [
                                 { module: 'BRB', status: 'expired', expiryDate: '2024-10-15', color: 'red' },
-                                { module: 'COL', status: 'expiring', expiryDate: '2025-01-20', color: 'orange' },
-                                { module: 'RCR', status: 'valid', expiryDate: '2025-09-30', color: 'green' }
+                                { module: 'COL', status: 'expiring', expiryDate: '2025-10-01', color: 'orange' },
+                                { module: 'RCR', status: 'valid', expiryDate: '2025-12-30', color: 'green' }
                               ],
                               [
-                                { module: 'BRB', status: 'valid', expiryDate: '2025-06-10', color: 'green' },
-                                { module: 'COL', status: 'expiring', expiryDate: '2025-01-05', color: 'orange' },
+                                { module: 'BRB', status: 'valid', expiryDate: '2026-06-10', color: 'green' },
+                                { module: 'COL', status: 'expiring', expiryDate: '2025-09-30', color: 'orange' },
                                 { module: 'RCR', status: 'expired', expiryDate: '2024-09-20', color: 'red' }
                               ]
                             ];
@@ -391,9 +391,9 @@ export default function ScientistDetail() {
                         {(() => {
                           // Generate dummy lab training data based on scientist ID
                           const labStatuses = [
-                            { status: 'valid', color: 'green', expiryDate: '2025-03-15' },
-                            { status: 'expiring', color: 'orange', expiryDate: '2025-01-10' },
-                            { status: 'expired', color: 'red', expiryDate: '2024-10-05' }
+                            { status: 'valid', color: 'green', expiryDate: '2026-03-15' },
+                            { status: 'expiring', color: 'orange', expiryDate: '2025-10-01' },
+                            { status: 'expired', color: 'red', expiryDate: '2024-08-05' }
                           ];
                           
                           // Use scientist ID to determine which status to show (for consistent dummy data)

@@ -594,8 +594,8 @@ export default function CertificationsPage() {
                     {filteredScientists.map((scientist: any) => {
                       // Generate dummy lab training data based on scientist ID
                       const trainingStatuses = [
-                        { lastTraining: '2024-03-15', expiration: '2025-03-15', status: 'valid' },
-                        { lastTraining: '2024-01-10', expiration: '2025-01-10', status: 'expiring' },
+                        { lastTraining: '2024-03-15', expiration: '2026-03-15', status: 'valid' },
+                        { lastTraining: '2024-10-01', expiration: '2025-10-01', status: 'expiring' },
                         { lastTraining: '2023-10-05', expiration: '2024-10-05', status: 'expired' },
                         { lastTraining: null, expiration: null, status: 'never' }
                       ];

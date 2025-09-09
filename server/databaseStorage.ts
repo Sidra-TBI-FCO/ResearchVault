@@ -1908,8 +1908,8 @@ export class DatabaseStorage implements IStorage {
           // Generate dummy data based on scientist and module IDs for consistency
           const combo = scientist.id + module.id;
           const dummyStatuses = [
-            { startDate: '2024-03-15', endDate: '2026-03-15' }, // Valid
-            { startDate: '2024-01-10', endDate: '2025-01-10' }, // Expiring soon
+            { startDate: '2024-03-15', endDate: '2026-03-15' }, // Valid (expires March 2026)
+            { startDate: '2024-09-25', endDate: '2025-09-25' }, // Expiring soon (expires Sep 25, 2025 - 16 days from now)
             { startDate: '2023-10-05', endDate: '2024-10-05' }, // Expired
             null // No certification
           ];
