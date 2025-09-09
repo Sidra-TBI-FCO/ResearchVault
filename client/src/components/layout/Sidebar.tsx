@@ -216,12 +216,18 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         {/* Logo/Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
           <div className="flex flex-col space-y-0.5">
-            <div className="flex items-center space-x-2">
-              <Beaker className="h-5 w-5 text-white" />
-              <span className="font-semibold text-lg text-white">IRIS</span>
-            </div>
-            <div className="text-xs text-white/80 ml-7">
-              {themes[themeName].name}
+            <div className="flex items-center space-x-3">
+              <img 
+                src="/iris-logo.png" 
+                alt="IRIS Logo" 
+                className="h-8 w-8"
+              />
+              <div className="flex flex-col">
+                <span className="font-semibold text-lg text-white">IRIS</span>
+                <div className="text-xs text-white/80 -mt-0.5">
+                  {themes[themeName].name}
+                </div>
+              </div>
             </div>
           </div>
           {mobile && onClose && (
@@ -331,7 +337,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           <div className="flex items-center">
             <Link 
               href="/settings"
-              className="flex items-center text-sm text-neutral-300 hover:text-primary-500"
+              className="flex items-center text-sm text-neutral-300 hover:text-sidra-teal cursor-pointer"
               onClick={() => {
                 // Close mobile menu when navigation item is clicked
                 if (mobile && onClose) {
