@@ -101,6 +101,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const root = document.documentElement;
     const theme = themes[themeName];
     
+    // Set data-theme attribute for CSS theme overrides
+    root.setAttribute('data-theme', themeName);
+    
     // Set CSS custom properties for current theme
     Object.entries(theme.colors.primary).forEach(([shade, color]) => {
       root.style.setProperty(`--color-primary-${shade}`, color);
