@@ -1918,14 +1918,26 @@ export class DatabaseStorage implements IStorage {
           dummyData = dummyStatuses[statusIndex];
         }
         
+        // Always use dummy data for demo purposes  
+        const combo = scientist.id + module.id;
+        const dummyStatuses = [
+          { startDate: '2024-03-15', endDate: '2026-03-15' }, // Valid (expires March 2026)
+          { startDate: '2024-09-25', endDate: '2025-09-25' }, // Expiring soon (expires Sep 25, 2025 - 16 days from now)
+          { startDate: '2023-10-05', endDate: '2024-10-05' }, // Expired
+          null // No certification
+        ];
+        
+        const statusIndex = combo % 4;
+        const demoData = dummyStatuses[statusIndex];
+        
         matrixData.push({
           scientistId: scientist.id,
           scientistName: scientist.name,
           moduleId: module.id,
           moduleName: module.name,
-          certificationId: certification?.id || (dummyData ? 999000 + scientist.id * 100 + module.id : null),
-          startDate: certification?.startDate || dummyData?.startDate || null,
-          endDate: certification?.endDate || dummyData?.endDate || null,
+          certificationId: certification?.id || (demoData ? 999000 + scientist.id * 100 + module.id : null),
+          startDate: demoData?.startDate || null,
+          endDate: demoData?.endDate || null,
           certificateFilePath: certification?.certificateFilePath || null,
           reportFilePath: certification?.reportFilePath || null,
         });
