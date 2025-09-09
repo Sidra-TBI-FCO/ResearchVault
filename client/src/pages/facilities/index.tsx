@@ -125,7 +125,7 @@ export default function FacilitiesList() {
                 </Button>
               </Link>
               <Link href="/facilities/rooms/create">
-                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center gap-2">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   Add Room
                 </Button>
