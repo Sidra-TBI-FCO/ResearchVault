@@ -539,6 +539,105 @@ export default function CertificationsPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="lab-training" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Lab Safety Training Matrix</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search staff..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 w-64"
+                    />
+                  </div>
+                  <Button onClick={exportToCSV} variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                  <span>Valid</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div>
+                  <span>Expiring (≤30 days)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                  <span>Expired</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
+                  <span>Never Completed</span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="sticky left-0 bg-white min-w-48">Staff Member</TableHead>
+                      <TableHead className="text-center min-w-40">Last Training Date</TableHead>
+                      <TableHead className="text-center min-w-40">Expiration Date</TableHead>
+                      <TableHead className="text-center min-w-32">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredScientists.map((scientist: any) => {
+                      // Generate dummy lab training data based on scientist ID
+                      const trainingStatuses = [
+                        { lastTraining: '2024-03-15', expiration: '2025-03-15', status: 'valid' },
+                        { lastTraining: '2024-01-10', expiration: '2025-01-10', status: 'expiring' },
+                        { lastTraining: '2023-10-05', expiration: '2024-10-05', status: 'expired' },
+                        { lastTraining: null, expiration: null, status: 'never' }
+                      ];
+                      
+                      const statusIndex = scientist.id % 4;
+                      const training = trainingStatuses[statusIndex];
+                      const status = getCertificationStatus(training.expiration);
+                      
+                      return (
+                        <TableRow key={scientist.id}>
+                          <TableCell className="sticky left-0 bg-white font-medium">
+                            <div>
+                              <div>{scientist.name}</div>
+                              {scientist.jobTitle && (
+                                <div className="text-xs text-gray-500 mt-1">{scientist.jobTitle}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {training.lastTraining ? format(parseISO(training.lastTraining), 'MM/dd/yyyy') : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {training.expiration ? format(parseISO(training.expiration), 'MM/dd/yyyy') : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="secondary"
+                              className={`${status.color}`}
+                            >
+                              {status.text}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="upload" className="space-y-6">
           <Card>
             <CardHeader>
