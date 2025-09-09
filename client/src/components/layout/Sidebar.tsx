@@ -210,17 +210,17 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
   return (
     <div className={mobile ? "flex flex-shrink-0 h-full" : "hidden md:flex md:flex-shrink-0"}>
       <div className={cn(
-        "flex flex-col w-64 border-r border-sidra-teal-light/30 bg-white",
+        "flex flex-col w-64 border-r border-primary/30 bg-card",
         mobile ? "h-full" : ""
       )}>
         {/* Logo/Brand */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-primary/30 bg-primary">
           <div className="flex flex-col space-y-0.5">
             <div className="flex items-center space-x-3">
               <img 
-                src="/iris-logo.png" 
+                src="/iris-logo-cropped.png" 
                 alt="IRIS Logo" 
-                className="h-8 w-8"
+                className="h-10 w-10"
               />
               <div className="flex flex-col">
                 <span className="font-semibold text-lg text-white">IRIS</span>
@@ -244,14 +244,14 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-sidra-teal-light/30">
+        <div className="p-4 border-b border-primary/30">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="h-10 w-10 rounded-full bg-sidra-teal-light flex items-center justify-center text-sidra-teal-dark font-medium">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
               {getInitials(currentUser.role)}
             </div>
             <div className="flex-1">
-              <div className="font-medium text-sidra-navy">{currentUser.role}</div>
-              <div className="text-xs text-sidra-gray">Role-based Testing</div>
+              <div className="font-medium text-card-foreground">{currentUser.role}</div>
+              <div className="text-xs text-muted-foreground">Role-based Testing</div>
             </div>
           </div>
           
@@ -264,7 +264,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
               {availableUsers.map((user) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
                   <div className="flex items-center space-x-2">
-                    <div className="h-4 w-4 rounded-full bg-sidra-teal-light flex items-center justify-center text-xs text-sidra-teal-dark font-medium">
+                    <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
                       {getInitials(user.role)}
                     </div>
                     <span>{user.role}</span>
@@ -285,7 +285,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
               <div key={section.title}>
                 {sectionIndex > 0 && (
                   <div className="px-3 py-2">
-                    <h3 className="text-xs font-semibold text-sidra-gray uppercase tracking-wider">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       {section.title}
                     </h3>
                   </div>
@@ -313,8 +313,8 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
                           className={cn(
                             "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
                             location === item.href 
-                              ? "bg-sidra-teal text-white font-medium shadow-sm" 
-                              : "text-sidra-navy hover:bg-sidra-teal-light/20 hover:text-sidra-teal-dark",
+                              ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+                              : "text-card-foreground hover:bg-primary/10 hover:text-primary",
                             itemIsReadOnly && "opacity-80"
                           )}
                         >
@@ -334,13 +334,13 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         
         {/* Bottom Nav */}
         <div className={cn(
-          "border-t border-neutral-100 p-4",
+          "border-t border-primary/30 p-4",
           mobile ? "flex-shrink-0" : ""
         )}>
           <div className="flex items-center">
             <Link 
               href="/settings"
-              className="flex items-center text-sm text-neutral-300 hover:text-sidra-teal cursor-pointer"
+              className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer"
               onClick={() => {
                 // Close mobile menu when navigation item is clicked
                 if (mobile && onClose) {
@@ -351,8 +351,8 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Link>
-            <div className="border-l border-neutral-100 h-5 mx-3"></div>
-            <button className="flex items-center text-sm text-neutral-300 hover:text-primary-500">
+            <div className="border-l border-primary/30 h-5 mx-3"></div>
+            <button className="flex items-center text-sm text-muted-foreground hover:text-primary">
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </button>
