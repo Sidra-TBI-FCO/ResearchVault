@@ -31,8 +31,8 @@ export default function Layout({ children }: LayoutProps) {
         "fixed inset-0 z-40 flex md:hidden",
         mobileSidebarOpen ? "block" : "hidden"
       )}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={toggleMobileSidebar}></div>
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white h-full">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={toggleMobileSidebar}></div>
+        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-card h-full">
           <Sidebar 
             currentUser={currentUser} 
             availableUsers={DUMMY_USERS}
@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header onMenuClick={toggleMobileSidebar} />
         
-        <main className="overflow-y-auto p-6 bg-sidra-teal-light/10">
+        <main className="overflow-y-auto p-6 bg-background">
           <DatabaseStatus />
           {children}
         </main>
