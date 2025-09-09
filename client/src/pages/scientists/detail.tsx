@@ -354,33 +354,43 @@ export default function ScientistDetail() {
                                 { module: 'BRB', status: 'valid', expiryDate: '2025-06-10', color: 'green' },
                                 { module: 'COL', status: 'expiring', expiryDate: '2025-01-05', color: 'orange' },
                                 { module: 'RCR', status: 'expired', expiryDate: '2024-09-20', color: 'red' }
+                              ],
+                              [
+                                { module: 'BRB', status: 'never', expiryDate: null, color: 'gray' },
+                                { module: 'COL', status: 'expired', expiryDate: '2024-08-15', color: 'red' },
+                                { module: 'RCR', status: 'expiring', expiryDate: '2025-01-25', color: 'orange' }
                               ]
                             ];
                             
                             // Use scientist ID to determine which modules to show
-                            const moduleIndex = (parseInt(id) % 3);
+                            const moduleIndex = (parseInt(id) % 4);
                             const modules = citiModules[moduleIndex];
                             
-                            return modules.map((module, idx) => (
-                              <Tooltip key={idx}>
-                                <TooltipTrigger>
-                                  <Badge 
-                                    className={`
-                                      ${module.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
-                                      ${module.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
-                                      ${module.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
-                                      cursor-help transition-colors text-xs
-                                    `}
-                                    variant="outline"
-                                  >
-                                    {module.module}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{module.module} - Expires: {module.expiryDate}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            ));
+                            return modules.map((module, idx) => {
+                              // Skip modules with "never" status (gray) - they don't get badges
+                              if (module.status === 'never') return null;
+                              
+                              return (
+                                <Tooltip key={idx}>
+                                  <TooltipTrigger>
+                                    <Badge 
+                                      className={`
+                                        ${module.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
+                                        ${module.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
+                                        ${module.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
+                                        cursor-help transition-colors text-xs
+                                      `}
+                                      variant="outline"
+                                    >
+                                      {module.module}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{module.module} - Expires: {module.expiryDate}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            }).filter(Boolean);
                           })()}
                         </TooltipProvider>
                       </div>
