@@ -13,6 +13,7 @@ import { PublicationsList } from "@/components/PublicationsList";
 import { PublicationCharts } from "@/components/PublicationCharts";
 import { OrgChart } from "@/components/OrgChart";
 import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Tree structure component for research activities
 interface ResearchActivitiesTreeProps {
@@ -324,6 +325,51 @@ export default function ScientistDetail() {
                           <span>Staff ID: {scientist.staffId}</span>
                         </div>
                       )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Certification Status */}
+                <div className="mt-6">
+                  <h3 className="font-medium mb-2">Certification</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-neutral-600 w-10">Citi:</span>
+                      <TooltipProvider>
+                        {(() => {
+                          // Generate dummy certification data based on scientist ID
+                          const certStatuses = [
+                            { status: 'valid', color: 'green', expiryDate: '2025-12-15', abbreviation: 'V' },
+                            { status: 'expiring', color: 'orange', expiryDate: '2025-01-20', abbreviation: 'E' },
+                            { status: 'expired', color: 'red', expiryDate: '2024-11-05', abbreviation: 'X' }
+                          ];
+                          
+                          // Use scientist ID to determine which status to show (for consistent dummy data)
+                          const statusIndex = (parseInt(id) % 3);
+                          const cert = certStatuses[statusIndex];
+                          
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge 
+                                  className={`
+                                    ${cert.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
+                                    ${cert.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
+                                    ${cert.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
+                                    cursor-help transition-colors
+                                  `}
+                                  variant="outline"
+                                >
+                                  {cert.abbreviation}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Expires: {cert.expiryDate}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })()}
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>
