@@ -334,7 +334,7 @@ export default function ScientistDetail() {
                   <h3 className="font-medium mb-2">Certification</h3>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-neutral-600 w-10">Citi:</span>
+                      <span className="text-sm text-neutral-600 w-16">Citi:</span>
                       <TooltipProvider>
                         {(() => {
                           // Generate dummy certification data based on scientist ID
@@ -365,6 +365,44 @@ export default function ScientistDetail() {
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>Expires: {cert.expiryDate}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })()}
+                      </TooltipProvider>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-neutral-600 w-16">Lab Safety:</span>
+                      <TooltipProvider>
+                        {(() => {
+                          // Generate dummy lab training data based on scientist ID
+                          const labStatuses = [
+                            { status: 'valid', color: 'green', expiryDate: '2025-03-15', abbreviation: 'V' },
+                            { status: 'expiring', color: 'orange', expiryDate: '2025-01-10', abbreviation: 'E' },
+                            { status: 'expired', color: 'red', expiryDate: '2024-10-05', abbreviation: 'X' }
+                          ];
+                          
+                          // Use scientist ID to determine which status to show (for consistent dummy data)
+                          const statusIndex = ((parseInt(id) + 1) % 3);
+                          const lab = labStatuses[statusIndex];
+                          
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge 
+                                  className={`
+                                    ${lab.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
+                                    ${lab.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
+                                    ${lab.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
+                                    cursor-help transition-colors
+                                  `}
+                                  variant="outline"
+                                >
+                                  {lab.abbreviation}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Expires: {lab.expiryDate}</p>
                               </TooltipContent>
                             </Tooltip>
                           );
