@@ -403,12 +403,25 @@ export default function ScientistDetail() {
                           const labStatuses = [
                             { status: 'valid', color: 'green', expiryDate: '2025-03-15' },
                             { status: 'expiring', color: 'orange', expiryDate: '2025-01-10' },
-                            { status: 'expired', color: 'red', expiryDate: '2024-10-05' }
+                            { status: 'expired', color: 'red', expiryDate: '2024-10-05' },
+                            { status: 'never', color: 'gray', expiryDate: null }
                           ];
                           
                           // Use scientist ID to determine which status to show (for consistent dummy data)
-                          const statusIndex = ((parseInt(id) + 1) % 3);
+                          const statusIndex = ((parseInt(id) + 1) % 4);
                           const lab = labStatuses[statusIndex];
+                          
+                          // Don't show badge if never completed
+                          if (lab.status === 'never') {
+                            return (
+                              <Badge 
+                                className="bg-gray-100 text-gray-600 border-gray-200 text-xs"
+                                variant="outline"
+                              >
+                                Not Completed
+                              </Badge>
+                            );
+                          }
                           
                           return (
                             <Tooltip>
