@@ -84,6 +84,88 @@
   --accent: var(--qbri-navy);
 }
 
+/* Comprehensive theme overrides for all button colors */
+[data-theme="qbri"] .bg-primary {
+  background-color: hsl(var(--qbri-blue));
+}
+
+[data-theme="qbri"] .text-primary {
+  color: hsl(var(--qbri-blue));
+}
+
+[data-theme="qbri"] .border-primary {
+  border-color: hsl(var(--qbri-blue));
+}
+
+[data-theme="qbri"] .hover\:bg-primary:hover {
+  background-color: hsl(var(--qbri-blue));
+}
+
+[data-theme="qbri"] .bg-teal-500,
+[data-theme="qbri"] .bg-teal-600,
+[data-theme="qbri"] .bg-emerald-500,
+[data-theme="qbri"] .bg-green-500,
+[data-theme="qbri"] .bg-green-600 {
+  background-color: hsl(var(--qbri-blue));
+}
+
+[data-theme="qbri"] .text-teal-500,
+[data-theme="qbri"] .text-teal-600,
+[data-theme="qbri"] .text-emerald-500,
+[data-theme="qbri"] .text-green-500,
+[data-theme="qbri"] .text-green-600 {
+  color: hsl(var(--qbri-blue));
+}
+
+[data-theme="qbri"] .border-teal-500,
+[data-theme="qbri"] .border-teal-600,
+[data-theme="qbri"] .border-emerald-500,
+[data-theme="qbri"] .border-green-500,
+[data-theme="qbri"] .border-green-600 {
+  border-color: hsl(var(--qbri-blue));
+}
+
+/* Dark mode overrides for QBRI */
+[data-theme="qbri"].dark .bg-primary {
+  background-color: hsl(var(--qbri-cyan));
+}
+
+[data-theme="qbri"].dark .text-primary {
+  color: hsl(var(--qbri-cyan));
+}
+
+[data-theme="qbri"].dark .border-primary {
+  border-color: hsl(var(--qbri-cyan));
+}
+
+[data-theme="qbri"].dark .hover\:bg-primary:hover {
+  background-color: hsl(var(--qbri-cyan));
+}
+
+[data-theme="qbri"].dark .bg-teal-500,
+[data-theme="qbri"].dark .bg-teal-600,
+[data-theme="qbri"].dark .bg-emerald-500,
+[data-theme="qbri"].dark .bg-green-500,
+[data-theme="qbri"].dark .bg-green-600 {
+  background-color: hsl(var(--qbri-cyan));
+}
+
+[data-theme="qbri"].dark .text-teal-500,
+[data-theme="qbri"].dark .text-teal-600,
+[data-theme="qbri"].dark .text-emerald-500,
+[data-theme="qbri"].dark .text-green-500,
+[data-theme="qbri"].dark .text-green-600 {
+  color: hsl(var(--qbri-cyan));
+}
+
+[data-theme="qbri"].dark .border-teal-500,
+[data-theme="qbri"].dark .border-teal-600,
+[data-theme="qbri"].dark .border-emerald-500,
+[data-theme="qbri"].dark .border-green-500,
+[data-theme="qbri"].dark .border-green-600 {
+  border-color: hsl(var(--qbri-cyan));
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -101,58 +183,58 @@
 }
 
 @layer components {
-  /* Sidra Medicine Brand Colors */
+  /* Theme-aware Brand Colors */
   .bg-sidra-teal {
-    background-color: hsl(var(--sidra-teal));
+    background-color: hsl(var(--primary));
   }
   
   .bg-sidra-teal-light {
-    background-color: hsl(var(--sidra-teal-light));
+    background-color: hsl(var(--primary) / 0.1);
   }
   
   .bg-sidra-teal-dark {
-    background-color: hsl(var(--sidra-teal-dark));
+    background-color: hsl(var(--primary));
   }
   
   .bg-sidra-navy {
-    background-color: hsl(var(--sidra-navy));
+    background-color: hsl(var(--secondary));
   }
   
   .bg-sidra-coral {
-    background-color: hsl(var(--sidra-coral));
+    background-color: hsl(var(--accent));
   }
   
   .text-sidra-teal {
-    color: hsl(var(--sidra-teal));
+    color: hsl(var(--primary));
   }
   
   .text-sidra-teal-dark {
-    color: hsl(var(--sidra-teal-dark));
+    color: hsl(var(--primary));
   }
   
   .text-sidra-navy {
-    color: hsl(var(--sidra-navy));
+    color: hsl(var(--secondary));
   }
   
   .text-sidra-coral {
-    color: hsl(var(--sidra-coral));
+    color: hsl(var(--accent));
   }
   
   .border-sidra-teal {
-    border-color: hsl(var(--sidra-teal));
+    border-color: hsl(var(--primary));
   }
   
   .border-sidra-teal-light {
-    border-color: hsl(var(--sidra-teal-light));
+    border-color: hsl(var(--primary) / 0.3);
   }
   
-  /* Sidra Medicine inspired gradients */
+  /* Theme-aware gradients */
   .bg-sidra-gradient {
-    background: linear-gradient(135deg, hsl(var(--sidra-teal)) 0%, hsl(var(--sidra-teal-dark)) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%);
   }
   
   .bg-sidra-gradient-subtle {
-    background: linear-gradient(135deg, hsl(var(--sidra-teal-light)) 0%, hsl(var(--background)) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--background)) 100%);
   }
   
   /* Enhanced card styling */
