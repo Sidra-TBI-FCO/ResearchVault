@@ -218,16 +218,13 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           <div className="flex flex-col space-y-0.5">
             <div className="flex items-center space-x-3">
               <img 
-                src="/iris-logo-cropped.png" 
+                src="/iris-logo-new.png" 
                 alt="IRIS Logo" 
-                className="h-10 w-10"
+                className="h-12 w-12"
               />
               <div className="flex flex-col">
-                <span className="font-semibold text-lg text-white">IRIS</span>
-                <div className="text-xs text-white/80 -mt-0.5">
-                  Intelligent Research Information System
-                </div>
-                <div className="text-xs text-white/60 -mt-0.5">
+                <span className="font-semibold text-lg text-white">IRIS : Intelligent Research Information System</span>
+                <div className="text-xs text-white/70 -mt-0.5">
                   {themes[themeName].name}
                 </div>
               </div>
