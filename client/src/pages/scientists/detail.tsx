@@ -391,9 +391,9 @@ export default function ScientistDetail() {
                         {(() => {
                           // Generate dummy lab training data based on scientist ID
                           const labStatuses = [
-                            { status: 'valid', color: 'green', expiryDate: '2025-03-15', abbreviation: 'V' },
-                            { status: 'expiring', color: 'orange', expiryDate: '2025-01-10', abbreviation: 'E' },
-                            { status: 'expired', color: 'red', expiryDate: '2024-10-05', abbreviation: 'X' }
+                            { status: 'valid', color: 'green', expiryDate: '2025-03-15' },
+                            { status: 'expiring', color: 'orange', expiryDate: '2025-01-10' },
+                            { status: 'expired', color: 'red', expiryDate: '2024-10-05' }
                           ];
                           
                           // Use scientist ID to determine which status to show (for consistent dummy data)
@@ -408,15 +408,15 @@ export default function ScientistDetail() {
                                     ${lab.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
                                     ${lab.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
                                     ${lab.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
-                                    cursor-help transition-colors
+                                    cursor-help transition-colors text-xs
                                   `}
                                   variant="outline"
                                 >
-                                  {lab.abbreviation}
+                                  {lab.expiryDate}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Expires: {lab.expiryDate}</p>
+                                <p>Lab Safety Training - Expires: {lab.expiryDate}</p>
                               </TooltipContent>
                             </Tooltip>
                           );
