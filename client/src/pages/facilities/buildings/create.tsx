@@ -238,9 +238,7 @@ export default function CreateBuilding() {
                 <Button
                   type="submit"
                   disabled={createBuildingMutation.isPending}
-                  style={{ backgroundColor: '#2D9C95', color: 'white' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#238B7A'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D9C95'}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {createBuildingMutation.isPending ? "Creating..." : "Create Building"}
                 </Button>

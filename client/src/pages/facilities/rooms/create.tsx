@@ -560,9 +560,7 @@ export default function CreateRoom() {
                 <Button
                   type="submit"
                   disabled={createRoomMutation.isPending}
-                  style={{ backgroundColor: '#6366F1', color: 'white' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5B5BF7'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6366F1'}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {createRoomMutation.isPending ? "Creating..." : "Create Room"}
                 </Button>

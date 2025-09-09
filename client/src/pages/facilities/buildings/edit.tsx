@@ -315,9 +315,7 @@ export default function EditBuilding() {
                 <Button
                   type="submit"
                   disabled={updateBuildingMutation.isPending}
-                  style={{ backgroundColor: '#2D9C95', color: 'white' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#238B7A'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D9C95'}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {updateBuildingMutation.isPending ? "Updating..." : "Update Building"}
                 </Button>
