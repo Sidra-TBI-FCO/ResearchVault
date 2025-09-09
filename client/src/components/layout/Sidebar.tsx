@@ -204,16 +204,6 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           icon: <TrendingUp className="w-4 h-4 mr-3" />
         }
       ]
-    },
-    {
-      title: "System",
-      items: [
-        { 
-          href: "/settings",
-          label: "Settings",
-          icon: <Settings className="w-4 h-4 mr-3" />
-        }
-      ]
     }
   ];
 
@@ -339,10 +329,19 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           mobile ? "flex-shrink-0" : ""
         )}>
           <div className="flex items-center">
-            <button className="flex items-center text-sm text-neutral-300 hover:text-primary-500">
+            <Link 
+              href="/settings"
+              className="flex items-center text-sm text-neutral-300 hover:text-primary-500"
+              onClick={() => {
+                // Close mobile menu when navigation item is clicked
+                if (mobile && onClose) {
+                  onClose();
+                }
+              }}
+            >
               <Settings className="w-4 h-4 mr-2" />
               Settings
-            </button>
+            </Link>
             <div className="border-l border-neutral-100 h-5 mx-3"></div>
             <button className="flex items-center text-sm text-neutral-300 hover:text-primary-500">
               <LogOut className="w-4 h-4 mr-2" />
