@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import { PermissionsProvider } from "@/hooks/usePermissions";
 import { CurrentUserProvider } from "@/hooks/useCurrentUser";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // Dashboard
 import Dashboard from "@/pages/dashboard";
@@ -258,14 +259,16 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <CurrentUserProvider>
-          <PermissionsProvider>
-            <Toaster />
-            <Router />
-          </PermissionsProvider>
-        </CurrentUserProvider>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <CurrentUserProvider>
+            <PermissionsProvider>
+              <Toaster />
+              <Router />
+            </PermissionsProvider>
+          </CurrentUserProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

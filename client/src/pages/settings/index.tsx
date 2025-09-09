@@ -1,26 +1,25 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Palette, Settings as SettingsIcon, Moon, Sun } from "lucide-react";
+import { useTheme, themes } from "@/contexts/ThemeContext";
 
 export default function Settings() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState("sidra");
+  const { mode, themeName, setMode, setTheme, toggleMode } = useTheme();
 
-  const themes = [
+  const themeOptions = [
     {
       id: "sidra",
-      name: "Sidra Medicine",
+      name: themes.sidra.name,
       description: "Current teal and green palette",
       preview: "bg-gradient-to-r from-teal-500 to-emerald-500"
     },
     {
       id: "qbri",
-      name: "QBRI",
-      description: "Qatar Biomedical Research Institute",
+      name: themes.qbri.name,
+      description: "Qatar Biomedical Research Institute blue palette",
       preview: "bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-800"
     }
   ];
@@ -53,12 +52,12 @@ export default function Settings() {
               <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="theme-selector">Application Theme</Label>
-                  <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                  <Select value={themeName} onValueChange={setTheme}>
                     <SelectTrigger id="theme-selector">
                       <SelectValue placeholder="Select a theme" />
                     </SelectTrigger>
                     <SelectContent>
-                      {themes.map((theme) => (
+                      {themeOptions.map((theme) => (
                         <SelectItem key={theme.id} value={theme.id}>
                           <div className="flex items-center gap-3">
                             <div className={`w-4 h-4 rounded ${theme.preview}`}></div>
@@ -77,8 +76,8 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Theme Preview</Label>
                   <div className="border rounded-lg p-4 space-y-3">
-                    {themes.map((theme) => (
-                      theme.id === selectedTheme && (
+                    {themeOptions.map((theme) => (
+                      theme.id === themeName && (
                         <div key={theme.id} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{theme.name}</span>
@@ -102,7 +101,7 @@ export default function Settings() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                  {mode === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                   Display Settings
                 </CardTitle>
               </CardHeader>
@@ -116,16 +115,16 @@ export default function Settings() {
                   </div>
                   <Switch
                     id="dark-mode"
-                    checked={darkMode}
-                    onCheckedChange={setDarkMode}
+                    checked={mode === 'dark'}
+                    onCheckedChange={toggleMode}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Current Settings</Label>
                   <div className="text-sm space-y-1">
-                    <div>Theme: <span className="font-medium">{themes.find(t => t.id === selectedTheme)?.name}</span></div>
-                    <div>Mode: <span className="font-medium">{darkMode ? 'Dark' : 'Light'}</span></div>
+                    <div>Theme: <span className="font-medium">{themeOptions.find(t => t.id === themeName)?.name}</span></div>
+                    <div>Mode: <span className="font-medium">{mode === 'dark' ? 'Dark' : 'Light'}</span></div>
                     <div>App: <span className="font-medium">IRIS: Intelligent Research Information Management System</span></div>
                   </div>
                 </div>
@@ -146,11 +145,11 @@ export default function Settings() {
                 </div>
                 <div>
                   <div className="font-medium text-muted-foreground">Current Theme</div>
-                  <div>{themes.find(t => t.id === selectedTheme)?.name}</div>
+                  <div>{themeOptions.find(t => t.id === themeName)?.name}</div>
                 </div>
                 <div>
                   <div className="font-medium text-muted-foreground">Display Mode</div>
-                  <div>{darkMode ? 'Dark Mode' : 'Light Mode'}</div>
+                  <div>{mode === 'dark' ? 'Dark Mode' : 'Light Mode'}</div>
                 </div>
               </div>
             </CardContent>

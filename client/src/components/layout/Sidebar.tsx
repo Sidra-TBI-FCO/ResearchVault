@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useTheme, themes } from "@/contexts/ThemeContext";
 
 interface DummyUser {
   id: number;
@@ -29,6 +30,7 @@ interface SidebarProps {
 export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { isHidden, isReadOnly } = usePermissions();
+  const { themeName } = useTheme();
 
   const handleUserSwitch = (userId: string) => {
     onUserSwitch(parseInt(userId));
@@ -223,9 +225,14 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       )}>
         {/* Logo/Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidra-teal-light/30 bg-sidra-gradient">
-          <div className="flex items-center space-x-2">
-            <Beaker className="h-5 w-5 text-white" />
-            <span className="font-semibold text-lg text-white">Sidra Research Portal</span>
+          <div className="flex flex-col space-y-0.5">
+            <div className="flex items-center space-x-2">
+              <Beaker className="h-5 w-5 text-white" />
+              <span className="font-semibold text-lg text-white">IRIS</span>
+            </div>
+            <div className="text-xs text-white/80 ml-7">
+              {themes[themeName].name}
+            </div>
           </div>
           {mobile && onClose && (
             <button 

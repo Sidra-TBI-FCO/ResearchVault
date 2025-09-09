@@ -29,6 +29,11 @@
 --sidra-navy: 210 100% 15%;
 --sidra-coral: 15 85% 65%;
 --sidra-gray: 200 10% 50%;
+/* QBRI Theme Colors */
+--qbri-cyan: 199 95% 74%;
+--qbri-blue: 199 89% 48%;
+--qbri-indigo: 238 75% 65%;
+--qbri-navy: 250 75% 25%;
   }
   .dark {
 --background: 210 100% 8%;
@@ -57,7 +62,27 @@
 --sidra-navy: 210 100% 12%;
 --sidra-coral: 15 85% 65%;
 --sidra-gray: 200 10% 60%;
+/* QBRI Theme Colors - Dark */
+--qbri-cyan: 199 95% 60%;
+--qbri-blue: 199 89% 58%;
+--qbri-indigo: 238 75% 75%;
+--qbri-navy: 250 75% 15%;
   }
+
+/* Theme-specific overrides */
+[data-theme="qbri"] {
+  --primary: var(--qbri-blue);
+  --secondary: var(--qbri-indigo);
+  --ring: var(--qbri-blue);
+  --accent: var(--qbri-cyan);
+}
+
+[data-theme="qbri"].dark {
+  --primary: var(--qbri-cyan);
+  --secondary: var(--qbri-indigo);
+  --ring: var(--qbri-cyan);
+  --accent: var(--qbri-navy);
+}
 
 @layer base {
   * {
