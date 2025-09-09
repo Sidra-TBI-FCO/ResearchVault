@@ -214,19 +214,22 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         mobile ? "h-full" : ""
       )}>
         {/* Logo/Brand */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-primary/30 bg-primary">
-          <div className="flex flex-col space-y-0.5">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/iris-logo-new.png" 
-                alt="IRIS Logo" 
-                className="h-12 w-12"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-lg text-white">IRIS : Intelligent Research Information System</span>
-                <div className="text-xs text-white/70 -mt-0.5">
-                  {themes[themeName].name}
-                </div>
+        <div className="h-20 flex items-center justify-between px-4 border-b border-primary/30 bg-primary">
+          <div className="flex items-center space-x-3 w-full">
+            <img 
+              src="/iris-logo-new.png" 
+              alt="IRIS Logo" 
+              className="h-10 w-10 flex-shrink-0"
+            />
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="font-semibold text-sm text-white leading-tight">
+                IRIS
+              </div>
+              <div className="text-xs text-white/90 leading-tight">
+                Intelligent Research Information System
+              </div>
+              <div className="text-xs text-white/70 leading-tight mt-0.5">
+                {themes[themeName].name}
               </div>
             </div>
           </div>
