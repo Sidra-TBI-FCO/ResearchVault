@@ -347,50 +347,40 @@ export default function ScientistDetail() {
                               ],
                               [
                                 { module: 'BRB', status: 'expired', expiryDate: '2024-10-15', color: 'red' },
-                                { module: 'COL', status: 'valid', expiryDate: '2025-08-20', color: 'green' },
+                                { module: 'COL', status: 'expiring', expiryDate: '2025-01-20', color: 'orange' },
                                 { module: 'RCR', status: 'valid', expiryDate: '2025-09-30', color: 'green' }
                               ],
                               [
                                 { module: 'BRB', status: 'valid', expiryDate: '2025-06-10', color: 'green' },
                                 { module: 'COL', status: 'expiring', expiryDate: '2025-01-05', color: 'orange' },
                                 { module: 'RCR', status: 'expired', expiryDate: '2024-09-20', color: 'red' }
-                              ],
-                              [
-                                { module: 'BRB', status: 'never', expiryDate: null, color: 'gray' },
-                                { module: 'COL', status: 'expired', expiryDate: '2024-08-15', color: 'red' },
-                                { module: 'RCR', status: 'expiring', expiryDate: '2025-01-25', color: 'orange' }
                               ]
                             ];
                             
                             // Use scientist ID to determine which modules to show
-                            const moduleIndex = (parseInt(id) % 4);
+                            const moduleIndex = (parseInt(id) % 3);
                             const modules = citiModules[moduleIndex];
                             
-                            return modules.map((module, idx) => {
-                              // Skip modules with "never" status (gray) - they don't get badges
-                              if (module.status === 'never') return null;
-                              
-                              return (
-                                <Tooltip key={idx}>
-                                  <TooltipTrigger>
-                                    <Badge 
-                                      className={`
-                                        ${module.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
-                                        ${module.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
-                                        ${module.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
-                                        cursor-help transition-colors text-xs
-                                      `}
-                                      variant="outline"
-                                    >
-                                      {module.module}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{module.module} - Expires: {module.expiryDate}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              );
-                            }).filter(Boolean);
+                            return modules.map((module, idx) => (
+                              <Tooltip key={idx}>
+                                <TooltipTrigger>
+                                  <Badge 
+                                    className={`
+                                      ${module.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
+                                      ${module.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
+                                      ${module.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
+                                      cursor-help transition-colors text-xs
+                                    `}
+                                    variant="outline"
+                                  >
+                                    {module.module}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{module.module} - Expires: {module.expiryDate}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ));
                           })()}
                         </TooltipProvider>
                       </div>
@@ -403,25 +393,12 @@ export default function ScientistDetail() {
                           const labStatuses = [
                             { status: 'valid', color: 'green', expiryDate: '2025-03-15' },
                             { status: 'expiring', color: 'orange', expiryDate: '2025-01-10' },
-                            { status: 'expired', color: 'red', expiryDate: '2024-10-05' },
-                            { status: 'never', color: 'gray', expiryDate: null }
+                            { status: 'expired', color: 'red', expiryDate: '2024-10-05' }
                           ];
                           
                           // Use scientist ID to determine which status to show (for consistent dummy data)
-                          const statusIndex = ((parseInt(id) + 1) % 4);
+                          const statusIndex = ((parseInt(id) + 1) % 3);
                           const lab = labStatuses[statusIndex];
-                          
-                          // Don't show badge if never completed
-                          if (lab.status === 'never') {
-                            return (
-                              <Badge 
-                                className="bg-gray-100 text-gray-600 border-gray-200 text-xs"
-                                variant="outline"
-                              >
-                                Not Completed
-                              </Badge>
-                            );
-                          }
                           
                           return (
                             <Tooltip>
