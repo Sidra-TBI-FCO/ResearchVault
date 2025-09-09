@@ -335,41 +335,55 @@ export default function ScientistDetail() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-neutral-600 w-16">Citi:</span>
-                      <TooltipProvider>
-                        {(() => {
-                          // Generate dummy certification data based on scientist ID
-                          const certStatuses = [
-                            { status: 'valid', color: 'green', expiryDate: '2025-12-15', abbreviation: 'V' },
-                            { status: 'expiring', color: 'orange', expiryDate: '2025-01-20', abbreviation: 'E' },
-                            { status: 'expired', color: 'red', expiryDate: '2024-11-05', abbreviation: 'X' }
-                          ];
-                          
-                          // Use scientist ID to determine which status to show (for consistent dummy data)
-                          const statusIndex = (parseInt(id) % 3);
-                          const cert = certStatuses[statusIndex];
-                          
-                          return (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Badge 
-                                  className={`
-                                    ${cert.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
-                                    ${cert.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
-                                    ${cert.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
-                                    cursor-help transition-colors
-                                  `}
-                                  variant="outline"
-                                >
-                                  {cert.abbreviation}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Expires: {cert.expiryDate}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          );
-                        })()}
-                      </TooltipProvider>
+                      <div className="flex gap-1">
+                        <TooltipProvider>
+                          {(() => {
+                            // Generate dummy CITI modules based on scientist ID
+                            const citiModules = [
+                              [
+                                { module: 'BRB', status: 'valid', expiryDate: '2025-12-15', color: 'green' },
+                                { module: 'COL', status: 'valid', expiryDate: '2025-11-20', color: 'green' },
+                                { module: 'RCR', status: 'expiring', expiryDate: '2025-01-10', color: 'orange' }
+                              ],
+                              [
+                                { module: 'BRB', status: 'expired', expiryDate: '2024-10-15', color: 'red' },
+                                { module: 'COL', status: 'valid', expiryDate: '2025-08-20', color: 'green' },
+                                { module: 'RCR', status: 'valid', expiryDate: '2025-09-30', color: 'green' }
+                              ],
+                              [
+                                { module: 'BRB', status: 'valid', expiryDate: '2025-06-10', color: 'green' },
+                                { module: 'COL', status: 'expiring', expiryDate: '2025-01-05', color: 'orange' },
+                                { module: 'RCR', status: 'expired', expiryDate: '2024-09-20', color: 'red' }
+                              ]
+                            ];
+                            
+                            // Use scientist ID to determine which modules to show
+                            const moduleIndex = (parseInt(id) % 3);
+                            const modules = citiModules[moduleIndex];
+                            
+                            return modules.map((module, idx) => (
+                              <Tooltip key={idx}>
+                                <TooltipTrigger>
+                                  <Badge 
+                                    className={`
+                                      ${module.color === 'green' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : ''}
+                                      ${module.color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200' : ''}
+                                      ${module.color === 'red' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : ''}
+                                      cursor-help transition-colors text-xs
+                                    `}
+                                    variant="outline"
+                                  >
+                                    {module.module}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{module.module} - Expires: {module.expiryDate}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ));
+                          })()}
+                        </TooltipProvider>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-neutral-600 w-16">Lab Safety:</span>
