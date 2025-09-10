@@ -34,7 +34,8 @@ import {
   insertCertificationModuleSchema,
   insertCertificationSchema,
   insertCertificationConfigurationSchema,
-  insertPdfImportHistorySchema
+  insertPdfImportHistorySchema,
+  insertFeatureRequestSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -5919,6 +5920,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching PDF import history entry:", error);
       res.status(500).json({ message: "Failed to fetch PDF import history entry" });
+    }
+  });
+
+  // Feature Request routes
+  app.get('/api/feature-requests', async (req: Request, res: Response) => {
+    try {
+      const requests = await storage.getFeatureRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching feature requests:", error);
+      res.status(500).json({ message: "Failed to fetch feature requests" });
+    }
+  });
+
+  app.get('/api/feature-requests/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid feature request ID" });
+      }
+
+      const request = await storage.getFeatureRequest(id);
+      if (!request) {
+        return res.status(404).json({ message: "Feature request not found" });
+      }
+
+      res.json(request);
+    } catch (error) {
+      console.error("Error fetching feature request:", error);
+      res.status(500).json({ message: "Failed to fetch feature request" });
+    }
+  });
+
+  app.post('/api/feature-requests', async (req: Request, res: Response) => {
+    try {
+      const featureRequestData = insertFeatureRequestSchema.parse(req.body);
+      const newRequest = await storage.createFeatureRequest(featureRequestData);
+      res.status(201).json(newRequest);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error creating feature request:", error);
+        res.status(500).json({ message: "Failed to create feature request" });
+      }
+    }
+  });
+
+  app.put('/api/feature-requests/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid feature request ID" });
+      }
+
+      // Validate request body with partial schema (allow partial updates)
+      const updateData = insertFeatureRequestSchema.partial().parse(req.body);
+      const updatedRequest = await storage.updateFeatureRequest(id, updateData);
+      
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Feature request not found" });
+      }
+
+      res.json(updatedRequest);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error updating feature request:", error);
+        res.status(500).json({ message: "Failed to update feature request" });
+      }
+    }
+  });
+
+  app.delete('/api/feature-requests/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid feature request ID" });
+      }
+
+      const deleted = await storage.deleteFeatureRequest(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Feature request not found" });
+      }
+
+      res.json({ message: "Feature request deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting feature request:", error);
+      res.status(500).json({ message: "Failed to delete feature request" });
     }
   });
 
