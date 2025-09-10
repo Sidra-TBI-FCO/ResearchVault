@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Send, FileText, Users, Clock, FlaskConical, Info, CheckCircle, AlertCircle, BookOpen } from "lucide-react";
+import { ArrowLeft, Save, Send, FileCheck, Clock, Users } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -127,21 +126,17 @@ export default function CreateRa200() {
     }).then(res => res.json()),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/pmo-applications'] });
-      toast({ title: "RA-200 form created successfully!" });
+      toast({ title: "RA-200 application created successfully!" });
       setLocation(`/pmo/applications/${data.id}`);
     },
     onError: (error: any) => {
-      toast({ title: "Error creating form", description: error.message, variant: "destructive" });
+      toast({ title: "Error creating application", description: error.message, variant: "destructive" });
     }
   });
 
   const handleSave = (status: 'draft' | 'submitted') => {
-    // Generate unique application ID
-    const applicationId = `PMO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
-    
     const submitData = {
       ...formData,
-      applicationId,
       status,
       formType: 'RA-200'
     };
@@ -159,682 +154,501 @@ export default function CreateRa200() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => setLocation('/pmo/applications')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Applications
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => setLocation("/pmo/applications")}>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Create RA-200 Research Activity Plan</h1>
-          <p className="text-muted-foreground">Complete the research activity planning form</p>
-        </div>
+        <h1 className="text-2xl font-semibold text-neutral-400">New RA-200 Research Activity Plan</h1>
       </div>
 
-      <Tabs defaultValue="guide" className="space-y-8">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="guide">User Guide</TabsTrigger>
-          <TabsTrigger value="header">Header Info</TabsTrigger>
-          <TabsTrigger value="research">Research Details</TabsTrigger>
-          <TabsTrigger value="requirements">Requirements</TabsTrigger>
-          <TabsTrigger value="duration">Duration & Core Labs</TabsTrigger>
-          <TabsTrigger value="methods">Detailed Methods</TabsTrigger>
-        </TabsList>
-
-        {/* User Guide */}
-        <TabsContent value="guide">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Form - Left 2/3 */}
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="h-5 w-5" />
-                RA-200 Research Activity Plan - User Guide
-              </CardTitle>
+              <CardTitle>RA-200 Research Activity Plan</CardTitle>
+              <CardDescription>Complete all sections for PMO review</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-blue-600" />
-                    What is the RA-200 Form?
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    The RA-200 Research Activity Plan is a planning guide required before beginning any research study. 
-                    It helps PMO office understand your research scope, requirements, and resource needs to ensure proper support and compliance.
-                  </p>
-                </div>
-
+                {/* Header Information */}
                 <div className="space-y-4">
-                  <h4 className="font-medium text-lg">Step-by-Step Completion Guide:</h4>
+                  <h3 className="text-lg font-medium border-b pb-2">Header Information</h3>
                   
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-full p-1 mt-0.5">
-                        <FileText className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">1. Header Information</div>
-                        <div className="text-sm text-muted-foreground">
-                          <strong>Research Activity Title:</strong> Provide a clear, descriptive title for your research activity (SDR)<br/>
-                          <strong>Lead Scientist:</strong> Select the principal investigator responsible for this research<br/>
-                          <strong>Project ID:</strong> Link to the parent project (PRJ) this research falls under<br/>
-                          <strong>Budget Holder:</strong> Identify who manages the budget for this activity<br/>
-                          <strong>Budget Source:</strong> Specify funding amount and source (e.g., "13,000 QAR")
-                        </div>
-                      </div>
+                  <div>
+                    <Label htmlFor="title">Research Activity Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Enter the research activity title"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="leadScientist">Lead Scientist *</Label>
+                      <Select
+                        value={formData.leadScientistId?.toString()}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, leadScientistId: parseInt(value) }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select lead scientist" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {scientists.map((scientist: any) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.firstName} {scientist.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full p-1 mt-0.5">
-                        <FlaskConical className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">2. Research Activity Details</div>
-                        <div className="text-sm text-muted-foreground">
-                          <strong>Abstract (Required):</strong> Summarize your planned research in 5000 characters. Include objectives, methods, and expected outcomes<br/>
-                          <strong>Background & Rationale:</strong> Explain the scientific background and why this research is important<br/>
-                          <strong>Objectives & Preliminary Work:</strong> List specific aims and any preliminary data you have<br/>
-                          <strong>Approach/Methods:</strong> Briefly describe your experimental approach and methods<br/>
-                          <strong>Discussion/Conclusion:</strong> Explain expected results and their significance
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 rounded-full p-1 mt-0.5">
-                        <CheckCircle className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">3. Requirements Assessment</div>
-                        <div className="text-sm text-muted-foreground">
-                          <strong>Ethics:</strong> Check if you need IRB approval for human subjects or IACUC for animal work<br/>
-                          <strong>Collaborations:</strong> Indicate if you're working with external partners or sharing data<br/>
-                          <strong>Budget:</strong> Specify your funding situation - no cost, external funding, or Sidra budget<br/>
-                          <strong>Sample Processing:</strong> Choose between PI collaboration or using Sidra core facilities
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="bg-purple-100 dark:bg-purple-900/20 text-purple-600 rounded-full p-1 mt-0.5">
-                        <Clock className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">4. Duration & Core Labs</div>
-                        <div className="text-sm text-muted-foreground">
-                          <strong>Duration:</strong> Estimate project length in months (typically 6-36 months)<br/>
-                          <strong>Core Labs:</strong> Select all core facilities you'll need (Genomics, Omics, Microscopy, etc.)<br/>
-                          <em>Note: Core lab selection helps PMO coordinate resources and estimate costs</em>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="bg-orange-100 dark:bg-orange-900/20 text-orange-600 rounded-full p-1 mt-0.5">
-                        <Users className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">5. Detailed Methods (Appendix A)</div>
-                        <div className="text-sm text-muted-foreground">
-                          <strong>Study Design & Methods:</strong> Provide comprehensive methodology details<br/>
-                          <strong>Proposal & Objectives:</strong> Elaborate on your research proposal and detailed objectives<br/>
-                          <strong>Preliminary Data:</strong> Include any pilot data, proof-of-concept results, or preliminary achievements
-                        </div>
-                      </div>
+
+                    <div>
+                      <Label htmlFor="project">Project ID (PRJ) *</Label>
+                      <Select
+                        value={formData.projectId?.toString()}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: parseInt(value) }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((project: any) => (
+                            <SelectItem key={project.id} value={project.id.toString()}>
+                              {project.projectId} - {project.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Tips for Success
-                    </h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Be specific and detailed in your descriptions</li>
-                      <li>• Include relevant citations and background research</li>
-                      <li>• Clearly justify resource requirements</li>
-                      <li>• Save drafts frequently during completion</li>
-                      <li>• Review all sections before submission</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-600" />
-                      Common Mistakes to Avoid
-                    </h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Vague or overly broad research descriptions</li>
-                      <li>• Missing ethics approval requirements</li>
-                      <li>• Underestimating core lab needs</li>
-                      <li>• Insufficient budget justification</li>
-                      <li>• Submitting without thorough review</li>
-                    </ul>
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="budgetHolder">Budget Holder *</Label>
+                      <Select
+                        value={formData.budgetHolderId?.toString()}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, budgetHolderId: parseInt(value) }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select budget holder" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {scientists.map((scientist: any) => (
+                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                              {scientist.firstName} {scientist.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">Need Help?</h4>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <div>• Contact PMO office: <strong>researchpmo@sidra.org</strong></div>
-                    <div>• Refer to institutional research guidelines</div>
-                    <div>• Consult with your program director or line manager</div>
-                    <div>• Review approved applications as examples (ask PMO office)</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Header Information */}
-        <TabsContent value="header">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Header Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Sidra Research Activity ID (SDR) Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter the research activity title"
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="leadScientist">SDR Lead Scientist *</Label>
-                  <Select
-                    value={formData.leadScientistId?.toString()}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, leadScientistId: parseInt(value) }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select lead scientist" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {scientists.map((scientist: any) => (
-                        <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                          {scientist.firstName} {scientist.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="project">Project ID (PRJ) *</Label>
-                  <Select
-                    value={formData.projectId?.toString()}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: parseInt(value) }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map((project: any) => (
-                        <SelectItem key={project.id} value={project.id.toString()}>
-                          {project.projectId} - {project.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="budgetHolder">PRJ Budget Holder/Line Manager *</Label>
-                  <Select
-                    value={formData.budgetHolderId?.toString()}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, budgetHolderId: parseInt(value) }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select budget holder" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {scientists.map((scientist: any) => (
-                        <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                          {scientist.firstName} {scientist.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="budgetSource">Budget Source</Label>
-                  <Input
-                    id="budgetSource"
-                    value={formData.budgetSource}
-                    onChange={(e) => setFormData(prev => ({ ...prev, budgetSource: e.target.value }))}
-                    placeholder="e.g., 13,000 QAR"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Research Details */}
-        <TabsContent value="research">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FlaskConical className="h-5 w-5" />
-                Research Activity Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="abstract">Abstract (5000 characters max) *</Label>
-                <Textarea
-                  id="abstract"
-                  value={formData.abstract}
-                  onChange={(e) => setFormData(prev => ({ ...prev, abstract: e.target.value }))}
-                  placeholder="Describe the planned research activities..."
-                  rows={6}
-                  maxLength={5000}
-                  className="mt-1"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  {formData.abstract.length}/5000 characters
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="background">Background & Rationale</Label>
-                <Textarea
-                  id="background"
-                  value={formData.backgroundRationale}
-                  onChange={(e) => setFormData(prev => ({ ...prev, backgroundRationale: e.target.value }))}
-                  placeholder="Provide background information and rationale..."
-                  rows={6}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="objectives">Objectives and Preliminary Work</Label>
-                <Textarea
-                  id="objectives"
-                  value={formData.objectivesPreliminary}
-                  onChange={(e) => setFormData(prev => ({ ...prev, objectivesPreliminary: e.target.value }))}
-                  placeholder="Describe objectives and any preliminary work..."
-                  rows={6}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="approach">Approach (Brief Summary of Methods)</Label>
-                <Textarea
-                  id="approach"
-                  value={formData.approachMethods}
-                  onChange={(e) => setFormData(prev => ({ ...prev, approachMethods: e.target.value }))}
-                  placeholder="Provide a brief summary of the methods to be used..."
-                  rows={6}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="discussion">Discussion / Conclusion</Label>
-                <Textarea
-                  id="discussion"
-                  value={formData.discussionConclusion}
-                  onChange={(e) => setFormData(prev => ({ ...prev, discussionConclusion: e.target.value }))}
-                  placeholder="Provide discussion and conclusion..."
-                  rows={6}
-                  className="mt-1"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Requirements */}
-        <TabsContent value="requirements">
-          <div className="space-y-6">
-            {/* Ethics Requirements */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Ethics</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="humanSubjects"
-                      checked={formData.ethicsRequirements.humanSubjects}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          ethicsRequirements: { ...prev.ethicsRequirements, humanSubjects: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="humanSubjects">Work with human-subject samples/data</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="irbNeeded"
-                      checked={formData.ethicsRequirements.irbNeeded}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          ethicsRequirements: { ...prev.ethicsRequirements, irbNeeded: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="irbNeeded">IRB needed</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="animalSamples"
-                      checked={formData.ethicsRequirements.animalSamples}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          ethicsRequirements: { ...prev.ethicsRequirements, animalSamples: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="animalSamples">Work with animal samples</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="iacucNeeded"
-                      checked={formData.ethicsRequirements.iacucNeeded}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          ethicsRequirements: { ...prev.ethicsRequirements, iacucNeeded: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="iacucNeeded">IACUC needed</Label>
-                  </div>
-                  <div className="flex items-center space-x-2 md:col-span-2">
-                    <Checkbox
-                      id="clinicalTrial"
-                      checked={formData.ethicsRequirements.clinicalTrial}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          ethicsRequirements: { ...prev.ethicsRequirements, clinicalTrial: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="clinicalTrial">This is an interventional clinical trial</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Collaborations */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Collaborations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="outsideCollaborators"
-                      checked={formData.collaborationRequirements.outsideCollaborators}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          collaborationRequirements: { ...prev.collaborationRequirements, outsideCollaborators: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="outsideCollaborators">Work with collaborators outside Sidra</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="dataSharing"
-                      checked={formData.collaborationRequirements.dataSharing}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          collaborationRequirements: { ...prev.collaborationRequirements, dataSharing: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="dataSharing">Data will be shared outside Sidra</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Budget */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="noCost"
-                      checked={formData.budgetRequirements.noCost}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          budgetRequirements: { ...prev.budgetRequirements, noCost: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="noCost">No Cost at all</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="externalFunding"
-                      checked={formData.budgetRequirements.externalFunding}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          budgetRequirements: { ...prev.budgetRequirements, externalFunding: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="externalFunding">External party outside Sidra is covering costs</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="sidraBudget"
-                      checked={formData.budgetRequirements.sidraBudget}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          budgetRequirements: { ...prev.budgetRequirements, sidraBudget: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="sidraBudget">Have a budget at Sidra for this research activity</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sample/Data Processing */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sample/Data Processing</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="collaborationWithPI"
-                      checked={formData.sampleDataProcessing.collaborationWithPI}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          sampleDataProcessing: { ...prev.sampleDataProcessing, collaborationWithPI: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="collaborationWithPI">Lab work will be done in collaboration with a Sidra PI</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="sidraCores"
-                      checked={formData.sampleDataProcessing.sidraCores}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          sampleDataProcessing: { ...prev.sampleDataProcessing, sidraCores: !!checked }
-                        }))
-                      }
-                    />
-                    <Label htmlFor="sidraCores">Lab work will be done by Sidra Cores</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Duration & Core Labs */}
-        <TabsContent value="duration">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Duration of the Research Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration in Months *</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={formData.durationMonths || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, durationMonths: parseInt(e.target.value) || null }))}
-                    placeholder="Enter duration in months"
-                    min="1"
-                    max="120"
-                    className="mt-1 max-w-xs"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Core Labs/Service Providers</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Select the areas where you require support:
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {coreLabOptions.map((lab) => (
-                    <div key={lab} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`corelab-${lab}`}
-                        checked={formData.coreLabs.includes(lab)}
-                        onCheckedChange={() => handleCoreLabToggle(lab)}
+                    <div>
+                      <Label htmlFor="budgetSource">Budget Source</Label>
+                      <Input
+                        id="budgetSource"
+                        value={formData.budgetSource}
+                        onChange={(e) => setFormData(prev => ({ ...prev, budgetSource: e.target.value }))}
+                        placeholder="e.g., 13,000 QAR"
+                        className="mt-1"
                       />
-                      <Label htmlFor={`corelab-${lab}`} className="text-sm">
-                        {lab}
-                      </Label>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
-        {/* Detailed Methods */}
-        <TabsContent value="methods">
+                {/* Research Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Research Activity Details</h3>
+                  
+                  <div>
+                    <Label htmlFor="abstract">Abstract (Required) *</Label>
+                    <Textarea
+                      id="abstract"
+                      value={formData.abstract}
+                      onChange={(e) => setFormData(prev => ({ ...prev, abstract: e.target.value }))}
+                      placeholder="Summarize your planned research (max 5000 characters)"
+                      rows={4}
+                      className="mt-1"
+                      maxLength={5000}
+                    />
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {formData.abstract.length}/5000 characters
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="background">Background & Rationale</Label>
+                      <Textarea
+                        id="background"
+                        value={formData.backgroundRationale}
+                        onChange={(e) => setFormData(prev => ({ ...prev, backgroundRationale: e.target.value }))}
+                        placeholder="Scientific background and rationale"
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="objectives">Objectives & Preliminary Work</Label>
+                      <Textarea
+                        id="objectives"
+                        value={formData.objectivesPreliminary}
+                        onChange={(e) => setFormData(prev => ({ ...prev, objectivesPreliminary: e.target.value }))}
+                        placeholder="Specific aims and preliminary data"
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="approach">Approach/Methods</Label>
+                      <Textarea
+                        id="approach"
+                        value={formData.approachMethods}
+                        onChange={(e) => setFormData(prev => ({ ...prev, approachMethods: e.target.value }))}
+                        placeholder="Experimental approach and methods"
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="discussion">Discussion/Conclusion</Label>
+                      <Textarea
+                        id="discussion"
+                        value={formData.discussionConclusion}
+                        onChange={(e) => setFormData(prev => ({ ...prev, discussionConclusion: e.target.value }))}
+                        placeholder="Expected results and significance"
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Requirements */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Requirements Assessment</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Ethics Requirements</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="humanSubjects"
+                            checked={formData.ethicsRequirements.humanSubjects}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                ethicsRequirements: { ...prev.ethicsRequirements, humanSubjects: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="humanSubjects">Human subjects involved</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="irbNeeded"
+                            checked={formData.ethicsRequirements.irbNeeded}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                ethicsRequirements: { ...prev.ethicsRequirements, irbNeeded: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="irbNeeded">IRB approval needed</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="animalSamples"
+                            checked={formData.ethicsRequirements.animalSamples}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                ethicsRequirements: { ...prev.ethicsRequirements, animalSamples: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="animalSamples">Animal samples/work</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="iacucNeeded"
+                            checked={formData.ethicsRequirements.iacucNeeded}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                ethicsRequirements: { ...prev.ethicsRequirements, iacucNeeded: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="iacucNeeded">IACUC approval needed</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="clinicalTrial"
+                            checked={formData.ethicsRequirements.clinicalTrial}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                ethicsRequirements: { ...prev.ethicsRequirements, clinicalTrial: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="clinicalTrial">Clinical trial</Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Budget & Collaboration</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="outsideCollaborators"
+                            checked={formData.collaborationRequirements.outsideCollaborators}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                collaborationRequirements: { ...prev.collaborationRequirements, outsideCollaborators: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="outsideCollaborators">Outside collaborators</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="dataSharing"
+                            checked={formData.collaborationRequirements.dataSharing}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                collaborationRequirements: { ...prev.collaborationRequirements, dataSharing: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="dataSharing">Data sharing required</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="noCost"
+                            checked={formData.budgetRequirements.noCost}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                budgetRequirements: { ...prev.budgetRequirements, noCost: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="noCost">No cost</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="externalFunding"
+                            checked={formData.budgetRequirements.externalFunding}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                budgetRequirements: { ...prev.budgetRequirements, externalFunding: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="externalFunding">External funding</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="sidraBudget"
+                            checked={formData.budgetRequirements.sidraBudget}
+                            onCheckedChange={(checked) => 
+                              setFormData(prev => ({
+                                ...prev,
+                                budgetRequirements: { ...prev.budgetRequirements, sidraBudget: checked as boolean }
+                              }))
+                            }
+                          />
+                          <Label htmlFor="sidraBudget">Sidra budget</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Duration & Core Labs */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Duration & Core Labs</h3>
+                  
+                  <div>
+                    <Label htmlFor="duration">Estimated Duration (months)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={formData.durationMonths || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, durationMonths: parseInt(e.target.value) || null }))}
+                      placeholder="e.g., 24"
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Core Facilities Required</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                      {coreLabOptions.map((lab) => (
+                        <div key={lab} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={lab}
+                            checked={formData.coreLabs.includes(lab)}
+                            onCheckedChange={() => handleCoreLabToggle(lab)}
+                          />
+                          <Label htmlFor={lab} className="text-sm">{lab}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Methods */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Detailed Methods (Appendix A)</h3>
+                  
+                  <div>
+                    <Label htmlFor="studyDesign">Study Design & Methods</Label>
+                    <Textarea
+                      id="studyDesign"
+                      value={formData.studyDesignMethods}
+                      onChange={(e) => setFormData(prev => ({ ...prev, studyDesignMethods: e.target.value }))}
+                      placeholder="Comprehensive methodology details"
+                      rows={4}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="proposal">Proposal & Objectives</Label>
+                    <Textarea
+                      id="proposal"
+                      value={formData.proposalObjectives}
+                      onChange={(e) => setFormData(prev => ({ ...prev, proposalObjectives: e.target.value }))}
+                      placeholder="Detailed research proposal and objectives"
+                      rows={4}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="preliminary">Preliminary Data</Label>
+                    <Textarea
+                      id="preliminary"
+                      value={formData.preliminaryData}
+                      onChange={(e) => setFormData(prev => ({ ...prev, preliminaryData: e.target.value }))}
+                      placeholder="Pilot data, proof-of-concept results, preliminary achievements"
+                      rows={4}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <CardFooter className="flex justify-end space-x-2 px-0 pt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setLocation("/pmo/applications")}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSave('draft')}
+                  disabled={createApplicationMutation.isPending}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save as Draft
+                </Button>
+                <Button
+                  onClick={() => handleSave('submitted')}
+                  disabled={createApplicationMutation.isPending || !formData.title}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Submit for Review
+                </Button>
+              </CardFooter>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Workflow Guide - Right 1/3 */}
+        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Appendix A - Detailed Methods</CardTitle>
+              <CardTitle className="text-lg">RA-200 Workflow</CardTitle>
+              <CardDescription>Review process and requirements</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="studyDesign">Study Design, Materials, Methods</Label>
-                <Textarea
-                  id="studyDesign"
-                  value={formData.studyDesignMethods}
-                  onChange={(e) => setFormData(prev => ({ ...prev, studyDesignMethods: e.target.value }))}
-                  placeholder="Describe your study design, materials, and methods in detail..."
-                  rows={8}
-                  className="mt-1"
-                />
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="p-3 border rounded-lg bg-gray-50">
+                  <h4 className="font-medium text-sm text-blue-800">1. Draft</h4>
+                  <p className="text-xs text-gray-600 mt-1">Work in progress - can be edited</p>
+                  <p className="text-xs text-blue-600 mt-1">Required: Title, Lead Scientist</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">2. Submitted</h4>
+                  <p className="text-xs text-gray-600 mt-1">Under PMO office review</p>
+                  <p className="text-xs text-orange-600 mt-1">Required: All sections completed</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">3. Under Review</h4>
+                  <p className="text-xs text-gray-600 mt-1">PMO staff reviewing application</p>
+                  <p className="text-xs text-gray-500 mt-1">Comments may be added</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm">4. Revision Requested</h4>
+                  <p className="text-xs text-gray-600 mt-1">Changes needed - returned to PI</p>
+                  <p className="text-xs text-purple-600 mt-1">Review PMO comments and resubmit</p>
+                </div>
+                
+                <div className="p-3 border rounded-lg bg-green-50">
+                  <h4 className="font-medium text-sm text-green-800">5. Approved</h4>
+                  <p className="text-xs text-gray-600 mt-1">Ready to proceed with research</p>
+                  <p className="text-xs text-green-600 mt-1">Automatically creates SDR entry</p>
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="proposalObjectives">Proposal and Objectives</Label>
-                <Textarea
-                  id="proposalObjectives"
-                  value={formData.proposalObjectives}
-                  onChange={(e) => setFormData(prev => ({ ...prev, proposalObjectives: e.target.value }))}
-                  placeholder="Describe your proposal and detailed objectives..."
-                  rows={6}
-                  className="mt-1"
-                />
+              
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <h5 className="font-medium text-sm text-blue-800 mb-2">Quick Tips</h5>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• Complete all required fields before submitting</li>
+                  <li>• Abstract limited to 5000 characters</li>
+                  <li>• Select all relevant core facilities</li>
+                  <li>• Provide realistic duration estimates</li>
+                  <li>• Include detailed methodology in Appendix A</li>
+                </ul>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="preliminaryData">Preliminary Data</Label>
-                <Textarea
-                  id="preliminaryData"
-                  value={formData.preliminaryData}
-                  onChange={(e) => setFormData(prev => ({ ...prev, preliminaryData: e.target.value }))}
-                  placeholder="Describe any preliminary data or achievements..."
-                  rows={6}
-                  className="mt-1"
-                />
+              
+              <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                <h5 className="font-medium text-sm text-amber-800 mb-2">Need Help?</h5>
+                <div className="text-xs text-amber-700 space-y-1">
+                  <div>• PMO Office: <strong>researchpmo@sidra.org</strong></div>
+                  <div>• Consult your line manager</div>
+                  <div>• Review institutional guidelines</div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Actions */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setLocation('/pmo/applications')}>
-              Cancel
-            </Button>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleSave('draft')}
-                disabled={createApplicationMutation.isPending}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save as Draft
-              </Button>
-              <Button
-                onClick={() => handleSave('submitted')}
-                disabled={createApplicationMutation.isPending || !formData.title}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Submit for Review
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
