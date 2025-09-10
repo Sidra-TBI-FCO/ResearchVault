@@ -1175,43 +1175,60 @@ export const insertFeatureRequestSchema = createInsertSchema(featureRequests).om
 export type InsertFeatureRequest = z.infer<typeof insertFeatureRequestSchema>;
 export type FeatureRequest = typeof featureRequests.$inferSelect;
 
-// PMO Applications - Research Activity Plans (RA-200) and future forms
+// PMO Applications - Research Activity Plans (RA-200) and Change Requests (RA-205A)
 export const pmoApplications = pgTable("pmo_applications", {
   id: serial("id").primaryKey(),
   applicationId: text("application_id").notNull().unique(), // PMO-generated ID like PMO-2025-001
-  formType: text("form_type").notNull().default("RA-200"), // RA-200, future form types
+  formType: text("form_type").notNull().default("RA-200"), // RA-200, RA-205A, future form types
   status: text("status").notNull().default("draft"), // draft, submitted, under_review, approved, rejected
   
-  // Header Information
+  // Common Header Information (applies to all form types)
   title: text("title").notNull(),
   leadScientistId: integer("lead_scientist_id").references(() => scientists.id),
   projectId: integer("project_id").references(() => projects.id),
   budgetHolderId: integer("budget_holder_id").references(() => scientists.id),
   budgetSource: text("budget_source"),
   
-  // Research Activity Details
+  // RA-200 Specific Fields: Research Activity Details
   abstract: text("abstract"), // 5000 characters max
   backgroundRationale: text("background_rationale"),
   objectivesPreliminary: text("objectives_preliminary"),
   approachMethods: text("approach_methods"),
   discussionConclusion: text("discussion_conclusion"),
   
-  // Requirements (JSON for checkbox states)
+  // RA-200 Specific Fields: Requirements (JSON for checkbox states)
   ethicsRequirements: json("ethics_requirements"), // human subjects, IRB, animals, IACUC, clinical trial
   collaborationRequirements: json("collaboration_requirements"), // outside collaborators, data sharing
   budgetRequirements: json("budget_requirements"), // no cost, external funding, sidra budget
   sampleDataProcessing: json("sample_data_processing"), // collaboration with PI, cores
   
-  // Duration and Core Labs
+  // RA-200 Specific Fields: Duration and Core Labs
   durationMonths: integer("duration_months"),
   coreLabs: json("core_labs"), // Array of selected core labs/services
   
-  // Detailed Methods (Appendix A)
+  // RA-200 Specific Fields: Detailed Methods (Appendix A)
   studyDesignMethods: text("study_design_methods"),
   proposalObjectives: text("proposal_objectives"),
   preliminaryData: text("preliminary_data"),
   
-  // Workflow and Comments
+  // RA-205A Specific Fields: Change Request Information
+  sdrNumber: text("sdr_number"), // Current SDR being changed
+  currentTitle: text("current_title"), // Current SDR title before change
+  activityType: text("activity_type"), // Human or Non-Human
+  changeCategory: json("change_category"), // LPI change, PRJ budget change, SDR title change, scope change, other
+  changeReason: text("change_reason"), // Reason for the change request
+  changeRequestNumber: text("change_request_number"), // PMO assigned number
+  
+  // RA-205A Specific Fields: PI Certifications
+  currentPiId: integer("current_pi_id").references(() => scientists.id),
+  newPiId: integer("new_pi_id").references(() => scientists.id),
+  currentPiSignature: json("current_pi_signature"), // Name, date, signature info
+  newPiSignature: json("new_pi_signature"), // Name, date, signature info
+  
+  // RA-205A Specific Fields: Stakeholder Certifications (JSON for all stakeholder signatures)
+  stakeholderCertifications: json("stakeholder_certifications"), // All stakeholder signatures and info
+  
+  // Common Workflow and Comments
   submittedBy: integer("submitted_by").references(() => scientists.id),
   officeComments: json("office_comments").default('[]'), // Array of office comments
   piComments: json("pi_comments").default('[]'), // Array of PI responses
