@@ -39,7 +39,8 @@ import {
   certificationConfigurations, CertificationConfiguration, InsertCertificationConfiguration,
   systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
   pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
-  featureRequests, FeatureRequest, InsertFeatureRequest
+  featureRequests, FeatureRequest, InsertFeatureRequest,
+  pmoApplications, PmoApplication, InsertPmoApplication
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
