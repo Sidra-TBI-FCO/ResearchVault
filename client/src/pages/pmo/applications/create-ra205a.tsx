@@ -271,72 +271,65 @@ export default function CreateRA205AApplication() {
                       )}
                     />
 
-                    {/* Auto-populated fields (read-only) */}
+                    {/* Auto-populated fields (read-only) - Condensed */}
                     {selectedSdrId && (
-                      <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <FormField
                           control={form.control}
                           name="sdrNumber"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sidra Project Identifier (SDR)</FormLabel>
+                              <FormLabel className="text-sm">SDR Number</FormLabel>
                               <FormControl>
-                                <Input {...field} readOnly className="bg-gray-50" />
+                                <Input {...field} readOnly className="bg-gray-50 h-8 text-sm" />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
-
+                        <FormField
+                          control={form.control}
+                          name="activityType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm">Type</FormLabel>
+                              <FormControl>
+                                <Input {...field} readOnly className="bg-gray-50 h-8 text-sm" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={form.control}
                           name="projectId"
                           render={({ field }) => {
                             const selectedProject = projects.find((p: any) => p.id === field.value);
                             return (
-                              <FormItem>
-                                <FormLabel>Research Project Identifier (PRJ)</FormLabel>
+                              <FormItem className="md:col-span-2">
+                                <FormLabel className="text-sm">Project</FormLabel>
                                 <FormControl>
                                   <Input 
                                     value={selectedProject ? `${selectedProject.projectId} - ${selectedProject.title}` : ''} 
                                     readOnly 
-                                    className="bg-gray-50" 
+                                    className="bg-gray-50 h-8 text-sm" 
                                   />
                                 </FormControl>
-                                <FormMessage />
                               </FormItem>
                             );
                           }}
                         />
-
                         <FormField
                           control={form.control}
                           name="currentTitle"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Current SDR Title</FormLabel>
+                            <FormItem className="md:col-span-2">
+                              <FormLabel className="text-sm">Current Title</FormLabel>
                               <FormControl>
-                                <Input {...field} readOnly className="bg-gray-50" />
+                                <Input {...field} readOnly className="bg-gray-50 h-8 text-sm" />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
-
-                        <FormField
-                          control={form.control}
-                          name="activityType"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Type (Human or Non-Human)</FormLabel>
-                              <FormControl>
-                                <Input {...field} readOnly className="bg-gray-50" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
+                      </div>
                     )}
 
                     
@@ -810,7 +803,15 @@ export default function CreateRA205AApplication() {
                     <li>• PI responsibilities are shifted to another appropriate PI.</li>
                     <li>• If the Study is closing research records are retained at least for 3 years. Records retention must also comply with all other applicable regulations governing the study.</li>
                     <li>• All data records, including regulatory documentation and participant files, should be retained as per Sidra's retention Policy.</li>
-                    <li>• All aspects concerning the project quality and compliance have been conducted in accordance with Sidra policies and procedures based on a sample basis.</li>
+                    <li>• All aspects concerning the project quality and compliance have been conducted in accordance with Sidra policies and procedures based on a sample basis as follows:</li>
+                    <ul className="ml-4 space-y-1 text-xs text-yellow-600">
+                      <li>a. Ensure the availability, completeness, and accuracy of the research PI's sample tracker</li>
+                      <li>b. Verification of Research Samples physically exist in the laboratory's location</li>
+                      <li>c. Existence of research ICF and Enrollment logs to ensure the existence of consenting related to the Sample verified and samples labeled with deidentify code as per the Informed Consent Log</li>
+                      <li>d. Ensure the accuracy and completeness of sample withdrawal and disposal processes</li>
+                      <li>e. Ensure the accuracy and completeness of sample storage, shipments, and transfers, including transfer samples during the project closure</li>
+                      <li>f. Ensure the completeness and accuracy of sample storage for future use</li>
+                    </ul>
                   </ul>
                 </div>
 
