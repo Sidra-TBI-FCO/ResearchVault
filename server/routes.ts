@@ -5976,7 +5976,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid feature request ID" });
       }
 
-      // Validate request body with partial schema (allow partial updates)
+      // Handle upvoting logic
+      if (req.body.upvoteUserId) {
+        const currentRequest = await storage.getFeatureRequest(id);
+        if (!currentRequest) {
+          return res.status(404).json({ message: "Feature request not found" });
+        }
+
+        const upvotedBy = currentRequest.upvotedBy || [];
+        const userId = req.body.upvoteUserId;
+
+        // Toggle upvote
+        let newUpvotedBy;
+        let newUpvotes;
+        
+        if (upvotedBy.includes(userId)) {
+          // Remove upvote
+          newUpvotedBy = upvotedBy.filter(id => id !== userId);
+          newUpvotes = Math.max(0, currentRequest.upvotes - 1);
+        } else {
+          // Add upvote
+          newUpvotedBy = [...upvotedBy, userId];
+          newUpvotes = currentRequest.upvotes + 1;
+        }
+
+        const updatedRequest = await storage.updateFeatureRequest(id, {
+          upvotes: newUpvotes,
+          upvotedBy: newUpvotedBy
+        });
+
+        return res.json(updatedRequest);
+      }
+
+      // Regular update logic
       const updateData = insertFeatureRequestSchema.partial().parse(req.body);
       const updatedRequest = await storage.updateFeatureRequest(id, updateData);
       

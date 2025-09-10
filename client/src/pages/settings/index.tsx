@@ -403,6 +403,56 @@ IRIS (Intelligent Research Information Management System) is a research manageme
         </TabsContent>
 
         <TabsContent value="feature-requests" className="space-y-6">
+          {/* User Explanation Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5" />
+                How AI-Powered Feature Requests Work
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-full p-1 mt-0.5">
+                    <MessageSquarePlus className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">1. Submit Your Request</div>
+                    <div className="text-muted-foreground">Describe what you need in plain language. Include your name and categorize the request by priority.</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full p-1 mt-0.5">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">2. AI Enhancement</div>
+                    <div className="text-muted-foreground">Click "Enhance" to let AI analyze your request and generate a detailed developer prompt with technical requirements, suggested implementation approach, and acceptance criteria.</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 dark:bg-purple-900/20 text-purple-600 rounded-full p-1 mt-0.5">
+                    <ThumbsUp className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">3. Community Voting</div>
+                    <div className="text-muted-foreground">Other users can upvote requests they find valuable, helping prioritize the most requested features.</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-orange-100 dark:bg-orange-900/20 text-orange-600 rounded-full p-1 mt-0.5">
+                    <CheckCircle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">4. Developer Implementation</div>
+                    <div className="text-muted-foreground">Copy the AI-generated prompt and use it with development tools like Replit Agent for efficient implementation.</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Submit New Request */}
             <Card>
@@ -479,6 +529,19 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                     value={requestForm.tags}
                     onChange={(e) => setRequestForm({ ...requestForm, tags: e.target.value })}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="requested-by">Your Name (optional)</Label>
+                  <Input
+                    id="requested-by"
+                    placeholder="Your name for credit"
+                    value={requestForm.requestedBy}
+                    onChange={(e) => setRequestForm({ ...requestForm, requestedBy: e.target.value })}
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Leave blank for anonymous submission
+                  </div>
                 </div>
 
                 <Button 
@@ -576,90 +639,147 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {Array.isArray(featureRequests) && featureRequests.map((request) => {
+                  {Array.isArray(featureRequests) && featureRequests
+                    .sort((a, b) => b.upvotes - a.upvotes) // Sort by upvotes (most popular first)
+                    .map((request) => {
                     const statusInfo = statusOptions.find(s => s.value === request.status);
                     const priorityInfo = priorityOptions.find(p => p.value === request.priority);
                     const categoryInfo = categoryOptions.find(c => c.value === request.category);
                     const StatusIcon = statusInfo?.icon || Clock;
+                    const isExpanded = expandedRequests.has(request.id);
 
                     return (
-                      <div key={request.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-medium">{request.title}</h3>
-                              <Badge variant="outline" className={statusInfo?.color}>
-                                <StatusIcon className="h-3 w-3 mr-1" />
-                                {statusInfo?.label}
-                              </Badge>
-                              <Badge variant="outline" className={priorityInfo?.color}>
-                                {priorityInfo?.label}
-                              </Badge>
-                              <Badge variant="outline">
-                                {categoryInfo?.icon} {categoryInfo?.label}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
-                            {request.tags && (
-                              <div className="flex gap-1 flex-wrap">
-                                {request.tags.map((tag: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
+                      <div key={request.id} className="border rounded-lg overflow-hidden">
+                        {/* Request Header - Always Visible */}
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleRequestExpanded(request.id)}
+                                  className="p-1 h-6 w-6"
+                                >
+                                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                </Button>
+                                <h3 className="font-medium">{request.title}</h3>
+                                <Badge variant="outline" className={statusInfo?.color}>
+                                  <StatusIcon className="h-3 w-3 mr-1" />
+                                  {statusInfo?.label}
+                                </Badge>
+                                <Badge variant="outline" className={priorityInfo?.color}>
+                                  {priorityInfo?.label}
+                                </Badge>
+                                <Badge variant="outline">
+                                  {categoryInfo?.icon} {categoryInfo?.label}
+                                </Badge>
                               </div>
-                            )}
-                          </div>
+                              
+                              {/* Request Info Row */}
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  <span>{request.requestedBy}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>{formatDate(request.createdAt)}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span>{request.upvotes} votes</span>
+                                </div>
+                              </div>
+                            </div>
 
-                          <div className="flex gap-2 ml-4">
-                            {request.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleEnhanceRequest(request)}
-                                disabled={enhancingRequest === request.id}
-                                className="bg-primary"
-                              >
-                                <Lightbulb className="h-4 w-4 mr-1" />
-                                {enhancingRequest === request.id ? 'Enhancing...' : 'Enhance'}
-                              </Button>
-                            )}
-                            
-                            {request.enhancedPrompt && (
+                            <div className="flex gap-2 ml-4">
+                              {/* Upvote Button */}
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(request.enhancedPrompt!);
-                                  toast({ title: "Prompt copied to clipboard!" });
-                                }}
+                                onClick={() => handleUpvote(request.id)}
+                                disabled={votingRequest === request.id}
+                                className="flex items-center gap-1"
                               >
-                                Copy Prompt
+                                <ThumbsUp className={`h-4 w-4 ${request.upvotes > 0 ? 'text-blue-600' : ''}`} />
+                                {request.upvotes}
                               </Button>
-                            )}
 
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => deleteRequestMutation.mutate(request.id)}
-                              disabled={deleteRequestMutation.isPending}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                              {request.status === 'pending' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleEnhanceRequest(request)}
+                                  disabled={enhancingRequest === request.id}
+                                  className="bg-primary"
+                                >
+                                  <Lightbulb className="h-4 w-4 mr-1" />
+                                  {enhancingRequest === request.id ? 'Enhancing...' : 'Enhance'}
+                                </Button>
+                              )}
+                              
+                              {request.enhancedPrompt && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(request.enhancedPrompt!);
+                                    toast({ title: "Prompt copied to clipboard!" });
+                                  }}
+                                >
+                                  Copy Prompt
+                                </Button>
+                              )}
+
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => deleteRequestMutation.mutate(request.id)}
+                                disabled={deleteRequestMutation.isPending}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
-                        {request.enhancedPrompt && (
-                          <div className="mt-3 p-3 bg-muted rounded border-l-4 border-blue-500">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Lightbulb className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-medium">AI-Enhanced Developer Prompt</span>
-                              <Badge variant="outline" className="text-xs">
-                                {request.aiProvider?.toUpperCase()}
-                              </Badge>
+                        {/* Collapsible Content */}
+                        {isExpanded && (
+                          <div className="border-t bg-muted/50 p-4 space-y-3">
+                            <div>
+                              <div className="text-sm font-medium mb-2">Description</div>
+                              <p className="text-sm text-muted-foreground">{request.description}</p>
                             </div>
-                            <pre className="text-xs whitespace-pre-wrap text-muted-foreground max-h-40 overflow-y-auto">
-                              {request.enhancedPrompt}
-                            </pre>
+                            
+                            {request.tags && request.tags.length > 0 && (
+                              <div>
+                                <div className="text-sm font-medium mb-2">Tags</div>
+                                <div className="flex gap-1 flex-wrap">
+                                  {request.tags.map((tag: string, idx: number) => (
+                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {request.enhancedPrompt && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Lightbulb className="h-4 w-4 text-blue-600" />
+                                  <span className="text-sm font-medium">AI-Enhanced Developer Prompt</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {request.aiProvider?.toUpperCase()}
+                                  </Badge>
+                                </div>
+                                <div className="bg-white dark:bg-gray-900 border rounded p-3 max-h-60 overflow-y-auto">
+                                  <pre className="text-xs whitespace-pre-wrap text-muted-foreground">
+                                    {request.enhancedPrompt}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
