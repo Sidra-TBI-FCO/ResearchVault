@@ -127,6 +127,7 @@ import SettingsPage from "@/pages/settings";
 // PMO Applications
 import PmoApplicationsList from "@/pages/pmo/applications/index";
 import CreateRa200 from "@/pages/pmo/applications/create";
+import EditRa200 from "@/pages/pmo/applications/edit";
 import PmoApplicationDetail from "@/pages/pmo/applications/detail";
 
 // PMO Office
@@ -175,6 +176,7 @@ function Router() {
         {/* PMO Office - Applications */}
         <Route path="/pmo/applications" component={PmoApplicationsList} />
         <Route path="/pmo/applications/create" component={CreateRa200} />
+        <Route path="/pmo/applications/:id/edit" component={EditRa200} />
         <Route path="/pmo/applications/:id" component={PmoApplicationDetail} />
         
         {/* PMO Office - Review */}

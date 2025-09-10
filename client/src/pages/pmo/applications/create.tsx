@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Send, FileText, Users, Clock, FlaskConical } from "lucide-react";
+import { ArrowLeft, Save, Send, FileText, Users, Clock, FlaskConical, Info, CheckCircle, AlertCircle, BookOpen } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -172,14 +172,162 @@ export default function CreateRa200() {
         </div>
       </div>
 
-      <Tabs defaultValue="header" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="guide" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="guide">User Guide</TabsTrigger>
           <TabsTrigger value="header">Header Info</TabsTrigger>
           <TabsTrigger value="research">Research Details</TabsTrigger>
           <TabsTrigger value="requirements">Requirements</TabsTrigger>
           <TabsTrigger value="duration">Duration & Core Labs</TabsTrigger>
           <TabsTrigger value="methods">Detailed Methods</TabsTrigger>
         </TabsList>
+
+        {/* User Guide */}
+        <TabsContent value="guide">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                RA-200 Research Activity Plan - User Guide
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-blue-600" />
+                    What is the RA-200 Form?
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    The RA-200 Research Activity Plan is a planning guide required before beginning any research study. 
+                    It helps PMO office understand your research scope, requirements, and resource needs to ensure proper support and compliance.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-medium text-lg">Step-by-Step Completion Guide:</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-full p-1 mt-0.5">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">1. Header Information</div>
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Research Activity Title:</strong> Provide a clear, descriptive title for your research activity (SDR)<br/>
+                          <strong>Lead Scientist:</strong> Select the principal investigator responsible for this research<br/>
+                          <strong>Project ID:</strong> Link to the parent project (PRJ) this research falls under<br/>
+                          <strong>Budget Holder:</strong> Identify who manages the budget for this activity<br/>
+                          <strong>Budget Source:</strong> Specify funding amount and source (e.g., "13,000 QAR")
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full p-1 mt-0.5">
+                        <FlaskConical className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">2. Research Activity Details</div>
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Abstract (Required):</strong> Summarize your planned research in 5000 characters. Include objectives, methods, and expected outcomes<br/>
+                          <strong>Background & Rationale:</strong> Explain the scientific background and why this research is important<br/>
+                          <strong>Objectives & Preliminary Work:</strong> List specific aims and any preliminary data you have<br/>
+                          <strong>Approach/Methods:</strong> Briefly describe your experimental approach and methods<br/>
+                          <strong>Discussion/Conclusion:</strong> Explain expected results and their significance
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 rounded-full p-1 mt-0.5">
+                        <CheckCircle className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">3. Requirements Assessment</div>
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Ethics:</strong> Check if you need IRB approval for human subjects or IACUC for animal work<br/>
+                          <strong>Collaborations:</strong> Indicate if you're working with external partners or sharing data<br/>
+                          <strong>Budget:</strong> Specify your funding situation - no cost, external funding, or Sidra budget<br/>
+                          <strong>Sample Processing:</strong> Choose between PI collaboration or using Sidra core facilities
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="bg-purple-100 dark:bg-purple-900/20 text-purple-600 rounded-full p-1 mt-0.5">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">4. Duration & Core Labs</div>
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Duration:</strong> Estimate project length in months (typically 6-36 months)<br/>
+                          <strong>Core Labs:</strong> Select all core facilities you'll need (Genomics, Omics, Microscopy, etc.)<br/>
+                          <em>Note: Core lab selection helps PMO coordinate resources and estimate costs</em>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="bg-orange-100 dark:bg-orange-900/20 text-orange-600 rounded-full p-1 mt-0.5">
+                        <Users className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">5. Detailed Methods (Appendix A)</div>
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Study Design & Methods:</strong> Provide comprehensive methodology details<br/>
+                          <strong>Proposal & Objectives:</strong> Elaborate on your research proposal and detailed objectives<br/>
+                          <strong>Preliminary Data:</strong> Include any pilot data, proof-of-concept results, or preliminary achievements
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      Tips for Success
+                    </h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Be specific and detailed in your descriptions</li>
+                      <li>• Include relevant citations and background research</li>
+                      <li>• Clearly justify resource requirements</li>
+                      <li>• Save drafts frequently during completion</li>
+                      <li>• Review all sections before submission</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      Common Mistakes to Avoid
+                    </h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Vague or overly broad research descriptions</li>
+                      <li>• Missing ethics approval requirements</li>
+                      <li>• Underestimating core lab needs</li>
+                      <li>• Insufficient budget justification</li>
+                      <li>• Submitting without thorough review</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Need Help?</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <div>• Contact PMO office: <strong>researchpmo@sidra.org</strong></div>
+                    <div>• Refer to institutional research guidelines</div>
+                    <div>• Consult with your program director or line manager</div>
+                    <div>• Review approved applications as examples (ask PMO office)</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Header Information */}
         <TabsContent value="header">
