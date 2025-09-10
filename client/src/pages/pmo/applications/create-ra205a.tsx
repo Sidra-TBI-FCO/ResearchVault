@@ -692,6 +692,78 @@ export default function CreateRA205AApplication() {
                             </FormItem>
                           )}
                         />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.biosafety.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Biosafety Officer</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Biosafety officer name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.finance.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Finance & Procurement</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Business manager name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.researchGrants.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Research Grants Manager</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Grants manager name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.researchContracts.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Research Contract Specialist</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Contract specialist name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.researchGovernance.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Research Governance Manager</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Governance manager name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.dataManagement.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Research Data Management Manager</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Data management manager name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </CardContent>
