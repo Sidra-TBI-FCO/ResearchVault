@@ -159,7 +159,7 @@ export default function CreateRa200() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" onClick={() => setLocation('/pmo/applications')}>
@@ -172,7 +172,7 @@ export default function CreateRa200() {
         </div>
       </div>
 
-      <Tabs defaultValue="guide" className="space-y-6">
+      <Tabs defaultValue="guide" className="space-y-8">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="guide">User Guide</TabsTrigger>
           <TabsTrigger value="header">Header Info</TabsTrigger>
@@ -338,8 +338,8 @@ export default function CreateRa200() {
                 Header Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
+            <CardContent className="space-y-6 p-6">
+              <div className="space-y-2">
                 <Label htmlFor="title">Sidra Research Activity ID (SDR) Title *</Label>
                 <Input
                   id="title"
@@ -350,8 +350,8 @@ export default function CreateRa200() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
                   <Label htmlFor="leadScientist">SDR Lead Scientist *</Label>
                   <Select
                     value={formData.leadScientistId?.toString()}
@@ -370,7 +370,7 @@ export default function CreateRa200() {
                   </Select>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="project">Project ID (PRJ) *</Label>
                   <Select
                     value={formData.projectId?.toString()}
@@ -390,8 +390,8 @@ export default function CreateRa200() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
                   <Label htmlFor="budgetHolder">PRJ Budget Holder/Line Manager *</Label>
                   <Select
                     value={formData.budgetHolderId?.toString()}
@@ -410,7 +410,7 @@ export default function CreateRa200() {
                   </Select>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="budgetSource">Budget Source</Label>
                   <Input
                     id="budgetSource"
@@ -435,7 +435,7 @@ export default function CreateRa200() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="abstract">Abstract (5000 characters max) *</Label>
                 <Textarea
                   id="abstract"
@@ -451,7 +451,7 @@ export default function CreateRa200() {
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="background">Background & Rationale</Label>
                 <Textarea
                   id="background"
@@ -463,7 +463,7 @@ export default function CreateRa200() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="objectives">Objectives and Preliminary Work</Label>
                 <Textarea
                   id="objectives"
@@ -475,7 +475,7 @@ export default function CreateRa200() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="approach">Approach (Brief Summary of Methods)</Label>
                 <Textarea
                   id="approach"
@@ -487,7 +487,7 @@ export default function CreateRa200() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="discussion">Discussion / Conclusion</Label>
                 <Textarea
                   id="discussion"
@@ -510,7 +510,7 @@ export default function CreateRa200() {
               <CardHeader>
                 <CardTitle>Ethics</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -586,7 +586,7 @@ export default function CreateRa200() {
               <CardHeader>
                 <CardTitle>Collaborations</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -623,7 +623,7 @@ export default function CreateRa200() {
               <CardHeader>
                 <CardTitle>Budget</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -673,7 +673,7 @@ export default function CreateRa200() {
               <CardHeader>
                 <CardTitle>Sample/Data Processing</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -718,7 +718,7 @@ export default function CreateRa200() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="duration">Duration in Months *</Label>
                   <Input
                     id="duration"
@@ -768,7 +768,7 @@ export default function CreateRa200() {
               <CardTitle>Appendix A - Detailed Methods</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="studyDesign">Study Design, Materials, Methods</Label>
                 <Textarea
                   id="studyDesign"
@@ -780,7 +780,7 @@ export default function CreateRa200() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="proposalObjectives">Proposal and Objectives</Label>
                 <Textarea
                   id="proposalObjectives"
@@ -792,7 +792,7 @@ export default function CreateRa200() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="preliminaryData">Preliminary Data</Label>
                 <Textarea
                   id="preliminaryData"
@@ -810,12 +810,12 @@ export default function CreateRa200() {
 
       {/* Actions */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-6">
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setLocation('/pmo/applications')}>
               Cancel
             </Button>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={() => handleSave('draft')}

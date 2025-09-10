@@ -411,7 +411,7 @@ export default function EditRa200() {
                 Header Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6 p-6">
               <div>
                 <Label htmlFor="title">Sidra Research Activity ID (SDR) Title *</Label>
                 <Input
@@ -432,12 +432,12 @@ export default function EditRa200() {
 
       {/* Actions */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-6">
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setLocation(`/pmo/applications/${applicationId}`)}>
               Cancel
             </Button>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={() => handleSave('draft')}
