@@ -128,6 +128,10 @@ import SettingsPage from "@/pages/settings";
 import PmoApplicationsList from "@/pages/pmo/applications/index";
 import CreateRa200 from "@/pages/pmo/applications/create";
 
+// PMO Office
+import PmoOfficeReview from "@/pages/pmo/office/index";
+import PmoOfficeReviewDetail from "@/pages/pmo/office/review";
+
 function Router() {
   return (
     <Layout>
@@ -170,6 +174,10 @@ function Router() {
         {/* PMO Office - Applications */}
         <Route path="/pmo/applications" component={PmoApplicationsList} />
         <Route path="/pmo/applications/create" component={CreateRa200} />
+        
+        {/* PMO Office - Review */}
+        <Route path="/pmo/office" component={PmoOfficeReview} />
+        <Route path="/pmo/office/review/:id" component={PmoOfficeReviewDetail} />
         
         {/* Legacy routes - redirect to PMO paths */}
         <Route path="/programs" component={ProgramsList} />

@@ -58,6 +58,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       "/pmo/projects": "projects", 
       "/pmo/research-activities": "research-activities",
       "/pmo/applications": "pmo-applications",
+      "/pmo/office": "pmo-office",
       "/irb": "irb-applications",
       "/irb-office": "irb-office",
       "/irb-reviewer": "irb-reviewer",
@@ -130,6 +131,11 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           href: "/pmo/applications",
           label: "PMO Applications",
           icon: <ClipboardList className="w-4 h-4 mr-3" />
+        },
+        { 
+          href: "/pmo/office",
+          label: "PMO Office Review",
+          icon: <Eye className="w-4 h-4 mr-3" />
         }
       ]
     },
