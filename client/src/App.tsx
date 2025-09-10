@@ -176,7 +176,7 @@ function Router() {
         
         {/* PMO Office - Applications */}
         <Route path="/pmo/applications" component={PmoApplicationsList} />
-        <Route path="/pmo/applications/create" component={CreateRa200} />
+        <Route path="/pmo/applications/create-ra200" component={CreateRa200} />
         <Route path="/pmo/applications/create-ra205a" component={CreateRA205AApplication} />
         <Route path="/pmo/applications/:id/edit" component={EditRa200} />
         <Route path="/pmo/applications/:id" component={PmoApplicationDetail} />

@@ -76,7 +76,7 @@ export default function PmoApplicationsList() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/pmo/applications/create">
+          <Link href="/pmo/applications/create-ra200">
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               New RA-200
@@ -208,7 +208,7 @@ export default function PmoApplicationsList() {
               <p className="text-muted-foreground mb-4">
                 Start by creating your first RA-200 Research Activity Plan
               </p>
-              <Link href="/pmo/applications/create">
+              <Link href="/pmo/applications/create-ra200">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Create RA-200 Form
