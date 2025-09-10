@@ -21,6 +21,18 @@ const mockApplications = [
     budgetHolder: "Wouter Hendrickx",
     createdAt: "2025-07-17",
     durationMonths: 10
+  },
+  {
+    id: 2,
+    applicationId: "PMO-2025-002",
+    title: "Sidra Pediatric Precision Oncology Initiative - Title Change Request",
+    formType: "RA-205A",
+    status: "submitted",
+    leadScientist: "Sonia Davila",
+    projectId: "PRJ12003",
+    budgetHolder: "Wouter Hendrickx",
+    createdAt: "2025-07-18",
+    durationMonths: null
   }
 ];
 
@@ -36,13 +48,13 @@ export default function PmoApplicationsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // TODO: Connect to real API
+  // Connect to real API
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['/api/pmo-applications'],
-    enabled: false // Disable for now since API isn't implemented yet
+    initialData: mockApplications
   });
 
-  const filteredApplications = mockApplications.filter(app => {
+  const filteredApplications = applications.filter(app => {
     const matchesSearch = app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          app.applicationId.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          app.leadScientist.toLowerCase().includes(searchTerm.toLowerCase());

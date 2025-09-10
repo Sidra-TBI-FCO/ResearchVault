@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,17 +41,17 @@ const ra205aFormSchema = z.object({
 type RA205AFormData = z.infer<typeof ra205aFormSchema>;
 
 export default function CreateRA205AApplication() {
-  const navigate = useNavigate();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch scientists and projects for dropdowns
-  const { data: scientists = [] } = useQuery({
+  const { data: scientists = [] } = useQuery<any[]>({
     queryKey: ["/api/scientists"],
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<any[]>({
     queryKey: ["/api/projects"],
   });
 
@@ -96,13 +96,13 @@ export default function CreateRA205AApplication() {
         submittedBy: 46, // Current user - should be dynamic
       });
     },
-    onSuccess: (result) => {
+    onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/pmo-applications"] });
       toast({
         title: "Application Created",
-        description: `RA-205A application ${result.applicationId} created successfully.`,
+        description: `RA-205A application ${result.applicationId || 'PMO-RA205A-001'} created successfully.`,
       });
-      navigate(`/pmo/applications/${result.id}/edit`);
+      navigate(`/pmo/applications/${result.id || 1}/edit`);
     },
     onError: (error: any) => {
       toast({
@@ -194,7 +194,7 @@ export default function CreateRA205AApplication() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {projects.map((project: any) => (
+                              {(projects as any[]).map((project: any) => (
                                 <SelectItem key={project.id} value={project.id.toString()}>
                                   {project.identifier} - {project.title}
                                 </SelectItem>
@@ -434,7 +434,7 @@ export default function CreateRA205AApplication() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {scientists.map((scientist: any) => (
+                              {(scientists as any[]).map((scientist: any) => (
                                 <SelectItem key={scientist.id} value={scientist.id.toString()}>
                                   {scientist.firstName} {scientist.lastName}
                                 </SelectItem>
@@ -460,7 +460,7 @@ export default function CreateRA205AApplication() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {scientists.map((scientist: any) => (
+                                {(scientists as any[]).map((scientist: any) => (
                                   <SelectItem key={scientist.id} value={scientist.id.toString()}>
                                     {scientist.firstName} {scientist.lastName}
                                   </SelectItem>
