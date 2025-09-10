@@ -50,17 +50,20 @@ export default function PmoApplicationsList() {
 
   // Connect to real API
   const { data: applications = [], isLoading } = useQuery({
-    queryKey: ['/api/pmo-applications'],
-    initialData: mockApplications
+    queryKey: ['/api/pmo-applications']
   });
 
   const filteredApplications = applications.filter(app => {
     const matchesSearch = app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.applicationId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.leadScientist.toLowerCase().includes(searchTerm.toLowerCase());
+                         app.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (app.leadScientist || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Separate applications by type
+  const ra200Applications = filteredApplications.filter(app => app.form_type === 'RA-200');
+  const ra205aApplications = filteredApplications.filter(app => app.form_type === 'RA-205A');
 
   return (
     <div className="p-6 space-y-6">
@@ -96,7 +99,7 @@ export default function PmoApplicationsList() {
               <ClipboardList className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Total Applications</p>
-                <p className="text-2xl font-bold">1</p>
+                <p className="text-2xl font-bold">{applications.length}</p>
               </div>
             </div>
           </CardContent>
@@ -107,7 +110,7 @@ export default function PmoApplicationsList() {
               <FileText className="h-5 w-5 text-orange-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Draft</p>
-                <p className="text-2xl font-bold">1</p>
+                <p className="text-2xl font-bold">{applications.filter(app => app.status === 'draft').length}</p>
               </div>
             </div>
           </CardContent>
@@ -118,7 +121,7 @@ export default function PmoApplicationsList() {
               <Eye className="h-5 w-5 text-yellow-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Under Review</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{applications.filter(app => app.status === 'under_review').length}</p>
               </div>
             </div>
           </CardContent>
@@ -192,34 +195,29 @@ export default function PmoApplicationsList() {
         </CardContent>
       </Card>
 
-      {/* Applications List */}
+      {/* RA-200 Applications Section */}
       <Card>
         <CardHeader>
           <CardTitle>Research Activity Plans (RA-200)</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredApplications.length === 0 ? (
+          {ra200Applications.length === 0 ? (
             <div className="text-center py-8">
               <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No applications found</h3>
+              <h3 className="text-lg font-medium mb-2">No RA-200 applications found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== "all" 
-                  ? "Try adjusting your search or filters"
-                  : "Start by creating your first RA-200 Research Activity Plan"
-                }
+                Start by creating your first RA-200 Research Activity Plan
               </p>
-              {(!searchTerm && statusFilter === "all") && (
-                <Link href="/pmo/applications/create">
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create RA-200 Form
-                  </Button>
-                </Link>
-              )}
+              <Link href="/pmo/applications/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create RA-200 Form
+                </Button>
+              </Link>
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredApplications.map((application) => (
+              {ra200Applications.map((application) => (
                 <div key={application.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -228,25 +226,103 @@ export default function PmoApplicationsList() {
                         <Badge className={statusColors[application.status as keyof typeof statusColors]}>
                           {application.status.replace('_', ' ').toUpperCase()}
                         </Badge>
-                        <Badge variant="outline">{application.formType}</Badge>
+                        <Badge variant="outline">{application.form_type}</Badge>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
                         <div>
                           <span className="font-medium">Application ID:</span>
-                          <div>{application.applicationId}</div>
+                          <div>{application.application_id}</div>
                         </div>
                         <div>
                           <span className="font-medium">Lead Scientist:</span>
-                          <div>{application.leadScientist}</div>
+                          <div>TBD</div>
                         </div>
                         <div>
                           <span className="font-medium">Project ID:</span>
-                          <div>{application.projectId}</div>
+                          <div>{application.project_id || 'TBD'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Duration:</span>
-                          <div>{application.durationMonths} months</div>
+                          <div>{application.duration_months || 'TBD'} months</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 ml-4">
+                      <Link href={`/pmo/applications/${application.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </Link>
+                      {application.status === 'draft' && (
+                        <Link href={`/pmo/applications/${application.id}/edit`}>
+                          <Button size="sm">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* RA-205A Applications Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Research Activity Change Requests (RA-205A)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {ra205aApplications.length === 0 ? (
+            <div className="text-center py-8">
+              <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No RA-205A applications found</h3>
+              <p className="text-muted-foreground mb-4">
+                Start by creating your first RA-205A Change Request
+              </p>
+              <Link href="/pmo/applications/create-ra205a">
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create RA-205A Form
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {ra205aApplications.map((application) => (
+                <div key={application.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-medium text-lg">{application.title}</h3>
+                        <Badge className={statusColors[application.status as keyof typeof statusColors]}>
+                          {application.status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline">{application.form_type}</Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                        <div>
+                          <span className="font-medium">Application ID:</span>
+                          <div>{application.application_id}</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Lead Scientist:</span>
+                          <div>TBD</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Project ID:</span>
+                          <div>{application.project_id || 'TBD'}</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Status:</span>
+                          <div>{application.status}</div>
                         </div>
                       </div>
                     </div>
