@@ -1175,60 +1175,42 @@ export const insertFeatureRequestSchema = createInsertSchema(featureRequests).om
 export type InsertFeatureRequest = z.infer<typeof insertFeatureRequestSchema>;
 export type FeatureRequest = typeof featureRequests.$inferSelect;
 
-// PMO Applications - Research Activity Plans (RA-200) and Change Requests (RA-205A)
-export const pmoApplications = pgTable("pmo_applications", {
+// RA-200 Applications - Research Activity Plans
+export const ra200Applications = pgTable("ra200_applications", {
   id: serial("id").primaryKey(),
-  applicationId: text("application_id").notNull().unique(), // PMO-generated ID like PMO-2025-001
-  formType: text("form_type").notNull().default("RA-200"), // RA-200, RA-205A, future form types
+  applicationId: text("application_id").notNull().unique(), // PMO-generated ID like PMO-RA200-2025-001
   status: text("status").notNull().default("draft"), // draft, submitted, under_review, approved, rejected
   
-  // Common Header Information (applies to all form types)
+  // Header Information
   title: text("title").notNull(),
   leadScientistId: integer("lead_scientist_id").references(() => scientists.id),
   projectId: integer("project_id").references(() => projects.id),
   budgetHolderId: integer("budget_holder_id").references(() => scientists.id),
   budgetSource: text("budget_source"),
   
-  // RA-200 Specific Fields: Research Activity Details
+  // Research Activity Details
   abstract: text("abstract"), // 5000 characters max
   backgroundRationale: text("background_rationale"),
   objectivesPreliminary: text("objectives_preliminary"),
   approachMethods: text("approach_methods"),
   discussionConclusion: text("discussion_conclusion"),
   
-  // RA-200 Specific Fields: Requirements (JSON for checkbox states)
+  // Requirements (JSON for checkbox states)
   ethicsRequirements: json("ethics_requirements"), // human subjects, IRB, animals, IACUC, clinical trial
   collaborationRequirements: json("collaboration_requirements"), // outside collaborators, data sharing
   budgetRequirements: json("budget_requirements"), // no cost, external funding, sidra budget
   sampleDataProcessing: json("sample_data_processing"), // collaboration with PI, cores
   
-  // RA-200 Specific Fields: Duration and Core Labs
+  // Duration and Core Labs
   durationMonths: integer("duration_months"),
   coreLabs: json("core_labs"), // Array of selected core labs/services
   
-  // RA-200 Specific Fields: Detailed Methods (Appendix A)
+  // Detailed Methods (Appendix A)
   studyDesignMethods: text("study_design_methods"),
   proposalObjectives: text("proposal_objectives"),
   preliminaryData: text("preliminary_data"),
   
-  // RA-205A Specific Fields: Change Request Information
-  sdrNumber: text("sdr_number"), // Current SDR being changed
-  currentTitle: text("current_title"), // Current SDR title before change
-  activityType: text("activity_type"), // Human or Non-Human
-  changeCategory: json("change_category"), // LPI change, PRJ budget change, SDR title change, scope change, other
-  changeReason: text("change_reason"), // Reason for the change request
-  changeRequestNumber: text("change_request_number"), // PMO assigned number
-  
-  // RA-205A Specific Fields: PI Certifications
-  currentPiId: integer("current_pi_id").references(() => scientists.id),
-  newPiId: integer("new_pi_id").references(() => scientists.id),
-  currentPiSignature: json("current_pi_signature"), // Name, date, signature info
-  newPiSignature: json("new_pi_signature"), // Name, date, signature info
-  
-  // RA-205A Specific Fields: Stakeholder Certifications (JSON for all stakeholder signatures)
-  stakeholderCertifications: json("stakeholder_certifications"), // All stakeholder signatures and info
-  
-  // Common Workflow and Comments
+  // Workflow and Comments
   submittedBy: integer("submitted_by").references(() => scientists.id),
   officeComments: json("office_comments").default('[]'), // Array of office comments
   piComments: json("pi_comments").default('[]'), // Array of PI responses
@@ -1238,12 +1220,64 @@ export const pmoApplications = pgTable("pmo_applications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertPmoApplicationSchema = createInsertSchema(pmoApplications).omit({
+// RA-205A Applications - Research Activity Change Requests
+export const ra205aApplications = pgTable("ra205a_applications", {
+  id: serial("id").primaryKey(),
+  applicationId: text("application_id").notNull().unique(), // PMO-generated ID like PMO-RA205A-2025-001
+  status: text("status").notNull().default("draft"), // draft, submitted, under_review, approved, rejected
+  
+  // Header Information
+  title: text("title").notNull(),
+  leadScientistId: integer("lead_scientist_id").references(() => scientists.id),
+  projectId: integer("project_id").references(() => projects.id),
+  budgetHolderId: integer("budget_holder_id").references(() => scientists.id),
+  budgetSource: text("budget_source"),
+  
+  // Change Request Information
+  sdrNumber: text("sdr_number"), // Current SDR being changed
+  currentTitle: text("current_title"), // Current SDR title before change
+  activityType: text("activity_type"), // Human or Non-Human
+  changeCategory: json("change_category"), // LPI change, PRJ budget change, SDR title change, scope change, other
+  changeReason: text("change_reason"), // Reason for the change request
+  changeRequestNumber: text("change_request_number"), // PMO assigned number
+  
+  // PI Certifications
+  currentPiId: integer("current_pi_id").references(() => scientists.id),
+  newPiId: integer("new_pi_id").references(() => scientists.id),
+  currentPiSignature: json("current_pi_signature"), // Name, date, signature info
+  newPiSignature: json("new_pi_signature"), // Name, date, signature info
+  
+  // Stakeholder Certifications (JSON for all stakeholder signatures)
+  stakeholderCertifications: json("stakeholder_certifications"), // All stakeholder signatures and info
+  
+  // Workflow and Comments
+  submittedBy: integer("submitted_by").references(() => scientists.id),
+  officeComments: json("office_comments").default('[]'), // Array of office comments
+  piComments: json("pi_comments").default('[]'), // Array of PI responses
+  reviewHistory: json("review_history").default('[]'), // Timeline of status changes
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Schema definitions for RA-200
+export const insertRa200ApplicationSchema = createInsertSchema(ra200Applications).omit({
   id: true,
   applicationId: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type InsertPmoApplication = z.infer<typeof insertPmoApplicationSchema>;
-export type PmoApplication = typeof pmoApplications.$inferSelect;
+export type InsertRa200Application = z.infer<typeof insertRa200ApplicationSchema>;
+export type Ra200Application = typeof ra200Applications.$inferSelect;
+
+// Schema definitions for RA-205A
+export const insertRa205aApplicationSchema = createInsertSchema(ra205aApplications).omit({
+  id: true,
+  applicationId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertRa205aApplication = z.infer<typeof insertRa205aApplicationSchema>;
+export type Ra205aApplication = typeof ra205aApplications.$inferSelect;
