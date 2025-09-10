@@ -4,7 +4,8 @@ import {
   Beaker, LayoutDashboard, Users, FlaskConical, Database, 
   BookOpen, Award, FileText, Table, Handshake, PieChart,
   Settings, LogOut, UserPlus, X, Shield, Biohazard, Building,
-  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp, ChevronDown, Eye
+  FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp, ChevronDown, Eye,
+  ClipboardList, Briefcase
 } from "lucide-react";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -52,9 +53,11 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       "/": "dashboard",
       "/scientists": "scientists",
       "/facilities": "facilities", 
-      "/programs": "programs",
-      "/projects": "projects",
-      "/research-activities": "research-activities",
+      "/pmo": "pmo",
+      "/pmo/programs": "programs",
+      "/pmo/projects": "projects", 
+      "/pmo/research-activities": "research-activities",
+      "/pmo/applications": "pmo-applications",
       "/irb": "irb-applications",
       "/irb-office": "irb-office",
       "/irb-reviewer": "irb-reviewer",
@@ -99,24 +102,34 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           icon: <Building className="w-4 h-4 mr-3" />
         },
         { 
-          href: "/programs",
+          href: "/certifications",
+          label: "Certifications",
+          icon: <ShieldCheck className="w-4 h-4 mr-3" />
+        }
+      ]
+    },
+    {
+      title: "PMO Office",
+      items: [
+        { 
+          href: "/pmo/programs",
           label: "Programs (PRM)",
           icon: <Beaker className="w-4 h-4 mr-3" />
         },
         { 
-          href: "/projects",
+          href: "/pmo/projects",
           label: "Projects (PRJ)",
           icon: <FlaskConical className="w-4 h-4 mr-3" />
         },
         { 
-          href: "/research-activities",
+          href: "/pmo/research-activities",
           label: "Research Activities (SDR)",
           icon: <Database className="w-4 h-4 mr-3" />
         },
         { 
-          href: "/certifications",
-          label: "Certifications",
-          icon: <ShieldCheck className="w-4 h-4 mr-3" />
+          href: "/pmo/applications",
+          label: "PMO Applications",
+          icon: <ClipboardList className="w-4 h-4 mr-3" />
         }
       ]
     },
