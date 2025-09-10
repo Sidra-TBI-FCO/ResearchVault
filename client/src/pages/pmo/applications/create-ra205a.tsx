@@ -248,34 +248,20 @@ export default function CreateRA205AApplication() {
                   <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="sdrNumber"
+                      name="selectedSdrId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Sidra Project Identifier (SDR) *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., SDR200074" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="projectId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Research Project Identifier (PRJ)</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                          <FormLabel>Select Existing SDR *</FormLabel>
+                          <Select onValueChange={handleSdrSelection} value={field.value?.toString()}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select project" />
+                                <SelectValue placeholder="Select an existing research activity" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {(projects as any[]).map((project: any) => (
-                                <SelectItem key={project.id} value={project.id.toString()}>
-                                  {project.identifier} - {project.title}
+                              {researchActivities.map((activity: any) => (
+                                <SelectItem key={activity.id} value={activity.id.toString()}>
+                                  {activity.sdrNumber} - {activity.title}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -285,55 +271,80 @@ export default function CreateRA205AApplication() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="currentTitle"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Current SDR Title *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Current research activity title" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Auto-populated fields (read-only) */}
+                    {selectedSdrId && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="sdrNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sidra Project Identifier (SDR)</FormLabel>
+                              <FormControl>
+                                <Input {...field} readOnly className="bg-gray-50" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New SDR Title *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="New research activity title" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="projectId"
+                          render={({ field }) => {
+                            const selectedProject = projects.find((p: any) => p.id === field.value);
+                            return (
+                              <FormItem>
+                                <FormLabel>Research Project Identifier (PRJ)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    value={selectedProject ? `${selectedProject.projectId} - ${selectedProject.title}` : ''} 
+                                    readOnly 
+                                    className="bg-gray-50" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="activityType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Type *</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Human">Human</SelectItem>
-                              <SelectItem value="Non-Human">Non-Human</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="currentTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Current SDR Title</FormLabel>
+                              <FormControl>
+                                <Input {...field} readOnly className="bg-gray-50" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="activityType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Type (Human or Non-Human)</FormLabel>
+                              <FormControl>
+                                <Input {...field} readOnly className="bg-gray-50" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+
+                    
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Date:</strong> {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -403,6 +414,23 @@ export default function CreateRA205AApplication() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Conditional New Title Field */}
+                      {changeCategory.titleChange && (
+                        <FormField
+                          control={form.control}
+                          name="newTitle"
+                          render={({ field }) => (
+                            <FormItem className="ml-6">
+                              <FormLabel>New SDR Title *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter new research activity title" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
                       <FormField
                         control={form.control}
@@ -567,6 +595,197 @@ export default function CreateRA205AApplication() {
                         )}
                       />
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* PI Certification Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      1) Certification – Principal Investigators (PIs)
+                    </CardTitle>
+                    <CardDescription>
+                      In signing below, the new/transferred PI and/or current PI certifies to:
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-3">PI Responsibilities:</h4>
+                      <ul className="text-sm space-y-2 list-disc ml-4">
+                        <li>Accept all responsibilities/know-how for the scientific conduct of the project in terms of, but not limited to, the previous activities that took place before accepting the responsibility to be the PI, all project entries in the PMO database, ethical approvals, regulatory binders, and all aspects related to project ownership.</li>
+                        <li>Account for sound know-how of the project's updates/documents/papers/etc.</li>
+                        <li>Adhere to all biosafety requirements/responsibilities for research in the labs.</li>
+                        <li>Acknowledge sample ownership/location(s) and obtain the sample register.</li>
+                        <li>Acknowledge consumable stock ownership, identify the consumed/unconsumed stock location(s), and obtain RA-206 Acknowledgment of Inventory Receipt Form and Inventory List.</li>
+                        <li>Prevent unauthorized access to biospecimens/data.</li>
+                        <li>Once funding is secured, research will be executed within a reasonable time in line with budget availability and declared deadlines.</li>
+                        <li>Accurately report any project updates on the PMO database such as, but not limited to, progress reports, email responses, and any other project information required by the PMO.</li>
+                      </ul>
+                      <p className="text-sm mt-3 font-medium">
+                        In signing below, the new/transferred PI and/or current PI certifies that the above will be executed and all required project information will be provided upon request.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Current PI</h4>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="approvals.currentPi.name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Current PI name" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="approvals.currentPi.date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium mb-2">New/Transferred PI</h4>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="approvals.newPi.name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="New PI name" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="approvals.newPi.date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Stakeholder Certification Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      2) Certification – Stakeholder(s)
+                    </CardTitle>
+                    <CardDescription>
+                      Each stakeholder must certify their specific responsibilities
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* PMO Section */}
+                    <div className="border-l-4 border-orange-500 pl-4">
+                      <h4 className="font-medium text-orange-900 mb-2">PMO</h4>
+                      <div className="text-sm text-gray-600 mb-3">
+                        <p>In signing below, the PMO certifies that:</p>
+                        <ul className="list-disc ml-4 mt-1 space-y-1">
+                          <li>Stakeholders, where applicable, have been informed accordingly.</li>
+                          <li>The PMO database has been subsequently implemented to reflect all changes.</li>
+                        </ul>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.pmo.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Lead - Research Project Management Office" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.pmo.date"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex items-end">
+                          <p className="text-sm text-gray-500 mb-2">Signature (Digital)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Research Labs */}
+                    <div className="border-l-4 border-blue-500 pl-4">
+                      <h4 className="font-medium text-blue-900 mb-2">Research Laboratories Manager</h4>
+                      <div className="text-sm text-gray-600 mb-3">
+                        <p>In signing below, the Research Laboratories Manager certifies that:</p>
+                        <ul className="list-disc ml-4 mt-1 space-y-1">
+                          <li>Leaving person has returned all lab notebooks under their name and the ones of their reporting staff in case they have kept it.</li>
+                          <li>Samples have been acknowledged by the receiver; in case the project has been transferred to another researcher. Or samples have been destroyed in case of closure of the study and as per IRB conditions.</li>
+                          <li>Fridges/freezers are emptied.</li>
+                          <li>New/transferred PI acknowledges all the roles/responsibilities pertaining to the samples and the requirements in the labs as well as the sample logs.</li>
+                        </ul>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.researchLabs.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="approvals.stakeholders.researchLabs.date"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex items-end">
+                          <p className="text-sm text-gray-500 mb-2">Signature (Digital)</p>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
