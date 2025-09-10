@@ -239,6 +239,13 @@ export interface IStorage {
   createFeatureRequest(request: InsertFeatureRequest): Promise<FeatureRequest>;
   updateFeatureRequest(id: number, request: Partial<InsertFeatureRequest>): Promise<FeatureRequest | undefined>;
   deleteFeatureRequest(id: number): Promise<boolean>;
+
+  // PMO Applications
+  createPmoApplication(data: InsertPmoApplication): Promise<PmoApplication>;
+  getPmoApplications(): Promise<PmoApplication[]>;
+  getPmoApplication(id: number): Promise<PmoApplication | null>;
+  updatePmoApplication(id: number, updates: Partial<InsertPmoApplication>): Promise<PmoApplication | null>;
+  deletePmoApplication(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

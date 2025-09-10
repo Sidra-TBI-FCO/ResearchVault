@@ -2146,6 +2146,37 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(featureRequests).where(eq(featureRequests.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
+
+  // PMO Applications
+  async createPmoApplication(data: InsertPmoApplication): Promise<PmoApplication> {
+    const applicationId = `PMO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+    const [result] = await db.insert(pmoApplications)
+      .values({ ...data, applicationId })
+      .returning();
+    return result;
+  }
+
+  async getPmoApplications(): Promise<PmoApplication[]> {
+    return await db.select().from(pmoApplications).orderBy(desc(pmoApplications.createdAt));
+  }
+
+  async getPmoApplication(id: number): Promise<PmoApplication | null> {
+    const [result] = await db.select().from(pmoApplications).where(eq(pmoApplications.id, id));
+    return result || null;
+  }
+
+  async updatePmoApplication(id: number, updates: Partial<InsertPmoApplication>): Promise<PmoApplication | null> {
+    const [result] = await db.update(pmoApplications)
+      .set({ ...updates, updatedAt: sql`now()` })
+      .where(eq(pmoApplications.id, id))
+      .returning();
+    return result || null;
+  }
+
+  async deletePmoApplication(id: number): Promise<boolean> {
+    const result = await db.delete(pmoApplications).where(eq(pmoApplications.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();

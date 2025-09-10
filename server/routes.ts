@@ -6047,6 +6047,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PMO Applications routes
+  app.get('/api/pmo-applications', async (req: Request, res: Response) => {
+    try {
+      const applications = await storage.getPmoApplications();
+      res.json(applications);
+    } catch (error) {
+      console.error("Error fetching PMO applications:", error);
+      res.status(500).json({ message: "Failed to fetch PMO applications" });
+    }
+  });
+
+  app.get('/api/pmo-applications/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid application ID" });
+      }
+
+      const application = await storage.getPmoApplication(id);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      res.json(application);
+    } catch (error) {
+      console.error("Error fetching PMO application:", error);
+      res.status(500).json({ message: "Failed to fetch application" });
+    }
+  });
+
+  app.post('/api/pmo-applications', async (req: Request, res: Response) => {
+    try {
+      // Validate request body with PMO application schema
+      const applicationData = insertPmoApplicationSchema.parse(req.body);
+      const application = await storage.createPmoApplication(applicationData);
+      res.status(201).json(application);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error creating PMO application:", error);
+        res.status(500).json({ message: "Failed to create application" });
+      }
+    }
+  });
+
+  app.put('/api/pmo-applications/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid application ID" });
+      }
+
+      // Handle status changes and comments
+      if (req.body.statusChange) {
+        const { status, comment, userId } = req.body.statusChange;
+        
+        const currentApp = await storage.getPmoApplication(id);
+        if (!currentApp) {
+          return res.status(404).json({ message: "Application not found" });
+        }
+
+        // Add to review history
+        const newHistory = [
+          ...(currentApp.reviewHistory as any[] || []),
+          {
+            timestamp: new Date().toISOString(),
+            action: status,
+            user: userId || 'PMO Office',
+            comment: comment
+          }
+        ];
+
+        // Add to office comments if it's from PMO office
+        const newOfficeComments = [
+          ...(currentApp.officeComments as any[] || []),
+          {
+            timestamp: new Date().toISOString(),
+            user: userId || 'PMO Office',
+            comment: comment,
+            action: status
+          }
+        ];
+
+        // If approved, create SDR entry
+        if (status === 'approved') {
+          // TODO: Create SDR entry from approved application
+          console.log('Creating SDR entry for approved application:', id);
+        }
+
+        const updatedApp = await storage.updatePmoApplication(id, {
+          status,
+          reviewHistory: newHistory,
+          officeComments: newOfficeComments
+        });
+
+        return res.json(updatedApp);
+      }
+
+      // Regular update
+      const updateData = insertPmoApplicationSchema.partial().parse(req.body);
+      const updatedApp = await storage.updatePmoApplication(id, updateData);
+
+      if (!updatedApp) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      res.json(updatedApp);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error updating PMO application:", error);
+        res.status(500).json({ message: "Failed to update application" });
+      }
+    }
+  });
+
+  app.delete('/api/pmo-applications/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid application ID" });
+      }
+
+      const deleted = await storage.deletePmoApplication(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      res.json({ message: "Application deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting PMO application:", error);
+      res.status(500).json({ message: "Failed to delete application" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
