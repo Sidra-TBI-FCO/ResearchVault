@@ -124,6 +124,10 @@ import CertificationsPage from "@/pages/certifications";
 // Settings
 import SettingsPage from "@/pages/settings";
 
+// PMO Applications
+import PmoApplicationsList from "@/pages/pmo/applications/index";
+import CreateRa200 from "@/pages/pmo/applications/create";
+
 function Router() {
   return (
     <Layout>
@@ -162,6 +166,10 @@ function Router() {
         <Route path="/pmo/research-activities/:id/edit" component={EditResearchActivity} />
         <Route path="/pmo/research-activities/:id" component={ResearchActivityDetail} />
         <Route path="/pmo/research-activities/:id/team" component={ResearchActivityTeam} />
+        
+        {/* PMO Office - Applications */}
+        <Route path="/pmo/applications" component={PmoApplicationsList} />
+        <Route path="/pmo/applications/create" component={CreateRa200} />
         
         {/* Legacy routes - redirect to PMO paths */}
         <Route path="/programs" component={ProgramsList} />
