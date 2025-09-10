@@ -40,7 +40,8 @@ import {
   systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
   pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
   featureRequests, FeatureRequest, InsertFeatureRequest,
-  pmoApplications, PmoApplication, InsertPmoApplication
+  ra200Applications, Ra200Application, InsertRa200Application,
+  ra205aApplications, Ra205aApplication, InsertRa205aApplication
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -2148,35 +2149,79 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  // PMO Applications
-  async createPmoApplication(data: InsertPmoApplication): Promise<PmoApplication> {
-    const applicationId = `PMO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
-    const [result] = await db.insert(pmoApplications)
+  // RA-200 Applications
+  async createRa200Application(data: InsertRa200Application): Promise<Ra200Application> {
+    const applicationId = `PMO-RA200-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+    const [result] = await db.insert(ra200Applications)
       .values({ ...data, applicationId })
       .returning();
     return result;
   }
 
-  async getPmoApplications(): Promise<PmoApplication[]> {
-    return await db.select().from(pmoApplications).orderBy(desc(pmoApplications.createdAt));
+  async getRa200Applications(): Promise<Ra200Application[]> {
+    return await db.select().from(ra200Applications).orderBy(desc(ra200Applications.createdAt));
   }
 
-  async getPmoApplication(id: number): Promise<PmoApplication | null> {
-    const [result] = await db.select().from(pmoApplications).where(eq(pmoApplications.id, id));
+  async getRa200Application(id: number): Promise<Ra200Application | null> {
+    const [result] = await db.select().from(ra200Applications).where(eq(ra200Applications.id, id));
     return result || null;
   }
 
-  async updatePmoApplication(id: number, updates: Partial<InsertPmoApplication>): Promise<PmoApplication | null> {
-    const [result] = await db.update(pmoApplications)
+  async updateRa200Application(id: number, updates: Partial<InsertRa200Application>): Promise<Ra200Application | null> {
+    const [result] = await db.update(ra200Applications)
       .set({ ...updates, updatedAt: sql`now()` })
-      .where(eq(pmoApplications.id, id))
+      .where(eq(ra200Applications.id, id))
       .returning();
     return result || null;
   }
 
-  async deletePmoApplication(id: number): Promise<boolean> {
-    const result = await db.delete(pmoApplications).where(eq(pmoApplications.id, id));
+  async deleteRa200Application(id: number): Promise<boolean> {
+    const result = await db.delete(ra200Applications).where(eq(ra200Applications.id, id));
     return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // RA-205A Applications
+  async createRa205aApplication(data: InsertRa205aApplication): Promise<Ra205aApplication> {
+    const applicationId = `PMO-RA205A-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+    const [result] = await db.insert(ra205aApplications)
+      .values({ ...data, applicationId })
+      .returning();
+    return result;
+  }
+
+  async getRa205aApplications(): Promise<Ra205aApplication[]> {
+    return await db.select().from(ra205aApplications).orderBy(desc(ra205aApplications.createdAt));
+  }
+
+  async getRa205aApplication(id: number): Promise<Ra205aApplication | null> {
+    const [result] = await db.select().from(ra205aApplications).where(eq(ra205aApplications.id, id));
+    return result || null;
+  }
+
+  async updateRa205aApplication(id: number, updates: Partial<InsertRa205aApplication>): Promise<Ra205aApplication | null> {
+    const [result] = await db.update(ra205aApplications)
+      .set({ ...updates, updatedAt: sql`now()` })
+      .where(eq(ra205aApplications.id, id))
+      .returning();
+    return result || null;
+  }
+
+  async deleteRa205aApplication(id: number): Promise<boolean> {
+    const result = await db.delete(ra205aApplications).where(eq(ra205aApplications.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Combined view for PMO Applications (for listing both types together)
+  async getAllPmoApplications(): Promise<Array<Ra200Application & { form_type: 'RA-200' } | Ra205aApplication & { form_type: 'RA-205A' }>> {
+    const ra200Apps = await this.getRa200Applications();
+    const ra205aApps = await this.getRa205aApplications();
+    
+    const ra200WithType = ra200Apps.map(app => ({ ...app, form_type: 'RA-200' as const }));
+    const ra205aWithType = ra205aApps.map(app => ({ ...app, form_type: 'RA-205A' as const }));
+    
+    return [...ra200WithType, ...ra205aWithType].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 }
 
