@@ -86,11 +86,11 @@ export default function Settings() {
   });
 
   const createRequestMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/feature-requests', {
+    mutationFn: (data: any) => fetch('/api/feature-requests', {
       method: 'POST',
       body: JSON.stringify(data),
       headers: { 'Content-Type': 'application/json' }
-    }),
+    }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/feature-requests'] });
       setRequestForm({ title: '', description: '', category: 'feature', priority: 'medium', tags: '' });
@@ -102,11 +102,11 @@ export default function Settings() {
   });
 
   const updateRequestMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => apiRequest(`/api/feature-requests/${id}`, {
+    mutationFn: ({ id, data }: { id: number; data: any }) => fetch(`/api/feature-requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
       headers: { 'Content-Type': 'application/json' }
-    }),
+    }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/feature-requests'] });
       toast({ title: "Feature request updated successfully!" });
@@ -114,7 +114,7 @@ export default function Settings() {
   });
 
   const deleteRequestMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/feature-requests/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: number) => fetch(`/api/feature-requests/${id}`, { method: 'DELETE' }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/feature-requests'] });
       toast({ title: "Feature request deleted successfully!" });
