@@ -80,9 +80,17 @@ export default function Settings() {
   const [enhancingRequest, setEnhancingRequest] = useState<number | null>(null);
 
   // React Query hooks for feature requests
-  const { data: featureRequests = [], isLoading: requestsLoading } = useQuery({
+  const { data: featureRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery({
     queryKey: ['/api/feature-requests'],
-    queryFn: () => fetch('/api/feature-requests').then(res => res.json()) as Promise<FeatureRequest[]>
+    queryFn: async () => {
+      const response = await fetch('/api/feature-requests');
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature requests');
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
+    retry: false
   });
 
   const createRequestMutation = useMutation({
@@ -488,7 +496,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
               <CardContent>
                 <div className="space-y-3">
                   {statusOptions.map((status) => {
-                    const count = featureRequests.filter(req => req.status === status.value).length;
+                    const count = Array.isArray(featureRequests) ? featureRequests.filter(req => req.status === status.value).length : 0;
                     const Icon = status.icon;
                     return (
                       <div key={status.value} className="flex items-center justify-between">
@@ -515,13 +523,13 @@ IRIS (Intelligent Research Information Management System) is a research manageme
             <CardContent>
               {requestsLoading ? (
                 <div className="text-center py-8">Loading requests...</div>
-              ) : featureRequests.length === 0 ? (
+              ) : !Array.isArray(featureRequests) || featureRequests.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No feature requests yet. Submit your first request above!
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {featureRequests.map((request) => {
+                  {Array.isArray(featureRequests) && featureRequests.map((request) => {
                     const statusInfo = statusOptions.find(s => s.value === request.status);
                     const priorityInfo = priorityOptions.find(p => p.value === request.priority);
                     const categoryInfo = categoryOptions.find(c => c.value === request.category);
@@ -547,7 +555,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                             <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
                             {request.tags && (
                               <div className="flex gap-1 flex-wrap">
-                                {request.tags.map((tag, idx) => (
+                                {request.tags.map((tag: string, idx: number) => (
                                   <Badge key={idx} variant="secondary" className="text-xs">
                                     {tag}
                                   </Badge>
