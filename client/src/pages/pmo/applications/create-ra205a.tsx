@@ -125,15 +125,15 @@ export default function CreateRA205AApplication() {
   const changeCategory = form.watch("changeCategory");
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/pmo/applications")}
-            className="mb-4"
+            className="mb-2"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to PMO Applications
@@ -142,14 +142,15 @@ export default function CreateRA205AApplication() {
           <div className="flex items-center gap-3">
             <FileText className="h-8 w-8 text-orange-600" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Create RA-205A Application</h1>
-              <p className="text-gray-600">Research Activity Change Request Form</p>
+              <h1 className="text-3xl font-bold">Create RA-205A Application</h1>
+              <p className="text-muted-foreground mt-1">Research Activity Change Request Form</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Main Content - 3 Column Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
           {/* Form Content - Takes 2 columns */}
           <div className="space-y-6 lg:col-span-2">
             <Form {...form}>
@@ -553,7 +554,6 @@ export default function CreateRA205AApplication() {
             </Card>
           </div>
         </div>
-      </div>
     </div>
   );
 }
