@@ -36,7 +36,8 @@ import {
   insertCertificationConfigurationSchema,
   insertPdfImportHistorySchema,
   insertFeatureRequestSchema,
-  insertPmoApplicationSchema
+  insertRa200ApplicationSchema,
+  insertRa205aApplicationSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -6051,7 +6052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PMO Applications routes
   app.get('/api/pmo-applications', async (req: Request, res: Response) => {
     try {
-      const applications = await storage.getPmoApplications();
+      const applications = await storage.getAllPmoApplications();
       res.json(applications);
     } catch (error) {
       console.error("Error fetching PMO applications:", error);
@@ -6078,18 +6079,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/pmo-applications', async (req: Request, res: Response) => {
+  // Create RA-200 Application
+  app.post('/api/ra200-applications', async (req: Request, res: Response) => {
     try {
-      // Validate request body with PMO application schema
-      const applicationData = insertPmoApplicationSchema.parse(req.body);
-      const application = await storage.createPmoApplication(applicationData);
+      const applicationData = insertRa200ApplicationSchema.parse(req.body);
+      const application = await storage.createRa200Application(applicationData);
       res.status(201).json(application);
     } catch (error) {
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         res.status(400).json({ message: validationError.message });
       } else {
-        console.error("Error creating PMO application:", error);
+        console.error("Error creating RA-200 application:", error);
+        res.status(500).json({ message: "Failed to create application" });
+      }
+    }
+  });
+
+  // Create RA-205A Application
+  app.post('/api/ra205a-applications', async (req: Request, res: Response) => {
+    try {
+      const applicationData = insertRa205aApplicationSchema.parse(req.body);
+      const application = await storage.createRa205aApplication(applicationData);
+      res.status(201).json(application);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error creating RA-205A application:", error);
         res.status(500).json({ message: "Failed to create application" });
       }
     }
