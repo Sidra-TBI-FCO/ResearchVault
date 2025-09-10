@@ -35,7 +35,8 @@ import {
   insertCertificationSchema,
   insertCertificationConfigurationSchema,
   insertPdfImportHistorySchema,
-  insertFeatureRequestSchema
+  insertFeatureRequestSchema,
+  insertPmoApplicationSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
