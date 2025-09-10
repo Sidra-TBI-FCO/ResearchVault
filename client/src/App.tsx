@@ -274,7 +274,7 @@ function Router() {
         
         {/* Research Teams */}
         <Route path="/teams" component={TeamsList} />
-        <Route path="/teams/:id" component={TeamDetail} />
+        <Route path="/teams/:id" component={(props: any) => <TeamDetail researchActivityId={parseInt(props.params.id)} />} />
         
         {/* Certifications */}
         <Route path="/certifications" component={CertificationsPage} />

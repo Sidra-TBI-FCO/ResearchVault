@@ -354,7 +354,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                           <div className="flex items-center justify-between w-full">
                             <div className="flex flex-col">
                               <span className="font-medium">{formatFullName(scientist)}</span>
-                              <span className="text-xs text-muted-foreground">{scientist.title}</span>
+                              <span className="text-xs text-muted-foreground">{scientist.jobTitle}</span>
                             </div>
                             {scientist.staffId && 
                               <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700 border-blue-200">
@@ -383,7 +383,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                       const selectedScientist = selectedScientistId 
                         ? scientists?.find(s => s.id === selectedScientistId)
                         : null;
-                      const canBePrincipalInvestigator = selectedScientist?.title === "Investigator";
+                      const canBePrincipalInvestigator = selectedScientist?.jobTitle === "Investigator";
                       const constraints = getRoleConstraints();
                       
                       return (
@@ -410,10 +410,10 @@ export default function TeamDetail(props: TeamDetailProps) {
                 </Select>
                 {selectedScientistId && (() => {
                   const selectedScientist = scientists?.find(s => s.id === selectedScientistId);
-                  return selectedScientist?.title !== "Investigator" && (
+                  return selectedScientist?.jobTitle !== "Investigator" && (
                     <p className="text-sm text-amber-600 mt-1">
                       <span className="font-medium">Note:</span> Only scientists with job title "Investigator" can be assigned as Principal Investigator. 
-                      {selectedScientist?.name} has the job title "{selectedScientist?.title}".
+                      {selectedScientist ? formatFullName(selectedScientist) : 'This scientist'} has the job title "{selectedScientist?.jobTitle}".
                     </p>
                   );
                 })()}
@@ -527,7 +527,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                     return (
                       <TableRow key={member.id}>
                         <TableCell>
-                          <div className="font-medium">{scientist?.name || 'Unknown'}</div>
+                          <div className="font-medium">{scientist ? formatFullName(scientist) : 'Unknown'}</div>
                           <div className="text-sm text-muted-foreground">
                             {scientist?.email || 'No email available'}
                           </div>
@@ -541,7 +541,7 @@ export default function TeamDetail(props: TeamDetailProps) {
                             {member.role}
                           </Badge>
                         </TableCell>
-                        <TableCell>{scientist?.title || 'N/A'}</TableCell>
+                        <TableCell>{scientist?.jobTitle || 'N/A'}</TableCell>
                         <TableCell>
                           {scientist?.staffId ? (
                             <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 border-blue-200">

@@ -83,10 +83,10 @@ export default function CreatePublication() {
   });
 
   const onSubmit = (data: CreatePublicationFormValues) => {
-    // Convert string date from HTML input to Date object for API
+    // Convert date to string format for API
     const submitData = {
       ...data,
-      publicationDate: data.publicationDate ? new Date(data.publicationDate) : null,
+      publicationDate: data.publicationDate ? data.publicationDate : undefined,
       researchActivityId: data.researchActivityId,
     };
     createPublicationMutation.mutate(submitData);

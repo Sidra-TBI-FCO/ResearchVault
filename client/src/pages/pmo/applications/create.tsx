@@ -110,11 +110,11 @@ export default function CreateRa200() {
   });
 
   // Load scientists and projects for dropdowns
-  const { data: scientists = [] } = useQuery({
+  const { data: scientists = [] } = useQuery<any[]>({
     queryKey: ['/api/scientists']
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<any[]>({
     queryKey: ['/api/projects']
   });
 
