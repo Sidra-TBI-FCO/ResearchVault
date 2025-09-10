@@ -1143,3 +1143,31 @@ export const insertPdfImportHistorySchema = createInsertSchema(pdfImportHistory)
 
 export type InsertPdfImportHistory = z.infer<typeof insertPdfImportHistorySchema>;
 export type PdfImportHistory = typeof pdfImportHistory.$inferSelect;
+
+// Feature Requests - AI-powered feature request system
+export const featureRequests = pgTable("feature_requests", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("pending"), // pending, enhanced, approved, implemented, rejected
+  priority: text("priority").notNull().default("medium"), // low, medium, high, critical
+  category: text("category").notNull().default("feature"), // ui, backend, feature, bugfix, enhancement
+  originalRequest: text("original_request").notNull(), // User's original description
+  enhancedPrompt: text("enhanced_prompt"), // AI-enhanced developer prompt
+  approvedPrompt: text("approved_prompt"), // Final approved prompt for developers
+  aiProvider: text("ai_provider"), // groq, huggingface, together_ai
+  implementationNotes: text("implementation_notes"), // Developer notes during implementation
+  estimatedEffort: text("estimated_effort"), // low, medium, high (development effort estimate)
+  tags: text("tags").array(), // Searchable tags for categorization
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFeatureRequestSchema = createInsertSchema(featureRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertFeatureRequest = z.infer<typeof insertFeatureRequestSchema>;
+export type FeatureRequest = typeof featureRequests.$inferSelect;

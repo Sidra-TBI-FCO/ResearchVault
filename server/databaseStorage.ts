@@ -38,7 +38,8 @@ import {
   certifications, Certification, InsertCertification,
   certificationConfigurations, CertificationConfiguration, InsertCertificationConfiguration,
   systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
-  pdfImportHistory, PdfImportHistory, InsertPdfImportHistory
+  pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
+  featureRequests, FeatureRequest, InsertFeatureRequest
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -2115,6 +2116,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(pdfImportHistory.fileName, fileName))
       .returning();
     return updatedEntry;
+  }
+
+  // Feature Request operations
+  async getFeatureRequests(): Promise<FeatureRequest[]> {
+    return await db.select().from(featureRequests).orderBy(desc(featureRequests.createdAt));
+  }
+
+  async getFeatureRequest(id: number): Promise<FeatureRequest | undefined> {
+    const [request] = await db.select().from(featureRequests).where(eq(featureRequests.id, id));
+    return request;
+  }
+
+  async createFeatureRequest(insertRequest: InsertFeatureRequest): Promise<FeatureRequest> {
+    const [request] = await db.insert(featureRequests).values(insertRequest).returning();
+    return request;
+  }
+
+  async updateFeatureRequest(id: number, updates: Partial<InsertFeatureRequest>): Promise<FeatureRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(featureRequests)
+      .set({ ...updates, updatedAt: sql`now()` })
+      .where(eq(featureRequests.id, id))
+      .returning();
+    return updatedRequest;
+  }
+
+  async deleteFeatureRequest(id: number): Promise<boolean> {
+    const result = await db.delete(featureRequests).where(eq(featureRequests.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 

@@ -22,7 +22,8 @@ import {
   journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
   grants, Grant, InsertGrant,
   systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
-  pdfImportHistory, PdfImportHistory, InsertPdfImportHistory
+  pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
+  featureRequests, FeatureRequest, InsertFeatureRequest
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -231,6 +232,13 @@ export interface IStorage {
   }): Promise<PdfImportHistory[]>;
   
   updatePdfImportHistorySaveStatus(fileName: string, saveStatus: string): Promise<PdfImportHistory | undefined>;
+
+  // Feature Request operations
+  getFeatureRequests(): Promise<FeatureRequest[]>;
+  getFeatureRequest(id: number): Promise<FeatureRequest | undefined>;
+  createFeatureRequest(request: InsertFeatureRequest): Promise<FeatureRequest>;
+  updateFeatureRequest(id: number, request: Partial<InsertFeatureRequest>): Promise<FeatureRequest | undefined>;
+  deleteFeatureRequest(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
