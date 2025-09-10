@@ -257,7 +257,7 @@ export default function PmoApplicationsList() {
                         </Button>
                       </Link>
                       {application.status === 'draft' && (
-                        <Link href={`/pmo/applications/${application.id}/edit`}>
+                        <Link href={`/pmo/applications/${application.id}/edit-ra200`}>
                           <Button size="sm">
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
@@ -335,7 +335,7 @@ export default function PmoApplicationsList() {
                         </Button>
                       </Link>
                       {application.status === 'draft' && (
-                        <Link href={`/pmo/applications/${application.id}/edit`}>
+                        <Link href={`/pmo/applications/${application.id}/edit-ra205a`}>
                           <Button size="sm">
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
