@@ -598,38 +598,21 @@ export default function CreateRA205AApplication() {
                   </CardContent>
                 </Card>
 
-                {/* PI Certification Section */}
+                {/* Signatures Section */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <CheckCircle2 className="h-5 w-5" />
-                      1) Certification – Principal Investigators (PIs)
+                      Certifications & Signatures
                     </CardTitle>
                     <CardDescription>
-                      In signing below, the new/transferred PI and/or current PI certifies to:
+                      Please refer to the "Certification Requirements" guide on the right for detailed responsibilities.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-3">PI Responsibilities:</h4>
-                      <ul className="text-sm space-y-2 list-disc ml-4">
-                        <li>Accept all responsibilities/know-how for the scientific conduct of the project in terms of, but not limited to, the previous activities that took place before accepting the responsibility to be the PI, all project entries in the PMO database, ethical approvals, regulatory binders, and all aspects related to project ownership.</li>
-                        <li>Account for sound know-how of the project's updates/documents/papers/etc.</li>
-                        <li>Adhere to all biosafety requirements/responsibilities for research in the labs.</li>
-                        <li>Acknowledge sample ownership/location(s) and obtain the sample register.</li>
-                        <li>Acknowledge consumable stock ownership, identify the consumed/unconsumed stock location(s), and obtain RA-206 Acknowledgment of Inventory Receipt Form and Inventory List.</li>
-                        <li>Prevent unauthorized access to biospecimens/data.</li>
-                        <li>Once funding is secured, research will be executed within a reasonable time in line with budget availability and declared deadlines.</li>
-                        <li>Accurately report any project updates on the PMO database such as, but not limited to, progress reports, email responses, and any other project information required by the PMO.</li>
-                      </ul>
-                      <p className="text-sm mt-3 font-medium">
-                        In signing below, the new/transferred PI and/or current PI certifies that the above will be executed and all required project information will be provided upon request.
-                      </p>
-                    </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="font-medium mb-2">Current PI</h4>
+                        <h4 className="font-medium mb-2">Current PI Certification</h4>
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
@@ -659,7 +642,7 @@ export default function CreateRA205AApplication() {
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2">New/Transferred PI</h4>
+                        <h4 className="font-medium mb-2">New/Transferred PI Certification</h4>
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
@@ -688,102 +671,34 @@ export default function CreateRA205AApplication() {
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
 
-                {/* Stakeholder Certification Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      2) Certification – Stakeholder(s)
-                    </CardTitle>
-                    <CardDescription>
-                      Each stakeholder must certify their specific responsibilities
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* PMO Section */}
-                    <div className="border-l-4 border-orange-500 pl-4">
-                      <h4 className="font-medium text-orange-900 mb-2">PMO</h4>
-                      <div className="text-sm text-gray-600 mb-3">
-                        <p>In signing below, the PMO certifies that:</p>
-                        <ul className="list-disc ml-4 mt-1 space-y-1">
-                          <li>Stakeholders, where applicable, have been informed accordingly.</li>
-                          <li>The PMO database has been subsequently implemented to reflect all changes.</li>
-                        </ul>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3">Stakeholder Certifications</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="approvals.stakeholders.pmo.name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Name</FormLabel>
+                              <FormLabel>PMO Representative</FormLabel>
                               <FormControl>
-                                <Input placeholder="Lead - Research Project Management Office" {...field} />
+                                <Input placeholder="PMO staff name" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="approvals.stakeholders.pmo.date"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Date</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex items-end">
-                          <p className="text-sm text-gray-500 mb-2">Signature (Digital)</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Research Labs */}
-                    <div className="border-l-4 border-blue-500 pl-4">
-                      <h4 className="font-medium text-blue-900 mb-2">Research Laboratories Manager</h4>
-                      <div className="text-sm text-gray-600 mb-3">
-                        <p>In signing below, the Research Laboratories Manager certifies that:</p>
-                        <ul className="list-disc ml-4 mt-1 space-y-1">
-                          <li>Leaving person has returned all lab notebooks under their name and the ones of their reporting staff in case they have kept it.</li>
-                          <li>Samples have been acknowledged by the receiver; in case the project has been transferred to another researcher. Or samples have been destroyed in case of closure of the study and as per IRB conditions.</li>
-                          <li>Fridges/freezers are emptied.</li>
-                          <li>New/transferred PI acknowledges all the roles/responsibilities pertaining to the samples and the requirements in the labs as well as the sample logs.</li>
-                        </ul>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
                         <FormField
                           control={form.control}
                           name="approvals.stakeholders.researchLabs.name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Name</FormLabel>
+                              <FormLabel>Research Labs Manager</FormLabel>
                               <FormControl>
-                                <Input {...field} />
+                                <Input placeholder="Labs manager name" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="approvals.stakeholders.researchLabs.date"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Date</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex items-end">
-                          <p className="text-sm text-gray-500 mb-2">Signature (Digital)</p>
-                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -806,47 +721,121 @@ export default function CreateRA205AApplication() {
             </Form>
           </div>
 
-          {/* Workflow Guide - Takes 1 column */}
+          {/* Certification Requirements Guide - Takes 1 column */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  RA-205A Workflow Guide
+                  Certification Requirements
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3 text-sm">
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-medium text-blue-900 mb-2">Required Information</h4>
-                    <ul className="space-y-1 text-blue-700">
-                      <li>• Current SDR identifier</li>
-                      <li>• Change category selection</li>
-                      <li>• Detailed change justification</li>
-                      <li>• PI information updates</li>
-                    </ul>
-                  </div>
-
-                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <h4 className="font-medium text-amber-900 mb-2">Review Process</h4>
-                    <ul className="space-y-1 text-amber-700">
-                      <li>• PMO office review</li>
-                      <li>• Stakeholder certifications</li>
-                      <li>• PI signature collection</li>
-                      <li>• Final approval workflow</li>
-                    </ul>
-                  </div>
-
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <h4 className="font-medium text-green-900 mb-2">Tips</h4>
-                    <ul className="space-y-1 text-green-700">
-                      <li>• Be specific in change reason</li>
-                      <li>• Select all applicable categories</li>
-                      <li>• Coordinate with all stakeholders</li>
-                      <li>• Keep original documentation</li>
-                    </ul>
-                  </div>
+              <CardContent className="space-y-4 max-h-[80vh] overflow-y-auto">
+                
+                {/* PI Certification Responsibilities */}
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-medium text-blue-900 mb-2">PI Certification Responsibilities</h4>
+                  <p className="text-xs text-blue-800 mb-2">In signing below, the new/transferred PI and/or current PI certifies to:</p>
+                  <ul className="space-y-1 text-xs text-blue-700">
+                    <li>• Accept all responsibilities/know-how for the scientific conduct of the project in terms of, but not limited to, the previous activities that took place before accepting the responsibility to be the PI, all project entries in the PMO database, ethical approvals, regulatory binders, and all aspects related to project ownership.</li>
+                    <li>• Account for sound know-how of the project's updates/documents/papers/etc.</li>
+                    <li>• Adhere to all biosafety requirements/responsibilities for research in the labs.</li>
+                    <li>• Acknowledge sample ownership/location(s) and obtain the sample register.</li>
+                    <li>• Acknowledge consumable stock ownership, identify the consumed/unconsumed stock location(s), and obtain RA-206 Acknowledgment of Inventory Receipt Form and Inventory List.</li>
+                    <li>• Prevent unauthorized access to biospecimens/data.</li>
+                    <li>• Once funding is secured, research will be executed within a reasonable time in line with budget availability and declared deadlines.</li>
+                    <li>• Accurately report any project updates on the PMO database such as, but not limited to, progress reports, email responses, and any other project information required by the PMO.</li>
+                  </ul>
                 </div>
+
+                {/* Research Labs Certification */}
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-medium text-purple-900 mb-2">Research Labs Manager</h4>
+                  <p className="text-xs text-purple-800 mb-2">In signing below, the Research Laboratories Manager certifies that:</p>
+                  <ul className="space-y-1 text-xs text-purple-700">
+                    <li>• Leaving person has returned all lab notebooks under their name and the ones of their reporting staff in case they have kept it.</li>
+                    <li>• Samples have been acknowledged by the receiver; in case the project has been transferred to another researcher. Or samples have been destroyed in case of closure of the study and as per IRB conditions.</li>
+                    <li>• Fridges/freezers are emptied.</li>
+                    <li>• New/transferred PI acknowledges all the roles/responsibilities pertaining to the samples and the requirements in the labs as well as the sample logs.</li>
+                  </ul>
+                </div>
+
+                {/* Biosafety Certification */}
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-medium text-green-900 mb-2">Biosafety Officer</h4>
+                  <p className="text-xs text-green-800 mb-2">In signing below, the Biosafety Officer certifies that:</p>
+                  <ul className="space-y-1 text-xs text-green-700">
+                    <li>• New/transferred PI is informed about and acknowledges all the upcoming roles/responsibilities/requirements of the LPI as indicated in the Biosafety Manual and IBC Research Application Approval procedure.</li>
+                  </ul>
+                </div>
+
+                {/* Finance & Procurement Certification */}
+                <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <h4 className="font-medium text-orange-900 mb-2">Finance & Procurement</h4>
+                  <p className="text-xs text-orange-800 mb-2">In signing below, the Business Manager certifies that:</p>
+                  <ul className="space-y-1 text-xs text-orange-700">
+                    <li>• All unconsumed stock/non-stock/special items purchased against the project have been identified – as applicable.</li>
+                    <li>• RA-206 Acknowledgment of Inventory Receipt Form and Inventory List has been discussed/obtained – as applicable.</li>
+                    <li>• New/transferred PI acknowledges fulfilling all the upcoming roles/responsibilities pertaining to the research project's budget and have been administered the changes.</li>
+                  </ul>
+                </div>
+
+                {/* Research Grants Certification */}
+                <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                  <h4 className="font-medium text-indigo-900 mb-2">Research Grants Manager</h4>
+                  <p className="text-xs text-indigo-800 mb-2">In signing below, the Research Grants Manager certifies that:</p>
+                  <ul className="space-y-1 text-xs text-indigo-700">
+                    <li>• All grant-related information has been accurately transferred and acknowledged.</li>
+                    <li>• New/transferred PI acknowledges fulfilling all the upcoming roles/responsibilities pertaining to grant(s).</li>
+                  </ul>
+                </div>
+
+                {/* Research Contracts Certification */}
+                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                  <h4 className="font-medium text-red-900 mb-2">Research Contract Specialist</h4>
+                  <p className="text-xs text-red-800 mb-2">In signing below, the Research Contract Specialist certifies that:</p>
+                  <ul className="space-y-1 text-xs text-red-700">
+                    <li>• All legal contracts and terms have been discussed and have been modified, transferred, and/or closed as applicable by all counterparties.</li>
+                    <li>• Intellectual Property (IP) materials, contracts, and terms have been discussed and modified, transferred, and/or closed as applicable by all counterparties.</li>
+                    <li>• New/transferred PI acknowledges fulfilling all the upcoming roles/responsibilities of the research contract.</li>
+                  </ul>
+                </div>
+
+                {/* Research Governance Certification */}
+                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <h4 className="font-medium text-yellow-900 mb-2">Research Governance Manager</h4>
+                  <p className="text-xs text-yellow-800 mb-2">In signing below, the Research Governance Manager ensures that:</p>
+                  <ul className="space-y-1 text-xs text-yellow-700">
+                    <li>• Timely transfer of responsibilities to the new PI.</li>
+                    <li>• PI responsibilities are shifted to another appropriate PI.</li>
+                    <li>• If the Study is closing research records are retained at least for 3 years. Records retention must also comply with all other applicable regulations governing the study.</li>
+                    <li>• All data records, including regulatory documentation and participant files, should be retained as per Sidra's retention Policy.</li>
+                    <li>• All aspects concerning the project quality and compliance have been conducted in accordance with Sidra policies and procedures based on a sample basis.</li>
+                  </ul>
+                </div>
+
+                {/* Research Data Management Certification */}
+                <div className="p-3 bg-teal-50 rounded-lg border border-teal-200">
+                  <h4 className="font-medium text-teal-900 mb-2">Research Data Management Manager</h4>
+                  <p className="text-xs text-teal-800 mb-2">In signing below, the Research Data Management Manager certifies that:</p>
+                  <ul className="space-y-1 text-xs text-teal-700">
+                    <li>• All related data has been accurately identified, located, transferred, and acknowledged by the PI.</li>
+                    <li>• R004 - Research Data Access/Sharing Application Form has been obtained/discussed – as applicable.</li>
+                    <li>• New/transferred PI acknowledges fulfilling all the upcoming roles/responsibilities pertaining to managing the related data.</li>
+                    <li>• Verify that the new LPI has been set as the data owner in the data management systems and storage.</li>
+                  </ul>
+                </div>
+
+                {/* PMO Certification */}
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="font-medium text-gray-900 mb-2">PMO (All changes)</h4>
+                  <p className="text-xs text-gray-800 mb-2">In signing below, the PMO certifies that:</p>
+                  <ul className="space-y-1 text-xs text-gray-700">
+                    <li>• Stakeholders, where applicable, have been informed accordingly.</li>
+                    <li>• The PMO database has been subsequently implemented to reflect all changes.</li>
+                  </ul>
+                </div>
+
               </CardContent>
             </Card>
           </div>
