@@ -1159,6 +1159,9 @@ export const featureRequests = pgTable("feature_requests", {
   implementationNotes: text("implementation_notes"), // Developer notes during implementation
   estimatedEffort: text("estimated_effort"), // low, medium, high (development effort estimate)
   tags: text("tags").array(), // Searchable tags for categorization
+  requestedBy: text("requested_by").notNull().default("Anonymous User"), // Who submitted the request
+  upvotes: integer("upvotes").notNull().default(0), // Number of upvotes
+  upvotedBy: text("upvoted_by").array().default([]), // Array of user IDs who upvoted
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
