@@ -60,12 +60,20 @@ export default function PmoApplicationsList() {
             Manage research activity plans and PMO application workflows
           </p>
         </div>
-        <Link href="/pmo/applications/create">
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            New RA-200 Form
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/pmo/applications/create">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New RA-200
+            </Button>
+          </Link>
+          <Link href="/pmo/applications/create-ra205a">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New RA-205A
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
