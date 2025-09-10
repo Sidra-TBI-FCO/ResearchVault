@@ -145,18 +145,32 @@ function Router() {
         <Route path="/facilities/rooms/create" component={CreateRoom} />
         <Route path="/facilities/rooms/edit/:id" component={EditRoom} />
 
-        {/* Programs */}
+        {/* PMO Office - Programs */}
+        <Route path="/pmo/programs" component={ProgramsList} />
+        <Route path="/pmo/programs/:id/edit" component={EditProgram} />
+        <Route path="/pmo/programs/:id" component={ProgramDetail} />
+        
+        {/* PMO Office - Projects (PRJ) */}
+        <Route path="/pmo/projects" component={ProjectList} />
+        <Route path="/pmo/projects/create" component={CreateProject} />
+        <Route path="/pmo/projects/:id/edit" component={EditProject} />
+        <Route path="/pmo/projects/:id" component={ProjectDetail} />
+        
+        {/* PMO Office - Research Activities (SDR) */}
+        <Route path="/pmo/research-activities" component={ResearchActivitiesList} />
+        <Route path="/pmo/research-activities/create" component={CreateResearchActivity} />
+        <Route path="/pmo/research-activities/:id/edit" component={EditResearchActivity} />
+        <Route path="/pmo/research-activities/:id" component={ResearchActivityDetail} />
+        <Route path="/pmo/research-activities/:id/team" component={ResearchActivityTeam} />
+        
+        {/* Legacy routes - redirect to PMO paths */}
         <Route path="/programs" component={ProgramsList} />
         <Route path="/programs/:id/edit" component={EditProgram} />
         <Route path="/programs/:id" component={ProgramDetail} />
-        
-        {/* Projects (PRJ) */}
         <Route path="/projects" component={ProjectList} />
         <Route path="/projects/create" component={CreateProject} />
         <Route path="/projects/:id/edit" component={EditProject} />
         <Route path="/projects/:id" component={ProjectDetail} />
-        
-        {/* Research Activities (SDR) */}
         <Route path="/research-activities" component={ResearchActivitiesList} />
         <Route path="/research-activities/create" component={CreateResearchActivity} />
         <Route path="/research-activities/:id/edit" component={EditResearchActivity} />
