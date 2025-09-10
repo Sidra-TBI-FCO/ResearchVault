@@ -17,12 +17,14 @@ import { apiRequest } from "@/lib/queryClient";
 
 // Form validation schema for RA-205A
 const ra205aFormSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  sdrNumber: z.string().min(1, "SDR Number is required"),
-  currentTitle: z.string().min(1, "Current SDR Title is required"),
-  activityType: z.enum(["Human", "Non-Human"], {
-    required_error: "Activity type is required",
-  }),
+  selectedSdrId: z.number({ required_error: "Please select an existing SDR" }),
+  sdrNumber: z.string().optional(), // Auto-populated from selected SDR
+  currentTitle: z.string().optional(), // Auto-populated from selected SDR
+  projectId: z.number().optional(), // Auto-populated from selected SDR
+  currentPiId: z.number().optional(), // Auto-populated from selected SDR
+  activityType: z.enum(["Human", "Non-Human"]).optional(), // Auto-populated
+  
+  // Change category with conditional new title
   changeCategory: z.object({
     lpiChange: z.boolean().default(false),
     budgetChange: z.boolean().default(false),
@@ -31,11 +33,47 @@ const ra205aFormSchema = z.object({
     other: z.boolean().default(false),
     otherDescription: z.string().optional(),
   }),
+  
+  // New title only required if titleChange is true
+  newTitle: z.string().optional(),
+  
   changeReason: z.string().min(10, "Change reason must be at least 10 characters"),
-  projectId: z.number().optional(),
-  currentPiId: z.number().optional(),
   newPiId: z.number().optional(),
   budgetSource: z.string().optional(),
+  
+  // Approval tracking fields
+  changeRequestNumber: z.string().optional(), // PMO generated
+  approvals: z.object({
+    currentPi: z.object({
+      name: z.string().optional(),
+      date: z.string().optional(),
+      signature: z.string().optional(),
+    }).optional(),
+    newPi: z.object({
+      name: z.string().optional(),
+      date: z.string().optional(),
+      signature: z.string().optional(),
+    }).optional(),
+    stakeholders: z.object({
+      pmo: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      researchLabs: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      biosafety: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      finance: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      grants: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      contracts: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      governance: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+      dataManagement: z.object({ name: z.string().optional(), date: z.string().optional(), signature: z.string().optional() }).optional(),
+    }).optional(),
+  }).optional(),
+}).refine((data) => {
+  // If titleChange is true, newTitle is required
+  if (data.changeCategory.titleChange && (!data.newTitle || data.newTitle.trim().length < 5)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "New title is required when title change is selected",
+  path: ["newTitle"],
 });
 
 type RA205AFormData = z.infer<typeof ra205aFormSchema>;
@@ -46,7 +84,7 @@ export default function CreateRA205AApplication() {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch scientists and projects for dropdowns
+  // Fetch data for dropdowns
   const { data: scientists = [] } = useQuery<any[]>({
     queryKey: ["/api/scientists"],
   });
@@ -55,13 +93,19 @@ export default function CreateRA205AApplication() {
     queryKey: ["/api/projects"],
   });
 
+  const { data: researchActivities = [] } = useQuery<any[]>({
+    queryKey: ["/api/research-activities"],
+  });
+
   const form = useForm<RA205AFormData>({
     resolver: zodResolver(ra205aFormSchema),
     defaultValues: {
-      title: "",
+      selectedSdrId: undefined,
       sdrNumber: "",
       currentTitle: "",
       activityType: "Human",
+      projectId: undefined,
+      currentPiId: undefined,
       changeCategory: {
         lpiChange: false,
         budgetChange: false,
@@ -70,11 +114,25 @@ export default function CreateRA205AApplication() {
         other: false,
         otherDescription: "",
       },
+      newTitle: "",
       changeReason: "",
-      projectId: undefined,
-      currentPiId: undefined,
       newPiId: undefined,
       budgetSource: "",
+      changeRequestNumber: "",
+      approvals: {
+        currentPi: { name: "", date: "", signature: "" },
+        newPi: { name: "", date: "", signature: "" },
+        stakeholders: {
+          pmo: { name: "", date: "", signature: "" },
+          researchLabs: { name: "Patricia Hachem", date: "", signature: "" },
+          biosafety: { name: "", date: "", signature: "" },
+          finance: { name: "", date: "30/06/25", signature: "" },
+          grants: { name: "Irem Mueed", date: "", signature: "" },
+          contracts: { name: "", date: "", signature: "" },
+          governance: { name: "", date: "", signature: "" },
+          dataManagement: { name: "", date: "", signature: "" },
+        },
+      },
     },
   });
 
@@ -82,9 +140,10 @@ export default function CreateRA205AApplication() {
     mutationFn: async (data: RA205AFormData) => {
       return apiRequest("/api/pmo-applications", "POST", {
         formType: "RA-205A",
-        title: data.title,
+        title: data.newTitle || data.currentTitle, // Use new title if provided, otherwise current
         sdrNumber: data.sdrNumber,
         currentTitle: data.currentTitle,
+        newTitle: data.newTitle,
         activityType: data.activityType,
         changeCategory: data.changeCategory,
         changeReason: data.changeReason,
@@ -93,6 +152,9 @@ export default function CreateRA205AApplication() {
         newPiId: data.newPiId || null,
         budgetSource: data.budgetSource || null,
         leadScientistId: data.newPiId || data.currentPiId || null,
+        selectedSdrId: data.selectedSdrId,
+        changeRequestNumber: data.changeRequestNumber,
+        approvals: data.approvals,
         submittedBy: 46, // Current user - should be dynamic
       });
     },
@@ -123,6 +185,22 @@ export default function CreateRA205AApplication() {
   };
 
   const changeCategory = form.watch("changeCategory");
+  const selectedSdrId = form.watch("selectedSdrId");
+  
+  // Auto-populate fields when SDR is selected
+  const handleSdrSelection = (sdrId: string) => {
+    const selectedActivity = researchActivities.find((activity: any) => activity.id === parseInt(sdrId));
+    if (selectedActivity) {
+      form.setValue("selectedSdrId", selectedActivity.id);
+      form.setValue("sdrNumber", selectedActivity.sdrNumber);
+      form.setValue("currentTitle", selectedActivity.title);
+      form.setValue("projectId", selectedActivity.projectId);
+      form.setValue("currentPiId", selectedActivity.budgetHolderId);
+      // Map sidraBranch to activity type (Research/Clinical -> Human, others -> Non-Human)
+      const activityType = selectedActivity.sidraBranch === "Research" || selectedActivity.sidraBranch === "Clinical" ? "Human" : "Non-Human";
+      form.setValue("activityType", activityType);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
