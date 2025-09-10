@@ -230,7 +230,7 @@ export default function EditRa200() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" onClick={() => setLocation(`/pmo/applications/${applicationId}`)}>
@@ -243,7 +243,7 @@ export default function EditRa200() {
         </div>
       </div>
 
-      <Tabs defaultValue="guide" className="space-y-6">
+      <Tabs defaultValue="guide" className="space-y-8">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="guide">User Guide</TabsTrigger>
           <TabsTrigger value="header">Header Info</TabsTrigger>
@@ -356,7 +356,7 @@ export default function EditRa200() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600" />
@@ -412,7 +412,7 @@ export default function EditRa200() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="title">Sidra Research Activity ID (SDR) Title *</Label>
                 <Input
                   id="title"
