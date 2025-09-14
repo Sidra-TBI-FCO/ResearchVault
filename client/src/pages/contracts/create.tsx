@@ -29,22 +29,28 @@ import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PermissionWrapper } from "@/components/PermissionWrapper";
 
-// Extend the insert schema with additional validations
+// Enhanced schema matching the current database model
 const createResearchContractSchema = insertResearchContractSchema.extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
+  contractNumber: z.string().min(3, "Contract number is required"),
   contractorName: z.string().min(2, "Contractor name is required"),
   researchActivityId: z.number({
     required_error: "Please select a research activity",
-  }),
+  }).nullable().optional(),
+  leadPIId: z.number({
+    required_error: "Please select a lead PI",
+  }).nullable().optional(),
   contractType: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
-  value: z.string().optional(),
-  status: z.string({
+  contractValue: z.number().min(0, "Contract value must be positive").optional(),
+  currency: z.string().default("QAR"),
+  fundingSourceCategory: z.string().optional(),
+  status: z.enum(["submitted", "under_review", "active", "completed", "terminated", "expired"], {
     required_error: "Please select a status",
   }),
   description: z.string().optional(),
-  principalInvestigatorId: z.number().nullable().optional(),
+  requestedByUserId: z.number().optional(),
 });
 
 type CreateResearchContractFormValues = z.infer<typeof createResearchContractSchema>;
@@ -64,12 +70,15 @@ export default function CreateContract() {
     queryKey: ['/api/research-activities'],
   });
 
-  // Default form values
+  // Default form values for enhanced schema
   const defaultValues: Partial<CreateResearchContractFormValues> = {
-    status: "Draft",
+    status: "submitted",
     startDate: new Date(),
     contractType: "Collaboration",
-    principalInvestigatorId: null,
+    currency: "QAR",
+    leadPIId: null,
+    researchActivityId: null,
+    requestedByUserId: currentUser.id,
   };
 
   const form = useForm<CreateResearchContractFormValues>({
@@ -118,6 +127,32 @@ export default function CreateContract() {
           <h1 className="text-2xl font-semibold text-neutral-400">New Research Contract</h1>
         </div>
 
+        {/* Contract Officer Notice */}
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">!</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-orange-800 mb-2">
+                  Contract Officer Access Only
+                </h3>
+                <p className="text-orange-700 mb-3">
+                  This form is exclusively for Contract Officers and Management to create contracts directly in the system.
+                  It bypasses the normal contract request and approval process.
+                </p>
+                <div className="text-sm text-orange-600">
+                  <p><strong>Regular users should use:</strong> "Request New Contract" button to submit requests through proper channels.</p>
+                  <p><strong>This form should only be used when:</strong> Creating pre-approved contracts or when authorized to bypass standard workflow.</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Contract Information</CardTitle>
@@ -140,18 +175,35 @@ export default function CreateContract() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="contractNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contract Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. CNT-2025-001" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Unique contract identifier
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <FormField
                   control={form.control}
                   name="contractorName"
                   render={({ field }) => (
-                    <FormItem className="col-span-full">
+                    <FormItem>
                       <FormLabel>Contractor Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. Novagen Therapeutics" {...field} />
                       </FormControl>
                       <FormDescription>
-                        Name of the external organization or entity
+                        External organization or entity
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -165,8 +217,8 @@ export default function CreateContract() {
                     <FormItem>
                       <FormLabel>Associated Research Activity (SDR)</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
+                        onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                        defaultValue={field.value?.toString() || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -174,6 +226,7 @@ export default function CreateContract() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
                           {activitiesLoading ? (
                             <SelectItem value="loading" disabled>Loading research activities...</SelectItem>
                           ) : (
@@ -185,6 +238,9 @@ export default function CreateContract() {
                           )}
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        Optional: Link to an existing research activity
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -192,17 +248,17 @@ export default function CreateContract() {
                 
                 <FormField
                   control={form.control}
-                  name="principalInvestigatorId"
+                  name="leadPIId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Investigator</FormLabel>
+                      <FormLabel>Lead Principal Investigator</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
                         defaultValue={field.value?.toString() || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select PI (optional)" />
+                            <SelectValue placeholder="Select Lead PI" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -219,7 +275,7 @@ export default function CreateContract() {
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Select the PI responsible for this contract (optional)
+                        Primary PI responsible for this contract
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -271,14 +327,17 @@ export default function CreateContract() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Draft">Draft</SelectItem>
-                          <SelectItem value="Under Review">Under Review</SelectItem>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Completed">Completed</SelectItem>
-                          <SelectItem value="Terminated">Terminated</SelectItem>
+                          <SelectItem value="submitted">Submitted</SelectItem>
+                          <SelectItem value="under_review">Under Review</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="terminated">Terminated</SelectItem>
+                          <SelectItem value="expired">Expired</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        Current contract workflow status
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -286,15 +345,74 @@ export default function CreateContract() {
                 
                 <FormField
                   control={form.control}
-                  name="value"
+                  name="contractValue"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Contract Value</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. $750,000" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="750000"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          value={field.value?.toString() || ""}
+                        />
                       </FormControl>
                       <FormDescription>
-                        The total financial value of the contract
+                        Total financial value (numeric)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="QAR">QAR (Qatari Riyal)</SelectItem>
+                          <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                          <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                          <SelectItem value="GBP">GBP (British Pound)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fundingSourceCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Funding Source Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select funding source" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="QNRF">QNRF</SelectItem>
+                          <SelectItem value="PI Fund">PI Fund</SelectItem>
+                          <SelectItem value="IRF Fund">IRF Fund</SelectItem>
+                          <SelectItem value="External">External</SelectItem>
+                          <SelectItem value="Industry">Industry</SelectItem>
+                          <SelectItem value="Government">Government</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Source of funding for this contract
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

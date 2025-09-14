@@ -23,6 +23,9 @@ export default function ContractsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentUser } = useCurrentUser();
   const { canEdit } = useElementPermissions(currentUser.role, "contracts");
+  
+  // Only Contract Officers and Management can create contracts directly (bypass request process)
+  const canCreateContractDirectly = currentUser.role === "contracts_officer" || currentUser.role === "Management";
 
   const { data: contracts, isLoading } = useQuery<EnhancedResearchContract[]>({
     queryKey: ['/api/research-contracts'],
@@ -84,7 +87,7 @@ export default function ContractsList() {
                 Request New Contract
               </Button>
             </Link>
-            {canEdit && (
+            {canCreateContractDirectly && (
               <Link href="/contracts/create">
                 <Button 
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
