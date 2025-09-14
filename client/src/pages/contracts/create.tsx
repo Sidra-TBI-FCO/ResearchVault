@@ -26,6 +26,8 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
 
 // Extend the insert schema with additional validations
 const createResearchContractSchema = insertResearchContractSchema.extend({
@@ -50,6 +52,7 @@ type CreateResearchContractFormValues = z.infer<typeof createResearchContractSch
 export default function CreateContract() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { currentUser } = useCurrentUser();
   
   // Get all principal investigators for selection
   const { data: principalInvestigators, isLoading: piLoading } = useQuery<Scientist[]>({
@@ -101,14 +104,19 @@ export default function CreateContract() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">New Research Contract</h1>
-      </div>
+    <PermissionWrapper 
+      currentUserRole={currentUser.role} 
+      navigationItem="contracts"
+      showReadOnlyBanner={true}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold text-neutral-400">New Research Contract</h1>
+        </div>
 
       <Card>
         <CardHeader>
@@ -171,7 +179,7 @@ export default function CreateContract() {
                           ) : (
                             researchActivities?.map((activity) => (
                               <SelectItem key={activity.id} value={activity.id.toString()}>
-                                {activity.sdrNumber} - {activity.projectTitle}
+                                {activity.sdrNumber} - {activity.title}
                               </SelectItem>
                             ))
                           )}
@@ -204,7 +212,7 @@ export default function CreateContract() {
                           ) : (
                             principalInvestigators?.map((pi) => (
                               <SelectItem key={pi.id} value={pi.id.toString()}>
-                                {pi.name}
+                                {pi.firstName} {pi.lastName}
                               </SelectItem>
                             ))
                           )}
@@ -413,6 +421,7 @@ export default function CreateContract() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PermissionWrapper>
   );
 }

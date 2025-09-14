@@ -155,9 +155,33 @@ export interface IStorage {
   getResearchContract(id: number): Promise<ResearchContract | undefined>;
   getResearchContractByContractNumber(contractNumber: string): Promise<ResearchContract | undefined>;
   getResearchContractsForResearchActivity(researchActivityId: number): Promise<ResearchContract[]>;
+  getResearchContractsForUser(userId: number): Promise<ResearchContract[]>;
+  getResearchContractsForProject(projectId: number): Promise<ResearchContract[]>;
   createResearchContract(contract: InsertResearchContract): Promise<ResearchContract>;
   updateResearchContract(id: number, contract: Partial<InsertResearchContract>): Promise<ResearchContract | undefined>;
   deleteResearchContract(id: number): Promise<boolean>;
+
+  // Research Contract Scope Items operations
+  getResearchContractScopeItems(contractId: number): Promise<ResearchContractScopeItem[]>;
+  getResearchContractScopeItem(id: number): Promise<ResearchContractScopeItem | undefined>;
+  createResearchContractScopeItem(item: InsertResearchContractScopeItem): Promise<ResearchContractScopeItem>;
+  updateResearchContractScopeItem(id: number, item: Partial<InsertResearchContractScopeItem>): Promise<ResearchContractScopeItem | undefined>;
+  deleteResearchContractScopeItem(id: number): Promise<boolean>;
+
+  // Research Contract Extensions operations
+  getResearchContractExtensions(contractId: number): Promise<ResearchContractExtension[]>;
+  getResearchContractExtension(id: number): Promise<ResearchContractExtension | undefined>;
+  createResearchContractExtension(extension: InsertResearchContractExtension): Promise<ResearchContractExtension>;
+  updateResearchContractExtension(id: number, extension: Partial<InsertResearchContractExtension>): Promise<ResearchContractExtension | undefined>;
+  deleteResearchContractExtension(id: number): Promise<boolean>;
+
+  // Research Contract Documents operations
+  getResearchContractDocuments(contractId: number): Promise<ResearchContractDocument[]>;
+  getResearchContractDocumentsForExtension(extensionId: number): Promise<ResearchContractDocument[]>;
+  getResearchContractDocument(id: number): Promise<ResearchContractDocument | undefined>;
+  createResearchContractDocument(document: InsertResearchContractDocument): Promise<ResearchContractDocument>;
+  updateResearchContractDocument(id: number, document: Partial<InsertResearchContractDocument>): Promise<ResearchContractDocument | undefined>;
+  deleteResearchContractDocument(id: number): Promise<boolean>;
 
   // Building operations
   getBuildings(): Promise<Building[]>;

@@ -103,6 +103,7 @@ import IbcReviewPage from "@/pages/ibc-reviewer/review";
 // Research Contracts
 import ContractsList from "@/pages/contracts";
 import CreateContract from "@/pages/contracts/create";
+import ContractRequest from "@/pages/contracts/request";
 import ResearchContractDetail from "@/pages/research-contracts/detail";
 import EditResearchContract from "@/pages/research-contracts/edit";
 
@@ -265,6 +266,7 @@ function Router() {
         {/* Research Contracts */}
         <Route path="/contracts" component={ContractsList} />
         <Route path="/contracts/create" component={CreateContract} />
+        <Route path="/contracts/request" component={ContractRequest} />
         <Route path="/research-contracts/:id/edit" component={EditResearchContract} />
         <Route path="/research-contracts/:id" component={ResearchContractDetail} />
         <Route path="/contracts/:id" component={ResearchContractDetail} />

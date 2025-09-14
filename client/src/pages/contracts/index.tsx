@@ -16,9 +16,13 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatFullName } from "@/utils/nameUtils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 export default function ContractsList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { currentUser } = useCurrentUser();
+  const { canEdit } = useElementPermissions(currentUser.role, "contracts");
 
   const { data: contracts, isLoading } = useQuery<EnhancedResearchContract[]>({
     queryKey: ['/api/research-contracts'],
@@ -53,24 +57,45 @@ export default function ContractsList() {
   const filteredContracts = contracts?.filter(contract => {
     return (
       contract.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contract.contractorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (contract.contractorName && contract.contractorName.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (contract.description && contract.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (contract.contractType && contract.contractType.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (contract.principalInvestigator && formatFullName(contract.principalInvestigator).toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (contract.principalInvestigator && contract.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (contract.project && contract.project.title.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Research Contracts</h1>
-        <Link href="/contracts/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            New Contract
-          </Button>
-        </Link>
-      </div>
+    <PermissionWrapper 
+      currentUserRole={currentUser.role} 
+      navigationItem="contracts"
+      showReadOnlyBanner={true}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-neutral-400">Research Contracts</h1>
+          <div className="flex items-center gap-2">
+            <Link href="/contracts/request">
+              <Button 
+                variant="outline"
+                data-testid="button-request-contract"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Request New Contract
+              </Button>
+            </Link>
+            {canEdit && (
+              <Link href="/contracts/create">
+                <Button 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  data-testid="button-create-contract"
+                >
+                  New Contract
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
 
       <Card>
         <CardHeader className="pb-3">
@@ -131,7 +156,7 @@ export default function ContractsList() {
                       </div>
                       {contract.principalInvestigator && (
                         <div className="text-xs text-neutral-200 mt-1 flex items-center">
-                          <span>PI: {formatFullName(contract.principalInvestigator)}</span>
+                          <span>PI: {contract.principalInvestigator.name}</span>
                         </div>
                       )}
                     </TableCell>
@@ -160,10 +185,10 @@ export default function ContractsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {contract.value ? (
+                      {contract.contractValue ? (
                         <div className="flex items-center text-sm font-medium">
                           <DollarSign className="h-4 w-4 mr-1 text-green-600" />
-                          {contract.value}
+                          {contract.contractValue}
                         </div>
                       ) : (
                         <span>—</span>
@@ -209,6 +234,7 @@ export default function ContractsList() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PermissionWrapper>
   );
 }

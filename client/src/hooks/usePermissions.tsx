@@ -38,7 +38,8 @@ const JOB_TITLES = [
   "IRB Officer",
   "IBC Officer",
   "Outcome Officer",
-  "Grant Officer"
+  "Grant Officer",
+  "contracts_officer"
 ];
 
 const NAVIGATION_ITEMS = [
@@ -84,6 +85,20 @@ const createDefaultPermissions = (): NavigationPermission[] => {
           // Full access to grants and related areas
           defaultAccess = "edit";
         } else if (navItem === "reports" || navItem === "publications" || navItem === "patents") {
+          // View access to reports and research outputs
+          defaultAccess = "view";
+        }
+      }
+      
+      // contracts_officer has specialized access
+      if (jobTitle === "contracts_officer") {
+        if (navItem.includes("-office") || navItem.includes("-reviewer")) {
+          // Hide other department offices/reviewer functions
+          defaultAccess = "hide";
+        } else if (navItem === "contracts" || navItem === "programs" || navItem === "projects" || navItem === "research-activities") {
+          // Full access to contracts and related areas
+          defaultAccess = "edit";
+        } else if (navItem === "reports" || navItem === "publications" || navItem === "patents" || navItem === "grants" || navItem === "scientists") {
           // View access to reports and research outputs
           defaultAccess = "view";
         }

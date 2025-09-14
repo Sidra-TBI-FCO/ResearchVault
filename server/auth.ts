@@ -48,6 +48,31 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
+ * Middleware to check if user is a contracts officer
+ */
+export function requireContractsOfficer(req: Request, res: Response, next: NextFunction) {
+  if (req.session && req.session.user && 
+      (req.session.user.role === 'contracts_officer' || req.session.user.role === 'admin')) {
+    return next();
+  }
+  
+  res.status(403).json({ message: "Forbidden. Contracts officer access required." });
+}
+
+/**
+ * Middleware to check if user can read contracts (own contracts + officers can see all)
+ */
+export function requireContractsRead(req: Request, res: Response, next: NextFunction) {
+  if (req.session && req.session.user) {
+    // Add user info to request for filtering in routes
+    (req as any).currentUser = req.session.user;
+    return next();
+  }
+  
+  res.status(401).json({ message: "Unauthorized. Please log in." });
+}
+
+/**
  * Login a user
  */
 export async function loginUser(username: string, password: string) {

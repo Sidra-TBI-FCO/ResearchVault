@@ -23,6 +23,9 @@ import {
   ibcDocuments, IbcDocument, InsertIbcDocument,
   ibcBoardMembers, IbcBoardMember, InsertIbcBoardMember,
   researchContracts, ResearchContract, InsertResearchContract,
+  researchContractScopeItems, ResearchContractScopeItem, InsertResearchContractScopeItem,
+  researchContractExtensions, ResearchContractExtension, InsertResearchContractExtension,
+  researchContractDocuments, ResearchContractDocument, InsertResearchContractDocument,
   irbBoardMembers, IrbBoardMember, InsertIrbBoardMember,
   buildings, Building, InsertBuilding,
   rooms, Room, InsertRoom,
@@ -1072,8 +1075,159 @@ export class DatabaseStorage implements IStorage {
     return updatedContract;
   }
 
+  async getResearchContractsForUser(userId: number): Promise<ResearchContract[]> {
+    return await db.select().from(researchContracts).where(eq(researchContracts.requestedByUserId, userId));
+  }
+
+  async getResearchContractsForProject(projectId: number): Promise<ResearchContract[]> {
+    // Get contracts via research activities associated with the project
+    return await db
+      .select({
+        id: researchContracts.id,
+        researchActivityId: researchContracts.researchActivityId,
+        contractNumber: researchContracts.contractNumber,
+        title: researchContracts.title,
+        leadPIId: researchContracts.leadPIId,
+        irbProtocol: researchContracts.irbProtocol,
+        ibcProtocol: researchContracts.ibcProtocol,
+        qnrfNumber: researchContracts.qnrfNumber,
+        requestState: researchContracts.requestState,
+        startDate: researchContracts.startDate,
+        endDate: researchContracts.endDate,
+        remarks: researchContracts.remarks,
+        fundingSourceCategory: researchContracts.fundingSourceCategory,
+        contractorName: researchContracts.contractorName,
+        internalCostSidra: researchContracts.internalCostSidra,
+        internalCostCounterparty: researchContracts.internalCostCounterparty,
+        moneyOut: researchContracts.moneyOut,
+        isPORelevant: researchContracts.isPORelevant,
+        contractType: researchContracts.contractType,
+        status: researchContracts.status,
+        description: researchContracts.description,
+        documents: researchContracts.documents,
+        requestedByUserId: researchContracts.requestedByUserId,
+        contractValue: researchContracts.contractValue,
+        currency: researchContracts.currency,
+        initiationRequestedAt: researchContracts.initiationRequestedAt,
+        reminderEmail: researchContracts.reminderEmail,
+        officeFormStatus: researchContracts.officeFormStatus,
+        createdAt: researchContracts.createdAt,
+        updatedAt: researchContracts.updatedAt,
+      })
+      .from(researchContracts)
+      .innerJoin(researchActivities, eq(researchContracts.researchActivityId, researchActivities.id))
+      .where(eq(researchActivities.projectId, projectId));
+  }
+
   async deleteResearchContract(id: number): Promise<boolean> {
     const result = await db.delete(researchContracts).where(eq(researchContracts.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Research Contract Scope Items operations
+  async getResearchContractScopeItems(contractId: number): Promise<ResearchContractScopeItem[]> {
+    return await db
+      .select()
+      .from(researchContractScopeItems)
+      .where(eq(researchContractScopeItems.contractId, contractId))
+      .orderBy(asc(researchContractScopeItems.position));
+  }
+
+  async getResearchContractScopeItem(id: number): Promise<ResearchContractScopeItem | undefined> {
+    const [item] = await db.select().from(researchContractScopeItems).where(eq(researchContractScopeItems.id, id));
+    return item;
+  }
+
+  async createResearchContractScopeItem(item: InsertResearchContractScopeItem): Promise<ResearchContractScopeItem> {
+    const [newItem] = await db.insert(researchContractScopeItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateResearchContractScopeItem(id: number, item: Partial<InsertResearchContractScopeItem>): Promise<ResearchContractScopeItem | undefined> {
+    const [updatedItem] = await db
+      .update(researchContractScopeItems)
+      .set(item)
+      .where(eq(researchContractScopeItems.id, id))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteResearchContractScopeItem(id: number): Promise<boolean> {
+    const result = await db.delete(researchContractScopeItems).where(eq(researchContractScopeItems.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Research Contract Extensions operations
+  async getResearchContractExtensions(contractId: number): Promise<ResearchContractExtension[]> {
+    return await db
+      .select()
+      .from(researchContractExtensions)
+      .where(eq(researchContractExtensions.contractId, contractId))
+      .orderBy(asc(researchContractExtensions.sequenceNumber));
+  }
+
+  async getResearchContractExtension(id: number): Promise<ResearchContractExtension | undefined> {
+    const [extension] = await db.select().from(researchContractExtensions).where(eq(researchContractExtensions.id, id));
+    return extension;
+  }
+
+  async createResearchContractExtension(extension: InsertResearchContractExtension): Promise<ResearchContractExtension> {
+    const [newExtension] = await db.insert(researchContractExtensions).values(extension).returning();
+    return newExtension;
+  }
+
+  async updateResearchContractExtension(id: number, extension: Partial<InsertResearchContractExtension>): Promise<ResearchContractExtension | undefined> {
+    const [updatedExtension] = await db
+      .update(researchContractExtensions)
+      .set(extension)
+      .where(eq(researchContractExtensions.id, id))
+      .returning();
+    return updatedExtension;
+  }
+
+  async deleteResearchContractExtension(id: number): Promise<boolean> {
+    const result = await db.delete(researchContractExtensions).where(eq(researchContractExtensions.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Research Contract Documents operations
+  async getResearchContractDocuments(contractId: number): Promise<ResearchContractDocument[]> {
+    return await db
+      .select()
+      .from(researchContractDocuments)
+      .where(eq(researchContractDocuments.contractId, contractId))
+      .orderBy(desc(researchContractDocuments.uploadedAt));
+  }
+
+  async getResearchContractDocumentsForExtension(extensionId: number): Promise<ResearchContractDocument[]> {
+    return await db
+      .select()
+      .from(researchContractDocuments)
+      .where(eq(researchContractDocuments.extensionId, extensionId))
+      .orderBy(desc(researchContractDocuments.uploadedAt));
+  }
+
+  async getResearchContractDocument(id: number): Promise<ResearchContractDocument | undefined> {
+    const [document] = await db.select().from(researchContractDocuments).where(eq(researchContractDocuments.id, id));
+    return document;
+  }
+
+  async createResearchContractDocument(document: InsertResearchContractDocument): Promise<ResearchContractDocument> {
+    const [newDocument] = await db.insert(researchContractDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async updateResearchContractDocument(id: number, document: Partial<InsertResearchContractDocument>): Promise<ResearchContractDocument | undefined> {
+    const [updatedDocument] = await db
+      .update(researchContractDocuments)
+      .set(document)
+      .where(eq(researchContractDocuments.id, id))
+      .returning();
+    return updatedDocument;
+  }
+
+  async deleteResearchContractDocument(id: number): Promise<boolean> {
+    const result = await db.delete(researchContractDocuments).where(eq(researchContractDocuments.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

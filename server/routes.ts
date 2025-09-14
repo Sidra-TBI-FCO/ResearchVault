@@ -22,6 +22,9 @@ import {
   insertIbcSubmissionSchema,
   insertIbcDocumentSchema,
   insertResearchContractSchema,
+  insertResearchContractScopeItemSchema,
+  insertResearchContractExtensionSchema,
+  insertResearchContractDocumentSchema,
   insertProgramSchema,
   insertProjectSchema,
   insertBuildingSchema,
@@ -39,6 +42,7 @@ import {
   insertRa200ApplicationSchema,
   insertRa205aApplicationSchema
 } from "@shared/schema";
+import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
@@ -4325,33 +4329,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Research Contracts
-  app.get('/api/research-contracts', async (req: Request, res: Response) => {
+  // Research Contracts - Enhanced with RBAC
+  app.get('/api/research-contracts', requireContractsRead, async (req: Request, res: Response) => {
     try {
+      const currentUser = (req as any).currentUser;
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
       
       let contracts;
-      if (projectId && !isNaN(projectId)) {
-        contracts = await storage.getResearchContractsForProject(projectId);
+      
+      // Role-based filtering
+      if (currentUser.role === 'contracts_officer' || currentUser.role === 'admin') {
+        // Officers can see all contracts
+        if (projectId && !isNaN(projectId)) {
+          contracts = await storage.getResearchContractsForProject(projectId);
+        } else {
+          contracts = await storage.getResearchContracts();
+        }
       } else {
-        contracts = await storage.getResearchContracts();
+        // Regular users can only see their own contracts
+        contracts = await storage.getResearchContractsForUser(currentUser.id);
+        
+        // Filter by project if requested and user has access
+        if (projectId && !isNaN(projectId)) {
+          contracts = contracts.filter(contract => {
+            // User can see contracts if they are the requester or related to their research activities
+            return contract.requestedByUserId === currentUser.id;
+          });
+        }
       }
       
       // Enhance contracts with project and PI details
       const enhancedContracts = await Promise.all(contracts.map(async (contract) => {
-        const project = await storage.getProject(contract.projectId);
-        const pi = contract.principalInvestigatorId ? 
-          await storage.getScientist(contract.principalInvestigatorId) : null;
+        const researchActivity = contract.researchActivityId ? 
+          await storage.getResearchActivity(contract.researchActivityId) : null;
+        const project = researchActivity?.projectId ? 
+          await storage.getProject(researchActivity.projectId) : null;
+        const pi = contract.leadPIId ? 
+          await storage.getScientist(contract.leadPIId) : null;
         
         return {
           ...contract,
+          researchActivity: researchActivity ? {
+            id: researchActivity.id,
+            sdrNumber: researchActivity.sdrNumber,
+            title: researchActivity.title
+          } : null,
           project: project ? {
             id: project.id,
-            title: project.title
+            projectId: project.projectId,
+            name: project.name
           } : null,
-          principalInvestigator: pi ? {
+          leadPI: pi ? {
             id: pi.id,
-            name: pi.name,
+            name: `${pi.honorificTitle} ${pi.firstName} ${pi.lastName}`,
             profileImageInitials: pi.profileImageInitials
           } : null
         };
@@ -4359,12 +4389,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(enhancedContracts);
     } catch (error) {
+      console.error('Error fetching research contracts:', error);
       res.status(500).json({ message: "Failed to fetch research contracts" });
     }
   });
 
-  app.get('/api/research-contracts/:id', async (req: Request, res: Response) => {
+  app.get('/api/research-contracts/:id', requireContractsRead, async (req: Request, res: Response) => {
     try {
+      const currentUser = (req as any).currentUser;
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid research contract ID" });
@@ -4375,45 +4407,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
+      // Check access permissions
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+          contract.requestedByUserId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied. You can only view your own contracts." });
+      }
+
       // Get related details
-      const project = await storage.getProject(contract.projectId);
-      const pi = contract.principalInvestigatorId ? 
-        await storage.getScientist(contract.principalInvestigatorId) : null;
+      const researchActivity = contract.researchActivityId ? 
+        await storage.getResearchActivity(contract.researchActivityId) : null;
+      const project = researchActivity?.projectId ? 
+        await storage.getProject(researchActivity.projectId) : null;
+      const pi = contract.leadPIId ? 
+        await storage.getScientist(contract.leadPIId) : null;
+      
+      // Get scope items, extensions, and documents
+      const scopeItems = await storage.getResearchContractScopeItems(id);
+      const extensions = await storage.getResearchContractExtensions(id);
+      const documents = await storage.getResearchContractDocuments(id);
       
       const enhancedContract = {
         ...contract,
+        researchActivity: researchActivity ? {
+          id: researchActivity.id,
+          sdrNumber: researchActivity.sdrNumber,
+          title: researchActivity.title,
+          status: researchActivity.status
+        } : null,
         project: project ? {
           id: project.id,
-          title: project.title
+          projectId: project.projectId,
+          name: project.name
         } : null,
-        principalInvestigator: pi ? {
+        leadPI: pi ? {
           id: pi.id,
-          name: pi.name,
+          name: `${pi.honorificTitle} ${pi.firstName} ${pi.lastName}`,
+          email: pi.email,
           profileImageInitials: pi.profileImageInitials
-        } : null
+        } : null,
+        scopeItems: scopeItems,
+        extensions: extensions,
+        documents: documents
       };
 
       res.json(enhancedContract);
     } catch (error) {
+      console.error('Error fetching research contract:', error);
       res.status(500).json({ message: "Failed to fetch research contract" });
     }
   });
 
-  app.post('/api/research-contracts', async (req: Request, res: Response) => {
+  app.post('/api/research-contracts', requireAuth, async (req: Request, res: Response) => {
     try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const validateData = insertResearchContractSchema.parse(req.body);
       
-      // Check if project exists
-      const project = await storage.getProject(validateData.projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+      // SECURITY: Server controls these fields - ignore any client-sent values
+      validateData.requestedByUserId = currentUser.id;
+      validateData.status = 'submitted'; // Always submitted on creation
+      validateData.contractNumber = `CR-${Date.now()}-${currentUser.id}`; // Generate unique contract number
+      
+      // Check if research activity exists
+      if (validateData.researchActivityId) {
+        const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+        if (!researchActivity) {
+          return res.status(404).json({ message: "Research activity not found" });
+        }
       }
       
-      // Check if principal investigator exists if provided
-      if (validateData.principalInvestigatorId) {
-        const pi = await storage.getScientist(validateData.principalInvestigatorId);
+      // Check if lead PI exists if provided
+      if (validateData.leadPIId) {
+        const pi = await storage.getScientist(validateData.leadPIId);
         if (!pi) {
-          return res.status(404).json({ message: "Principal investigator not found" });
+          return res.status(404).json({ message: "Lead PI not found" });
         }
       }
       
@@ -4423,32 +4493,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
+      console.error('Error creating research contract:', error);
       res.status(500).json({ message: "Failed to create research contract" });
     }
   });
 
-  app.patch('/api/research-contracts/:id', async (req: Request, res: Response) => {
+  app.patch('/api/research-contracts/:id', requireAuth, async (req: Request, res: Response) => {
     try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid research contract ID" });
       }
 
+      // Get existing contract to check permissions
+      const existingContract = await storage.getResearchContract(id);
+      if (!existingContract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
       const validateData = insertResearchContractSchema.partial().parse(req.body);
       
-      // Check if project exists if projectId is provided
-      if (validateData.projectId) {
-        const project = await storage.getProject(validateData.projectId);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
+      // Check permissions for updates
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = existingContract.requestedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner) {
+        return res.status(403).json({ message: "Access denied. You can only update your own contracts." });
+      }
+      
+      // Workflow validation - only officers can change status after submission
+      if (validateData.status && validateData.status !== existingContract.status) {
+        if (!isContractsOfficer && existingContract.status !== 'draft') {
+          return res.status(403).json({ message: "Only contracts officers can change contract status after submission." });
         }
       }
       
-      // Check if principal investigator exists if provided
-      if (validateData.principalInvestigatorId) {
-        const pi = await storage.getScientist(validateData.principalInvestigatorId);
+      // Check if research activity exists if provided
+      if (validateData.researchActivityId) {
+        const researchActivity = await storage.getResearchActivity(validateData.researchActivityId);
+        if (!researchActivity) {
+          return res.status(404).json({ message: "Research activity not found" });
+        }
+      }
+      
+      // Check if lead PI exists if provided
+      if (validateData.leadPIId) {
+        const pi = await storage.getScientist(validateData.leadPIId);
         if (!pi) {
-          return res.status(404).json({ message: "Principal investigator not found" });
+          return res.status(404).json({ message: "Lead PI not found" });
         }
       }
       
@@ -4463,15 +4560,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
+      console.error('Error updating research contract:', error);
       res.status(500).json({ message: "Failed to update research contract" });
     }
   });
 
-  app.delete('/api/research-contracts/:id', async (req: Request, res: Response) => {
+  app.delete('/api/research-contracts/:id', requireContractsOfficer, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid research contract ID" });
+      }
+
+      // Check if contract exists
+      const existingContract = await storage.getResearchContract(id);
+      if (!existingContract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      // Only allow deletion if contract is in draft or submitted status
+      if (!['draft', 'submitted'].includes(existingContract.status)) {
+        return res.status(400).json({ message: "Cannot delete contracts that are active, completed, or terminated" });
       }
 
       const success = await storage.deleteResearchContract(id);
@@ -4482,7 +4591,588 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).send();
     } catch (error) {
+      console.error('Error deleting research contract:', error);
       res.status(500).json({ message: "Failed to delete research contract" });
+    }
+  });
+
+  // Research Contract Scope Items API
+  app.get('/api/research-contracts/:contractId/scope-items', requireContractsRead, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser;
+      const contractId = parseInt(req.params.contractId);
+      if (isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Check if contract exists and user has access
+      const contract = await storage.getResearchContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+          contract.requestedByUserId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const scopeItems = await storage.getResearchContractScopeItems(contractId);
+      res.json(scopeItems);
+    } catch (error) {
+      console.error('Error fetching contract scope items:', error);
+      res.status(500).json({ message: "Failed to fetch scope items" });
+    }
+  });
+
+  app.post('/api/research-contracts/:contractId/scope-items', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const contractId = parseInt(req.params.contractId);
+      if (isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Check if contract exists and user has access
+      const contract = await storage.getResearchContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Only allow editing if contract is in draft status (unless officer)
+      if (!isContractsOfficer && contract.status !== 'draft') {
+        return res.status(403).json({ message: "Cannot modify scope items after contract submission" });
+      }
+
+      const validateData = insertResearchContractScopeItemSchema.parse({
+        ...req.body,
+        contractId: contractId
+      });
+
+      const scopeItem = await storage.createResearchContractScopeItem(validateData);
+      res.status(201).json(scopeItem);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error creating scope item:', error);
+      res.status(500).json({ message: "Failed to create scope item" });
+    }
+  });
+
+  app.patch('/api/research-contracts/scope-items/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid scope item ID" });
+      }
+
+      // Get existing scope item to check permissions
+      const existingScopeItem = await storage.getResearchContractScopeItem(id);
+      if (!existingScopeItem) {
+        return res.status(404).json({ message: "Scope item not found" });
+      }
+
+      const contract = await storage.getResearchContract(existingScopeItem.contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Associated contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!isContractsOfficer && contract.status !== 'draft') {
+        return res.status(403).json({ message: "Cannot modify scope items after contract submission" });
+      }
+
+      const validateData = insertResearchContractScopeItemSchema.partial().parse(req.body);
+      const scopeItem = await storage.updateResearchContractScopeItem(id, validateData);
+      
+      if (!scopeItem) {
+        return res.status(404).json({ message: "Scope item not found" });
+      }
+      
+      res.json(scopeItem);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error updating scope item:', error);
+      res.status(500).json({ message: "Failed to update scope item" });
+    }
+  });
+
+  app.delete('/api/research-contracts/scope-items/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid scope item ID" });
+      }
+
+      // Get existing scope item to check permissions
+      const existingScopeItem = await storage.getResearchContractScopeItem(id);
+      if (!existingScopeItem) {
+        return res.status(404).json({ message: "Scope item not found" });
+      }
+
+      const contract = await storage.getResearchContract(existingScopeItem.contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Associated contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!isContractsOfficer && contract.status !== 'draft') {
+        return res.status(403).json({ message: "Cannot modify scope items after contract submission" });
+      }
+
+      const success = await storage.deleteResearchContractScopeItem(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Scope item not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting scope item:', error);
+      res.status(500).json({ message: "Failed to delete scope item" });
+    }
+  });
+
+  // Research Contract Extensions API
+  app.get('/api/research-contracts/:contractId/extensions', requireContractsRead, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser;
+      const contractId = parseInt(req.params.contractId);
+      if (isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Check if contract exists and user has access
+      const contract = await storage.getResearchContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+          contract.requestedByUserId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const extensions = await storage.getResearchContractExtensions(contractId);
+      res.json(extensions);
+    } catch (error) {
+      console.error('Error fetching contract extensions:', error);
+      res.status(500).json({ message: "Failed to fetch extensions" });
+    }
+  });
+
+  app.post('/api/research-contracts/:contractId/extensions', requireContractsOfficer, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.contractId);
+      if (isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Check if contract exists
+      const contract = await storage.getResearchContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      // Only allow extensions for active contracts
+      if (contract.status !== 'active') {
+        return res.status(400).json({ message: "Extensions can only be created for active contracts" });
+      }
+
+      // Get existing extensions to determine sequence number
+      const existingExtensions = await storage.getResearchContractExtensions(contractId);
+      const nextSequenceNumber = existingExtensions.length + 1;
+
+      const validateData = insertResearchContractExtensionSchema.parse({
+        ...req.body,
+        contractId: contractId,
+        sequenceNumber: nextSequenceNumber
+      });
+
+      const extension = await storage.createResearchContractExtension(validateData);
+      res.status(201).json(extension);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error creating extension:', error);
+      res.status(500).json({ message: "Failed to create extension" });
+    }
+  });
+
+  app.patch('/api/research-contracts/extensions/:id', requireContractsOfficer, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid extension ID" });
+      }
+
+      // Check if extension exists
+      const existingExtension = await storage.getResearchContractExtension(id);
+      if (!existingExtension) {
+        return res.status(404).json({ message: "Extension not found" });
+      }
+
+      const validateData = insertResearchContractExtensionSchema.partial().parse(req.body);
+      const extension = await storage.updateResearchContractExtension(id, validateData);
+      
+      if (!extension) {
+        return res.status(404).json({ message: "Extension not found" });
+      }
+      
+      res.json(extension);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error updating extension:', error);
+      res.status(500).json({ message: "Failed to update extension" });
+    }
+  });
+
+  app.delete('/api/research-contracts/extensions/:id', requireContractsOfficer, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid extension ID" });
+      }
+
+      // Check if extension exists
+      const existingExtension = await storage.getResearchContractExtension(id);
+      if (!existingExtension) {
+        return res.status(404).json({ message: "Extension not found" });
+      }
+
+      // Only allow deletion if extension hasn't been approved yet
+      if (existingExtension.approvedAt) {
+        return res.status(400).json({ message: "Cannot delete approved extensions" });
+      }
+
+      const success = await storage.deleteResearchContractExtension(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Extension not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting extension:', error);
+      res.status(500).json({ message: "Failed to delete extension" });
+    }
+  });
+
+  // Research Contract Documents API
+  app.get('/api/research-contracts/:contractId/documents', requireContractsRead, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser;
+      const contractId = parseInt(req.params.contractId);
+      if (isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Check if contract exists and user has access
+      const contract = await storage.getResearchContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+          contract.requestedByUserId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const documents = await storage.getResearchContractDocuments(contractId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching contract documents:', error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  app.get('/api/research-contracts/extensions/:extensionId/documents', requireContractsRead, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser;
+      const extensionId = parseInt(req.params.extensionId);
+      if (isNaN(extensionId)) {
+        return res.status(400).json({ message: "Invalid extension ID" });
+      }
+
+      // Check if extension exists and user has access
+      const extension = await storage.getResearchContractExtension(extensionId);
+      if (!extension) {
+        return res.status(404).json({ message: "Extension not found" });
+      }
+
+      const contract = await storage.getResearchContract(extension.contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Associated contract not found" });
+      }
+
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+          contract.requestedByUserId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const documents = await storage.getResearchContractDocumentsForExtension(extensionId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching extension documents:', error);
+      res.status(500).json({ message: "Failed to fetch extension documents" });
+    }
+  });
+
+  app.post('/api/research-contracts/:contractId/documents', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const contractId = parseInt(req.params.contractId);
+      if (isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Check if contract exists and user has access
+      const contract = await storage.getResearchContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Research contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const validateData = insertResearchContractDocumentSchema.parse({
+        ...req.body,
+        contractId: contractId,
+        uploadedByUserId: currentUser.id
+      });
+
+      const document = await storage.createResearchContractDocument(validateData);
+      res.status(201).json(document);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error creating document:', error);
+      res.status(500).json({ message: "Failed to create document" });
+    }
+  });
+
+  app.post('/api/research-contracts/extensions/:extensionId/documents', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const extensionId = parseInt(req.params.extensionId);
+      if (isNaN(extensionId)) {
+        return res.status(400).json({ message: "Invalid extension ID" });
+      }
+
+      // Check if extension exists and user has access
+      const extension = await storage.getResearchContractExtension(extensionId);
+      if (!extension) {
+        return res.status(404).json({ message: "Extension not found" });
+      }
+
+      const contract = await storage.getResearchContract(extension.contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Associated contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const validateData = insertResearchContractDocumentSchema.parse({
+        ...req.body,
+        extensionId: extensionId,
+        uploadedByUserId: currentUser.id
+      });
+
+      const document = await storage.createResearchContractDocument(validateData);
+      res.status(201).json(document);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error creating extension document:', error);
+      res.status(500).json({ message: "Failed to create extension document" });
+    }
+  });
+
+  app.patch('/api/research-contracts/documents/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+
+      // Get existing document to check permissions
+      const existingDocument = await storage.getResearchContractDocument(id);
+      if (!existingDocument) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Find associated contract
+      let contract;
+      if (existingDocument.contractId) {
+        contract = await storage.getResearchContract(existingDocument.contractId);
+      } else if (existingDocument.extensionId) {
+        const extension = await storage.getResearchContractExtension(existingDocument.extensionId);
+        if (extension) {
+          contract = await storage.getResearchContract(extension.contractId);
+        }
+      }
+
+      if (!contract) {
+        return res.status(404).json({ message: "Associated contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      const isUploader = existingDocument.uploadedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner && !isUploader) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const validateData = insertResearchContractDocumentSchema.partial().parse(req.body);
+      const document = await storage.updateResearchContractDocument(id, validateData);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Error updating document:', error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.delete('/api/research-contracts/documents/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser || req.session?.user;
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+
+      // Get existing document to check permissions
+      const existingDocument = await storage.getResearchContractDocument(id);
+      if (!existingDocument) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Find associated contract
+      let contract;
+      if (existingDocument.contractId) {
+        contract = await storage.getResearchContract(existingDocument.contractId);
+      } else if (existingDocument.extensionId) {
+        const extension = await storage.getResearchContractExtension(existingDocument.extensionId);
+        if (extension) {
+          contract = await storage.getResearchContract(extension.contractId);
+        }
+      }
+
+      if (!contract) {
+        return res.status(404).json({ message: "Associated contract not found" });
+      }
+
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isOwner = contract.requestedByUserId === currentUser.id;
+      const isUploader = existingDocument.uploadedByUserId === currentUser.id;
+      
+      if (!isContractsOfficer && !isOwner && !isUploader) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const success = await storage.deleteResearchContractDocument(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
+  // Additional convenience endpoint for getting contracts by research activity
+  app.get('/api/research-activities/:id/contracts', requireContractsRead, async (req: Request, res: Response) => {
+    try {
+      const currentUser = (req as any).currentUser;
+      const researchActivityId = parseInt(req.params.id);
+      if (isNaN(researchActivityId)) {
+        return res.status(400).json({ message: "Invalid research activity ID" });
+      }
+
+      // Check if research activity exists
+      const researchActivity = await storage.getResearchActivity(researchActivityId);
+      if (!researchActivity) {
+        return res.status(404).json({ message: "Research activity not found" });
+      }
+
+      const contracts = await storage.getResearchContractsForResearchActivity(researchActivityId);
+
+      // Filter contracts based on user permissions
+      const filteredContracts = contracts.filter(contract => {
+        if (currentUser.role === 'contracts_officer' || currentUser.role === 'admin') {
+          return true; // Officers can see all contracts
+        }
+        return contract.requestedByUserId === currentUser.id; // Users can only see their own
+      });
+
+      // Enhance contracts with related details
+      const enhancedContracts = await Promise.all(filteredContracts.map(async (contract) => {
+        const pi = contract.leadPIId ? 
+          await storage.getScientist(contract.leadPIId) : null;
+        
+        return {
+          ...contract,
+          leadPI: pi ? {
+            id: pi.id,
+            name: `${pi.honorificTitle} ${pi.firstName} ${pi.lastName}`,
+            profileImageInitials: pi.profileImageInitials
+          } : null
+        };
+      }));
+
+      res.json(enhancedContracts);
+    } catch (error) {
+      console.error('Error fetching contracts for research activity:', error);
+      res.status(500).json({ message: "Failed to fetch contracts" });
     }
   });
 

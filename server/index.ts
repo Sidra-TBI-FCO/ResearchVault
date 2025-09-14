@@ -41,6 +41,24 @@ app.use(session({
   }
 }));
 
+// Development middleware to bridge dummy users with session-based auth
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    // If no session user is set, use a default development user
+    if (!req.session.user) {
+      // Default to Management user for development access
+      req.session.user = {
+        id: 8,
+        username: 'iris.admin',
+        name: 'Iris Administrator', 
+        email: 'iris.admin@research.org',
+        role: 'Management'
+      };
+    }
+    next();
+  });
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

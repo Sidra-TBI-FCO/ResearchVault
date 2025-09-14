@@ -621,9 +621,70 @@ export const researchContracts = pgTable("research_contracts", {
   moneyOut: integer("money_out"), // Amount of money transferred from Sidra to counterparty
   isPORelevant: boolean("is_po_relevant").default(false), // PO relevant flag
   contractType: text("contract_type"), // Collaboration, Service, Material Transfer, etc.
-  status: text("status").notNull(), // Draft, Active, Completed, Terminated, etc.
+  status: text("status", { 
+    enum: ["submitted", "under_review", "active", "completed", "terminated", "expired"] 
+  }).notNull().default("submitted"), // Enhanced workflow status
   description: text("description"),
   documents: json("documents"), // Store metadata for contract documents
+  
+  // Enhanced workflow and role-based fields
+  requestedByUserId: integer("requested_by_user_id"), // references users.id
+  contractValue: numeric("contract_value", { precision: 15, scale: 2 }), // Contract value amount
+  currency: text("currency").default("QAR"), // Currency type (QAR, USD, EUR, etc.)
+  initiationRequestedAt: timestamp("initiation_requested_at"), // When initiation was requested
+  reminderEmail: text("reminder_email"), // Email for reminders
+  officeFormStatus: text("office_form_status", { 
+    enum: ["complete", "incomplete"] 
+  }).default("incomplete"), // Office form completion status
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Research Contract Scope Items - Track deliverables and scope items
+export const researchContractScopeItems = pgTable("research_contract_scope_items", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id").notNull(), // references researchContracts.id
+  party: text("party", { 
+    enum: ["sidra", "counterparty"] 
+  }).notNull(), // Which party is responsible
+  description: text("description").notNull(), // Scope item description
+  dueDate: date("due_date"), // When this item is due
+  acceptanceCriteria: text("acceptance_criteria"), // Criteria for acceptance
+  position: integer("position").notNull().default(0), // Order/position for sorting
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Research Contract Extensions - Track contract extensions
+export const researchContractExtensions = pgTable("research_contract_extensions", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id").notNull(), // references researchContracts.id
+  sequenceNumber: integer("sequence_number").notNull(), // Extension number (1, 2, 3, etc.)
+  requestedAt: timestamp("requested_at").defaultNow(), // When extension was requested
+  approvedAt: timestamp("approved_at"), // When extension was approved
+  newEndDate: date("new_end_date").notNull(), // New contract end date
+  signatureDate: date("signature_date"), // Date when extension was signed
+  notes: text("notes"), // Additional notes about the extension
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Research Contract Documents - Track contract documents
+export const researchContractDocuments = pgTable("research_contract_documents", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id"), // references researchContracts.id (nullable for extension docs)
+  extensionId: integer("extension_id"), // references researchContractExtensions.id (nullable for main contract docs)
+  documentType: text("document_type", { 
+    enum: ["contract", "amendment", "extension", "sow", "invoice", "report", "correspondence", "other"] 
+  }).notNull(), // Type of document
+  objectKey: text("object_key").notNull(), // Storage object key/path
+  fileName: text("file_name").notNull(), // Original filename
+  mimeType: text("mime_type"), // File MIME type
+  fileSize: integer("file_size"), // File size in bytes
+  uploadedByUserId: integer("uploaded_by_user_id").notNull(), // references users.id
+  uploadedAt: timestamp("uploaded_at").defaultNow(), // Upload timestamp
+  notes: text("notes"), // Additional notes about the document
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -633,6 +694,34 @@ export const insertResearchContractSchema = createInsertSchema(researchContracts
   createdAt: true,
   updatedAt: true,
 });
+
+export const insertResearchContractScopeItemSchema = createInsertSchema(researchContractScopeItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertResearchContractExtensionSchema = createInsertSchema(researchContractExtensions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertResearchContractDocumentSchema = createInsertSchema(researchContractDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  // Ensure at least one of contractId or extensionId is provided
+  contractId: z.number().optional(),
+  extensionId: z.number().optional(),
+}).refine(
+  (data) => data.contractId != null || data.extensionId != null,
+  {
+    message: "Either contractId or extensionId must be provided",
+    path: ["contractId"],
+  }
+);
 
 // Buildings and Rooms (Facilities Management)
 export const buildings = pgTable("buildings", {
@@ -876,6 +965,15 @@ export type InsertIbcApplicationResearchActivity = z.infer<typeof insertIbcAppli
 
 export type ResearchContract = typeof researchContracts.$inferSelect;
 export type InsertResearchContract = z.infer<typeof insertResearchContractSchema>;
+
+export type ResearchContractScopeItem = typeof researchContractScopeItems.$inferSelect;
+export type InsertResearchContractScopeItem = z.infer<typeof insertResearchContractScopeItemSchema>;
+
+export type ResearchContractExtension = typeof researchContractExtensions.$inferSelect;
+export type InsertResearchContractExtension = z.infer<typeof insertResearchContractExtensionSchema>;
+
+export type ResearchContractDocument = typeof researchContractDocuments.$inferSelect;
+export type InsertResearchContractDocument = z.infer<typeof insertResearchContractDocumentSchema>;
 
 export type IrbBoardMember = typeof irbBoardMembers.$inferSelect;
 export type InsertIrbBoardMember = z.infer<typeof insertIrbBoardMemberSchema>;
