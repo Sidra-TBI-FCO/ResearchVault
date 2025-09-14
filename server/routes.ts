@@ -4519,7 +4519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validateData = insertResearchContractSchema.partial().parse(req.body);
       
       // Check permissions for updates
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = existingContract.requestedByUserId === currentUser.id;
       
       if (!isContractsOfficer && !isOwner) {
@@ -4611,7 +4611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
           contract.requestedByUserId !== currentUser.id) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -4638,7 +4638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       
       if (!isContractsOfficer && !isOwner) {
@@ -4685,7 +4685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       
       if (!isContractsOfficer && !isOwner) {
@@ -4732,7 +4732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       
       if (!isContractsOfficer && !isOwner) {
@@ -4771,7 +4771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
           contract.requestedByUserId !== currentUser.id) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -4899,7 +4899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
           contract.requestedByUserId !== currentUser.id) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -4931,7 +4931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
+      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
           contract.requestedByUserId !== currentUser.id) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -4958,7 +4958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       
       if (!isContractsOfficer && !isOwner) {
@@ -5001,7 +5001,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       
       if (!isContractsOfficer && !isOwner) {
@@ -5054,7 +5054,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       const isUploader = existingDocument.uploadedByUserId === currentUser.id;
       
@@ -5108,7 +5108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin';
+      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
       const isOwner = contract.requestedByUserId === currentUser.id;
       const isUploader = existingDocument.uploadedByUserId === currentUser.id;
       

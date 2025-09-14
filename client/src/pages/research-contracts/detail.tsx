@@ -9,11 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { usePublicationCount } from "@/hooks/use-publication-count";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function ResearchContractDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id);
+  const { currentUser } = useCurrentUser();
 
   const { data: contract, isLoading: contractLoading } = useQuery<ResearchContract>({
     queryKey: ['/api/research-contracts', id],
@@ -68,6 +70,14 @@ export default function ResearchContractDetail() {
 
   // Get the number of publications linked to this research activity
   const { count: publicationCount } = usePublicationCount(contract?.researchActivityId);
+
+  // Check if current user can edit this contract
+  const canEditContract = contract && (
+    currentUser.role === 'contracts_officer' || 
+    currentUser.role === 'admin' || 
+    currentUser.role === 'Management' ||
+    contract.requestedByUserId === currentUser.id
+  );
 
   if (contractLoading) {
     return (
@@ -131,14 +141,16 @@ export default function ResearchContractDetail() {
           </Button>
           <h1 className="text-2xl font-semibold text-neutral-400">{contract.title}</h1>
         </div>
-        <Button 
-          className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
-          onClick={() => navigate(`/research-contracts/${contract.id}/edit`)}
-          data-testid="button-edit-contract"
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
+        {canEditContract && (
+          <Button 
+            className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
+            onClick={() => navigate(`/research-contracts/${contract.id}/edit`)}
+            data-testid="button-edit-contract"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
