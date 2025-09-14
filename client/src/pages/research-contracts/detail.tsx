@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResearchActivity, ResearchContract, Scientist } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ResearchActivity, ResearchContract, Scientist, ResearchContractExtension } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -51,6 +52,20 @@ export default function ResearchContractDetail() {
     enabled: !!contract?.leadPIId,
   });
   
+  // Get extensions for this contract
+  const { data: extensions, isLoading: extensionsLoading } = useQuery<ResearchContractExtension[]>({
+    queryKey: ['/api/research-contracts', id, 'extensions'],
+    queryFn: async () => {
+      if (!contract?.id) return [];
+      const response = await fetch(`/api/research-contracts/${contract.id}/extensions`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch contract extensions');
+      }
+      return response.json();
+    },
+    enabled: !!contract?.id,
+  });
+
   // Get the number of publications linked to this research activity
   const { count: publicationCount } = usePublicationCount(contract?.researchActivityId);
 
@@ -58,7 +73,7 @@ export default function ResearchContractDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")} data-testid="button-back-loading">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -86,7 +101,7 @@ export default function ResearchContractDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")} data-testid="button-back-not-found">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -96,7 +111,7 @@ export default function ResearchContractDetail() {
           <CardContent className="py-8">
             <div className="text-center">
               <p className="text-lg text-neutral-400">The research contract you're looking for could not be found.</p>
-              <Button className="mt-4" onClick={() => navigate("/contracts")}>
+              <Button className="mt-4" onClick={() => navigate("/contracts")} data-testid="button-return-contracts">
                 Return to Contracts List
               </Button>
             </div>
@@ -110,7 +125,7 @@ export default function ResearchContractDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")} data-testid="button-back-main">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -119,6 +134,7 @@ export default function ResearchContractDetail() {
         <Button 
           className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
           onClick={() => navigate(`/research-contracts/${contract.id}/edit`)}
+          data-testid="button-edit-contract"
         >
           <Edit className="h-4 w-4 mr-2" />
           Edit
@@ -163,13 +179,13 @@ export default function ResearchContractDetail() {
                       {researchActivityLoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
                       ) : researchActivity ? (
-                        <Button 
-                          variant="link" 
-                          className="p-0 h-auto text-primary-600"
+                        <span 
+                          className="text-primary-600 hover:text-primary-700 cursor-pointer hover:underline"
                           onClick={() => navigate(`/research-activities/${researchActivity.id}`)}
+                          data-testid="link-research-activity"
                         >
                           {researchActivity.title}
-                        </Button>
+                        </span>
                       ) : 'Not assigned'}
                     </span>
                   </div>
@@ -338,6 +354,7 @@ export default function ResearchContractDetail() {
                   className="w-full justify-start" 
                   onClick={() => researchActivity && navigate(`/research-activities/${researchActivity.id}`)}
                   disabled={!researchActivity}
+                  data-testid="button-related-research-activity"
                 >
                   <Layers className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Research Activity</span>
@@ -352,6 +369,7 @@ export default function ResearchContractDetail() {
                   className="w-full justify-start" 
                   onClick={() => leadPI && navigate(`/scientists/${leadPI.id}`)}
                   disabled={!leadPI}
+                  data-testid="button-related-lead-pi"
                 >
                   <Users className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Principal Investigator</span>
@@ -370,6 +388,7 @@ export default function ResearchContractDetail() {
                   className="w-full justify-start" 
                   onClick={() => researchActivity && navigate(`/publications?researchActivityId=${researchActivity.id}`)}
                   disabled={!researchActivity}
+                  data-testid="button-related-publications"
                 >
                   <FileText className="h-4 w-4 mr-2" /> 
                   <span className="flex-1 text-left">Publications</span>
@@ -397,6 +416,7 @@ export default function ResearchContractDetail() {
                         })
                         .catch(() => navigate(`/irb-applications?search=${contract.irbProtocol}`));
                     }}
+                    data-testid="button-related-irb-protocol"
                   >
                     <FileText className="h-4 w-4 mr-2" /> 
                     <span className="flex-1 text-left">IRB Protocol</span>
@@ -424,6 +444,7 @@ export default function ResearchContractDetail() {
                         })
                         .catch(() => navigate(`/ibc-applications?search=${contract.ibcProtocol}`));
                     }}
+                    data-testid="button-related-ibc-protocol"
                   >
                     <FileText className="h-4 w-4 mr-2" /> 
                     <span className="flex-1 text-left">IBC Protocol</span>
@@ -448,7 +469,7 @@ export default function ResearchContractDetail() {
                       <FileText className="h-4 w-4 text-neutral-400" />
                       <span>{contract.documents.agreement}</span>
                     </div>
-                    <Button size="sm" variant="ghost">
+                    <Button size="sm" variant="ghost" data-testid="button-document-view">
                       <FileText className="h-4 w-4" />
                     </Button>
                   </div>
@@ -456,9 +477,90 @@ export default function ResearchContractDetail() {
               ) : (
                 <p className="text-neutral-400">No documents available.</p>
               )}
-              <Button variant="outline" className="w-full mt-4" disabled>
+              <Button variant="outline" className="w-full mt-4" disabled data-testid="button-add-document">
                 <FileText className="h-4 w-4 mr-2" /> Add Document
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Contract Extensions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {extensionsLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : extensions && extensions.length > 0 ? (
+                <div className="space-y-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Extension #</TableHead>
+                        <TableHead>New End Date</TableHead>
+                        <TableHead>Requested</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Notes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {extensions.map((extension) => (
+                        <TableRow key={extension.id} data-testid={`row-extension-${extension.id}`}>
+                          <TableCell className="font-medium">
+                            <Badge variant="outline" data-testid={`badge-extension-sequence-${extension.id}`}>
+                              #{extension.sequenceNumber}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2" data-testid={`cell-extension-end-date-${extension.id}`}>
+                              <Calendar className="h-4 w-4 text-neutral-400" />
+                              {extension.newEndDate ? format(new Date(extension.newEndDate), 'MMM dd, yyyy') : 'Not set'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span data-testid={`cell-extension-requested-${extension.id}`}>
+                              {extension.requestedAt ? format(new Date(extension.requestedAt), 'MMM dd, yyyy') : 'Not set'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              className={
+                                extension.approvedAt ? 
+                                'bg-green-100 text-green-800' : 
+                                'bg-yellow-100 text-yellow-800'
+                              }
+                              data-testid={`badge-extension-status-${extension.id}`}
+                            >
+                              {extension.approvedAt ? 'Approved' : 'Pending Approval'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div 
+                              className="truncate text-sm text-neutral-600" 
+                              title={extension.notes || 'No notes'}
+                              data-testid={`cell-extension-notes-${extension.id}`}
+                            >
+                              {extension.notes || 'No notes'}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
+                  <p className="text-neutral-400">No contract extensions found.</p>
+                  <p className="text-sm text-neutral-300 mt-1">Extensions will appear here when created.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

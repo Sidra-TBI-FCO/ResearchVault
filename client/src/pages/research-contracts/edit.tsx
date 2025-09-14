@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertResearchContractSchema, insertResearchContractScopeItemSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity, type ResearchContractScopeItem } from "@shared/schema";
+import { insertResearchContractSchema, insertResearchContractScopeItemSchema, insertResearchContractExtensionSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity, type ResearchContractScopeItem, type ResearchContractExtension } from "@shared/schema";
 import { ArrowLeft, Loader2, Plus, Minus, CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -34,11 +34,25 @@ const scopeItemSchema = insertResearchContractScopeItemSchema.extend({
   contractId: true, // Will be set from parent contract
 });
 
-// Define a custom schema that includes proper handling for date fields and scope items
+// Extended schema for contract extensions  
+const extensionSchema = insertResearchContractExtensionSchema.extend({
+  newEndDate: z.date({
+    required_error: "New end date is required",
+  }),
+  notes: z.string().optional(),
+  sequenceNumber: z.number().default(1),
+}).omit({
+  contractId: true, // Will be set from parent contract
+  requestedAt: true, // Set automatically
+  approvedAt: true, // Set automatically
+});
+
+// Define a custom schema that includes proper handling for date fields, scope items, and extensions
 const contractEditSchema = insertResearchContractSchema.extend({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   scopeItems: z.array(scopeItemSchema).optional(),
+  extensions: z.array(extensionSchema).optional(),
 });
 
 type ContractEditFormValues = z.infer<typeof contractEditSchema>;
@@ -66,6 +80,13 @@ export default function ResearchContractEdit() {
     enabled: !!id,
   });
 
+  // Get extensions for this contract
+  const { data: extensions, isLoading: extensionsLoading } = useQuery<ResearchContractExtension[]>({
+    queryKey: ['/api/research-contracts', id, 'extensions'],
+    queryFn: () => fetch(`/api/research-contracts/${id}/extensions`).then(res => res.json()),
+    enabled: !!id,
+  });
+
   const form = useForm<ContractEditFormValues>({
     resolver: zodResolver(contractEditSchema),
     defaultValues: {
@@ -88,18 +109,25 @@ export default function ResearchContractEdit() {
         acceptanceCriteria: "",
         position: 0,
       }],
+      extensions: [],
     },
   });
 
-  // Update form when contract and scope items data loads
+  // Update form when contract, scope items, and extensions data loads
   React.useEffect(() => {
-    if (contract && scopeItems !== undefined) {
+    if (contract && scopeItems !== undefined && extensions !== undefined) {
       const formattedScopeItems = scopeItems.map(item => ({
         party: item.party as "sidra" | "counterparty",
         description: item.description,
         dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
         acceptanceCriteria: item.acceptanceCriteria || "",
         position: item.position,
+      }));
+
+      const formattedExtensions = extensions.map(extension => ({
+        newEndDate: new Date(extension.newEndDate),
+        notes: extension.notes || "",
+        sequenceNumber: extension.sequenceNumber,
       }));
       
       form.reset({
@@ -122,9 +150,10 @@ export default function ResearchContractEdit() {
           acceptanceCriteria: "",
           position: 0,
         }],
+        extensions: formattedExtensions,
       });
     }
-  }, [contract, scopeItems, form]);
+  }, [contract, scopeItems, extensions, form]);
 
   // Scope items field array management
   const { fields, append, remove } = useFieldArray({
@@ -142,6 +171,20 @@ export default function ResearchContractEdit() {
     });
   };
 
+  // Extensions field array management
+  const { fields: extensionFields, append: appendExtension, remove: removeExtension } = useFieldArray({
+    control: form.control,
+    name: "extensions",
+  });
+
+  const addExtension = () => {
+    appendExtension({
+      newEndDate: new Date(),
+      notes: "",
+      sequenceNumber: extensionFields.length + 1,
+    });
+  };
+
   const removeScopeItem = (index: number) => {
     if (fields.length > 1) {
       remove(index);
@@ -156,8 +199,8 @@ export default function ResearchContractEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: ContractEditFormValues) => {
-      // Separate scope items from contract data
-      const { scopeItems, ...contractData } = data;
+      // Separate scope items and extensions from contract data
+      const { scopeItems, extensions, ...contractData } = data;
       
       // Update the contract first
       const contractResponse = await apiRequest("PATCH", `/api/research-contracts/${id}`, {
@@ -204,17 +247,47 @@ export default function ResearchContractEdit() {
           });
         }
       }
+
+      // Handle extensions updates - always delete existing extensions first, then recreate from form data
+      try {
+        // Always fetch and delete existing extensions regardless of new array length
+        const existingExtensionsResponse = await fetch(`/api/research-contracts/${id}/extensions`);
+        if (existingExtensionsResponse.ok) {
+          const existingExtensions = await existingExtensionsResponse.json();
+          
+          // Delete each existing extension
+          for (const extension of existingExtensions) {
+            await apiRequest("DELETE", `/api/research-contracts/extensions/${extension.id}`);
+          }
+        }
+      } catch (error) {
+        console.warn("Error deleting existing extensions:", error);
+      }
+
+      // Create new extensions if any exist in the form
+      if (extensions && extensions.length > 0) {
+        for (let i = 0; i < extensions.length; i++) {
+          const extension = extensions[i];
+          await apiRequest("POST", `/api/research-contracts/${id}/extensions`, {
+            newEndDate: extension.newEndDate.toISOString().split('T')[0],
+            notes: extension.notes || null,
+            sequenceNumber: i + 1,
+            // Remove server-managed fields - let server assign requestedAt and approvedAt
+          });
+        }
+      }
       
       return contractResponse.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Research contract and scope items updated successfully",
+        description: "Research contract, scope items, and extensions updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/research-contracts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/research-contracts', id] });
       queryClient.invalidateQueries({ queryKey: ['/api/research-contracts', id, 'scope-items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/research-contracts', id, 'extensions'] });
       navigate(`/research-contracts/${id}`);
     },
     onError: (error: any) => {
@@ -686,6 +759,143 @@ export default function ResearchContractEdit() {
                     {form.formState.errors.scopeItems?.root && (
                       <p className="text-sm font-medium text-destructive">
                         {form.formState.errors.scopeItems.root.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contract Extensions Section */}
+              <div className="space-y-6 mt-8">
+                <div className="border-t pt-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium">Contract Extensions</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage contract extensions and their details
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    {extensionFields.length > 0 ? (
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[100px]">Extension #</TableHead>
+                              <TableHead className="w-[180px]">New End Date</TableHead>
+                              <TableHead className="w-[300px]">Notes</TableHead>
+                              <TableHead className="w-[80px]">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {extensionFields.map((field, index) => (
+                              <TableRow key={field.id}>
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center">
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                                      #{index + 1}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <FormField
+                                    control={form.control}
+                                    name={`extensions.${index}.newEndDate`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex flex-col">
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <FormControl>
+                                              <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                  "w-full pl-3 text-left font-normal",
+                                                  !field.value && "text-muted-foreground"
+                                                )}
+                                                data-testid={`button-extension-date-${index}`}
+                                              >
+                                                {field.value ? (
+                                                  format(field.value, "PPP")
+                                                ) : (
+                                                  <span>Pick a date</span>
+                                                )}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                              </Button>
+                                            </FormControl>
+                                          </PopoverTrigger>
+                                          <PopoverContent className="w-auto p-0" align="start">
+                                            <DatePickerCalendar
+                                              mode="single"
+                                              selected={field.value}
+                                              onSelect={field.onChange}
+                                              disabled={(date) =>
+                                                date < new Date("1900-01-01")
+                                              }
+                                              initialFocus
+                                            />
+                                          </PopoverContent>
+                                        </Popover>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <FormField
+                                    control={form.control}
+                                    name={`extensions.${index}.notes`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <Textarea
+                                            placeholder="Extension notes or reason..."
+                                            className="resize-none"
+                                            rows={2}
+                                            data-testid={`textarea-extension-notes-${index}`}
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => removeExtension(index)}
+                                    data-testid={`button-remove-extension-${index}`}
+                                    type="button"
+                                  >
+                                    <Minus className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 border rounded-md bg-neutral-50">
+                        <p className="text-neutral-400">No extensions added yet.</p>
+                        <p className="text-sm text-neutral-300 mt-1">Click "Add Extension" to create the first extension.</p>
+                      </div>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addExtension}
+                      className="w-full"
+                      data-testid="button-add-extension"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Extension
+                    </Button>
+
+                    {form.formState.errors.extensions?.root && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.extensions.root.message}
                       </p>
                     )}
                   </div>
