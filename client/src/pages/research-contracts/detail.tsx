@@ -250,6 +250,50 @@ export default function ResearchContractDetail() {
                 )}
               </div>
 
+              {/* SDR Funding Information Section */}
+              {researchActivity && ((researchActivity.budgetSource?.length ?? 0) > 0 || (researchActivity.grantCodes?.length ?? 0) > 0) && (
+                <div className="mt-6" data-testid="section-sdr-funding">
+                  <h3 className="text-md font-medium border-b pb-2">SDR Funding Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {researchActivity.budgetSource && researchActivity.budgetSource.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-400 mb-2">Budget Source</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {researchActivity.budgetSource.map((source, index) => (
+                            <Badge 
+                              key={index}
+                              variant="outline" 
+                              className="rounded-sm bg-green-50 text-green-700 border-green-200"
+                              data-testid={`badge-budget-source-${index}`}
+                            >
+                              {source}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {researchActivity.grantCodes && researchActivity.grantCodes.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-400 mb-2">Grant Codes</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {researchActivity.grantCodes.map((code, index) => (
+                            <Badge 
+                              key={index}
+                              variant="outline" 
+                              className="rounded-sm bg-blue-50 text-blue-700 border-blue-200"
+                              data-testid={`badge-grant-code-${index}`}
+                            >
+                              {code}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {contract.description && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-neutral-400">Description</h3>
