@@ -583,13 +583,13 @@ export default function ContractRequest() {
                   Important dates for the contract
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}
                     name="startDate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-col space-y-2">
                         <FormLabel>Start Date</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -597,26 +597,27 @@ export default function ContractRequest() {
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "w-full pl-3 text-left font-normal",
+                                  "w-full justify-start text-left font-normal h-10",
                                   !field.value && "text-muted-foreground"
                                 )}
                                 data-testid="button-start-date"
                               >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value ? (
                                   format(field.value, "PPP")
                                 ) : (
                                   <span>Pick start date</span>
                                 )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
                             <Calendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
                               initialFocus
+                              className="rounded-md border"
                             />
                           </PopoverContent>
                         </Popover>
@@ -629,7 +630,7 @@ export default function ContractRequest() {
                     control={form.control}
                     name="endDate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-col space-y-2">
                         <FormLabel>End Date</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -637,26 +638,27 @@ export default function ContractRequest() {
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "w-full pl-3 text-left font-normal",
+                                  "w-full justify-start text-left font-normal h-10",
                                   !field.value && "text-muted-foreground"
                                 )}
                                 data-testid="button-end-date"
                               >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value ? (
                                   format(field.value, "PPP")
                                 ) : (
                                   <span>Pick end date</span>
                                 )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
                             <Calendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
                               initialFocus
+                              className="rounded-md border"
                             />
                           </PopoverContent>
                         </Popover>
@@ -669,7 +671,7 @@ export default function ContractRequest() {
                     control={form.control}
                     name="expectedSignatureDate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-col space-y-2">
                         <FormLabel>Expected Signature Date</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -677,26 +679,27 @@ export default function ContractRequest() {
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "w-full pl-3 text-left font-normal",
+                                  "w-full justify-start text-left font-normal h-10",
                                   !field.value && "text-muted-foreground"
                                 )}
                                 data-testid="button-signature-date"
                               >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value ? (
                                   format(field.value, "PPP")
                                 ) : (
                                   <span>Pick expected date</span>
                                 )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
                             <Calendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
                               initialFocus
+                              className="rounded-md border"
                             />
                           </PopoverContent>
                         </Popover>
@@ -811,26 +814,27 @@ export default function ContractRequest() {
                                           <Button
                                             variant={"outline"}
                                             className={cn(
-                                              "w-full pl-3 text-left font-normal",
+                                              "w-full justify-start text-left font-normal h-9",
                                               !field.value && "text-muted-foreground"
                                             )}
                                             data-testid={`button-due-date-${index}`}
                                           >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
                                             {field.value ? (
                                               format(field.value, "PP")
                                             ) : (
                                               <span>Pick date</span>
                                             )}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                           </Button>
                                         </FormControl>
                                       </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0" align="start">
+                                      <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
                                         <Calendar
                                           mode="single"
                                           selected={field.value}
                                           onSelect={field.onChange}
                                           initialFocus
+                                          className="rounded-md border"
                                         />
                                       </PopoverContent>
                                     </Popover>
