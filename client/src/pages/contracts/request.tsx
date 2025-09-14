@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,9 @@ const contractRequestSchema = insertResearchContractSchema.extend({
   contractorName: z.string().min(2, "Contractor name is required"),
   researchActivityId: z.number({
     required_error: "Please select a research activity",
+  }),
+  leadPIId: z.number({
+    required_error: "Lead PI is required",
   }),
   contractType: z.enum(["Collaboration", "Service", "Material Transfer", "Confidentiality", "License", "Other"], {
     required_error: "Please select a contract type",
@@ -113,6 +116,11 @@ export default function ContractRequest() {
     queryKey: ['/api/research-activities'],
   });
 
+  // Get scientists data for Lead PI field
+  const { data: scientists, isLoading: scientistsLoading } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists'],
+  });
+
   // Default form values
   const defaultValues: Partial<ContractRequestFormValues> = {
     contractType: "Collaboration",
@@ -135,6 +143,24 @@ export default function ContractRequest() {
     resolver: zodResolver(contractRequestSchema),
     defaultValues,
   });
+
+  // Watch for changes in research activity selection
+  const selectedResearchActivityId = form.watch("researchActivityId");
+
+  // Auto-populate Lead PI when research activity is selected
+  useEffect(() => {
+    if (selectedResearchActivityId && researchActivities) {
+      const selectedActivity = researchActivities.find(activity => activity.id === selectedResearchActivityId);
+      if (selectedActivity?.budgetHolderId) {
+        form.setValue("leadPIId", selectedActivity.budgetHolderId);
+        // Show toast to inform user that Lead PI was auto-populated
+        toast({
+          title: "Lead PI Auto-Selected",
+          description: "Lead PI has been automatically selected from the research activity.",
+        });
+      }
+    }
+  }, [selectedResearchActivityId, researchActivities, form, toast]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -225,37 +251,83 @@ export default function ContractRequest() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <FormField
-                  control={form.control}
-                  name="researchActivityId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Research Activity</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString() || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-research-activity">
-                            <SelectValue placeholder="Select a research activity" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {activitiesLoading ? (
-                            <SelectItem value="loading" disabled>Loading research activities...</SelectItem>
-                          ) : (
-                            researchActivities?.map((activity) => (
-                              <SelectItem key={activity.id} value={activity.id.toString()}>
-                                {activity.sdrNumber} - {activity.title}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="researchActivityId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Research Activity</FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          defaultValue={field.value?.toString() || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-research-activity">
+                              <SelectValue placeholder="Select a research activity" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {activitiesLoading ? (
+                              <SelectItem value="loading" disabled>Loading research activities...</SelectItem>
+                            ) : (
+                              researchActivities?.map((activity) => (
+                                <SelectItem key={activity.id} value={activity.id.toString()}>
+                                  {activity.sdrNumber} - {activity.title}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="leadPIId"
+                    render={({ field }) => {
+                      const selectedScientist = scientists?.find(scientist => scientist.id === field.value);
+                      return (
+                        <FormItem>
+                          <FormLabel>Lead Principal Investigator</FormLabel>
+                          <Select
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                            value={field.value?.toString() || undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-lead-pi">
+                                <SelectValue placeholder="Auto-selected from SDR" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {scientistsLoading ? (
+                                <SelectItem value="loading" disabled>Loading scientists...</SelectItem>
+                              ) : (
+                                scientists?.map((scientist) => (
+                                  <SelectItem key={scientist.id} value={scientist.id.toString()}>
+                                    {scientist.honorificTitle} {scientist.firstName} {scientist.lastName}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            {selectedScientist ? (
+                              <span className="text-green-600">
+                                ✓ Auto-selected from research activity: {selectedScientist.honorificTitle} {selectedScientist.firstName} {selectedScientist.lastName}
+                              </span>
+                            ) : (
+                              "Lead PI will be auto-selected when you choose a research activity"
+                            )}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
 
