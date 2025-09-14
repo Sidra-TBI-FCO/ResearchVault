@@ -4338,7 +4338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let contracts;
       
       // Role-based filtering
-      if (currentUser.role === 'contracts_officer' || currentUser.role === 'admin') {
+      if (currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management') {
         // Officers can see all contracts
         if (projectId && !isNaN(projectId)) {
           contracts = await storage.getResearchContractsForProject(projectId);
