@@ -1076,29 +1076,51 @@ export class MemStorage implements IStorage {
 
     // Create research contracts
     this.createResearchContract({
-      projectId: 1,
-      title: "Pharmaceutical Development Partnership",
-      contractorName: "Novagen Therapeutics",
-      contractType: "Collaboration",
-      startDate: new Date("2023-02-01"),
-      endDate: new Date("2025-01-31"),
-      value: "$750,000",
+      researchActivityId: 1,
+      contractNumber: "CNT-2023-001",
+      title: "Genomic Sequencing Equipment Collaboration",
+      leadPIId: 2, // Maria
+      requestedByUserId: 1,
+      contractorName: "GenomeTech Solutions",
+      contractType: "Equipment",
+      startDate: new Date("2023-03-01"),
+      endDate: new Date("2025-02-28"),
+      contractValue: 850000,
+      currency: "QAR",
       status: "active",
-      description: "Joint development agreement for CRISPR-based cancer therapeutics",
-      principalInvestigatorId: 2 // Maria
+      description: "Equipment lease agreement for next-generation genomic sequencing platform for precision medicine research",
+      fundingSourceCategory: "Equipment Lease",
+      isPORelevant: true,
+      internalCostSidra: 850000,
+      internalCostCounterparty: 0,
+      moneyOut: 850000,
+      officeFormStatus: "complete",
+      initiationRequestedAt: new Date("2023-02-15"),
+      reminderEmail: "genomics@example.com"
     });
 
     this.createResearchContract({
-      projectId: 2,
-      title: "Clinical Sample Analysis Services",
-      contractorName: "Central Clinical Laboratories",
+      researchActivityId: 2,
+      contractNumber: "CNT-2023-002",
+      title: "Single-Cell Analysis Service Agreement",
+      leadPIId: 1, // Jane
+      requestedByUserId: 1,
+      contractorName: "CellAnalytics Inc",
       contractType: "Service",
-      startDate: new Date("2023-04-01"),
-      endDate: new Date("2024-03-31"),
-      value: "$120,000",
+      startDate: new Date("2023-05-01"),
+      endDate: new Date("2024-04-30"),
+      contractValue: 180000,
+      currency: "USD",
       status: "active",
-      description: "Service agreement for specialized immune cell analysis",
-      principalInvestigatorId: 1 // Jane
+      description: "Specialized single-cell analysis services for immunotherapy research projects",
+      fundingSourceCategory: "Service Agreement",
+      isPORelevant: true,
+      internalCostSidra: 0,
+      internalCostCounterparty: 180000,
+      moneyOut: 180000,
+      officeFormStatus: "complete",
+      initiationRequestedAt: new Date("2023-04-10"),
+      reminderEmail: "immunology@example.com"
     });
   }
 }
