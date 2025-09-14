@@ -24,7 +24,7 @@ import { insertResearchContractSchema, insertResearchContractScopeItemSchema } f
 import { Scientist, ResearchActivity } from "@shared/schema";
 import { CalendarIcon, ArrowLeft, Plus, Minus, FileText, Users, DollarSign } from "lucide-react";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -576,7 +576,7 @@ export default function ContractRequest() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                  <CalendarIcon className="h-5 w-5" />
                   Timeline
                 </CardTitle>
                 <CardDescription>
@@ -612,7 +612,7 @@ export default function ContractRequest() {
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
-                            <Calendar
+                            <DatePickerCalendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
@@ -653,7 +653,7 @@ export default function ContractRequest() {
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
-                            <Calendar
+                            <DatePickerCalendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
@@ -694,7 +694,7 @@ export default function ContractRequest() {
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
-                            <Calendar
+                            <DatePickerCalendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
