@@ -1,19 +1,47 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertResearchContractSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity } from "@shared/schema";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { insertResearchContractSchema, insertResearchContractScopeItemSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity, type ResearchContractScopeItem } from "@shared/schema";
+import { ArrowLeft, Loader2, Plus, Minus, CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { z } from "zod";
 import React from "react";
+
+// Extended schema for contract edit with scope items
+const scopeItemSchema = insertResearchContractScopeItemSchema.extend({
+  party: z.enum(["sidra", "counterparty"], {
+    required_error: "Please select the responsible party",
+  }),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  dueDate: z.date().optional(),
+  acceptanceCriteria: z.string().optional(),
+  position: z.number().default(0),
+}).omit({
+  contractId: true, // Will be set from parent contract
+});
+
+// Define a custom schema that includes proper handling for date fields and scope items
+const contractEditSchema = insertResearchContractSchema.extend({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  scopeItems: z.array(scopeItemSchema).optional(),
+});
+
+type ContractEditFormValues = z.infer<typeof contractEditSchema>;
 
 export default function ResearchContractEdit() {
   const { id } = useParams();
@@ -31,58 +59,162 @@ export default function ResearchContractEdit() {
     queryKey: ['/api/research-activities'],
   });
 
-  const form = useForm<InsertResearchContract>({
-    resolver: zodResolver(insertResearchContractSchema),
+  // Get scope items for this contract
+  const { data: scopeItems, isLoading: scopeItemsLoading } = useQuery<ResearchContractScopeItem[]>({
+    queryKey: ['/api/research-contracts', id, 'scope-items'],
+    queryFn: () => fetch(`/api/research-contracts/${id}/scope-items`).then(res => res.json()),
+    enabled: !!id,
+  });
+
+  const form = useForm<ContractEditFormValues>({
+    resolver: zodResolver(contractEditSchema),
     defaultValues: {
-      researchActivityId: contract?.researchActivityId || 0,
-      contractNumber: contract?.contractNumber || "",
-      title: contract?.title || "",
-      contractorName: contract?.contractorName || "",
-      contractorContact: contract?.contractorContact || "",
-      startDate: contract?.startDate ? new Date(contract.startDate).toISOString().split('T')[0] : "",
-      endDate: contract?.endDate ? new Date(contract.endDate).toISOString().split('T')[0] : "",
-      contractValue: contract?.contractValue || 0,
-      description: contract?.description || "",
-      deliverables: contract?.deliverables || "",
-      status: contract?.status || "Active",
-      contractType: contract?.contractType || "Service Agreement",
+      researchActivityId: 0,
+      contractNumber: "",
+      title: "",
+      contractorName: "",
+      startDate: "",
+      endDate: "",
+      internalCostSidra: 0,
+      internalCostCounterparty: 0,
+      moneyOut: 0,
+      remarks: "",
+      status: "submitted",
+      contractType: "Service Agreement",
+      scopeItems: [{
+        party: "sidra",
+        description: "",
+        dueDate: undefined,
+        acceptanceCriteria: "",
+        position: 0,
+      }],
     },
   });
 
-  // Update form when contract data loads
+  // Update form when contract and scope items data loads
   React.useEffect(() => {
-    if (contract) {
+    if (contract && scopeItems !== undefined) {
+      const formattedScopeItems = scopeItems.map(item => ({
+        party: item.party as "sidra" | "counterparty",
+        description: item.description,
+        dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
+        acceptanceCriteria: item.acceptanceCriteria || "",
+        position: item.position,
+      }));
+      
       form.reset({
         researchActivityId: contract.researchActivityId || 0,
-        contractNumber: contract.contractNumber,
-        title: contract.title,
+        contractNumber: contract.contractNumber || "",
+        title: contract.title || "",
         contractorName: contract.contractorName || "",
-        contractorContact: contract.contractorContact || "",
         startDate: contract.startDate ? new Date(contract.startDate).toISOString().split('T')[0] : "",
         endDate: contract.endDate ? new Date(contract.endDate).toISOString().split('T')[0] : "",
-        contractValue: contract.contractValue || 0,
-        description: contract.description || "",
-        deliverables: contract.deliverables || "",
-        status: contract.status,
+        internalCostSidra: contract.internalCostSidra || 0,
+        internalCostCounterparty: contract.internalCostCounterparty || 0,
+        moneyOut: contract.moneyOut || 0,
+        remarks: contract.remarks || "",
+        status: contract.status || "submitted",
         contractType: contract.contractType || "Service Agreement",
+        scopeItems: formattedScopeItems.length > 0 ? formattedScopeItems : [{
+          party: "sidra",
+          description: "",
+          dueDate: undefined,
+          acceptanceCriteria: "",
+          position: 0,
+        }],
       });
     }
-  }, [contract, form]);
+  }, [contract, scopeItems, form]);
+
+  // Scope items field array management
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "scopeItems",
+  });
+
+  const addScopeItem = () => {
+    append({
+      party: "sidra",
+      description: "",
+      dueDate: undefined,
+      acceptanceCriteria: "",
+      position: fields.length,
+    });
+  };
+
+  const removeScopeItem = (index: number) => {
+    if (fields.length > 1) {
+      remove(index);
+    } else {
+      toast({
+        title: "Cannot remove",
+        description: "At least one scope item is required.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const updateMutation = useMutation({
-    mutationFn: (data: InsertResearchContract) => 
-      apiRequest("PATCH", `/api/research-contracts/${id}`, {
-        ...data,
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        endDate: data.endDate ? new Date(data.endDate) : null,
-      }),
+    mutationFn: async (data: ContractEditFormValues) => {
+      // Separate scope items from contract data
+      const { scopeItems, ...contractData } = data;
+      
+      // Update the contract first
+      const contractResponse = await apiRequest("PATCH", `/api/research-contracts/${id}`, {
+        ...contractData,
+        startDate: contractData.startDate ? contractData.startDate : null,
+        endDate: contractData.endDate ? contractData.endDate : null,
+      });
+      
+      // Handle scope items updates
+      if (scopeItems && scopeItems.length > 0) {
+        // Get current scope items to determine what needs to be updated/deleted
+        const currentScopeItems = scopeItems || [];
+        
+        // For simplicity, we'll delete all existing scope items and recreate them
+        // This ensures data consistency (alternative would be complex diff logic)
+        
+        // Delete existing scope items
+        if (scopeItems.length > 0) {
+          try {
+            // Get existing items first
+            const existingResponse = await fetch(`/api/research-contracts/${id}/scope-items`);
+            if (existingResponse.ok) {
+              const existingItems = await existingResponse.json();
+              
+              // Delete each existing item
+              for (const item of existingItems) {
+                await apiRequest("DELETE", `/api/research-contracts/scope-items/${item.id}`);
+              }
+            }
+          } catch (error) {
+            console.warn("Error deleting existing scope items:", error);
+          }
+        }
+        
+        // Create new scope items
+        for (let i = 0; i < currentScopeItems.length; i++) {
+          const item = currentScopeItems[i];
+          await apiRequest("POST", `/api/research-contracts/${id}/scope-items`, {
+            party: item.party,
+            description: item.description,
+            dueDate: item.dueDate || null,
+            acceptanceCriteria: item.acceptanceCriteria || null,
+            position: i,
+          });
+        }
+      }
+      
+      return contractResponse.json();
+    },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Research contract updated successfully",
+        description: "Research contract and scope items updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/research-contracts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/research-contracts', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/research-contracts', id, 'scope-items'] });
       navigate(`/research-contracts/${id}`);
     },
     onError: (error: any) => {
@@ -94,11 +226,11 @@ export default function ResearchContractEdit() {
     },
   });
 
-  const onSubmit = (data: InsertResearchContract) => {
+  const onSubmit = (data: ContractEditFormValues) => {
     updateMutation.mutate(data);
   };
 
-  if (isLoading) {
+  if (isLoading || scopeItemsLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -209,7 +341,7 @@ export default function ResearchContractEdit() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Contract Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select contract type" />
@@ -244,37 +376,21 @@ export default function ResearchContractEdit() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="contractorName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contractor Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Organization or individual name" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="contractorName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contractor Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Organization or individual name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="contractorContact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contractor Contact</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Contact person name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="startDate"
@@ -282,7 +398,7 @@ export default function ResearchContractEdit() {
                     <FormItem>
                       <FormLabel>Start Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,7 +412,29 @@ export default function ResearchContractEdit() {
                     <FormItem>
                       <FormLabel>End Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormField
+                  control={form.control}
+                  name="internalCostSidra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Internal Cost Sidra (QAR)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          {...field}
+                          value={field.value || 0}
+                          onChange={(e) => field.onChange(Number(e.target.value) || 0)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -305,16 +443,37 @@ export default function ResearchContractEdit() {
 
                 <FormField
                   control={form.control}
-                  name="contractValue"
+                  name="internalCostCounterparty"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contract Value ($)</FormLabel>
+                      <FormLabel>Internal Cost Counterparty (QAR)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           placeholder="0" 
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          value={field.value || 0}
+                          onChange={(e) => field.onChange(Number(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="moneyOut"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Money Out (QAR)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          {...field}
+                          value={field.value || 0}
+                          onChange={(e) => field.onChange(Number(e.target.value) || 0)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -329,19 +488,19 @@ export default function ResearchContractEdit() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || "submitted"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Under Review">Under Review</SelectItem>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Terminated">Terminated</SelectItem>
-                        <SelectItem value="Expired">Expired</SelectItem>
+                        <SelectItem value="submitted">Submitted</SelectItem>
+                        <SelectItem value="under_review">Under Review</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="terminated">Terminated</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -351,15 +510,16 @@ export default function ResearchContractEdit() {
 
               <FormField
                 control={form.control}
-                name="description"
+                name="remarks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Remarks</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Contract description..."
-                        className="min-h-[100px]"
+                        placeholder="Additional notes, deliverables, or description..."
+                        className="min-h-[150px]"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -367,29 +527,177 @@ export default function ResearchContractEdit() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="deliverables"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deliverables</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Expected deliverables..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Scope of Work Section */}
+              <div className="space-y-6 mt-8">
+                <div className="border-t pt-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium">Scope of Work</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Define deliverables and responsibilities for both parties
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[120px]">Responsible Party</TableHead>
+                        <TableHead className="w-[300px]">Deliverable Description</TableHead>
+                        <TableHead className="w-[140px]">Due Date</TableHead>
+                        <TableHead className="w-[200px]">Acceptance Criteria</TableHead>
+                        <TableHead className="w-[80px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {fields.map((field, index) => (
+                        <TableRow key={field.id}>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`scopeItems.${index}.party`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger data-testid={`select-party-${index}`}>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="sidra">Sidra</SelectItem>
+                                      <SelectItem value="counterparty">Counterparty</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`scopeItems.${index}.description`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Describe the deliverable..."
+                                      className="resize-none"
+                                      rows={2}
+                                      {...field}
+                                      data-testid={`textarea-description-${index}`}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`scopeItems.${index}.dueDate`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <FormControl>
+                                        <Button
+                                          variant={"outline"}
+                                          className={cn(
+                                            "w-full justify-start text-left font-normal h-9",
+                                            !field.value && "text-muted-foreground"
+                                          )}
+                                          data-testid={`button-due-date-${index}`}
+                                        >
+                                          <CalendarIcon className="mr-2 h-4 w-4" />
+                                          {field.value ? (
+                                            format(field.value, "PP")
+                                          ) : (
+                                            <span>Pick date</span>
+                                          )}
+                                        </Button>
+                                      </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom" sideOffset={4}>
+                                      <DatePickerCalendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        initialFocus
+                                        className="rounded-md border"
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`scopeItems.${index}.acceptanceCriteria`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="How will completion be measured?"
+                                      className="resize-none"
+                                      rows={2}
+                                      {...field}
+                                      data-testid={`textarea-criteria-${index}`}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeScopeItem(index)}
+                              disabled={fields.length === 1}
+                              data-testid={`button-remove-scope-${index}`}
+                              type="button"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addScopeItem}
+                  className="w-full"
+                  data-testid="button-add-scope-item"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Scope Item
+                </Button>
+
+                    {form.formState.errors.scopeItems?.root && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.scopeItems.root.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <div className="flex gap-4">
                 <Button 
                   type="submit" 
                   disabled={updateMutation.isPending}
                   className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                  data-testid="button-submit"
                 >
                   {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Update Research Contract
@@ -398,6 +706,7 @@ export default function ResearchContractEdit() {
                   type="button" 
                   variant="outline" 
                   onClick={() => navigate(`/research-contracts/${id}`)}
+                  data-testid="button-cancel"
                 >
                   Cancel
                 </Button>
