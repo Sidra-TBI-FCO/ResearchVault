@@ -2,6 +2,35 @@ import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex, 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Contract type definitions - shared across all components
+export const CONTRACT_TYPES = [
+  "Collaboration",
+  "Service", 
+  "Material Transfer",
+  "Confidentiality",
+  "License",
+  "Other",
+  "Consulting Agreement",
+  "Licensing Agreement"
+] as const;
+
+export const CONTRACT_STATUS_VALUES = [
+  "submitted",
+  "under_review", 
+  "active",
+  "completed",
+  "terminated",
+  "expired"
+] as const;
+
+// Zod schemas for validation
+export const contractTypeSchema = z.enum(CONTRACT_TYPES);
+export const contractStatusSchema = z.enum(CONTRACT_STATUS_VALUES);
+
+// TypeScript types
+export type ContractType = typeof CONTRACT_TYPES[number];
+export type ContractStatus = typeof CONTRACT_STATUS_VALUES[number];
+
 // User schema (for authentication)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

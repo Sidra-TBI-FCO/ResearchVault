@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertResearchContractSchema, insertResearchContractScopeItemSchema } from "@shared/schema";
+import { insertResearchContractSchema, insertResearchContractScopeItemSchema, CONTRACT_TYPES, CONTRACT_STATUS_VALUES, contractTypeSchema, contractStatusSchema } from "@shared/schema";
 import { Scientist, ResearchActivity } from "@shared/schema";
 import { CalendarIcon, ArrowLeft, Plus, Minus, FileText, Users, DollarSign } from "lucide-react";
 import { format } from "date-fns";
@@ -32,6 +32,8 @@ import { PermissionWrapper } from "@/components/PermissionWrapper";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+
+// Using shared contract type definitions from schema
 
 // Extended schema for contract request with scope items
 const scopeItemSchema = insertResearchContractScopeItemSchema.extend({
@@ -55,9 +57,7 @@ const contractRequestSchema = insertResearchContractSchema.extend({
   leadPIId: z.number({
     required_error: "Lead PI is required",
   }),
-  contractType: z.enum(["Collaboration", "Service", "Material Transfer", "Confidentiality", "License", "Other"], {
-    required_error: "Please select a contract type",
-  }),
+  contractType: contractTypeSchema,
   contractValue: z.number().min(0, "Contract value must be positive").optional(),
   currency: z.string().default("QAR"),
   startDate: z.date({
@@ -374,12 +374,11 @@ export default function ContractRequest() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Collaboration">Collaboration</SelectItem>
-                          <SelectItem value="Service">Service</SelectItem>
-                          <SelectItem value="Material Transfer">Material Transfer</SelectItem>
-                          <SelectItem value="Confidentiality">Confidentiality</SelectItem>
-                          <SelectItem value="License">License</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          {CONTRACT_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

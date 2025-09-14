@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertResearchContractSchema, insertResearchContractScopeItemSchema, insertResearchContractExtensionSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity, type ResearchContractScopeItem, type ResearchContractExtension } from "@shared/schema";
+import { insertResearchContractSchema, insertResearchContractScopeItemSchema, insertResearchContractExtensionSchema, CONTRACT_TYPES, CONTRACT_STATUS_VALUES, contractTypeSchema, contractStatusSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity, type ResearchContractScopeItem, type ResearchContractExtension } from "@shared/schema";
 import { ArrowLeft, Loader2, Plus, Minus, CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import React from "react";
+
+// Using shared contract type definitions from schema
 
 // Extended schema for contract edit with scope items
 const scopeItemSchema = insertResearchContractScopeItemSchema.extend({
@@ -49,6 +51,8 @@ const extensionSchema = insertResearchContractExtensionSchema.extend({
 
 // Define a custom schema that includes proper handling for date fields, scope items, and extensions
 const contractEditSchema = insertResearchContractSchema.extend({
+  contractType: contractTypeSchema.optional(),
+  status: contractStatusSchema.optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   scopeItems: z.array(scopeItemSchema).optional(),
@@ -76,14 +80,32 @@ export default function ResearchContractEdit() {
   // Get scope items for this contract
   const { data: scopeItems, isLoading: scopeItemsLoading } = useQuery<ResearchContractScopeItem[]>({
     queryKey: ['/api/research-contracts', id, 'scope-items'],
-    queryFn: () => fetch(`/api/research-contracts/${id}/scope-items`).then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/research-contracts/${id}/scope-items`);
+      if (!res.ok) {
+        // Return empty array if access denied or other errors
+        return [];
+      }
+      const data = await res.json();
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
+    },
     enabled: !!id,
   });
 
   // Get extensions for this contract
   const { data: extensions, isLoading: extensionsLoading } = useQuery<ResearchContractExtension[]>({
     queryKey: ['/api/research-contracts', id, 'extensions'],
-    queryFn: () => fetch(`/api/research-contracts/${id}/extensions`).then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/research-contracts/${id}/extensions`);
+      if (!res.ok) {
+        // Return empty array if access denied or other errors
+        return [];
+      }
+      const data = await res.json();
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
+    },
     enabled: !!id,
   });
 
@@ -101,7 +123,7 @@ export default function ResearchContractEdit() {
       moneyOut: 0,
       remarks: "",
       status: "submitted",
-      contractType: "Service Agreement",
+      contractType: "Service",
       scopeItems: [{
         party: "sidra",
         description: "",
@@ -116,7 +138,10 @@ export default function ResearchContractEdit() {
   // Update form when contract, scope items, and extensions data loads
   React.useEffect(() => {
     if (contract && scopeItems !== undefined && extensions !== undefined) {
-      const formattedScopeItems = scopeItems.map(item => ({
+      const safeScopeItems = Array.isArray(scopeItems) ? scopeItems : [];
+      const safeExtensions = Array.isArray(extensions) ? extensions : [];
+      
+      const formattedScopeItems = safeScopeItems.map(item => ({
         party: item.party as "sidra" | "counterparty",
         description: item.description,
         dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
@@ -124,7 +149,7 @@ export default function ResearchContractEdit() {
         position: item.position,
       }));
 
-      const formattedExtensions = extensions.map(extension => ({
+      const formattedExtensions = safeExtensions.map(extension => ({
         newEndDate: new Date(extension.newEndDate),
         notes: extension.notes || "",
         sequenceNumber: extension.sequenceNumber,
@@ -142,7 +167,7 @@ export default function ResearchContractEdit() {
         moneyOut: contract.moneyOut || 0,
         remarks: contract.remarks || "",
         status: contract.status || "submitted",
-        contractType: contract.contractType || "Service Agreement",
+        contractType: (CONTRACT_TYPES.includes(contract.contractType as any) ? contract.contractType : "Service") as typeof CONTRACT_TYPES[number],
         scopeItems: formattedScopeItems.length > 0 ? formattedScopeItems : [{
           party: "sidra",
           description: "",
@@ -421,12 +446,11 @@ export default function ResearchContractEdit() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Service Agreement">Service Agreement</SelectItem>
-                          <SelectItem value="Research Collaboration">Research Collaboration</SelectItem>
-                          <SelectItem value="Data Sharing Agreement">Data Sharing Agreement</SelectItem>
-                          <SelectItem value="Material Transfer Agreement">Material Transfer Agreement</SelectItem>
-                          <SelectItem value="Consulting Agreement">Consulting Agreement</SelectItem>
-                          <SelectItem value="Licensing Agreement">Licensing Agreement</SelectItem>
+                          {CONTRACT_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
