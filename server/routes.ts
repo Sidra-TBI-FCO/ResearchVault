@@ -4409,7 +4409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check access permissions
       if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
-          contract.requestedByUserId !== currentUser.id) {
+          currentUser.role !== 'Management' && contract.requestedByUserId !== currentUser.id) {
         return res.status(403).json({ message: "Access denied. You can only view your own contracts." });
       }
 

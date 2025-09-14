@@ -58,7 +58,7 @@ export default function ResearchContractDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/research-contracts")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -86,7 +86,7 @@ export default function ResearchContractDetail() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/research-contracts")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
@@ -96,8 +96,8 @@ export default function ResearchContractDetail() {
           <CardContent className="py-8">
             <div className="text-center">
               <p className="text-lg text-neutral-400">The research contract you're looking for could not be found.</p>
-              <Button className="mt-4" onClick={() => navigate("/research-contracts")}>
-                Return to Research Contracts List
+              <Button className="mt-4" onClick={() => navigate("/contracts")}>
+                Return to Contracts List
               </Button>
             </div>
           </CardContent>
@@ -110,7 +110,7 @@ export default function ResearchContractDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/research-contracts")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/contracts")}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
