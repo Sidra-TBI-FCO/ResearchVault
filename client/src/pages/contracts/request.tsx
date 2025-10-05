@@ -195,7 +195,19 @@ export default function ContractRequest() {
       // NOTE: Server will set requestedByUserId, status, and contractNumber securely
       const { scopeItems, ...contractPayload } = data;
 
-      const response = await apiRequest("POST", "/api/research-contracts", contractPayload);
+      // Convert types to match backend expectations
+      const formattedPayload = {
+        ...contractPayload,
+        // Convert number to string for numeric database field
+        contractValue: contractPayload.contractValue?.toString(),
+        // Convert Date objects to ISO strings for API transmission
+        startDate: contractPayload.startDate.toISOString(),
+        endDate: contractPayload.endDate.toISOString(),
+        initiationRequestedAt: contractPayload.initiationRequestedAt?.toISOString(),
+        expectedSignatureDate: contractPayload.expectedSignatureDate?.toISOString(),
+      };
+
+      const response = await apiRequest("POST", "/api/research-contracts", formattedPayload);
       return response.json();
     },
     onSuccess: (data) => {
