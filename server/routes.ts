@@ -4330,7 +4330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Research Contracts - Enhanced with RBAC
-  app.get('/api/research-contracts', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-contracts', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser;
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
@@ -4394,7 +4394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/research-contracts/:id', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-contracts/:id', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser;
       const id = parseInt(req.params.id);
@@ -4457,7 +4457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/research-contracts', requireAuth, async (req: Request, res: Response) => {
+  app.post('/api/research-contracts', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       if (!currentUser) {
@@ -4498,7 +4498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/research-contracts/:id', requireAuth, async (req: Request, res: Response) => {
+  app.patch('/api/research-contracts/:id', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       if (!currentUser) {
@@ -4565,7 +4565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/research-contracts/:id', requireContractsOfficer, async (req: Request, res: Response) => {
+  app.delete('/api/research-contracts/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -4597,7 +4597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Research Contract Scope Items API
-  app.get('/api/research-contracts/:contractId/scope-items', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-contracts/:contractId/scope-items', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser;
       const contractId = parseInt(req.params.contractId);
@@ -4624,7 +4624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/research-contracts/:contractId/scope-items', requireAuth, async (req: Request, res: Response) => {
+  app.post('/api/research-contracts/:contractId/scope-items', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const contractId = parseInt(req.params.contractId);
@@ -4666,7 +4666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/research-contracts/scope-items/:id', requireAuth, async (req: Request, res: Response) => {
+  app.patch('/api/research-contracts/scope-items/:id', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
@@ -4713,7 +4713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/research-contracts/scope-items/:id', requireAuth, async (req: Request, res: Response) => {
+  app.delete('/api/research-contracts/scope-items/:id', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
@@ -4757,7 +4757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Research Contract Extensions API
-  app.get('/api/research-contracts/:contractId/extensions', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-contracts/:contractId/extensions', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser;
       const contractId = parseInt(req.params.contractId);
@@ -4784,7 +4784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/research-contracts/:contractId/extensions', requireContractsOfficer, async (req: Request, res: Response) => {
+  app.post('/api/research-contracts/:contractId/extensions', async (req: Request, res: Response) => {
     try {
       const contractId = parseInt(req.params.contractId);
       if (isNaN(contractId)) {
@@ -4823,7 +4823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/research-contracts/extensions/:id', requireContractsOfficer, async (req: Request, res: Response) => {
+  app.patch('/api/research-contracts/extensions/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -4853,7 +4853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/research-contracts/extensions/:id', requireContractsOfficer, async (req: Request, res: Response) => {
+  app.delete('/api/research-contracts/extensions/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -4885,7 +4885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Research Contract Documents API
-  app.get('/api/research-contracts/:contractId/documents', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-contracts/:contractId/documents', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser;
       const contractId = parseInt(req.params.contractId);
@@ -4912,7 +4912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/research-contracts/extensions/:extensionId/documents', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-contracts/extensions/:extensionId/documents', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser;
       const extensionId = parseInt(req.params.extensionId);
@@ -4944,7 +4944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/research-contracts/:contractId/documents', requireAuth, async (req: Request, res: Response) => {
+  app.post('/api/research-contracts/:contractId/documents', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const contractId = parseInt(req.params.contractId);
@@ -4982,7 +4982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/research-contracts/extensions/:extensionId/documents', requireAuth, async (req: Request, res: Response) => {
+  app.post('/api/research-contracts/extensions/:extensionId/documents', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const extensionId = parseInt(req.params.extensionId);
@@ -5025,7 +5025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/research-contracts/documents/:id', requireAuth, async (req: Request, res: Response) => {
+  app.patch('/api/research-contracts/documents/:id', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
@@ -5079,7 +5079,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/research-contracts/documents/:id', requireAuth, async (req: Request, res: Response) => {
+  app.delete('/api/research-contracts/documents/:id', async (req: Request, res: Response) => {
     try {
       const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
