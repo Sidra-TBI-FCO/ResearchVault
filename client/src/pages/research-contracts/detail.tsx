@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ResearchActivity, ResearchContract, Scientist, ResearchContractExtension, ResearchContractScopeItem } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit, Clock, CheckSquare } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit, Clock, CheckSquare, Globe, Mail } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -256,10 +256,26 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Contractor</h3>
+                  <h3 className="text-sm font-medium text-neutral-400">Organization Name</h3>
                   <div className="flex items-center gap-1">
                     <Building className="h-3 w-3" />
                     <span>{contract.contractorName || 'Not specified'}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Country</h3>
+                  <div className="flex items-center gap-1">
+                    <Globe className="h-3 w-3" />
+                    <span>{contract.counterpartyCountry || 'Not specified'}</span>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <h3 className="text-sm font-medium text-neutral-400">Contact Information</h3>
+                  <div className="flex items-start gap-1 mt-1">
+                    <Mail className="h-3 w-3 mt-0.5" />
+                    <span className="whitespace-pre-wrap">{contract.counterpartyContact || 'Not specified'}</span>
                   </div>
                 </div>
                 
