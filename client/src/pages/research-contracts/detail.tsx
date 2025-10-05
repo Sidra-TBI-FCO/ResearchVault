@@ -3,8 +3,8 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ResearchActivity, ResearchContract, Scientist, ResearchContractExtension } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit, Clock } from "lucide-react";
+import { ResearchActivity, ResearchContract, Scientist, ResearchContractExtension, ResearchContractScopeItem } from "@shared/schema";
+import { ArrowLeft, Calendar, FileText, Building, Layers, DollarSign, Users, Edit, Clock, CheckSquare } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -62,6 +62,20 @@ export default function ResearchContractDetail() {
       const response = await fetch(`/api/research-contracts/${contract.id}/extensions`);
       if (!response.ok) {
         throw new Error('Failed to fetch contract extensions');
+      }
+      return response.json();
+    },
+    enabled: !!contract?.id,
+  });
+
+  // Get scope items for this contract
+  const { data: scopeItems, isLoading: scopeItemsLoading } = useQuery<ResearchContractScopeItem[]>({
+    queryKey: ['/api/research-contracts', id, 'scope-items'],
+    queryFn: async () => {
+      if (!contract?.id) return [];
+      const response = await fetch(`/api/research-contracts/${contract.id}/scope-items`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch contract scope items');
       }
       return response.json();
     },
@@ -492,6 +506,84 @@ export default function ResearchContractDetail() {
               <Button variant="outline" className="w-full mt-4" disabled data-testid="button-add-document">
                 <FileText className="h-4 w-4 mr-2" /> Add Document
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckSquare className="h-5 w-5" />
+                Scope of Work
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {scopeItemsLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : scopeItems && scopeItems.length > 0 ? (
+                <div className="space-y-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[120px]">Party</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="w-[140px]">Due Date</TableHead>
+                        <TableHead>Acceptance Criteria</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {scopeItems.map((item) => (
+                        <TableRow key={item.id} data-testid={`row-scope-item-${item.id}`}>
+                          <TableCell>
+                            <Badge 
+                              variant="outline" 
+                              className={
+                                item.party === 'sidra' 
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                              }
+                              data-testid={`badge-scope-party-${item.id}`}
+                            >
+                              {item.party === 'sidra' ? 'Sidra' : 'Counterparty'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div 
+                              className="text-sm" 
+                              data-testid={`cell-scope-description-${item.id}`}
+                            >
+                              {item.description || 'No description'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2" data-testid={`cell-scope-due-date-${item.id}`}>
+                              <Calendar className="h-4 w-4 text-neutral-400" />
+                              {item.dueDate ? format(new Date(item.dueDate), 'MMM dd, yyyy') : 'Not set'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div 
+                              className="text-sm text-neutral-600" 
+                              data-testid={`cell-scope-criteria-${item.id}`}
+                            >
+                              {item.acceptanceCriteria || 'Not specified'}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CheckSquare className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
+                  <p className="text-neutral-400">No scope of work defined.</p>
+                  <p className="text-sm text-neutral-300 mt-1">Scope items will appear here when added.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
