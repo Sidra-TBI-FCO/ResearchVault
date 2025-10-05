@@ -21,7 +21,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertResearchContractSchema } from "@shared/schema";
 import { Scientist, ResearchActivity } from "@shared/schema";
-import { CalendarIcon, ArrowLeft } from "lucide-react";
+import { CalendarIcon, ArrowLeft, FileText, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -153,69 +153,27 @@ export default function CreateContract() {
           </CardContent>
         </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Contract Information</CardTitle>
-          <CardDescription>Enter the details for the new research contract</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>Contract Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Pharmaceutical Development Partnership" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="contractNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contract Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. CNT-2025-001" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Unique contract identifier
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="contractorName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contractor Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Novagen Therapeutics" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        External organization or entity
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Research Activity (SDR) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Research Activity (SDR)
+              </CardTitle>
+              <CardDescription>
+                Link this contract to a research activity and assign the lead PI
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="researchActivityId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Associated Research Activity (SDR)</FormLabel>
+                      <FormLabel>Research Activity</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
                         defaultValue={field.value?.toString() || "none"}
@@ -245,7 +203,7 @@ export default function CreateContract() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="leadPIId"
@@ -281,7 +239,54 @@ export default function CreateContract() {
                     </FormItem>
                   )}
                 />
-                
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contract Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Contract Information
+              </CardTitle>
+              <CardDescription>
+                Basic information and details about the contract
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contract Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Pharmaceutical Development Partnership" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="contractNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contract Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. CNT-2025-001" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Unique contract identifier
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="contractType"
@@ -310,39 +315,173 @@ export default function CreateContract() {
                     </FormItem>
                   )}
                 />
-                
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="contractorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="submitted">Submitted</SelectItem>
-                          <SelectItem value="under_review">Under Review</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="terminated">Terminated</SelectItem>
-                          <SelectItem value="expired">Expired</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Contractor Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Novagen Therapeutics" {...field} />
+                      </FormControl>
                       <FormDescription>
-                        Current contract workflow status
+                        External organization or entity
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
+                <FormField
+                  control={form.control}
+                  name="fundingSourceCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Funding Source Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select funding source" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="QNRF">QNRF</SelectItem>
+                          <SelectItem value="PI Fund">PI Fund</SelectItem>
+                          <SelectItem value="IRF Fund">IRF Fund</SelectItem>
+                          <SelectItem value="External">External</SelectItem>
+                          <SelectItem value="Industry">Industry</SelectItem>
+                          <SelectItem value="Government">Government</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Source of funding for this contract
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>End Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        The date when the contract is scheduled to expire
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Detailed description of the contract, including scope of work, deliverables, and terms" 
+                        className="resize-none" 
+                        rows={4}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Financial Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Financial Details
+              </CardTitle>
+              <CardDescription>
+                Contract value and financial information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="contractValue"
@@ -389,138 +528,52 @@ export default function CreateContract() {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="fundingSourceCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Funding Source Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select funding source" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="QNRF">QNRF</SelectItem>
-                          <SelectItem value="PI Fund">PI Fund</SelectItem>
-                          <SelectItem value="IRF Fund">IRF Fund</SelectItem>
-                          <SelectItem value="External">External</SelectItem>
-                          <SelectItem value="Industry">Industry</SelectItem>
-                          <SelectItem value="Government">Government</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Source of funding for this contract
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        The date when the contract is scheduled to expire
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Detailed description of the contract, including scope of work, deliverables, and terms" 
-                          className="resize-none" 
-                          rows={4}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
+            </CardContent>
+          </Card>
 
-              <CardFooter className="flex justify-end space-x-2 px-0">
+          {/* Status & Submit */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Status & Submit</CardTitle>
+              <CardDescription>
+                Set the contract status and submit
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="submitted">Submitted</SelectItem>
+                        <SelectItem value="under_review">Under Review</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="terminated">Terminated</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Current contract workflow status
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button 
                   variant="outline" 
                   onClick={() => navigate("/contracts")}
@@ -534,11 +587,11 @@ export default function CreateContract() {
                 >
                   {createResearchContractMutation.isPending ? 'Creating...' : 'Create Contract'}
                 </Button>
-              </CardFooter>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
       </div>
     </PermissionWrapper>
   );
