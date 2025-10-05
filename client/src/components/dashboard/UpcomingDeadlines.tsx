@@ -12,6 +12,12 @@ export default function UpcomingDeadlines() {
 
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return {
+        month: 'N/A',
+        day: 0
+      };
+    }
     return {
       month: date.toLocaleString('default', { month: 'short' }),
       day: date.getDate()
@@ -21,6 +27,9 @@ export default function UpcomingDeadlines() {
   const getRemainingDaysText = (dueDate: string | Date) => {
     const today = new Date();
     const deadline = new Date(dueDate);
+    if (isNaN(deadline.getTime())) {
+      return "Invalid date";
+    }
     const diffTime = Math.abs(deadline.getTime() - today.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
@@ -42,6 +51,9 @@ export default function UpcomingDeadlines() {
   const getStatusColor = (dueDate: string | Date) => {
     const today = new Date();
     const deadline = new Date(dueDate);
+    if (isNaN(deadline.getTime())) {
+      return "bg-neutral-50 text-neutral-500";
+    }
     const diffTime = deadline.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
