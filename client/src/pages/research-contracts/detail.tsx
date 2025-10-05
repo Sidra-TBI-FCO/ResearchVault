@@ -280,14 +280,6 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Funding Source</h3>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
-                    <span>{contract.fundingSourceCategory || 'Not specified'}</span>
-                  </div>
-                </div>
-                
-                <div>
                   <h3 className="text-sm font-medium text-neutral-400">Contract Value</h3>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3" />

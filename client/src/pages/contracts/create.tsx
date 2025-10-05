@@ -45,7 +45,6 @@ const createResearchContractSchema = insertResearchContractSchema.extend({
   endDate: z.date().optional(),
   contractValue: z.number().min(0, "Contract value must be positive").optional(),
   currency: z.string().default("QAR"),
-  fundingSourceCategory: z.string().optional(),
   status: z.enum(["submitted", "under_review", "active", "completed", "terminated", "expired"], {
     required_error: "Please select a status",
   }),
@@ -317,53 +316,22 @@ export default function CreateContract() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="contractorName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contractor Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Novagen Therapeutics" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        External organization or entity
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="fundingSourceCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Funding Source Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select funding source" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="QNRF">QNRF</SelectItem>
-                          <SelectItem value="PI Fund">PI Fund</SelectItem>
-                          <SelectItem value="IRF Fund">IRF Fund</SelectItem>
-                          <SelectItem value="External">External</SelectItem>
-                          <SelectItem value="Industry">Industry</SelectItem>
-                          <SelectItem value="Government">Government</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Source of funding for this contract
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="contractorName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contractor Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Novagen Therapeutics" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      External organization or entity
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
