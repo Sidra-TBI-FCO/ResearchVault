@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertResearchContractSchema, insertResearchContractScopeItemSchema, insertResearchContractExtensionSchema, CONTRACT_TYPES, CONTRACT_STATUS_VALUES, contractTypeSchema, contractStatusSchema, type InsertResearchContract, type ResearchContract, type ResearchActivity, type ResearchContractScopeItem, type ResearchContractExtension } from "@shared/schema";
-import { ArrowLeft, Loader2, Plus, Minus, CalendarIcon, FileText, DollarSign, ListChecks } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Minus, CalendarIcon, FileText, DollarSign, ListChecks, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -21,6 +21,19 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import React from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+
+const countries = [
+  "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+  "Bahrain", "Bangladesh", "Belarus", "Belgium", "Bolivia", "Brazil", "Bulgaria", "Cambodia", "Canada",
+  "Chile", "China", "Colombia", "Croatia", "Czech Republic", "Denmark", "Ecuador", "Egypt", "Estonia",
+  "Finland", "France", "Georgia", "Germany", "Greece", "Hungary", "Iceland", "India", "Indonesia",
+  "Iran", "Iraq", "Ireland", "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kuwait",
+  "Latvia", "Lebanon", "Lithuania", "Luxembourg", "Malaysia", "Mexico", "Morocco", "Netherlands",
+  "New Zealand", "Norway", "Oman", "Pakistan", "Palestine", "Philippines", "Poland", "Portugal",
+  "Qatar", "Romania", "Russia", "Saudi Arabia", "Singapore", "Slovakia", "Slovenia", "South Africa",
+  "South Korea", "Spain", "Sri Lanka", "Sweden", "Switzerland", "Syria", "Taiwan", "Thailand",
+  "Tunisia", "Turkey", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Yemen"
+];
 
 const scopeItemSchema = insertResearchContractScopeItemSchema.extend({
   party: z.enum(["sidra", "counterparty"], {
@@ -109,6 +122,8 @@ export default function ResearchContractEdit() {
       contractNumber: "",
       title: "",
       contractorName: "",
+      counterpartyContact: "",
+      counterpartyCountry: "",
       startDate: "",
       endDate: "",
       internalCostSidra: 0,
@@ -154,6 +169,8 @@ export default function ResearchContractEdit() {
         contractNumber: contract.contractNumber || "",
         title: contract.title || "",
         contractorName: contract.contractorName || "",
+        counterpartyContact: contract.counterpartyContact || "",
+        counterpartyCountry: contract.counterpartyCountry || "",
         startDate: contract.startDate ? new Date(contract.startDate).toISOString().split('T')[0] : "",
         endDate: contract.endDate ? new Date(contract.endDate).toISOString().split('T')[0] : "",
         internalCostSidra: contract.internalCostSidra || 0,
@@ -475,20 +492,6 @@ export default function ResearchContractEdit() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="contractorName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contractor Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Organization or individual name" {...field} value={field.value || ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -518,6 +521,87 @@ export default function ResearchContractEdit() {
                   )}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Counterparty Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Counterparty Information
+              </CardTitle>
+              <CardDescription>
+                Details about the external organization or partner
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="contractorName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. Novagen Therapeutics Ltd." 
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-contractor-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="counterpartyCountry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-country">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {countries.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="counterpartyContact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Information</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Primary contact person, email, phone, address, etc."
+                        className="resize-none" 
+                        rows={3}
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="textarea-contact-info"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
 
