@@ -4247,6 +4247,7 @@ export default function IbcApplicationEdit() {
                     <TabsList className="w-full justify-start overflow-x-auto px-6 gap-2" style={{scrollPaddingLeft: '24px', scrollPaddingRight: '24px'}}>
                       <TabsTrigger value="materials-info" className="whitespace-nowrap flex-shrink-0">Materials Info</TabsTrigger>
                       <TabsTrigger value="cell-lines" className="whitespace-nowrap flex-shrink-0">Cell Lines</TabsTrigger>
+                      <TabsTrigger value="hazardous-procedures" className="whitespace-nowrap flex-shrink-0">Hazardous Procedures</TabsTrigger>
                       <TabsTrigger value="exposure-control" className="whitespace-nowrap flex-shrink-0">Exposure Control Plan</TabsTrigger>
                       <TabsTrigger value="additional-detail" className="whitespace-nowrap flex-shrink-0">Additional Detail</TabsTrigger>
                     </TabsList>
@@ -4737,6 +4738,295 @@ export default function IbcApplicationEdit() {
                                 data-testid="button-save-cell-line"
                               >
                                 Save changes
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TabsContent>
+
+                    {/* Hazardous Procedures Subtab */}
+                    <TabsContent value="hazardous-procedures" className="space-y-6 mt-6">
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold">Hazardous Procedures</h3>
+                          {!isReadOnly && (
+                            <Button
+                              type="button"
+                              onClick={openAddHazardousProcedureDialog}
+                              className="flex items-center gap-2"
+                              data-testid="button-add-hazardous-procedure"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add Hazardous Procedure
+                            </Button>
+                          )}
+                        </div>
+
+                        {form.watch('hazardousProcedures')?.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            No hazardous procedures added yet. Click "Add Hazardous Procedure" to get started.
+                          </div>
+                        ) : (
+                          <div className="border rounded-lg overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Cell Line</TableHead>
+                                  <TableHead>Procedure</TableHead>
+                                  <TableHead>Engineering Controls</TableHead>
+                                  <TableHead>PPE</TableHead>
+                                  {!isReadOnly && <TableHead className="text-right">Actions</TableHead>}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {form.watch('hazardousProcedures')?.map((proc, index) => (
+                                  <TableRow key={index} data-testid={`row-hazardous-procedure-${index}`}>
+                                    <TableCell className="font-medium">{proc.cellLineName}</TableCell>
+                                    <TableCell>{proc.procedure}</TableCell>
+                                    <TableCell>{proc.engineeringControls.length} selected</TableCell>
+                                    <TableCell>{proc.ppe.length} selected</TableCell>
+                                    {!isReadOnly && (
+                                      <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => openEditHazardousProcedureDialog(index)}
+                                            className="flex items-center gap-1"
+                                            data-testid={`button-edit-hazardous-procedure-${index}`}
+                                          >
+                                            <Pencil className="w-4 h-4" />
+                                            Edit
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => deleteHazardousProcedure(index)}
+                                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                                            data-testid={`button-delete-hazardous-procedure-${index}`}
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                            Delete
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    )}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+
+                        {/* Hazardous Procedure Dialog */}
+                        <Dialog open={hazardousProcedureDialogOpen} onOpenChange={setHazardousProcedureDialogOpen}>
+                          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>
+                                {editingHazardousProcedureIndex !== null ? 'Edit Hazardous Procedure' : 'Add Hazardous Procedure'}
+                              </DialogTitle>
+                            </DialogHeader>
+                            
+                            <div className="space-y-6 py-4">
+                              {/* Select Cell Line */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Select Cell Line <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  value={hazardousProcedureFormData.cellLineId}
+                                  onValueChange={(value) => {
+                                    const cellLines = form.getValues('cellLines') || [];
+                                    const selectedCellLine = cellLines.find((_, index) => index.toString() === value);
+                                    setHazardousProcedureFormData({
+                                      ...hazardousProcedureFormData,
+                                      cellLineId: value,
+                                      cellLineName: selectedCellLine?.name || "",
+                                    });
+                                  }}
+                                >
+                                  <SelectTrigger data-testid="select-cell-line">
+                                    <SelectValue placeholder="Select a cell line" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {(form.getValues('cellLines') || []).map((cellLine, index) => (
+                                      <SelectItem key={index} value={index.toString()}>
+                                        {cellLine.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {(form.getValues('cellLines') || []).length === 0 && (
+                                  <p className="text-sm text-amber-600">
+                                    No cell lines available. Please add a cell line first in the Cell Lines tab.
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Procedure */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Procedure <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  value={hazardousProcedureFormData.procedure}
+                                  onValueChange={(value) => setHazardousProcedureFormData({...hazardousProcedureFormData, procedure: value})}
+                                >
+                                  <SelectTrigger data-testid="select-procedure">
+                                    <SelectValue placeholder="Select procedure" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Chemicals">Chemicals</SelectItem>
+                                    <SelectItem value="Endothermal Reaction">Endothermal Reaction</SelectItem>
+                                    <SelectItem value="FACS">FACS</SelectItem>
+                                    <SelectItem value="Generation of Splashes">Generation of Splashes</SelectItem>
+                                    <SelectItem value="Hazardous Procedure">Hazardous Procedure</SelectItem>
+                                    <SelectItem value="Sprays or Aerosols from Centrifugation">Sprays or Aerosols from Centrifugation</SelectItem>
+                                    <SelectItem value="Use of Sharps (needled or glass)">Use of Sharps (needled or glass)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Other Cells Description */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  If Other is selected, please indicate the Other cells for which this hazardous procedure applies
+                                </label>
+                                <Textarea
+                                  value={hazardousProcedureFormData.otherCellsDescription}
+                                  onChange={(e) => setHazardousProcedureFormData({...hazardousProcedureFormData, otherCellsDescription: e.target.value})}
+                                  placeholder="Enter other cells description"
+                                  className="min-h-[100px]"
+                                  data-testid="textarea-other-cells"
+                                />
+                              </div>
+
+                              {/* Engineering Controls */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Engineering Controls (check all applicable) <span className="text-red-500">*</span>
+                                </label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  {[
+                                    'Centrifuge Cone',
+                                    'Class II Biosafety Cabinet',
+                                    'Engineered Sharps',
+                                    'Fume Hood',
+                                    'HEPA Filtered Cage',
+                                    'Local Exhaust Snorkel',
+                                    'N/A',
+                                    'Sealed Rotor',
+                                    'Sealed Vials/Tubes',
+                                    'Sharps Container'
+                                  ].map((control) => (
+                                    <div key={control} className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`engineering-${control}`}
+                                        checked={hazardousProcedureFormData.engineeringControls.includes(control)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setHazardousProcedureFormData({
+                                              ...hazardousProcedureFormData,
+                                              engineeringControls: [...hazardousProcedureFormData.engineeringControls, control]
+                                            });
+                                          } else {
+                                            setHazardousProcedureFormData({
+                                              ...hazardousProcedureFormData,
+                                              engineeringControls: hazardousProcedureFormData.engineeringControls.filter(c => c !== control)
+                                            });
+                                          }
+                                        }}
+                                        className="w-4 h-4 text-blue-600"
+                                        data-testid={`checkbox-engineering-${control.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                                      />
+                                      <label htmlFor={`engineering-${control}`} className="text-sm cursor-pointer">{control}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* PPE */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  PPE (check all applicable) <span className="text-red-500">*</span>
+                                </label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  {[
+                                    'Face shield',
+                                    'Gloves',
+                                    'Goggles',
+                                    'Head Cover/Bonnet',
+                                    'Lab Coat, Disposable',
+                                    'Lab Coat-reusable, Laundered',
+                                    'N/A',
+                                    'N95',
+                                    'PADR',
+                                    'Safety Glasses',
+                                    'Shoe Covers',
+                                    'Surgical Mask',
+                                    'Tyvek Suit'
+                                  ].map((ppe) => (
+                                    <div key={ppe} className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`ppe-${ppe}`}
+                                        checked={hazardousProcedureFormData.ppe.includes(ppe)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setHazardousProcedureFormData({
+                                              ...hazardousProcedureFormData,
+                                              ppe: [...hazardousProcedureFormData.ppe, ppe]
+                                            });
+                                          } else {
+                                            setHazardousProcedureFormData({
+                                              ...hazardousProcedureFormData,
+                                              ppe: hazardousProcedureFormData.ppe.filter(p => p !== ppe)
+                                            });
+                                          }
+                                        }}
+                                        className="w-4 h-4 text-blue-600"
+                                        data-testid={`checkbox-ppe-${ppe.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                                      />
+                                      <label htmlFor={`ppe-${ppe}`} className="text-sm cursor-pointer">{ppe}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Procedure Details */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Describe detail use of the Hazardous Procedure on Selected Cell Lines <span className="text-red-500">*</span>
+                                </label>
+                                <Textarea
+                                  value={hazardousProcedureFormData.procedureDetails}
+                                  onChange={(e) => setHazardousProcedureFormData({...hazardousProcedureFormData, procedureDetails: e.target.value})}
+                                  placeholder="Enter detailed procedure description"
+                                  className="min-h-[120px]"
+                                  data-testid="textarea-procedure-details"
+                                />
+                              </div>
+                            </div>
+
+                            <DialogFooter>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setHazardousProcedureDialogOpen(false)}
+                                data-testid="button-cancel-hazardous-procedure"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={saveHazardousProcedure}
+                                data-testid="button-save-hazardous-procedure"
+                              >
+                                Save
                               </Button>
                             </DialogFooter>
                           </DialogContent>
