@@ -56,6 +56,8 @@ const contractEditSchema = insertResearchContractSchema.extend({
   status: contractStatusSchema.optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  contractValue: z.number().optional(),
+  currency: z.string().optional(),
   scopeItems: z.array(scopeItemSchema).optional(),
   extensions: z.array(extensionSchema).optional(),
 });
@@ -126,6 +128,8 @@ export default function ResearchContractEdit() {
       remarks: "",
       status: "submitted",
       contractType: "Service",
+      contractValue: undefined,
+      currency: "QAR",
       scopeItems: [{
         party: "sidra",
         description: "",
@@ -170,6 +174,8 @@ export default function ResearchContractEdit() {
         remarks: contract.remarks || "",
         status: contract.status || "submitted",
         contractType: (CONTRACT_TYPES.includes(contract.contractType as any) ? contract.contractType : "Service") as typeof CONTRACT_TYPES[number],
+        contractValue: contract.contractValue ? parseFloat(contract.contractValue) : undefined,
+        currency: contract.currency || "QAR",
         scopeItems: formattedScopeItems.length > 0 ? formattedScopeItems : [{
           party: "sidra",
           description: "",
@@ -229,12 +235,18 @@ export default function ResearchContractEdit() {
       // Separate scope items and extensions from contract data
       const { scopeItems, extensions, ...contractData } = data;
       
-      // Update the contract first
-      const contractResponse = await apiRequest("PATCH", `/api/research-contracts/${id}`, {
+      // Format contract data to match backend expectations
+      const formattedContractData: any = {
         ...contractData,
-        startDate: contractData.startDate ? contractData.startDate : null,
-        endDate: contractData.endDate ? contractData.endDate : null,
-      });
+        // Convert number to string for numeric database field
+        contractValue: contractData.contractValue?.toString(),
+        // Ensure dates are in YYYY-MM-DD format or null
+        startDate: contractData.startDate || null,
+        endDate: contractData.endDate || null,
+      };
+      
+      // Update the contract first
+      const contractResponse = await apiRequest("PATCH", `/api/research-contracts/${id}`, formattedContractData);
       
       // Handle scope items updates
       if (scopeItems && scopeItems.length > 0) {
@@ -268,7 +280,7 @@ export default function ResearchContractEdit() {
           await apiRequest("POST", `/api/research-contracts/${id}/scope-items`, {
             party: item.party,
             description: item.description,
-            dueDate: item.dueDate || null,
+            dueDate: item.dueDate ? (item.dueDate instanceof Date ? item.dueDate.toISOString().split('T')[0] : item.dueDate) : null,
             acceptanceCriteria: item.acceptanceCriteria || null,
             position: i,
           });
@@ -575,6 +587,54 @@ export default function ResearchContractEdit() {
                           onChange={(e) => field.onChange(Number(e.target.value) || 0)}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="contractValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contract Value</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          placeholder="0.00" 
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          data-testid="input-contract-value"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "QAR"}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-currency">
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="QAR">QAR - Qatari Riyal</SelectItem>
+                          <SelectItem value="USD">USD - US Dollar</SelectItem>
+                          <SelectItem value="EUR">EUR - Euro</SelectItem>
+                          <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
