@@ -3967,6 +3967,7 @@ export default function IbcApplicationEdit() {
                   <Tabs defaultValue="materials-info" className="w-full">
                     <TabsList className="w-full justify-start overflow-x-auto px-6 gap-2" style={{scrollPaddingLeft: '24px', scrollPaddingRight: '24px'}}>
                       <TabsTrigger value="materials-info" className="whitespace-nowrap flex-shrink-0">Materials Info</TabsTrigger>
+                      <TabsTrigger value="cell-lines" className="whitespace-nowrap flex-shrink-0">Cell Lines</TabsTrigger>
                       <TabsTrigger value="exposure-control" className="whitespace-nowrap flex-shrink-0">Exposure Control Plan</TabsTrigger>
                       <TabsTrigger value="additional-detail" className="whitespace-nowrap flex-shrink-0">Additional Detail</TabsTrigger>
                     </TabsList>
