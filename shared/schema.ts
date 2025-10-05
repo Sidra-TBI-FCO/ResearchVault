@@ -563,8 +563,11 @@ export const ibcApplications = pgTable("ibc_applications", {
   // NIH Guidelines Appendix C (Biological Agents)
   nihAppendixC: json("nih_appendix_c"), // Biological agent classifications
   
-  // Hazardous Procedures
-  hazardousProcedures: json("hazardous_procedures"), // Array of hazardous procedures with controls and PPE
+  // Cell Lines (Human/NHP Section)
+  cellLines: json("cell_lines"), // Array of cell line objects with name, species, descriptor, biosafetyLevel, acquisitionSource, passage, exposedTo, willBeCultured
+  
+  // Hazardous Procedures (paired with cell lines)
+  hazardousProcedures: json("hazardous_procedures"), // Array of hazardous procedure objects paired with cell lines, including procedure type, engineering controls, PPE, and procedure details
   
   // Synthetic Experiments
   syntheticExperiments: json("synthetic_experiments"), // Synthetic experiments data including vectors, inserts, and exposures
