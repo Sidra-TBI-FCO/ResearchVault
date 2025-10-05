@@ -247,6 +247,16 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
     exposedTo: z.array(z.string()),
     willBeCultured: z.boolean(),
   })).optional(),
+  hazardousProcedures: z.array(z.object({
+    id: z.string().optional(),
+    cellLineId: z.string(),
+    cellLineName: z.string(),
+    procedure: z.string(),
+    otherCellsDescription: z.string().optional(),
+    engineeringControls: z.array(z.string()),
+    ppe: z.array(z.string()),
+    procedureDetails: z.string(),
+  })).optional(),
   exposureControlPlanCompliance: z.boolean().optional(),
   handWashingDevice: z.boolean().optional(),
   laundryMethod: z.array(z.string()).optional(),
@@ -298,6 +308,19 @@ export default function IbcApplicationEdit() {
     passage: "",
     exposedTo: [] as string[],
     willBeCultured: false,
+  });
+
+  // State for hazardous procedures dialog
+  const [hazardousProcedureDialogOpen, setHazardousProcedureDialogOpen] = useState(false);
+  const [editingHazardousProcedureIndex, setEditingHazardousProcedureIndex] = useState<number | null>(null);
+  const [hazardousProcedureFormData, setHazardousProcedureFormData] = useState({
+    cellLineId: "",
+    cellLineName: "",
+    procedure: "",
+    otherCellsDescription: "",
+    engineeringControls: [] as string[],
+    ppe: [] as string[],
+    procedureDetails: "",
   });
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
@@ -545,6 +568,7 @@ export default function IbcApplicationEdit() {
         nonHumanPrimateOrigin: ibcApplication.nonHumanPrimateOrigin || false,
         stemCells: ibcApplication.stemCells || [],
         cellLines: ibcApplication.cellLines || [],
+        hazardousProcedures: ibcApplication.hazardousProcedures || [],
         exposureControlPlanCompliance: ibcApplication.exposureControlPlanCompliance || false,
         handWashingDevice: ibcApplication.handWashingDevice || false,
         laundryMethod: ibcApplication.laundryMethod || [],
@@ -810,6 +834,124 @@ export default function IbcApplicationEdit() {
       toast({
         title: "Success",
         description: "Cell line deleted successfully",
+      });
+    }
+  };
+
+  // Hazardous Procedures Dialog Functions
+  const openAddHazardousProcedureDialog = () => {
+    setHazardousProcedureFormData({
+      cellLineId: "",
+      cellLineName: "",
+      procedure: "",
+      otherCellsDescription: "",
+      engineeringControls: [],
+      ppe: [],
+      procedureDetails: "",
+    });
+    setEditingHazardousProcedureIndex(null);
+    setHazardousProcedureDialogOpen(true);
+  };
+
+  const openEditHazardousProcedureDialog = (index: number) => {
+    const hazardousProcedures = form.getValues('hazardousProcedures') || [];
+    const procedure = hazardousProcedures[index];
+    if (procedure) {
+      setHazardousProcedureFormData({
+        cellLineId: procedure.cellLineId,
+        cellLineName: procedure.cellLineName,
+        procedure: procedure.procedure,
+        otherCellsDescription: procedure.otherCellsDescription || "",
+        engineeringControls: procedure.engineeringControls || [],
+        ppe: procedure.ppe || [],
+        procedureDetails: procedure.procedureDetails,
+      });
+      setEditingHazardousProcedureIndex(index);
+      setHazardousProcedureDialogOpen(true);
+    }
+  };
+
+  const saveHazardousProcedure = () => {
+    // Validate required fields
+    if (!hazardousProcedureFormData.cellLineId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a cell line",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!hazardousProcedureFormData.procedure) {
+      toast({
+        title: "Validation Error",
+        description: "Procedure is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (hazardousProcedureFormData.engineeringControls.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least one Engineering Control is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (hazardousProcedureFormData.ppe.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least one PPE item is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!hazardousProcedureFormData.procedureDetails.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Procedure Details are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const currentProcedures = form.getValues('hazardousProcedures') || [];
+    let updatedProcedures;
+    
+    if (editingHazardousProcedureIndex !== null) {
+      // Edit existing procedure
+      updatedProcedures = [...currentProcedures];
+      const existingProcedure = updatedProcedures[editingHazardousProcedureIndex];
+      updatedProcedures[editingHazardousProcedureIndex] = {
+        ...hazardousProcedureFormData,
+        id: existingProcedure?.id, // Keep existing id if present
+      };
+    } else {
+      // Add new procedure
+      updatedProcedures = [
+        ...currentProcedures,
+        {
+          ...hazardousProcedureFormData,
+          id: `temp-${Date.now()}`, // Temporary ID for new procedures
+        },
+      ];
+    }
+    
+    form.setValue('hazardousProcedures', updatedProcedures);
+    setHazardousProcedureDialogOpen(false);
+    toast({
+      title: "Success",
+      description: editingHazardousProcedureIndex !== null ? "Hazardous procedure updated successfully" : "Hazardous procedure added successfully",
+    });
+  };
+
+  const deleteHazardousProcedure = (index: number) => {
+    if (window.confirm("Are you sure you want to delete this hazardous procedure?")) {
+      const currentProcedures = form.getValues('hazardousProcedures') || [];
+      const updatedProcedures = currentProcedures.filter((_, i) => i !== index);
+      form.setValue('hazardousProcedures', updatedProcedures);
+      toast({
+        title: "Success",
+        description: "Hazardous procedure deleted successfully",
       });
     }
   };
