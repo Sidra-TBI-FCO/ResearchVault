@@ -447,11 +447,30 @@ export const ibcApplications = pgTable("ibc_applications", {
   plants: boolean("plants").default(false),
   transgenicPlantsOrExposure: boolean("transgenic_plants_or_exposure"), // Sub-question for plants
   
+  // Human/NHP Section - Materials, Tissues, Stem Cells
+  humanOrigin: boolean("human_origin").default(false),
+  humanMaterials: text("human_materials").array(), // Array of selected human materials (e.g., "blood", "tissues", etc.)
+  humanMaterialsTissuesOther: text("human_materials_tissues_other"), // Text input for "Tissues (List below)"
+  humanMaterialsOtherMaterial: text("human_materials_other_material"), // Text input for "Other Material (List below)"
+  nonHumanPrimateOrigin: boolean("non_human_primate_origin").default(false),
+  stemCells: text("stem_cells").array(), // Array of selected stem cell types
+  
+  // Human/NHP Section - Exposure Control Plan
+  exposureControlPlanCompliance: boolean("exposure_control_plan_compliance").default(false), // I have read and agree to comply with the Exposure Control Plan
+  handWashingDevice: boolean("hand_washing_device").default(false), // Is there a hand washing device available in the room(s)?
+  laundryMethod: text("laundry_method").array(), // How to launder soiled lab coats (disposable, in-house, offsite vendor, other)
+  laundryMethodOther: text("laundry_method_other"), // Text input for "Other" laundry method
+  
+  // Human/NHP Section - Additional Detail
+  materialsContainKnownPathogens: boolean("materials_contain_known_pathogens").default(false), // Do these materials contain known pathogens?
+  materialPathogenDetails: text("material_pathogen_details"), // List the material and the known pathogen
+  materialTreatmentDetails: text("material_treatment_details"), // Explain any type of treatment the material has undergone
+  infectionSymptoms: text("infection_symptoms"), // What are the signs and symptoms of infection from exposure to these materials
+  
   biologicalAgents: json("biological_agents"), // List of biological agents/organisms
   chemicalAgents: json("chemical_agents"), // Chemical hazards
   radiologicalMaterials: json("radiological_materials"), // Radioactive materials
   recombinantDNA: boolean("recombinant_dna").default(false),
-  humanMaterials: boolean("human_materials").default(false),
   animalWork: boolean("animal_work").default(false),
   fieldWork: boolean("field_work").default(false),
   
