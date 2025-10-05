@@ -52,7 +52,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
  */
 export function requireContractsOfficer(req: Request, res: Response, next: NextFunction) {
   if (req.session && req.session.user && 
-      (req.session.user.role === 'contracts_officer' || req.session.user.role === 'admin' || req.session.user.role === 'Management')) {
+      (req.session.user.role === 'Contracts Officer' || req.session.user.role === 'admin' || req.session.user.role === 'Management')) {
     return next();
   }
   

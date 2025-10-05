@@ -73,7 +73,7 @@ export default function ResearchContractDetail() {
 
   // Check if current user can edit this contract
   const canEditContract = contract && (
-    currentUser.role === 'contracts_officer' || 
+    currentUser.role === 'Contracts Officer' || 
     currentUser.role === 'admin' || 
     currentUser.role === 'Management' ||
     contract.requestedByUserId === currentUser.id

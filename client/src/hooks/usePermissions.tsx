@@ -39,7 +39,7 @@ const JOB_TITLES = [
   "IBC Officer",
   "Outcome Officer",
   "Grant Officer",
-  "contracts_officer"
+  "Contracts Officer"
 ];
 
 const NAVIGATION_ITEMS = [
@@ -90,8 +90,8 @@ const createDefaultPermissions = (): NavigationPermission[] => {
         }
       }
       
-      // contracts_officer has specialized access
-      if (jobTitle === "contracts_officer") {
+      // Contracts Officer has specialized access
+      if (jobTitle === "Contracts Officer") {
         if (navItem.includes("-office") || navItem.includes("-reviewer")) {
           // Hide other department offices/reviewer functions
           defaultAccess = "hide";

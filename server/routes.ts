@@ -4329,33 +4329,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Research Contracts - Enhanced with RBAC
+  // Research Contracts
   app.get('/api/research-contracts', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
       
       let contracts;
       
-      // Role-based filtering
-      if (currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management') {
-        // Officers can see all contracts
-        if (projectId && !isNaN(projectId)) {
-          contracts = await storage.getResearchContractsForProject(projectId);
-        } else {
-          contracts = await storage.getResearchContracts();
-        }
+      // Return all contracts, optionally filtered by project
+      if (projectId && !isNaN(projectId)) {
+        contracts = await storage.getResearchContractsForProject(projectId);
       } else {
-        // Regular users can only see their own contracts
-        contracts = await storage.getResearchContractsForUser(currentUser.id);
-        
-        // Filter by project if requested and user has access
-        if (projectId && !isNaN(projectId)) {
-          contracts = contracts.filter(contract => {
-            // User can see contracts if they are the requester or related to their research activities
-            return contract.requestedByUserId === currentUser.id;
-          });
-        }
+        contracts = await storage.getResearchContracts();
       }
       
       // Enhance contracts with project and PI details
@@ -4396,7 +4381,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/research-contracts/:id', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid research contract ID" });
@@ -4405,12 +4389,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contract = await storage.getResearchContract(id);
       if (!contract) {
         return res.status(404).json({ message: "Research contract not found" });
-      }
-
-      // Check access permissions
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && 
-          currentUser.role !== 'Management' && contract.requestedByUserId !== currentUser.id) {
-        return res.status(403).json({ message: "Access denied. You can only view your own contracts." });
       }
 
       // Get related details
@@ -4459,17 +4437,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/research-contracts', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
-      if (!currentUser) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
       const validateData = insertResearchContractSchema.parse(req.body);
       
-      // SECURITY: Server controls these fields - ignore any client-sent values
-      validateData.requestedByUserId = currentUser.id;
-      validateData.status = 'submitted'; // Always submitted on creation
-      validateData.contractNumber = `CR-${Date.now()}-${currentUser.id}`; // Generate unique contract number
+      // Generate unique contract number
+      validateData.contractNumber = `CR-${Date.now()}`;
       
       // Check if research activity exists
       if (validateData.researchActivityId) {
@@ -4500,38 +4471,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/research-contracts/:id', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
-      if (!currentUser) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid research contract ID" });
       }
 
-      // Get existing contract to check permissions
       const existingContract = await storage.getResearchContract(id);
       if (!existingContract) {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
       const validateData = insertResearchContractSchema.partial().parse(req.body);
-      
-      // Check permissions for updates
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = existingContract.requestedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner) {
-        return res.status(403).json({ message: "Access denied. You can only update your own contracts." });
-      }
-      
-      // Workflow validation - only officers can change status after submission
-      if (validateData.status && validateData.status !== existingContract.status) {
-        if (!isContractsOfficer && existingContract.status !== 'draft') {
-          return res.status(403).json({ message: "Only contracts officers can change contract status after submission." });
-        }
-      }
       
       // Check if research activity exists if provided
       if (validateData.researchActivityId) {
@@ -4599,21 +4549,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Research Contract Scope Items API
   app.get('/api/research-contracts/:contractId/scope-items', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const contractId = parseInt(req.params.contractId);
       if (isNaN(contractId)) {
         return res.status(400).json({ message: "Invalid contract ID" });
       }
 
-      // Check if contract exists and user has access
       const contract = await storage.getResearchContract(contractId);
       if (!contract) {
         return res.status(404).json({ message: "Research contract not found" });
-      }
-
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
-          contract.requestedByUserId !== currentUser.id) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const scopeItems = await storage.getResearchContractScopeItems(contractId);
@@ -4626,28 +4569,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/research-contracts/:contractId/scope-items', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const contractId = parseInt(req.params.contractId);
       if (isNaN(contractId)) {
         return res.status(400).json({ message: "Invalid contract ID" });
       }
 
-      // Check if contract exists and user has access
       const contract = await storage.getResearchContract(contractId);
       if (!contract) {
         return res.status(404).json({ message: "Research contract not found" });
-      }
-
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      // Only allow editing if contract is in draft status (unless officer)
-      if (!isContractsOfficer && contract.status !== 'draft') {
-        return res.status(403).json({ message: "Cannot modify scope items after contract submission" });
       }
 
       const validateData = insertResearchContractScopeItemSchema.parse({
@@ -4668,32 +4597,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/research-contracts/scope-items/:id', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid scope item ID" });
       }
 
-      // Get existing scope item to check permissions
       const existingScopeItem = await storage.getResearchContractScopeItem(id);
       if (!existingScopeItem) {
         return res.status(404).json({ message: "Scope item not found" });
-      }
-
-      const contract = await storage.getResearchContract(existingScopeItem.contractId);
-      if (!contract) {
-        return res.status(404).json({ message: "Associated contract not found" });
-      }
-
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      if (!isContractsOfficer && contract.status !== 'draft') {
-        return res.status(403).json({ message: "Cannot modify scope items after contract submission" });
       }
 
       const validateData = insertResearchContractScopeItemSchema.partial().parse(req.body);
@@ -4715,32 +4626,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/research-contracts/scope-items/:id', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid scope item ID" });
       }
 
-      // Get existing scope item to check permissions
       const existingScopeItem = await storage.getResearchContractScopeItem(id);
       if (!existingScopeItem) {
         return res.status(404).json({ message: "Scope item not found" });
-      }
-
-      const contract = await storage.getResearchContract(existingScopeItem.contractId);
-      if (!contract) {
-        return res.status(404).json({ message: "Associated contract not found" });
-      }
-
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      if (!isContractsOfficer && contract.status !== 'draft') {
-        return res.status(403).json({ message: "Cannot modify scope items after contract submission" });
       }
 
       const success = await storage.deleteResearchContractScopeItem(id);
@@ -4759,21 +4652,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Research Contract Extensions API
   app.get('/api/research-contracts/:contractId/extensions', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const contractId = parseInt(req.params.contractId);
       if (isNaN(contractId)) {
         return res.status(400).json({ message: "Invalid contract ID" });
       }
 
-      // Check if contract exists and user has access
       const contract = await storage.getResearchContract(contractId);
       if (!contract) {
         return res.status(404).json({ message: "Research contract not found" });
-      }
-
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
-          contract.requestedByUserId !== currentUser.id) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const extensions = await storage.getResearchContractExtensions(contractId);
@@ -4887,21 +4773,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Research Contract Documents API
   app.get('/api/research-contracts/:contractId/documents', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const contractId = parseInt(req.params.contractId);
       if (isNaN(contractId)) {
         return res.status(400).json({ message: "Invalid contract ID" });
       }
 
-      // Check if contract exists and user has access
       const contract = await storage.getResearchContract(contractId);
       if (!contract) {
         return res.status(404).json({ message: "Research contract not found" });
-      }
-
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
-          contract.requestedByUserId !== currentUser.id) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const documents = await storage.getResearchContractDocuments(contractId);
@@ -4914,13 +4793,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/research-contracts/extensions/:extensionId/documents', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const extensionId = parseInt(req.params.extensionId);
       if (isNaN(extensionId)) {
         return res.status(400).json({ message: "Invalid extension ID" });
       }
 
-      // Check if extension exists and user has access
       const extension = await storage.getResearchContractExtension(extensionId);
       if (!extension) {
         return res.status(404).json({ message: "Extension not found" });
@@ -4929,11 +4806,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contract = await storage.getResearchContract(extension.contractId);
       if (!contract) {
         return res.status(404).json({ message: "Associated contract not found" });
-      }
-
-      if (currentUser.role !== 'contracts_officer' && currentUser.role !== 'admin' && currentUser.role !== 'Management' && 
-          contract.requestedByUserId !== currentUser.id) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const documents = await storage.getResearchContractDocumentsForExtension(extensionId);
@@ -4946,29 +4818,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/research-contracts/:contractId/documents', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const contractId = parseInt(req.params.contractId);
       if (isNaN(contractId)) {
         return res.status(400).json({ message: "Invalid contract ID" });
       }
 
-      // Check if contract exists and user has access
       const contract = await storage.getResearchContract(contractId);
       if (!contract) {
         return res.status(404).json({ message: "Research contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
       const validateData = insertResearchContractDocumentSchema.parse({
         ...req.body,
-        contractId: contractId,
-        uploadedByUserId: currentUser.id
+        contractId: contractId
       });
 
       const document = await storage.createResearchContractDocument(validateData);
@@ -4984,13 +4846,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/research-contracts/extensions/:extensionId/documents', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const extensionId = parseInt(req.params.extensionId);
       if (isNaN(extensionId)) {
         return res.status(400).json({ message: "Invalid extension ID" });
       }
 
-      // Check if extension exists and user has access
       const extension = await storage.getResearchContractExtension(extensionId);
       if (!extension) {
         return res.status(404).json({ message: "Extension not found" });
@@ -5001,17 +4861,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Associated contract not found" });
       }
 
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
       const validateData = insertResearchContractDocumentSchema.parse({
         ...req.body,
-        extensionId: extensionId,
-        uploadedByUserId: currentUser.id
+        extensionId: extensionId
       });
 
       const document = await storage.createResearchContractDocument(validateData);
@@ -5027,39 +4879,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/research-contracts/documents/:id', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid document ID" });
       }
 
-      // Get existing document to check permissions
       const existingDocument = await storage.getResearchContractDocument(id);
       if (!existingDocument) {
         return res.status(404).json({ message: "Document not found" });
-      }
-
-      // Find associated contract
-      let contract;
-      if (existingDocument.contractId) {
-        contract = await storage.getResearchContract(existingDocument.contractId);
-      } else if (existingDocument.extensionId) {
-        const extension = await storage.getResearchContractExtension(existingDocument.extensionId);
-        if (extension) {
-          contract = await storage.getResearchContract(extension.contractId);
-        }
-      }
-
-      if (!contract) {
-        return res.status(404).json({ message: "Associated contract not found" });
-      }
-
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      const isUploader = existingDocument.uploadedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner && !isUploader) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const validateData = insertResearchContractDocumentSchema.partial().parse(req.body);
@@ -5081,39 +4908,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/research-contracts/documents/:id', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser || req.session?.user;
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid document ID" });
       }
 
-      // Get existing document to check permissions
       const existingDocument = await storage.getResearchContractDocument(id);
       if (!existingDocument) {
         return res.status(404).json({ message: "Document not found" });
-      }
-
-      // Find associated contract
-      let contract;
-      if (existingDocument.contractId) {
-        contract = await storage.getResearchContract(existingDocument.contractId);
-      } else if (existingDocument.extensionId) {
-        const extension = await storage.getResearchContractExtension(existingDocument.extensionId);
-        if (extension) {
-          contract = await storage.getResearchContract(extension.contractId);
-        }
-      }
-
-      if (!contract) {
-        return res.status(404).json({ message: "Associated contract not found" });
-      }
-
-      const isContractsOfficer = currentUser.role === 'contracts_officer' || currentUser.role === 'admin' || currentUser.role === 'Management';
-      const isOwner = contract.requestedByUserId === currentUser.id;
-      const isUploader = existingDocument.uploadedByUserId === currentUser.id;
-      
-      if (!isContractsOfficer && !isOwner && !isUploader) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const success = await storage.deleteResearchContractDocument(id);
@@ -5130,15 +4932,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Additional convenience endpoint for getting contracts by research activity
-  app.get('/api/research-activities/:id/contracts', requireContractsRead, async (req: Request, res: Response) => {
+  app.get('/api/research-activities/:id/contracts', async (req: Request, res: Response) => {
     try {
-      const currentUser = (req as any).currentUser;
       const researchActivityId = parseInt(req.params.id);
       if (isNaN(researchActivityId)) {
         return res.status(400).json({ message: "Invalid research activity ID" });
       }
 
-      // Check if research activity exists
       const researchActivity = await storage.getResearchActivity(researchActivityId);
       if (!researchActivity) {
         return res.status(404).json({ message: "Research activity not found" });
@@ -5146,16 +4946,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const contracts = await storage.getResearchContractsForResearchActivity(researchActivityId);
 
-      // Filter contracts based on user permissions
-      const filteredContracts = contracts.filter(contract => {
-        if (currentUser.role === 'contracts_officer' || currentUser.role === 'admin') {
-          return true; // Officers can see all contracts
-        }
-        return contract.requestedByUserId === currentUser.id; // Users can only see their own
-      });
-
       // Enhance contracts with related details
-      const enhancedContracts = await Promise.all(filteredContracts.map(async (contract) => {
+      const enhancedContracts = await Promise.all(contracts.map(async (contract) => {
         const pi = contract.leadPIId ? 
           await storage.getScientist(contract.leadPIId) : null;
         
