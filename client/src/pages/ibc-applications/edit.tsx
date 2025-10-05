@@ -784,6 +784,7 @@ export default function IbcApplicationEdit() {
                 <span className="hidden sm:inline lg:hidden">Nucleic Acids</span>
                 <span className="sm:hidden">DNA/RNA</span>
               </TabsTrigger>
+              <TabsTrigger value="human-nhp" className="whitespace-nowrap flex-shrink-0">Human/NHP</TabsTrigger>
               <TabsTrigger value="facilities" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Facilities</span>
                 <span className="sm:hidden">Labs</span>
