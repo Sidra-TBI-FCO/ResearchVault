@@ -228,6 +228,22 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   animalWork: z.boolean().optional(),
   fieldWork: z.boolean().optional(),
   
+  // Human/NHP Section
+  humanOrigin: z.boolean().optional(),
+  humanMaterialsArray: z.array(z.string()).optional(),
+  humanMaterialsTissuesOther: z.string().optional(),
+  humanMaterialsOtherMaterial: z.string().optional(),
+  nonHumanPrimateOrigin: z.boolean().optional(),
+  stemCells: z.array(z.string()).optional(),
+  exposureControlPlanCompliance: z.boolean().optional(),
+  handWashingDevice: z.boolean().optional(),
+  laundryMethod: z.array(z.string()).optional(),
+  laundryMethodOther: z.string().optional(),
+  materialsContainKnownPathogens: z.boolean().optional(),
+  materialPathogenDetails: z.string().optional(),
+  materialTreatmentDetails: z.string().optional(),
+  infectionSymptoms: z.string().optional(),
+  
   // Team members and comments
   teamMembers: z.array(z.union([
     z.object({
@@ -375,6 +391,22 @@ export default function IbcApplicationEdit() {
       animalWork: false,
       fieldWork: false,
       
+      // Human/NHP Section defaults
+      humanOrigin: false,
+      humanMaterialsArray: [],
+      humanMaterialsTissuesOther: "",
+      humanMaterialsOtherMaterial: "",
+      nonHumanPrimateOrigin: false,
+      stemCells: [],
+      exposureControlPlanCompliance: false,
+      handWashingDevice: false,
+      laundryMethod: [],
+      laundryMethodOther: "",
+      materialsContainKnownPathogens: false,
+      materialPathogenDetails: "",
+      materialTreatmentDetails: "",
+      infectionSymptoms: "",
+      
       researchActivityIds: [],
       teamMembers: [],
     },
@@ -479,6 +511,22 @@ export default function IbcApplicationEdit() {
         humanMaterials: ibcApplication.humanMaterials || false,
         animalWork: ibcApplication.animalWork || false,
         fieldWork: ibcApplication.fieldWork || false,
+        
+        // Human/NHP Section actual values
+        humanOrigin: ibcApplication.humanOrigin || false,
+        humanMaterialsArray: ibcApplication.humanMaterialsArray || [],
+        humanMaterialsTissuesOther: ibcApplication.humanMaterialsTissuesOther || "",
+        humanMaterialsOtherMaterial: ibcApplication.humanMaterialsOtherMaterial || "",
+        nonHumanPrimateOrigin: ibcApplication.nonHumanPrimateOrigin || false,
+        stemCells: ibcApplication.stemCells || [],
+        exposureControlPlanCompliance: ibcApplication.exposureControlPlanCompliance || false,
+        handWashingDevice: ibcApplication.handWashingDevice || false,
+        laundryMethod: ibcApplication.laundryMethod || [],
+        laundryMethodOther: ibcApplication.laundryMethodOther || "",
+        materialsContainKnownPathogens: ibcApplication.materialsContainKnownPathogens || false,
+        materialPathogenDetails: ibcApplication.materialPathogenDetails || "",
+        materialTreatmentDetails: ibcApplication.materialTreatmentDetails || "",
+        infectionSymptoms: ibcApplication.infectionSymptoms || "",
         
         researchActivityIds: associatedActivities.map(ra => ra.id) || [],
         teamMembers: [],
