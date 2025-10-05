@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
 import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
 import { IbcInactivationDecontaminationTab } from "@/components/IbcInactivationDecontaminationTab";
@@ -289,6 +290,12 @@ export default function IbcApplicationEdit() {
     ppe: [] as string[],
     procedureDetails: "",
   });
+
+  // State for conditional tab visibility with data protection
+  const [nucleicAcidsConfirmDialog, setNucleicAcidsConfirmDialog] = useState(false);
+  const [humanNhpConfirmDialog, setHumanNhpConfirmDialog] = useState(false);
+  const prevRecombinantValue = useRef<boolean | undefined>();
+  const prevHumanNhpValue = useRef<boolean | undefined>();
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -680,6 +687,153 @@ export default function IbcApplicationEdit() {
       });
     },
   });
+
+  // Helper functions to check if tabs have data
+  const hasNucleicAcidsData = () => {
+    const syntheticExperiments = form.getValues('syntheticExperiments');
+    return syntheticExperiments && syntheticExperiments.length > 0;
+  };
+
+  const hasHumanNhpData = () => {
+    const humanOrigin = form.getValues('humanOrigin');
+    const humanMaterials = form.getValues('humanMaterials');
+    const cellLines = form.getValues('cellLines');
+    const hazardousProcedures = form.getValues('hazardousProcedures');
+    const stemCells = form.getValues('stemCells');
+    const nonHumanPrimateOrigin = form.getValues('nonHumanPrimateOrigin');
+    
+    return (
+      humanOrigin ||
+      (humanMaterials && humanMaterials.length > 0) ||
+      (cellLines && cellLines.length > 0) ||
+      (hazardousProcedures && hazardousProcedures.length > 0) ||
+      (stemCells && stemCells.length > 0) ||
+      nonHumanPrimateOrigin
+    );
+  };
+
+  // Data clearing functions
+  const clearNucleicAcidsData = () => {
+    form.setValue('syntheticExperiments', []);
+    form.setValue('nihSectionABC', {
+      requiresNihDirectorApproval: false,
+      drugResistanceTraits: false,
+      toxinMolecules: false,
+      humanGeneTransfer: false,
+      approvalDocuments: [],
+    });
+    form.setValue('nihSectionD', {
+      riskGroup2Plus: false,
+      pathogenDnaRna: false,
+      infectiousViral: false,
+      wholeAnimalExperiments: false,
+      wholePlants: false,
+      largeScaleExperiments: false,
+      influenzaViruses: false,
+      geneDriveOrganisms: false,
+    });
+    form.setValue('nihSectionE', {
+      limitedViralGenome: false,
+      plantExperiments: false,
+      transgenicRodents: false,
+    });
+    form.setValue('nihSectionF', {
+      f1TissueCulture: false,
+      f2EcoliK12: false,
+      f3Saccharomyces: false,
+      f4Kluyveromyces: false,
+      f5Bacillus: false,
+      f6GramPositive: false,
+      f7TransgenicRodents: false,
+      f8TransgenicBreeding: false,
+    });
+    form.setValue('nihAppendixC', {
+      cI: false,
+      cII: false,
+      cIII: false,
+      cIV: false,
+      cV: false,
+      cVI: false,
+      cVII: false,
+      cVIII: false,
+      cIX: false,
+    });
+    setNucleicAcidsConfirmDialog(false);
+  };
+
+  const clearHumanNhpData = () => {
+    form.setValue('humanOrigin', false);
+    form.setValue('humanMaterials', []);
+    form.setValue('humanMaterialsTissuesOther', '');
+    form.setValue('humanMaterialsOtherMaterial', '');
+    form.setValue('nonHumanPrimateOrigin', false);
+    form.setValue('stemCells', []);
+    form.setValue('cellLines', []);
+    form.setValue('hazardousProcedures', []);
+    form.setValue('exposureControlPlanCompliance', false);
+    form.setValue('handWashingDevice', false);
+    form.setValue('laundryMethod', []);
+    form.setValue('laundryMethodOther', '');
+    form.setValue('materialsContainKnownPathogens', false);
+    form.setValue('materialPathogenDetails', '');
+    form.setValue('materialTreatmentDetails', '');
+    form.setValue('infectionSymptoms', '');
+    form.setValue('introducingPrimateMaterialIntoAnimals', false);
+    setHumanNhpConfirmDialog(false);
+  };
+
+  // Watch for changes in the Basics tab questions
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      // Handle Recombinant/Synthetic Nucleic Acids toggle
+      if (name === 'recombinantSyntheticNucleicAcid') {
+        const currentValue = value.recombinantSyntheticNucleicAcid;
+        const previousValue = prevRecombinantValue.current;
+        
+        // Check if transitioning from true to false
+        if (previousValue === true && currentValue === false) {
+          // Check if there's data in the Nucleic Acids tab
+          if (hasNucleicAcidsData()) {
+            // Show confirmation dialog
+            setNucleicAcidsConfirmDialog(true);
+            // Revert the toggle temporarily
+            form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false });
+          }
+        }
+        
+        prevRecombinantValue.current = currentValue;
+      }
+      
+      // Handle Human/NHP Material toggle
+      if (name === 'humanNonHumanPrimateMaterial') {
+        const currentValue = value.humanNonHumanPrimateMaterial;
+        const previousValue = prevHumanNhpValue.current;
+        
+        // Check if transitioning from true to false
+        if (previousValue === true && currentValue === false) {
+          // Check if there's data in the Human/NHP tab
+          if (hasHumanNhpData()) {
+            // Show confirmation dialog
+            setHumanNhpConfirmDialog(true);
+            // Revert the toggle temporarily
+            form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false });
+          }
+        }
+        
+        prevHumanNhpValue.current = currentValue;
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Initialize previous values when data loads
+  useEffect(() => {
+    if (ibcApplication) {
+      prevRecombinantValue.current = ibcApplication.recombinantSyntheticNucleicAcid;
+      prevHumanNhpValue.current = ibcApplication.humanNonHumanPrimateMaterial;
+    }
+  }, [ibcApplication]);
 
   // Cell Line Dialog Handlers
   const openAddCellLineDialog = () => {
