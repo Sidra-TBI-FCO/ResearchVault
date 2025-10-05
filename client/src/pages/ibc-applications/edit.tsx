@@ -1188,12 +1188,16 @@ export default function IbcApplicationEdit() {
               <TabsTrigger value="basics" className="whitespace-nowrap flex-shrink-0">Basics</TabsTrigger>
               <TabsTrigger value="staff" className="whitespace-nowrap flex-shrink-0">Staff</TabsTrigger>
               <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Overview</TabsTrigger>
-              <TabsTrigger value="nucleic-acids" className="whitespace-nowrap flex-shrink-0">
-                <span className="hidden lg:inline">Recombinant or Synthetic Nucleic Acids</span>
-                <span className="hidden sm:inline lg:hidden">Nucleic Acids</span>
-                <span className="sm:hidden">DNA/RNA</span>
-              </TabsTrigger>
-              <TabsTrigger value="human-nhp" className="whitespace-nowrap flex-shrink-0">Human/NHP</TabsTrigger>
+              {form.watch('recombinantSyntheticNucleicAcid') && (
+                <TabsTrigger value="nucleic-acids" className="whitespace-nowrap flex-shrink-0">
+                  <span className="hidden lg:inline">Recombinant or Synthetic Nucleic Acids</span>
+                  <span className="hidden sm:inline lg:hidden">Nucleic Acids</span>
+                  <span className="sm:hidden">DNA/RNA</span>
+                </TabsTrigger>
+              )}
+              {form.watch('humanNonHumanPrimateMaterial') && (
+                <TabsTrigger value="human-nhp" className="whitespace-nowrap flex-shrink-0">Human/NHP</TabsTrigger>
+              )}
               <TabsTrigger value="facilities" className="whitespace-nowrap flex-shrink-0">
                 <span className="hidden sm:inline">Facilities</span>
                 <span className="sm:hidden">Labs</span>
@@ -5734,6 +5738,81 @@ export default function IbcApplicationEdit() {
           )}
         </form>
       </Form>
+
+      {/* Confirmation Dialog for Nucleic Acids Tab Data Deletion */}
+      <AlertDialog open={nucleicAcidsConfirmDialog} onOpenChange={setNucleicAcidsConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have data filled in the Recombinant or Synthetic Nucleic Acids tab. 
+              If you change this answer to "No", all data in that tab will be permanently deleted, including:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Synthetic Experiments</li>
+                <li>NIH Guidelines sections</li>
+              </ul>
+              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              // Keep the toggle as "Yes" - no data deletion
+              setNucleicAcidsConfirmDialog(false);
+            }}>
+              Cancel (Keep Data)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                // User confirmed - proceed with data deletion
+                form.setValue('recombinantSyntheticNucleicAcid', false);
+                clearNucleicAcidsData();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Data and Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Dialog for Human/NHP Tab Data Deletion */}
+      <AlertDialog open={humanNhpConfirmDialog} onOpenChange={setHumanNhpConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have data filled in the Human/NHP Material tab. 
+              If you change this answer to "No", all data in that tab will be permanently deleted, including:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Human and Non-Human Primate Origin information</li>
+                <li>Cell Lines</li>
+                <li>Hazardous Procedures</li>
+                <li>Stem Cells</li>
+                <li>Exposure Control Plan details</li>
+              </ul>
+              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              // Keep the toggle as "Yes" - no data deletion
+              setHumanNhpConfirmDialog(false);
+            }}>
+              Cancel (Keep Data)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                // User confirmed - proceed with data deletion
+                form.setValue('humanNonHumanPrimateMaterial', false);
+                clearHumanNhpData();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Data and Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
