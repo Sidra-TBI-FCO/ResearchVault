@@ -195,10 +195,7 @@ export default function ContractRequest() {
       // NOTE: Server will set requestedByUserId, status, and contractNumber securely
       const { scopeItems, ...contractPayload } = data;
 
-      const response = await apiRequest("POST", "/api/research-contracts", {
-        contract: contractPayload,
-        scopeItems: scopeItems,
-      });
+      const response = await apiRequest("POST", "/api/research-contracts", contractPayload);
       return response.json();
     },
     onSuccess: (data) => {

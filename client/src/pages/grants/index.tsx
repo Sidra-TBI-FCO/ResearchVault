@@ -27,6 +27,8 @@ import { Plus, Search, MoreHorizontal, Download, Filter, DollarSign, Calendar, A
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 type EnhancedGrant = Grant & {
   lpi?: {
@@ -46,6 +48,8 @@ export default function GrantsList() {
   const [sortDirection, setSortDirection] = useState<string>("desc");
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { currentUser } = useCurrentUser();
+  const { canEdit } = useElementPermissions(currentUser.role, "grants");
 
   const { data: grants, isLoading } = useQuery<EnhancedGrant[]>({
     queryKey: ['/api/grants'],
@@ -212,28 +216,31 @@ export default function GrantsList() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Grants Office</h1>
-          <p className="text-gray-600 mt-1">Manage research grants and funding applications</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleExportCSV}
-            variant="outline"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Link href="/grants/create">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Grant
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="grants">
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Grants Office</h1>
+            <p className="text-gray-600 mt-1">Manage research grants and funding applications</p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleExportCSV}
+              variant="outline"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
             </Button>
-          </Link>
+            {canEdit && (
+              <Link href="/grants/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Grant
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
 
       <div>
         <Card>
@@ -418,5 +425,6 @@ export default function GrantsList() {
         </Card>
       </div>
     </div>
+    </PermissionWrapper>
   );
 }
