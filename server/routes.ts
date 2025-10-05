@@ -4437,10 +4437,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/research-contracts', async (req: Request, res: Response) => {
     try {
-      const validateData = insertResearchContractSchema.parse(req.body);
+      // Make contractNumber optional for validation since it's auto-generated
+      const validateData = insertResearchContractSchema.omit({ contractNumber: true }).parse(req.body);
       
       // Generate unique contract number
-      validateData.contractNumber = `CR-${Date.now()}`;
+      const contractNumber = `CR-${Date.now()}`;
       
       // Check if research activity exists
       if (validateData.researchActivityId) {
@@ -4458,7 +4459,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const contract = await storage.createResearchContract(validateData);
+      const contract = await storage.createResearchContract({
+        ...validateData,
+        contractNumber,
+      });
       res.status(201).json(contract);
     } catch (error) {
       if (error instanceof ZodError) {
