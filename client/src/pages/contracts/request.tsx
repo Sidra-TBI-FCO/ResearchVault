@@ -127,7 +127,6 @@ export default function ContractRequest() {
     currency: "QAR",
     startDate: new Date(),
     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-    initiationRequestedAt: new Date(),
     scopeItems: [
       {
         party: "sidra",
@@ -196,16 +195,22 @@ export default function ContractRequest() {
       const { scopeItems, ...contractPayload } = data;
 
       // Convert types to match backend expectations
-      const formattedPayload = {
+      const formattedPayload: any = {
         ...contractPayload,
         // Convert number to string for numeric database field
         contractValue: contractPayload.contractValue?.toString(),
-        // Convert Date objects to ISO strings for API transmission
-        startDate: contractPayload.startDate.toISOString(),
-        endDate: contractPayload.endDate.toISOString(),
-        initiationRequestedAt: contractPayload.initiationRequestedAt?.toISOString(),
-        expectedSignatureDate: contractPayload.expectedSignatureDate?.toISOString(),
+        // Format date fields as YYYY-MM-DD for PostgreSQL date columns
+        startDate: contractPayload.startDate.toISOString().split('T')[0],
+        endDate: contractPayload.endDate.toISOString().split('T')[0],
       };
+
+      // Only include optional date fields if they have values
+      if (contractPayload.expectedSignatureDate) {
+        formattedPayload.expectedSignatureDate = contractPayload.expectedSignatureDate.toISOString().split('T')[0];
+      }
+      if (contractPayload.initiationRequestedAt) {
+        formattedPayload.initiationRequestedAt = contractPayload.initiationRequestedAt.toISOString();
+      }
 
       const response = await apiRequest("POST", "/api/research-contracts", formattedPayload);
       return response.json();
