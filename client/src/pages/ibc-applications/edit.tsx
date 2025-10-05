@@ -439,12 +439,12 @@ export default function IbcApplicationEdit() {
   React.useEffect(() => {
     if (ibcApplication && associatedActivities) {
       // Set default collapsed state for hazardous procedures and synthetic experiments
-      if (ibcApplication.hazardousProcedures && ibcApplication.hazardousProcedures.length > 0) {
+      if (Array.isArray(ibcApplication.hazardousProcedures) && ibcApplication.hazardousProcedures.length > 0) {
         const collapsedIndices = new Set(ibcApplication.hazardousProcedures.map((_, index) => index));
         setCollapsedProcedures(collapsedIndices);
       }
       
-      if (ibcApplication.syntheticExperiments && ibcApplication.syntheticExperiments.length > 0) {
+      if (Array.isArray(ibcApplication.syntheticExperiments) && ibcApplication.syntheticExperiments.length > 0) {
         const collapsedIndices = new Set(ibcApplication.syntheticExperiments.map((_, index) => index));
         setCollapsedSyntheticExperiments(collapsedIndices);
       }
@@ -691,7 +691,7 @@ export default function IbcApplicationEdit() {
   // Helper functions to check if tabs have data
   const hasNucleicAcidsData = () => {
     const syntheticExperiments = form.getValues('syntheticExperiments');
-    return syntheticExperiments && syntheticExperiments.length > 0;
+    return Array.isArray(syntheticExperiments) && syntheticExperiments.length > 0;
   };
 
   const hasHumanNhpData = () => {
@@ -704,10 +704,10 @@ export default function IbcApplicationEdit() {
     
     return (
       humanOrigin ||
-      (humanMaterials && humanMaterials.length > 0) ||
-      (cellLines && cellLines.length > 0) ||
-      (hazardousProcedures && hazardousProcedures.length > 0) ||
-      (stemCells && stemCells.length > 0) ||
+      (Array.isArray(humanMaterials) && humanMaterials.length > 0) ||
+      (Array.isArray(cellLines) && cellLines.length > 0) ||
+      (Array.isArray(hazardousProcedures) && hazardousProcedures.length > 0) ||
+      (Array.isArray(stemCells) && stemCells.length > 0) ||
       nonHumanPrimateOrigin
     );
   };
