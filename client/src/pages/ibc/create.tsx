@@ -545,7 +545,6 @@ export default function CreateIbc() {
               <Tabs defaultValue="basics" className="w-full">
                 <TabsList className="w-full flex overflow-x-auto px-2 gap-1" style={{scrollPaddingLeft: '8px', scrollPaddingRight: '8px'}}>
                   <TabsTrigger value="basics" className="whitespace-nowrap flex-shrink-0">Basics</TabsTrigger>
-                  <TabsTrigger value="human-nhp" className="whitespace-nowrap flex-shrink-0">Human/NHP</TabsTrigger>
                   <TabsTrigger value="staff" className="whitespace-nowrap flex-shrink-0">Staff</TabsTrigger>
                   <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Overview</TabsTrigger>
                 </TabsList>
