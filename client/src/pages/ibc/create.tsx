@@ -57,10 +57,13 @@ const createIbcApplicationSchema = insertIbcApplicationSchema.omit({
   humanNonHumanPrimateMaterial: z.boolean(),
   introducingPrimateMaterialIntoAnimals: z.boolean().optional(),
   microorganismsInfectiousMaterial: z.boolean(),
+  introducingRecombinantDnaToMicroorganisms: z.boolean().optional(),
   biologicalToxins: z.boolean(),
   nanoparticles: z.boolean(),
   arthropods: z.boolean(),
+  transgenicArthropodsOrExposure: z.boolean().optional(),
   plants: z.boolean(),
+  transgenicPlantsOrExposure: z.boolean().optional(),
   
   // Additional fields
   riskGroupClassification: z.string().optional(),
@@ -261,10 +264,13 @@ export default function CreateIbc() {
     humanNonHumanPrimateMaterial: false,
     introducingPrimateMaterialIntoAnimals: false,
     microorganismsInfectiousMaterial: false,
+    introducingRecombinantDnaToMicroorganisms: false,
     biologicalToxins: false,
     nanoparticles: false,
     arthropods: false,
+    transgenicArthropodsOrExposure: false,
     plants: false,
+    transgenicPlantsOrExposure: false,
     riskGroupClassification: "",
     protocolSummary: "",
     
@@ -548,7 +554,7 @@ export default function CreateIbc() {
                                   ) : (
                                     principalInvestigators?.map((pi) => (
                                       <SelectItem key={pi.id} value={pi.id.toString()}>
-                                        {pi.firstName} {pi.lastName} ({pi.title || "Researcher"})
+                                        {pi.firstName} {pi.lastName} ({pi.jobTitle || "Researcher"})
                                       </SelectItem>
                                     ))
                                   )}
@@ -977,6 +983,46 @@ export default function CreateIbc() {
                       )}
                     />
 
+                    {/* Conditional sub-question for Microorganisms */}
+                    {form.watch('microorganismsInfectiousMaterial') && (
+                      <FormField
+                        control={form.control}
+                        name="introducingRecombinantDnaToMicroorganisms"
+                        render={({ field }) => (
+                          <FormItem className="bg-blue-50 p-4 rounded-lg border border-blue-200 ml-8">
+                            <div className="space-y-3">
+                              <FormLabel className="text-base font-medium text-blue-800">
+                                Will you introduce recombinant/synthetic DNA to any microorganism/potentially infectious agent, use recombinant/synthetic DNA to change the genetic make-up of any microorganism/potentially infectious agent, or use DNA from any microorganism/infectious agent to perform any recombinant DNA experiments? <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <div className="flex items-center space-x-6">
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === true}
+                                      onChange={() => field.onChange(true)}
+                                      className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span>Yes</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === false}
+                                      onChange={() => field.onChange(false)}
+                                      className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span>No</span>
+                                  </label>
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
                     <FormField
                       control={form.control}
                       name="biologicalToxins"
@@ -1088,6 +1134,46 @@ export default function CreateIbc() {
                       )}
                     />
 
+                    {/* Conditional sub-question for Arthropods */}
+                    {form.watch('arthropods') && (
+                      <FormField
+                        control={form.control}
+                        name="transgenicArthropodsOrExposure"
+                        render={({ field }) => (
+                          <FormItem className="bg-blue-50 p-4 rounded-lg border border-blue-200 ml-8">
+                            <div className="space-y-3">
+                              <FormLabel className="text-base font-medium text-blue-800">
+                                Will you be using, creating, or breeding transgenic arthropods or exposing arthropods to recombinant DNA? <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <div className="flex items-center space-x-6">
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === true}
+                                      onChange={() => field.onChange(true)}
+                                      className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span>Yes</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === false}
+                                      onChange={() => field.onChange(false)}
+                                      className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span>No</span>
+                                  </label>
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
                     <FormField
                       control={form.control}
                       name="plants"
@@ -1095,7 +1181,7 @@ export default function CreateIbc() {
                         <FormItem className="bg-white p-4 rounded-lg border border-gray-200">
                           <div className="space-y-3">
                             <FormLabel className="text-base font-medium">
-                              Plants (e.g., transgenic plants, plant tissues, plant pathogens)
+                              Plants (e.g., toxic/transgenic plants)
                             </FormLabel>
                             <FormControl>
                               <div className="flex items-center space-x-6">
@@ -1124,6 +1210,46 @@ export default function CreateIbc() {
                         </FormItem>
                       )}
                     />
+
+                    {/* Conditional sub-question for Plants */}
+                    {form.watch('plants') && (
+                      <FormField
+                        control={form.control}
+                        name="transgenicPlantsOrExposure"
+                        render={({ field }) => (
+                          <FormItem className="bg-blue-50 p-4 rounded-lg border border-blue-200 ml-8">
+                            <div className="space-y-3">
+                              <FormLabel className="text-base font-medium text-blue-800">
+                                Will you be creating transgenic plants, exposing plant to recombinant DNA, transgenic arthropods, or transgenic microorganism/infectious agents? <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <div className="flex items-center space-x-6">
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === true}
+                                      onChange={() => field.onChange(true)}
+                                      className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span>Yes</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      checked={field.value === false}
+                                      onChange={() => field.onChange(false)}
+                                      className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span>No</span>
+                                  </label>
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                 </TabsContent>
 

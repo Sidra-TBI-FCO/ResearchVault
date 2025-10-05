@@ -439,10 +439,13 @@ export const ibcApplications = pgTable("ibc_applications", {
   introducingPrimateMaterialIntoAnimals: boolean("introducing_primate_material_into_animals"), // Optional field
   
   microorganismsInfectiousMaterial: boolean("microorganisms_infectious_material").default(false),
+  introducingRecombinantDnaToMicroorganisms: boolean("introducing_recombinant_dna_to_microorganisms"), // Sub-question for microorganisms
   biologicalToxins: boolean("biological_toxins").default(false),
   nanoparticles: boolean("nanoparticles").default(false),
   arthropods: boolean("arthropods").default(false),
+  transgenicArthropodsOrExposure: boolean("transgenic_arthropods_or_exposure"), // Sub-question for arthropods
   plants: boolean("plants").default(false),
+  transgenicPlantsOrExposure: boolean("transgenic_plants_or_exposure"), // Sub-question for plants
   
   biologicalAgents: json("biological_agents"), // List of biological agents/organisms
   chemicalAgents: json("chemical_agents"), // Chemical hazards
