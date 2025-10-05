@@ -12,7 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2 } from "lucide-react";
+import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2, Pencil } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
 import { IbcInactivationDecontaminationTab } from "@/components/IbcInactivationDecontaminationTab";
 import { IbcDisposalTab } from "@/components/IbcDisposalTab";
@@ -283,6 +285,20 @@ export default function IbcApplicationEdit() {
   const [submissionComment, setSubmissionComment] = useState("");
   const [collapsedProcedures, setCollapsedProcedures] = useState<Set<number>>(new Set());
   const [collapsedSyntheticExperiments, setCollapsedSyntheticExperiments] = useState<Set<number>>(new Set());
+  
+  // State for cell line dialog
+  const [cellLineDialogOpen, setCellLineDialogOpen] = useState(false);
+  const [editingCellLineIndex, setEditingCellLineIndex] = useState<number | null>(null);
+  const [cellLineFormData, setCellLineFormData] = useState({
+    name: "",
+    species: "",
+    descriptor: "",
+    biosafetyLevel: "",
+    acquisitionSource: [] as string[],
+    passage: "",
+    exposedTo: [] as string[],
+    willBeCultured: false,
+  });
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -675,7 +691,128 @@ export default function IbcApplicationEdit() {
     },
   });
 
+  // Cell Line Dialog Handlers
+  const openAddCellLineDialog = () => {
+    setCellLineFormData({
+      name: "",
+      species: "",
+      descriptor: "",
+      biosafetyLevel: "",
+      acquisitionSource: [],
+      passage: "",
+      exposedTo: [],
+      willBeCultured: false,
+    });
+    setEditingCellLineIndex(null);
+    setCellLineDialogOpen(true);
+  };
 
+  const openEditCellLineDialog = (index: number) => {
+    const cellLines = form.getValues('cellLines') || [];
+    const cellLine = cellLines[index];
+    if (cellLine) {
+      setCellLineFormData({
+        name: cellLine.name,
+        species: cellLine.species || "",
+        descriptor: cellLine.descriptor || "",
+        biosafetyLevel: cellLine.biosafetyLevel,
+        acquisitionSource: cellLine.acquisitionSource || [],
+        passage: cellLine.passage,
+        exposedTo: cellLine.exposedTo || [],
+        willBeCultured: cellLine.willBeCultured,
+      });
+      setEditingCellLineIndex(index);
+      setCellLineDialogOpen(true);
+    }
+  };
+
+  const saveCellLine = () => {
+    // Validate required fields
+    if (!cellLineFormData.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Cell Line Name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!cellLineFormData.biosafetyLevel) {
+      toast({
+        title: "Validation Error",
+        description: "Biosafety Level is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (cellLineFormData.acquisitionSource.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least one Acquisition Source is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!cellLineFormData.passage) {
+      toast({
+        title: "Validation Error",
+        description: "Passage is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (cellLineFormData.exposedTo.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least one exposure type is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const currentCellLines = form.getValues('cellLines') || [];
+    let updatedCellLines;
+    
+    if (editingCellLineIndex !== null) {
+      // Edit existing cell line
+      updatedCellLines = [...currentCellLines];
+      updatedCellLines[editingCellLineIndex] = {
+        ...cellLineFormData,
+        id: currentCellLines[editingCellLineIndex].id || `temp-${Date.now()}`,
+      };
+      toast({
+        title: "Success",
+        description: "Cell line updated successfully",
+      });
+    } else {
+      // Add new cell line
+      updatedCellLines = [
+        ...currentCellLines,
+        {
+          ...cellLineFormData,
+          id: `temp-${Date.now()}`,
+        }
+      ];
+      toast({
+        title: "Success",
+        description: "Cell line added successfully",
+      });
+    }
+    
+    form.setValue('cellLines', updatedCellLines);
+    setCellLineDialogOpen(false);
+  };
+
+  const deleteCellLine = (index: number) => {
+    if (window.confirm("Are you sure you want to delete this cell line?")) {
+      const currentCellLines = form.getValues('cellLines') || [];
+      const updatedCellLines = currentCellLines.filter((_, i) => i !== index);
+      form.setValue('cellLines', updatedCellLines);
+      toast({
+        title: "Success",
+        description: "Cell line deleted successfully",
+      });
+    }
+  };
 
   const handleSave = async (data: EditIbcApplicationFormValues) => {
     const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
@@ -4157,6 +4294,311 @@ export default function IbcApplicationEdit() {
                             )}
                           />
                         </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* Cell Lines Subtab */}
+                    <TabsContent value="cell-lines" className="space-y-6 mt-6">
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold">Cell Lines</h3>
+                          {!isReadOnly && (
+                            <Button
+                              type="button"
+                              onClick={openAddCellLineDialog}
+                              className="flex items-center gap-2"
+                              data-testid="button-add-cell-line"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add Cell Line
+                            </Button>
+                          )}
+                        </div>
+
+                        {form.watch('cellLines')?.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            No cell lines added yet. Click "Add Cell Line" to get started.
+                          </div>
+                        ) : (
+                          <div className="border rounded-lg overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Cell Line Name</TableHead>
+                                  <TableHead>Species</TableHead>
+                                  <TableHead>Biosafety Level</TableHead>
+                                  <TableHead>Cultured</TableHead>
+                                  {!isReadOnly && <TableHead className="text-right">Actions</TableHead>}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {form.watch('cellLines')?.map((cellLine, index) => (
+                                  <TableRow key={index} data-testid={`row-cell-line-${index}`}>
+                                    <TableCell className="font-medium">{cellLine.name}</TableCell>
+                                    <TableCell>{cellLine.species || '-'}</TableCell>
+                                    <TableCell>{cellLine.biosafetyLevel}</TableCell>
+                                    <TableCell>{cellLine.willBeCultured ? 'Yes' : 'No'}</TableCell>
+                                    {!isReadOnly && (
+                                      <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => openEditCellLineDialog(index)}
+                                            className="flex items-center gap-1"
+                                            data-testid={`button-edit-cell-line-${index}`}
+                                          >
+                                            <Pencil className="w-4 h-4" />
+                                            Edit
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => deleteCellLine(index)}
+                                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                                            data-testid={`button-delete-cell-line-${index}`}
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                            Delete
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    )}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+
+                        {/* Cell Line Dialog */}
+                        <Dialog open={cellLineDialogOpen} onOpenChange={setCellLineDialogOpen}>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>
+                                {editingCellLineIndex !== null ? 'Edit Cell Line' : 'Add Cell Line'}
+                              </DialogTitle>
+                            </DialogHeader>
+                            
+                            <div className="space-y-6 py-4">
+                              {/* Cell Line Name */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Cells/Cell Line Name <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  value={cellLineFormData.name}
+                                  onChange={(e) => setCellLineFormData({...cellLineFormData, name: e.target.value})}
+                                  placeholder="Enter cell line name"
+                                  data-testid="input-cell-line-name"
+                                />
+                              </div>
+
+                              {/* Species of Origin */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Species of Origin</label>
+                                <Textarea
+                                  value={cellLineFormData.species}
+                                  onChange={(e) => setCellLineFormData({...cellLineFormData, species: e.target.value})}
+                                  placeholder="Enter species of origin"
+                                  className="min-h-[80px]"
+                                  data-testid="textarea-species"
+                                />
+                              </div>
+
+                              {/* Descriptor (Type of Cell Line) */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Descriptor (Type of Cell Line)</label>
+                                <Textarea
+                                  value={cellLineFormData.descriptor}
+                                  onChange={(e) => setCellLineFormData({...cellLineFormData, descriptor: e.target.value})}
+                                  placeholder="Enter descriptor"
+                                  className="min-h-[80px]"
+                                  data-testid="textarea-descriptor"
+                                />
+                              </div>
+
+                              {/* Select Bio-safety Level */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Select Bio-safety Level <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  value={cellLineFormData.biosafetyLevel}
+                                  onValueChange={(value) => setCellLineFormData({...cellLineFormData, biosafetyLevel: value})}
+                                >
+                                  <SelectTrigger data-testid="select-biosafety-level">
+                                    <SelectValue placeholder="Select biosafety level" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="BSL-1">BSL-1</SelectItem>
+                                    <SelectItem value="BSL-2">BSL-2</SelectItem>
+                                    <SelectItem value="BSL-3">BSL-3</SelectItem>
+                                    <SelectItem value="BSL-4">BSL-4</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Acquisition Source */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Acquisition Source <span className="text-red-500">*</span>
+                                </label>
+                                <div className="space-y-2">
+                                  {[
+                                    'Acquired from a Research Collaborator',
+                                    'Commercial Vendor',
+                                    'Developed/Created in my Institution Lab',
+                                    'Other Source'
+                                  ].map((source) => (
+                                    <div key={source} className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`acquisition-${source}`}
+                                        checked={cellLineFormData.acquisitionSource.includes(source)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setCellLineFormData({
+                                              ...cellLineFormData,
+                                              acquisitionSource: [...cellLineFormData.acquisitionSource, source]
+                                            });
+                                          } else {
+                                            setCellLineFormData({
+                                              ...cellLineFormData,
+                                              acquisitionSource: cellLineFormData.acquisitionSource.filter(s => s !== source)
+                                            });
+                                          }
+                                        }}
+                                        className="w-4 h-4 text-blue-600"
+                                        data-testid={`checkbox-acquisition-${source.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                                      />
+                                      <label htmlFor={`acquisition-${source}`} className="text-sm cursor-pointer">{source}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Passage */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Passage <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  value={cellLineFormData.passage}
+                                  onValueChange={(value) => setCellLineFormData({...cellLineFormData, passage: value})}
+                                >
+                                  <SelectTrigger data-testid="select-passage">
+                                    <SelectValue placeholder="Select passage" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="P0">P0</SelectItem>
+                                    <SelectItem value="P1">P1</SelectItem>
+                                    <SelectItem value="P2">P2</SelectItem>
+                                    <SelectItem value="P3">P3</SelectItem>
+                                    <SelectItem value="P4">P4</SelectItem>
+                                    <SelectItem value="P5">P5</SelectItem>
+                                    <SelectItem value="P6+">P6+</SelectItem>
+                                    <SelectItem value="Unknown">Unknown</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* What will be Exposed to the Cell Line */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  What will be Exposed to the Cell Line (check all applicable)? <span className="text-red-500">*</span>
+                                </label>
+                                <div className="space-y-2">
+                                  {[
+                                    'Arthropods',
+                                    'Cell Culture',
+                                    'Humans',
+                                    'Invertebrate Animals',
+                                    'Micro Organism',
+                                    'None',
+                                    'Plants or Transgenic Plants',
+                                    'Vertebrate Animals'
+                                  ].map((exposure) => (
+                                    <div key={exposure} className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`exposure-${exposure}`}
+                                        checked={cellLineFormData.exposedTo.includes(exposure)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setCellLineFormData({
+                                              ...cellLineFormData,
+                                              exposedTo: [...cellLineFormData.exposedTo, exposure]
+                                            });
+                                          } else {
+                                            setCellLineFormData({
+                                              ...cellLineFormData,
+                                              exposedTo: cellLineFormData.exposedTo.filter(ex => ex !== exposure)
+                                            });
+                                          }
+                                        }}
+                                        className="w-4 h-4 text-blue-600"
+                                        data-testid={`checkbox-exposure-${exposure.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                                      />
+                                      <label htmlFor={`exposure-${exposure}`} className="text-sm cursor-pointer">{exposure}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Will this be Cultured? */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Will this be Cultured? <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex items-center space-x-6">
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name="willBeCultured"
+                                      checked={cellLineFormData.willBeCultured === true}
+                                      onChange={() => setCellLineFormData({...cellLineFormData, willBeCultured: true})}
+                                      className="w-4 h-4 text-blue-600"
+                                      data-testid="radio-cultured-yes"
+                                    />
+                                    <span>Yes</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name="willBeCultured"
+                                      checked={cellLineFormData.willBeCultured === false}
+                                      onChange={() => setCellLineFormData({...cellLineFormData, willBeCultured: false})}
+                                      className="w-4 h-4 text-blue-600"
+                                      data-testid="radio-cultured-no"
+                                    />
+                                    <span>No</span>
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+
+                            <DialogFooter>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setCellLineDialogOpen(false)}
+                                data-testid="button-cancel-cell-line"
+                              >
+                                Cancel changes
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={saveCellLine}
+                                data-testid="button-save-cell-line"
+                              >
+                                Save changes
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </TabsContent>
 
