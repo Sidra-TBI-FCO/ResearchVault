@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import React from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { PermissionWrapper } from "@/components/PermissionWrapper";
 
 // Using shared contract type definitions from schema
 
@@ -380,40 +379,14 @@ export default function ResearchContractEdit() {
   }
 
   return (
-    <PermissionWrapper 
-      currentUserRole={currentUser.role} 
-      navigationItem="contracts"
-      showReadOnlyBanner={true}
-      fallback={
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/research-contracts/${id}`)}>
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-            <h1 className="text-2xl font-semibold text-neutral-400">Access Denied</h1>
-          </div>
-          <Card>
-            <CardContent className="py-8">
-              <div className="text-center">
-                <p className="text-lg text-neutral-400">You don't have permission to edit research contracts.</p>
-                <Button className="mt-4" onClick={() => navigate(`/research-contracts/${id}`)}>
-                  Return to Contract Details
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      }
-    >
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/research-contracts/${id}`)}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Edit Research Contract</h1>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate(`/research-contracts/${id}`)}>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-semibold text-neutral-400">Edit Research Contract</h1>
+      </div>
 
       <Card>
         <CardHeader>
@@ -978,7 +951,6 @@ export default function ResearchContractEdit() {
           </Form>
         </CardContent>
       </Card>
-      </div>
-    </PermissionWrapper>
+    </div>
   );
 }
