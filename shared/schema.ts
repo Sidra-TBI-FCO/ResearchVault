@@ -644,7 +644,9 @@ export const researchContracts = pgTable("research_contracts", {
   endDate: date("end_date"),
   remarks: text("remarks"),
   fundingSourceCategory: text("funding_source_category"), // QNRF, PI Fund, IRF Fund, etc.
-  contractorName: text("contractor_name"),
+  contractorName: text("contractor_name"), // Legacy field - use counterparty fields instead
+  counterpartyContact: text("counterparty_contact"), // Contact information for counterparty
+  counterpartyCountry: text("counterparty_country"), // Country of counterparty organization
   internalCostSidra: integer("internal_cost_sidra"), // Internal Costs by Sidra in QAR
   internalCostCounterparty: integer("internal_cost_counterparty"), // Internal Costs for Counterparty in QAR
   moneyOut: integer("money_out"), // Amount of money transferred from Sidra to counterparty
