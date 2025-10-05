@@ -212,8 +212,23 @@ export default function ContractRequest() {
         formattedPayload.initiationRequestedAt = contractPayload.initiationRequestedAt.toISOString();
       }
 
-      const response = await apiRequest("POST", "/api/research-contracts", formattedPayload);
-      return response.json();
+      // Step 1: Create the contract
+      const contractResponse = await apiRequest("POST", "/api/research-contracts", formattedPayload);
+      const contract = await contractResponse.json();
+
+      // Step 2: Save scope items for the contract
+      if (scopeItems && scopeItems.length > 0) {
+        for (const item of scopeItems) {
+          const scopePayload = {
+            ...item,
+            contractId: contract.id,
+            dueDate: item.dueDate ? item.dueDate.toISOString().split('T')[0] : undefined,
+          };
+          await apiRequest("POST", `/api/research-contracts/${contract.id}/scope-items`, scopePayload);
+        }
+      }
+
+      return contract;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/research-contracts'] });

@@ -187,7 +187,7 @@ export default function ResearchContractDetail() {
                   )}
                   <Badge className={
                     contract.status === 'active' ? 'bg-green-100 text-green-800' :
-                    contract.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    contract.status === 'submitted' || contract.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
                     contract.status === 'completed' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }>
@@ -225,7 +225,7 @@ export default function ResearchContractDetail() {
                       {leadPILoading ? (
                         <Skeleton className="h-4 w-24 inline-block" />
                       ) : leadPI ? (
-                        leadPI.name
+                        `${leadPI.firstName} ${leadPI.lastName}`
                       ) : 'Not assigned'}
                     </span>
                   </div>
@@ -268,6 +268,26 @@ export default function ResearchContractDetail() {
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3" />
                     <span>{contract.fundingSourceCategory || 'Not specified'}</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Contract Value</h3>
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    <span>
+                      {contract.contractValue 
+                        ? `${contract.currency || 'QAR'} ${parseFloat(contract.contractValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                        : 'Not specified'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-neutral-400">Contract Type</h3>
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    <span>{contract.contractType || 'Not specified'}</span>
                   </div>
                 </div>
                 
