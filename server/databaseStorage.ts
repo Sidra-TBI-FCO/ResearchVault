@@ -2059,42 +2059,38 @@ export class DatabaseStorage implements IStorage {
           c => c.scientistId === scientist.id && c.moduleId === module.id
         );
         
-        // Generate dummy certification data if no real certification exists
-        let dummyData = null;
-        if (!certification) {
-          // Generate dummy data based on scientist and module IDs for consistency
+        // Use real certification data if it exists, otherwise generate dummy data
+        let displayData: { startDate: string | null; endDate: string | null; certificationId: number | null };
+        
+        if (certification) {
+          // Use real certification from database
+          displayData = {
+            startDate: certification.startDate,
+            endDate: certification.endDate,
+            certificationId: certification.id
+          };
+        } else {
+          // Generate dummy data for missing certifications (primarily for CITI modules)
           const combo = scientist.id + module.id;
           const dummyStatuses = [
-            { startDate: '2024-03-15', endDate: '2026-03-15' }, // Valid (expires March 2026)
-            { startDate: '2024-09-25', endDate: '2025-09-25' }, // Expiring soon (expires Sep 25, 2025 - 16 days from now)
-            { startDate: '2023-10-05', endDate: '2024-10-05' }, // Expired
-            null // No certification
+            { startDate: '2024-03-15', endDate: '2026-03-15', certificationId: 999000 + scientist.id * 100 + module.id }, // Valid
+            { startDate: '2024-09-25', endDate: '2025-09-25', certificationId: 999000 + scientist.id * 100 + module.id }, // Expiring
+            { startDate: '2023-10-05', endDate: '2024-10-05', certificationId: 999000 + scientist.id * 100 + module.id }, // Expired
+            { startDate: null, endDate: null, certificationId: null } // No certification
           ];
           
           const statusIndex = combo % 4;
-          dummyData = dummyStatuses[statusIndex];
+          displayData = dummyStatuses[statusIndex];
         }
-        
-        // Always use dummy data for demo purposes  
-        const combo = scientist.id + module.id;
-        const dummyStatuses = [
-          { startDate: '2024-03-15', endDate: '2026-03-15' }, // Valid (expires March 2026)
-          { startDate: '2024-09-25', endDate: '2025-09-25' }, // Expiring soon (expires Sep 25, 2025 - 16 days from now)
-          { startDate: '2023-10-05', endDate: '2024-10-05' }, // Expired
-          null // No certification
-        ];
-        
-        const statusIndex = combo % 4;
-        const demoData = dummyStatuses[statusIndex];
         
         matrixData.push({
           scientistId: scientist.id,
           scientistName: scientist.name,
           moduleId: module.id,
           moduleName: module.name,
-          certificationId: certification?.id || (demoData ? 999000 + scientist.id * 100 + module.id : null),
-          startDate: demoData?.startDate || null,
-          endDate: demoData?.endDate || null,
+          certificationId: displayData.certificationId,
+          startDate: displayData.startDate,
+          endDate: displayData.endDate,
           certificateFilePath: certification?.certificateFilePath || null,
           reportFilePath: certification?.reportFilePath || null,
         });
