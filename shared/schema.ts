@@ -474,13 +474,6 @@ export const ibcApplications = pgTable("ibc_applications", {
   animalWork: boolean("animal_work").default(false),
   fieldWork: boolean("field_work").default(false),
   
-  // Detailed Methods Section
-  materialAndMethods: text("material_and_methods"), // Detailed experimental protocols
-  proceduresInvolvingInfectiousAgents: text("procedures_involving_infectious_agents"),
-  nucleicAcidExtractionMethods: text("nucleic_acid_extraction_methods"),
-  cellCultureProcedures: text("cell_culture_procedures"),
-  animalProcedures: text("animal_procedures"), // If animal work is involved
-  
   // Protocol Summary Checkboxes (from Section F)
   usingRecombinantDNAForDetection: boolean("using_recombinant_dna_detection").default(false),
   creatingGenomicLibraries: boolean("creating_genomic_libraries").default(false),
@@ -497,9 +490,6 @@ export const ibcApplications = pgTable("ibc_applications", {
   
   // Room and facility assignments
   approvedRooms: json("approved_rooms"), // Room numbers and their biosafety levels
-  containmentProcedures: text("containment_procedures"),
-  wasteDisposalPlan: text("waste_disposal_plan"),
-  emergencyProcedures: text("emergency_procedures"),
   
   // Laboratory Policies Compliance (Section G)
   labPoliciesCompliance: json("lab_policies_compliance"), // Yes/No answers to safety checklist
