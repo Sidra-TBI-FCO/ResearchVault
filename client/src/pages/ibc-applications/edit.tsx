@@ -452,7 +452,7 @@ export default function IbcApplicationEdit() {
         cayuseProtocolNumber: ibcApplication.cayuseProtocolNumber || "",
         title: ibcApplication.title || "",
         shortTitle: ibcApplication.shortTitle || "",
-        principalInvestigatorId: ibcApplication.principalInvestigatorId ?? 0,
+        principalInvestigatorId: ibcApplication.principalInvestigatorId || 0,
         biosafetyLevel: ibcApplication.biosafetyLevel || "BSL-2",
         description: ibcApplication.description || "",
         
@@ -630,7 +630,7 @@ export default function IbcApplicationEdit() {
       
       return uniqueStaff;
     },
-    enabled: selectedSDRIds.length > 0,
+    enabled: Array.isArray(selectedSDRIds) && selectedSDRIds.length > 0,
   });
 
   const saveMutation = useMutation({
@@ -1246,7 +1246,7 @@ export default function IbcApplicationEdit() {
                               field.onChange(parseInt(value));
                               form.setValue('researchActivityIds', []);
                             }}
-                            value={field.value?.toString() || ""}
+                            value={field.value && field.value > 0 ? field.value.toString() : ""}
                             disabled={isReadOnly}
                           >
                             <FormControl>
