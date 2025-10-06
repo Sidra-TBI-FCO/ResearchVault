@@ -33,6 +33,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { IbcApplication, Scientist, IbcBoardMember } from "@shared/schema";
 import TimelineComments from "@/components/TimelineComments";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatFullName } from "@/utils/nameUtils";
 
 // Helper function to get certification color based on expiry date
 function getCertificationColor(expiryDate: string | null): string {
@@ -635,7 +636,7 @@ export default function IbcProtocolDetailPage() {
                       <User className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium">{scientist.name}</p>
+                      <p className="font-medium">{formatFullName(scientist)}</p>
                       <p className="text-sm text-gray-500">{scientist.email}</p>
                       <p className="text-sm text-gray-500">{scientist.department}</p>
                     </div>
@@ -703,7 +704,7 @@ export default function IbcProtocolDetailPage() {
                                 <User className="h-4 w-4 text-gray-600" />
                               </div>
                               <div>
-                                <p className="font-medium">{member.scientist?.name || 'Unknown'}</p>
+                                <p className="font-medium">{member.scientist ? formatFullName(member.scientist) : 'Unknown'}</p>
                                 <p className="text-sm text-gray-500">{member.scientist?.email || ''}</p>
                               </div>
                             </div>
