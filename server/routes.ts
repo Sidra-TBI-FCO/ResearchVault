@@ -3643,10 +3643,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...person,
                 scientist: scientist ? {
                   id: scientist.id,
+                  honorificTitle: scientist.honorificTitle,
+                  firstName: scientist.firstName,
+                  lastName: scientist.lastName,
                   name: scientist.name,
                   email: scientist.email,
                   department: scientist.department,
-                  title: scientist.title,
+                  jobTitle: scientist.jobTitle,
                   profileImageInitials: scientist.profileImageInitials
                 } : null
               };
