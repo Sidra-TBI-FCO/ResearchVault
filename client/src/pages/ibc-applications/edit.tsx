@@ -681,29 +681,29 @@ export default function IbcApplicationEdit() {
   // Get all team member IDs
   const teamMemberIds = form.watch('teamMembers')?.map(m => m.scientistId).filter(Boolean) || [];
 
-  // Fetch certifications for all team members
-  const { data: teamCertifications } = useQuery<Record<number, Certification[]>>({
-    queryKey: ['/api/certifications/team', teamMemberIds],
-    queryFn: async () => {
-      if (!teamMemberIds.length) return {};
-      
-      const certPromises = teamMemberIds.map(async (scientistId) => {
-        const response = await fetch(`/api/certifications/scientist/${scientistId}`);
-        if (!response.ok) return { scientistId, certs: [] };
-        const certs = await response.json();
-        return { scientistId, certs };
-      });
-      
-      const results = await Promise.all(certPromises);
-      
-      // Convert to a Record for easy lookup
-      return results.reduce((acc, { scientistId, certs }) => {
-        acc[scientistId] = certs;
-        return acc;
-      }, {} as Record<number, Certification[]>);
-    },
-    enabled: teamMemberIds.length > 0,
+  // Fetch certification matrix for all scientists
+  const { data: certificationMatrix } = useQuery<any[]>({
+    queryKey: ['/api/certifications/matrix'],
   });
+
+  // Filter and convert matrix data to certifications for team members
+  const teamCertifications: Record<number, Certification[]> = {};
+  if (certificationMatrix && teamMemberIds.length > 0) {
+    teamMemberIds.forEach(scientistId => {
+      const scientistCerts = certificationMatrix
+        .filter(item => item.scientistId === scientistId && item.certificationId !== null)
+        .map(item => ({
+          id: item.certificationId,
+          scientistId: item.scientistId,
+          moduleId: item.moduleId,
+          startDate: item.startDate,
+          endDate: item.endDate,
+          certificateFilePath: item.certificateFilePath,
+          reportFilePath: item.reportFilePath,
+        } as Certification));
+      teamCertifications[scientistId] = scientistCerts;
+    });
+  }
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
