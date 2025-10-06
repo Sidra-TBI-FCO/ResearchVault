@@ -126,7 +126,7 @@ export default function IbcList() {
                         {application.title}
                       </div>
                       {application.description && (
-                        <div className="text-sm text-neutral-200 mt-1">
+                        <div className="text-sm text-neutral-600 mt-1">
                           {application.description}
                         </div>
                       )}
