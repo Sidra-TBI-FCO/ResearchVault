@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, User, Calendar, Building, Beaker, AlertTriangle, FileText, Shield, Eye, Edit, ExternalLink } from "lucide-react";
+import { ArrowLeft, User, Calendar, Building, Beaker, AlertTriangle, FileText, Shield, Eye, Edit, ExternalLink, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import type { IbcApplication, Scientist, ResearchActivity } from "@shared/schema";
 import TimelineComments from "@/components/TimelineComments";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatNameWithJobTitle } from "@/utils/nameUtils";
+import { formatNameWithJobTitle, formatFullName } from "@/utils/nameUtils";
 
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800", icon: FileText },
@@ -80,6 +80,57 @@ export default function IbcApplicationDetail() {
     staleTime: 0,
     refetchOnMount: true,
   });
+
+  // Fetch personnel/team members
+  const { data: personnelData = [] } = useQuery({
+    queryKey: [`/api/ibc-applications/${id}/personnel`],
+    enabled: !!id,
+  });
+
+  // Fetch certification modules
+  const { data: certificationModules = [] } = useQuery({
+    queryKey: ["/api/certification-modules"],
+  });
+
+  // Fetch certification matrix
+  const { data: certificationMatrix = [] } = useQuery({
+    queryKey: ["/api/certifications/matrix"],
+  });
+
+  // Check if all team members have all required certifications
+  const checkAllCertifications = () => {
+    if (personnelData.length === 0) return { complete: true, totalMembers: 0, completeMembers: 0 };
+    
+    const requiredModuleIds = certificationModules.map((m: any) => m.id);
+    let completeMembers = 0;
+    
+    personnelData.forEach((member: any) => {
+      if (!member.scientistId) return;
+      
+      const memberCerts = certificationMatrix.filter((cert: any) => cert.scientistId === member.scientistId);
+      const certifiedModuleIds = memberCerts.map((cert: any) => cert.moduleId);
+      
+      // Check if member has all required certifications and none are expired
+      const hasAllCerts = requiredModuleIds.every(moduleId => certifiedModuleIds.includes(moduleId));
+      const allValid = memberCerts.every((cert: any) => {
+        if (!cert.endDate) return false;
+        const expiry = new Date(cert.endDate);
+        return expiry > new Date();
+      });
+      
+      if (hasAllCerts && allValid) {
+        completeMembers++;
+      }
+    });
+    
+    return {
+      complete: completeMembers === personnelData.length,
+      totalMembers: personnelData.length,
+      completeMembers
+    };
+  };
+
+  const certificationStatus = checkAllCertifications();
 
   if (isLoading) {
     return (
@@ -207,6 +258,16 @@ export default function IbcApplicationDetail() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <label className="text-sm font-medium text-gray-500">IBC Number</label>
+                  <p className="font-mono">{ibcApplication.ibcNumber}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Submission Type</label>
+                  <Badge variant="outline" className="capitalize">
+                    {ibcApplication.submissionType || 'Initial'}
+                  </Badge>
+                </div>
+                <div>
                   <label className="text-sm font-medium text-gray-500">Principal Investigator</label>
                   <p className="flex items-center space-x-2">
                     <User className="h-4 w-4" />
@@ -223,20 +284,48 @@ export default function IbcApplicationDetail() {
                     <p className="font-mono">{ibcApplication.cayuseProtocolNumber}</p>
                   </div>
                 )}
-                {ibcApplication.shortTitle && (
+                {ibcApplication.irbnetIbcNumber && (
                   <div>
+                    <label className="text-sm font-medium text-gray-500">IRBNet IBC Number</label>
+                    <p className="font-mono">{ibcApplication.irbnetIbcNumber}</p>
+                  </div>
+                )}
+                {ibcApplication.shortTitle && (
+                  <div className="md:col-span-2">
                     <label className="text-sm font-medium text-gray-500">Short Title</label>
                     <p>{ibcApplication.shortTitle}</p>
+                  </div>
+                )}
+                {ibcApplication.additionalNotificationEmail && (
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium text-gray-500">Additional Notification Email</label>
+                    <p className="text-sm">{ibcApplication.additionalNotificationEmail}</p>
                   </div>
                 )}
               </div>
 
               {ibcApplication.description && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Description</label>
+                  <label className="text-sm font-medium text-gray-500">Project Description</label>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{ibcApplication.description}</p>
                 </div>
               )}
+
+              {/* Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                {ibcApplication.submissionDate && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Submission Date</label>
+                    <p className="text-sm">{format(new Date(ibcApplication.submissionDate), 'PPP')}</p>
+                  </div>
+                )}
+                {ibcApplication.expirationDate && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Expiration Date</label>
+                    <p className="text-sm">{format(new Date(ibcApplication.expirationDate), 'PPP')}</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -380,6 +469,70 @@ export default function IbcApplicationDetail() {
               <p className="text-xs text-gray-500 mt-2">
                 {getStatusDescription(ibcApplication.status)}
               </p>
+            </CardContent>
+          </Card>
+
+          {/* Protocol Staff */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Protocol Staff
+              </CardTitle>
+              <CardDescription>
+                Team members on this protocol
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {personnelData.length > 0 ? (
+                <div className="space-y-3">
+                  {/* Certification Status Summary */}
+                  <div className={`flex items-center justify-between p-3 rounded-lg ${
+                    certificationStatus.complete 
+                      ? 'bg-green-50 border border-green-200' 
+                      : 'bg-orange-50 border border-orange-200'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {certificationStatus.complete ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-orange-600" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium">
+                          {certificationStatus.complete 
+                            ? 'All Certifications Complete' 
+                            : 'Certifications Incomplete'}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {certificationStatus.completeMembers} of {certificationStatus.totalMembers} members certified
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Team Member List */}
+                  <div className="space-y-2">
+                    {personnelData.map((member: any, index: number) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {member.scientist ? formatFullName(member.scientist) : 'Unknown'}
+                          </p>
+                          <p className="text-xs text-gray-500 capitalize">{member.role?.replace('_', ' ')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No team members assigned
+                </p>
+              )}
             </CardContent>
           </Card>
 
