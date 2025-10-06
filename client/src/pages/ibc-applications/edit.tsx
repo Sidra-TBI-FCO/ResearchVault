@@ -553,7 +553,13 @@ export default function IbcApplicationEdit() {
         infectionSymptoms: ibcApplication.infectionSymptoms || "",
         
         researchActivityIds: associatedActivities.map(ra => ra.id) || [],
-        teamMembers: [],
+        teamMembers: (() => {
+          try {
+            return ibcApplication.protocolTeamMembers ? JSON.parse(ibcApplication.protocolTeamMembers) : [];
+          } catch {
+            return [];
+          }
+        })(),
         
         // Additional Details actual values
         proposedBiosafetyLevels: ibcApplication.proposedBiosafetyLevels || {
