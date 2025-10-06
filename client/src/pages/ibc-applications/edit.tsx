@@ -26,6 +26,7 @@ import { apiRequest } from "@/lib/queryClient";
 import React from "react";
 import { z } from "zod";
 import TimelineComments from "@/components/TimelineComments";
+import { formatNameWithJobTitle } from "@/utils/nameUtils";
 
 // Extended schema for edit form with biosafety options
 const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
@@ -1260,7 +1261,7 @@ export default function IbcApplicationEdit() {
                               ) : (
                                 principalInvestigators?.map((pi) => (
                                   <SelectItem key={pi.id} value={pi.id.toString()}>
-                                    {pi.firstName} {pi.lastName} ({pi.title || "Researcher"})
+                                    {formatNameWithJobTitle(pi)}
                                   </SelectItem>
                                 ))
                               )}
@@ -1923,7 +1924,7 @@ export default function IbcApplicationEdit() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Add Team Member Section */}
-                  {form.watch('researchActivityIds')?.length > 0 && availableStaff?.length ? (
+                  {form.watch('researchActivityIds')?.length > 0 && (staffLoading || availableStaff !== undefined) ? (
                     <div className="border rounded-lg p-4 bg-gray-50">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -1938,22 +1939,28 @@ export default function IbcApplicationEdit() {
                                 <SelectValue placeholder="Choose from SDR team members..." />
                               </SelectTrigger>
                               <SelectContent>
-                                {availableStaff.map((staff) => {
-                                  const currentTeamMembers = form.watch('teamMembers') || [];
-                                  const isAlreadySelected = currentTeamMembers.some(member => 
-                                    member.scientistId === staff.id || member.name === staff.name
-                                  );
-                                  return (
-                                    <SelectItem 
-                                      key={staff.id} 
-                                      value={staff.id.toString()}
-                                      disabled={isAlreadySelected}
-                                    >
-                                      {staff.name} - {staff.title}
-                                      {isAlreadySelected && " (Already added)"}
-                                    </SelectItem>
-                                  );
-                                })}
+                                {staffLoading ? (
+                                  <SelectItem value="loading" disabled>Loading staff...</SelectItem>
+                                ) : availableStaff && availableStaff.length > 0 ? (
+                                  availableStaff.map((staff) => {
+                                    const currentTeamMembers = form.watch('teamMembers') || [];
+                                    const isAlreadySelected = currentTeamMembers.some(member => 
+                                      member.scientistId === staff.id || member.name === staff.name
+                                    );
+                                    return (
+                                      <SelectItem 
+                                        key={staff.id} 
+                                        value={staff.id.toString()}
+                                        disabled={isAlreadySelected}
+                                      >
+                                        {formatNameWithJobTitle(staff)}
+                                        {isAlreadySelected && " (Already added)"}
+                                      </SelectItem>
+                                    );
+                                  })
+                                ) : (
+                                  <SelectItem value="none" disabled>No available staff members</SelectItem>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
