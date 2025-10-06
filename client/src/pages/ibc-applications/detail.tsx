@@ -32,7 +32,16 @@ export default function IbcApplicationDetail() {
   const [, navigate] = useLocation();
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication & {
-    principalInvestigator?: { id: number; name: string; profileImageInitials: string };
+    principalInvestigator?: { 
+      id: number; 
+      name: string; 
+      email: string;
+      profileImageInitials: string;
+      honorificTitle: string;
+      firstName: string;
+      lastName: string;
+      jobTitle: string;
+    };
     researchActivities?: ResearchActivity[];
   }>({
     queryKey: [`/api/ibc-applications/${id}`],

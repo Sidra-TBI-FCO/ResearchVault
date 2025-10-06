@@ -555,7 +555,14 @@ export default function IbcApplicationEdit() {
         researchActivityIds: associatedActivities.map(ra => ra.id) || [],
         teamMembers: (() => {
           try {
-            return ibcApplication.protocolTeamMembers ? JSON.parse(ibcApplication.protocolTeamMembers) : [];
+            const savedMembers = ibcApplication.protocolTeamMembers ? JSON.parse(ibcApplication.protocolTeamMembers) : [];
+            const piId = ibcApplication.principalInvestigatorId;
+            
+            if (piId && !savedMembers.some((m: any) => m.scientistId === piId)) {
+              return [{ scientistId: piId, role: "team_leader" as const }, ...savedMembers];
+            }
+            
+            return [...savedMembers];
           } catch {
             return [];
           }
@@ -1951,7 +1958,7 @@ export default function IbcApplicationEdit() {
                                   availableStaff.map((staff) => {
                                     const currentTeamMembers = form.watch('teamMembers') || [];
                                     const isAlreadySelected = currentTeamMembers.some(member => 
-                                      member.scientistId === staff.id || member.name === staff.name
+                                      member.scientistId === staff.id
                                     );
                                     return (
                                       <SelectItem 
@@ -2052,10 +2059,15 @@ export default function IbcApplicationEdit() {
                       let memberName, memberEmail, memberRole;
                       
                       if (member.scientistId) {
-                        // New format - look up in available staff
-                        const staff = availableStaff?.find(s => s.id === member.scientistId);
+                        // New format - look up in available staff or check if it's the PI
+                        let staff = availableStaff?.find(s => s.id === member.scientistId);
+                        
+                        if (!staff && ibcApplication?.principalInvestigator?.id === member.scientistId) {
+                          staff = ibcApplication.principalInvestigator as any;
+                        }
+                        
                         if (!staff) return null;
-                        memberName = staff.name;
+                        memberName = formatNameWithJobTitle(staff);
                         memberEmail = staff.email;
                         memberRole = member.role;
                       } else if (member.name) {

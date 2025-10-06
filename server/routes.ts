@@ -3106,6 +3106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             firstName: pi.firstName,
             lastName: pi.lastName,
             jobTitle: pi.jobTitle,
+            email: pi.email,
             name: pi.name,
             profileImageInitials: pi.profileImageInitials
           } : null
@@ -3334,6 +3335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             firstName: pi.firstName,
             lastName: pi.lastName,
             jobTitle: pi.jobTitle,
+            email: pi.email,
             name: pi.name,
             profileImageInitials: pi.profileImageInitials
           } : null
@@ -3374,7 +3376,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         principalInvestigator: pi ? {
           id: pi.id,
           name: pi.name,
-          profileImageInitials: pi.profileImageInitials
+          email: pi.email,
+          profileImageInitials: pi.profileImageInitials,
+          honorificTitle: pi.honorificTitle,
+          firstName: pi.firstName,
+          lastName: pi.lastName,
+          jobTitle: pi.jobTitle
         } : null
       };
 
