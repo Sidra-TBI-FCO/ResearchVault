@@ -1092,7 +1092,15 @@ export default function IbcApplicationEdit() {
 
   const handleSave = async (data: EditIbcApplicationFormValues) => {
     const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
-    const protocolTeamMembers = JSON.stringify(teamMembers);
+    
+    const piId = data.principalInvestigatorId;
+    let membersToSave = teamMembers || [];
+    
+    if (piId && !membersToSave.some(m => m.scientistId === piId)) {
+      membersToSave = [{ scientistId: piId, role: "team_leader" as const }, ...membersToSave];
+    }
+    
+    const protocolTeamMembers = JSON.stringify(membersToSave);
     
     let piResponses = ibcApplication?.piResponses || [];
     if (submissionComment && submissionComment.trim()) {
@@ -1123,7 +1131,15 @@ export default function IbcApplicationEdit() {
     }
 
     const { teamMembers, researchActivityIds, submissionComment: formComment, ...ibcData } = data;
-    const protocolTeamMembers = JSON.stringify(teamMembers);
+    
+    const piId = data.principalInvestigatorId;
+    let membersToSave = teamMembers || [];
+    
+    if (piId && !membersToSave.some(m => m.scientistId === piId)) {
+      membersToSave = [{ scientistId: piId, role: "team_leader" as const }, ...membersToSave];
+    }
+    
+    const protocolTeamMembers = JSON.stringify(membersToSave);
     
     // Keep existing piResponses for backward compatibility
     let piResponses = ibcApplication?.piResponses || [];
