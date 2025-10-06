@@ -592,16 +592,21 @@ export default function CertificationsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredScientists.map((scientist: any) => {
-                      // Generate dummy lab training data based on scientist ID
-                      const trainingStatuses = [
-                        { lastTraining: '2024-03-15', expiration: '2026-03-15', status: 'valid' },
-                        { lastTraining: '2024-10-01', expiration: '2025-10-01', status: 'expiring' },
-                        { lastTraining: '2023-10-05', expiration: '2024-10-05', status: 'expired' },
-                        { lastTraining: null, expiration: null, status: 'never' }
-                      ];
+                      // Find Lab Safety module
+                      const labSafetyModule = modules.find((m: CertificationModule) => m.name === 'Lab Safety');
                       
-                      const statusIndex = scientist.id % 4;
-                      const training = trainingStatuses[statusIndex];
+                      // Get Lab Safety certification from matrix data
+                      const labSafetyCert = matrixData.find(
+                        (item: CertificationMatrixItem) => 
+                          item.scientistId === scientist.id && 
+                          item.moduleId === labSafetyModule?.id &&
+                          item.certificationId !== null
+                      );
+                      
+                      const training = {
+                        lastTraining: labSafetyCert?.startDate || null,
+                        expiration: labSafetyCert?.endDate || null,
+                      };
                       const status = getCertificationStatus(training.expiration);
                       
                       return (
