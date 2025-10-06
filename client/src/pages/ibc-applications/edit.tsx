@@ -555,7 +555,12 @@ export default function IbcApplicationEdit() {
         researchActivityIds: associatedActivities.map(ra => ra.id) || [],
         teamMembers: (() => {
           try {
-            const savedMembers = ibcApplication.protocolTeamMembers ? JSON.parse(ibcApplication.protocolTeamMembers) : [];
+            let savedMembers = ibcApplication.protocolTeamMembers || [];
+            
+            if (typeof savedMembers === 'string') {
+              savedMembers = JSON.parse(savedMembers);
+            }
+            
             const piId = ibcApplication.principalInvestigatorId;
             
             if (piId && !savedMembers.some((m: any) => m.scientistId === piId)) {
