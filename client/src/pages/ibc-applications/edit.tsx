@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist } from "@shared/schema";
+import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist, type Certification, type CertificationModule } from "@shared/schema";
 import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -27,6 +27,27 @@ import React from "react";
 import { z } from "zod";
 import TimelineComments from "@/components/TimelineComments";
 import { formatNameWithJobTitle } from "@/utils/nameUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { differenceInDays, parseISO } from "date-fns";
+
+// Helper function to get certification color based on expiry date
+function getCertificationColor(expiryDate: string | null): string {
+  if (!expiryDate) {
+    return 'bg-gray-100 text-gray-600';
+  }
+  
+  const today = new Date();
+  const expiry = parseISO(expiryDate);
+  const daysUntilExpiry = differenceInDays(expiry, today);
+  
+  if (daysUntilExpiry < 0) {
+    return 'bg-red-100 text-red-800';
+  } else if (daysUntilExpiry <= 30) {
+    return 'bg-orange-100 text-orange-800';
+  } else {
+    return 'bg-green-100 text-green-800';
+  }
+}
 
 // Extended schema for edit form with biosafety options
 const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
@@ -650,6 +671,38 @@ export default function IbcApplicationEdit() {
       return uniqueStaff;
     },
     enabled: Array.isArray(selectedSDRIds) && selectedSDRIds.length > 0,
+  });
+
+  // Fetch certification modules
+  const { data: certificationModules } = useQuery<CertificationModule[]>({
+    queryKey: ['/api/certification-modules'],
+  });
+
+  // Get all team member IDs
+  const teamMemberIds = form.watch('teamMembers')?.map(m => m.scientistId).filter(Boolean) || [];
+
+  // Fetch certifications for all team members
+  const { data: teamCertifications } = useQuery<Record<number, Certification[]>>({
+    queryKey: ['/api/certifications/team', teamMemberIds],
+    queryFn: async () => {
+      if (!teamMemberIds.length) return {};
+      
+      const certPromises = teamMemberIds.map(async (scientistId) => {
+        const response = await fetch(`/api/certifications/scientist/${scientistId}`);
+        if (!response.ok) return { scientistId, certs: [] };
+        const certs = await response.json();
+        return { scientistId, certs };
+      });
+      
+      const results = await Promise.all(certPromises);
+      
+      // Convert to a Record for easy lookup
+      return results.reduce((acc, { scientistId, certs }) => {
+        acc[scientistId] = certs;
+        return acc;
+      }, {} as Record<number, Certification[]>);
+    },
+    enabled: teamMemberIds.length > 0,
   });
 
   const saveMutation = useMutation({
@@ -2100,6 +2153,20 @@ export default function IbcApplicationEdit() {
                         return null;
                       }
                       
+                      // Get certifications for this team member
+                      const memberCerts = member.scientistId ? (teamCertifications?.[member.scientistId] || []) : [];
+                      
+                      // Group certifications by type
+                      const citiCerts = memberCerts.filter(cert => {
+                        const module = certificationModules?.find(m => m.id === cert.moduleId);
+                        return module && module.name !== 'Lab Safety';
+                      });
+                      
+                      const labSafetyCert = memberCerts.find(cert => {
+                        const module = certificationModules?.find(m => m.id === cert.moduleId);
+                        return module && module.name === 'Lab Safety';
+                      });
+                      
                       return (
                         <div key={`${member.scientistId || member.name}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                           <div className="flex-1">
@@ -2108,6 +2175,70 @@ export default function IbcApplicationEdit() {
                             <div className="flex flex-wrap gap-1 mt-2">
                               <Badge variant="secondary" className="text-xs">{memberRole}</Badge>
                             </div>
+                            
+                            {/* Certification Status */}
+                            {member.scientistId && (
+                              <div className="mt-3 space-y-1.5">
+                                {/* CITI Certifications */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-neutral-600 w-20">Citi:</span>
+                                  <div className="flex gap-1 flex-wrap">
+                                    <TooltipProvider>
+                                      {citiCerts.length > 0 ? (
+                                        citiCerts.map((cert, idx) => {
+                                          const module = certificationModules?.find(m => m.id === cert.moduleId);
+                                          return (
+                                            <Tooltip key={idx}>
+                                              <TooltipTrigger>
+                                                <Badge 
+                                                  className={`${getCertificationColor(cert.endDate)} cursor-help transition-colors text-xs`}
+                                                  variant="outline"
+                                                >
+                                                  {module?.name || 'Unknown'}
+                                                </Badge>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>{module?.name || 'Unknown'} - Expires: {cert.endDate || 'N/A'}</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          );
+                                        })
+                                      ) : (
+                                        <Badge className="bg-gray-100 text-gray-600 text-xs" variant="outline">
+                                          None
+                                        </Badge>
+                                      )}
+                                    </TooltipProvider>
+                                  </div>
+                                </div>
+                                
+                                {/* Lab Safety Certification */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-neutral-600 w-20">Lab Safety:</span>
+                                  <TooltipProvider>
+                                    {labSafetyCert ? (
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <Badge 
+                                            className={`${getCertificationColor(labSafetyCert.endDate)} cursor-help transition-colors text-xs`}
+                                            variant="outline"
+                                          >
+                                            {labSafetyCert.endDate || 'N/A'}
+                                          </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Lab Safety Training - Expires: {labSafetyCert.endDate || 'N/A'}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    ) : (
+                                      <Badge className="bg-gray-100 text-gray-600 text-xs" variant="outline">
+                                        None
+                                      </Badge>
+                                    )}
+                                  </TooltipProvider>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center space-x-2">
                             <Button 
