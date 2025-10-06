@@ -28,10 +28,30 @@ import {
   UserCheck,
   X
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays, parseISO } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import type { IbcApplication, Scientist, IbcBoardMember } from "@shared/schema";
 import TimelineComments from "@/components/TimelineComments";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Helper function to get certification color based on expiry date
+function getCertificationColor(expiryDate: string | null): string {
+  if (!expiryDate) {
+    return 'bg-gray-100 text-gray-600';
+  }
+  
+  const today = new Date();
+  const expiry = parseISO(expiryDate);
+  const daysUntilExpiry = differenceInDays(expiry, today);
+  
+  if (daysUntilExpiry < 0) {
+    return 'bg-red-100 text-red-800';
+  } else if (daysUntilExpiry <= 30) {
+    return 'bg-orange-100 text-orange-800';
+  } else {
+    return 'bg-green-100 text-green-800';
+  }
+}
 
 const IBC_WORKFLOW_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-gray-100 text-gray-800", icon: FileText },
@@ -136,6 +156,25 @@ export default function IbcProtocolDetailPage() {
     staleTime: 0, // Force fresh data
     refetchOnMount: true,
   });
+
+  // Fetch certification modules
+  const { data: certificationModules = [] } = useQuery({
+    queryKey: ["/api/certification-modules"],
+  });
+
+  // Fetch certification matrix for all team members
+  const { data: certificationMatrix = [] } = useQuery({
+    queryKey: ["/api/certifications/matrix"],
+  });
+
+  // Group certifications by scientist ID for easy lookup
+  const teamCertifications = certificationMatrix.reduce((acc: any, cert: any) => {
+    if (!acc[cert.scientistId]) {
+      acc[cert.scientistId] = [];
+    }
+    acc[cert.scientistId].push(cert);
+    return acc;
+  }, {});
 
   const updateStatusMutation = useMutation({
     mutationFn: async (data: { status: string; reviewComments?: string; reviewerAssignments?: any }) => {
@@ -641,31 +680,112 @@ export default function IbcProtocolDetailPage() {
                   </div>
                 ) : personnelData && personnelData.length > 0 ? (
                   <div className="space-y-4">
-                    {personnelData.map((member: any, index: number) => (
-                      <div key={`${member.scientistId || 'unknown'}-${member.role || 'no-role'}-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            <User className="h-4 w-4 text-gray-600" />
+                    {personnelData.map((member: any, index: number) => {
+                      // Get certifications for this team member
+                      const memberCerts = member.scientistId ? (teamCertifications[member.scientistId] || []) : [];
+                      
+                      // Group certifications by type
+                      const citiCerts = memberCerts.filter((cert: any) => {
+                        const module = certificationModules.find((m: any) => m.id === cert.moduleId);
+                        return module && module.name !== 'Lab Safety';
+                      });
+                      
+                      const labSafetyCert = memberCerts.find((cert: any) => {
+                        const module = certificationModules.find((m: any) => m.id === cert.moduleId);
+                        return module && module.name === 'Lab Safety';
+                      });
+                      
+                      return (
+                        <div key={`${member.scientistId || 'unknown'}-${member.role || 'no-role'}-${index}`} className="p-3 border rounded-lg bg-white">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                <User className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{member.scientist?.name || 'Unknown'}</p>
+                                <p className="text-sm text-gray-500">{member.scientist?.email || ''}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="secondary" className={
+                                member.role === 'team_leader' ? 'bg-blue-100 text-blue-800' :
+                                member.role === 'safety_representative' ? 'bg-orange-100 text-orange-800' :
+                                'bg-gray-100 text-gray-800'
+                              }>
+                                {member.role === 'team_leader' ? 'Team Leader' :
+                                 member.role === 'safety_representative' ? 'Safety Representative' :
+                                 'Team Member'}
+                              </Badge>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{member.scientist?.name || 'Unknown'}</p>
-                            <p className="text-sm text-gray-500">{member.scientist?.email || ''}</p>
-                            <p className="text-sm text-gray-500">{member.scientist?.department || ''}</p>
-                          </div>
+                          
+                          {/* Certification Status */}
+                          {member.scientistId && (
+                            <div className="space-y-1.5 pl-11">
+                              {/* CITI Certifications */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-neutral-600 w-20">CITI:</span>
+                                <div className="flex gap-1 flex-wrap">
+                                  <TooltipProvider>
+                                    {citiCerts.length > 0 ? (
+                                      citiCerts.map((cert: any, idx: number) => {
+                                        const module = certificationModules.find((m: any) => m.id === cert.moduleId);
+                                        return (
+                                          <Tooltip key={idx}>
+                                            <TooltipTrigger>
+                                              <Badge 
+                                                className={`${getCertificationColor(cert.endDate)} cursor-help transition-colors text-xs`}
+                                                variant="outline"
+                                              >
+                                                {module?.name || 'Unknown'}
+                                              </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>{module?.name || 'Unknown'} - Expires: {cert.endDate || 'N/A'}</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        );
+                                      })
+                                    ) : (
+                                      <Badge className="bg-gray-100 text-gray-600 text-xs" variant="outline">
+                                        None
+                                      </Badge>
+                                    )}
+                                  </TooltipProvider>
+                                </div>
+                              </div>
+                              
+                              {/* Lab Safety Certification */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-neutral-600 w-20">Lab Safety:</span>
+                                <TooltipProvider>
+                                  {labSafetyCert ? (
+                                    <Tooltip>
+                                      <TooltipTrigger>
+                                        <Badge 
+                                          className={`${getCertificationColor(labSafetyCert.endDate)} cursor-help transition-colors text-xs`}
+                                          variant="outline"
+                                        >
+                                          {labSafetyCert.certificateName || 'Certified'}
+                                        </Badge>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{labSafetyCert.certificateName || 'Lab Safety'} - Expires: {labSafetyCert.endDate || 'N/A'}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  ) : (
+                                    <Badge className="bg-gray-100 text-gray-600 text-xs" variant="outline">
+                                      None
+                                    </Badge>
+                                  )}
+                                </TooltipProvider>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <Badge variant="secondary" className={
-                            member.role === 'team_leader' ? 'bg-blue-100 text-blue-800' :
-                            member.role === 'safety_representative' ? 'bg-orange-100 text-orange-800' :
-                            'bg-gray-100 text-gray-800'
-                          }>
-                            {member.role === 'team_leader' ? 'Team Leader' :
-                             member.role === 'safety_representative' ? 'Safety Representative' :
-                             'Team Member'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 text-center py-4">
@@ -675,56 +795,30 @@ export default function IbcProtocolDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Training and Safety Requirements */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Training Requirements</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full bg-green-500`} />
-                    <span className="text-sm">Biosafety Level {application.biosafetyLevel?.replace('BSL-', '')} Training</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full bg-green-500`} />
-                    <span className="text-sm">Laboratory Safety Protocols</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${application.animalWork ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    <span className="text-sm">Animal Handling (if applicable)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${application.recombinateDnaWork ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    <span className="text-sm">Recombinant DNA Protocols (if applicable)</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Safety Requirements</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${application.medicalSurveillance ? 'bg-orange-500' : 'bg-gray-300'}`} />
-                    <span className="text-sm">Medical Surveillance Required</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full bg-green-500`} />
-                    <span className="text-sm">Personal Protective Equipment</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full bg-green-500`} />
-                    <span className="text-sm">Emergency Response Training</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full bg-green-500`} />
-                    <span className="text-sm">Waste Management Protocols</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Certification Requirements */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Certification Requirements for This Protocol</CardTitle>
+                <CardDescription>
+                  All team members must have the following certifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {certificationModules.map((module: any) => (
+                    <div key={module.id} className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500" />
+                      <span className="text-sm">{module.name}</span>
+                    </div>
+                  ))}
+                  {certificationModules.length === 0 && (
+                    <p className="text-sm text-gray-500 col-span-2">
+                      No certification modules configured in the system
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
