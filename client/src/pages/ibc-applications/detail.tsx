@@ -423,14 +423,14 @@ export default function IbcApplicationDetail() {
               {/* Biosafety Options */}
               <div>
                 <label className="text-sm font-medium text-gray-500 mb-2 block">Biosafety Options</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${ibcApplication.recombinantSyntheticNucleicAcid ? 'bg-green-500' : 'bg-gray-300'}`} />
                     <span className="text-sm">Recombinant/Synthetic Nucleic Acid</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${ibcApplication.wholeAnimalsAnimalMaterial ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    <span className="text-sm">Animal Material</span>
+                    <span className="text-sm">Whole Animals/Animal Material</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${ibcApplication.humanNonHumanPrimateMaterial ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -447,6 +447,14 @@ export default function IbcApplicationDetail() {
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${ibcApplication.nanoparticles ? 'bg-green-500' : 'bg-gray-300'}`} />
                     <span className="text-sm">Nanoparticles</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${ibcApplication.arthropods ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <span className="text-sm">Arthropods</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${ibcApplication.plants ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <span className="text-sm">Plants</span>
                   </div>
                 </div>
               </div>
