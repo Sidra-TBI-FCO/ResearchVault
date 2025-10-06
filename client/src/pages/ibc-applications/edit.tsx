@@ -657,7 +657,7 @@ export default function IbcApplicationEdit() {
         description: "IBC application saved as draft successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${id}`] });
     },
     onError: (error: any) => {
       toast({
@@ -689,7 +689,7 @@ export default function IbcApplicationEdit() {
       });
       setSubmissionComment(""); // Clear the comment
       queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/ibc-applications', id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/ibc-applications/${id}/comments`] });
       navigate(`/ibc-applications/${id}`);
     },
