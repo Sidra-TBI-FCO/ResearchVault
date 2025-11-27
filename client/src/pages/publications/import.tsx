@@ -209,15 +209,6 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
       return;
     }
 
-    if (!bulkResearchActivityId) {
-      toast({
-        title: "Error",
-        description: "Please select a research activity for the imported publications",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Parse PMIDs - split by comma, newline, or space and clean up
     const pmidList = bulkPmids
       .split(/[,\n\s]+/)
@@ -286,7 +277,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                 abstract: pubData.abstract,
                 publicationDate: pubData.publicationDate ? new Date(pubData.publicationDate) : undefined,
                 status: 'published',
-                researchActivityId: parseInt(bulkResearchActivityId)
+                researchActivityId: bulkResearchActivityId && bulkResearchActivityId !== 'none' ? parseInt(bulkResearchActivityId) : undefined
               });
               
               if (saveResponse.ok) {
@@ -582,15 +573,16 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
 
           <TabsContent value="bulk" className="space-y-4">
             <div>
-              <Label htmlFor="bulk-sdr">Research Activity (SDR) *</Label>
+              <Label htmlFor="bulk-sdr">Research Activity (SDR) <span className="text-gray-400 font-normal">(optional)</span></Label>
               <Select 
                 value={bulkResearchActivityId} 
                 onValueChange={setBulkResearchActivityId}
               >
                 <SelectTrigger data-testid="select-bulk-sdr">
-                  <SelectValue placeholder="Select research activity for all imported publications" />
+                  <SelectValue placeholder="Optionally link to a research activity" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No SDR link</SelectItem>
                   {(researchActivities as any[])?.map((activity: any) => (
                     <SelectItem key={activity.id} value={activity.id.toString()}>
                       {activity.sdrNumber} - {activity.title}
@@ -599,7 +591,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                 </SelectContent>
               </Select>
               <p className="text-sm text-gray-500 mt-1">
-                All imported publications will be linked to this research activity
+                Optionally link all imported publications to a research activity. You can link them later if needed.
               </p>
             </div>
 
