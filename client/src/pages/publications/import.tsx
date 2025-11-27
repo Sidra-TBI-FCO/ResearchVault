@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPublicationSchema, type InsertPublication } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Search, FileText, ExternalLink, Loader2, CheckCircle, AlertCircle, Plus, BookOpen } from "lucide-react";
+import { Search, FileText, ExternalLink, Loader2, CheckCircle, AlertCircle, Plus, BookOpen, Upload, XCircle, SkipForward } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ImportedPublicationData {
@@ -30,15 +31,23 @@ interface ImportedPublicationData {
   publicationDate: string;
 }
 
+interface BulkImportResult {
+  pmid: string;
+  status: 'success' | 'failed' | 'skipped';
+  message: string;
+  title?: string;
+}
+
 interface PublicationImportProps {
   onClose: () => void;
 }
 
 export default function PublicationImport({ onClose }: PublicationImportProps) {
-  const [importType, setImportType] = useState<'pmid' | 'doi'>('pmid');
+  const [importType, setImportType] = useState<'pmid' | 'doi' | 'bulk'>('pmid');
   const [searchValue, setSearchValue] = useState('');
+  const [bulkPmids, setBulkPmids] = useState('');
   const [importedData, setImportedData] = useState<ImportedPublicationData | null>(null);
-  const [step, setStep] = useState<'search' | 'preview' | 'journal-select'>('search');
+  const [step, setStep] = useState<'search' | 'preview' | 'journal-select' | 'bulk-results'>('search');
   const [selectedResearchActivityId, setSelectedResearchActivityId] = useState<string>('');
   const [matchingJournals, setMatchingJournals] = useState<any[]>([]);
   const [selectedJournalId, setSelectedJournalId] = useState<string>('');
@@ -49,6 +58,13 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
     impactFactor: '',
     year: new Date().getFullYear()
   });
+  
+  // Bulk import state
+  const [bulkImportResults, setBulkImportResults] = useState<BulkImportResult[]>([]);
+  const [bulkImportProgress, setBulkImportProgress] = useState(0);
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [bulkResearchActivityId, setBulkResearchActivityId] = useState<string>('');
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,6 +76,11 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
   // Fetch scientists for authorship
   const { data: scientists } = useQuery({
     queryKey: ['/api/scientists'],
+  });
+
+  // Fetch existing publications to check for duplicates
+  const { data: existingPublications } = useQuery({
+    queryKey: ['/api/publications'],
   });
 
   // Import publication data
@@ -177,6 +198,143 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
     saveMutation.mutate(data);
   };
 
+  // Bulk import handler
+  const handleBulkImport = async () => {
+    if (!bulkPmids.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one PMID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!bulkResearchActivityId) {
+      toast({
+        title: "Error",
+        description: "Please select a research activity for the imported publications",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Parse PMIDs - split by comma, newline, or space and clean up
+    const pmidList = bulkPmids
+      .split(/[,\n\s]+/)
+      .map(pmid => pmid.trim())
+      .filter(pmid => pmid.length > 0 && /^\d+$/.test(pmid));
+
+    if (pmidList.length === 0) {
+      toast({
+        title: "Error",
+        description: "No valid PMIDs found. PMIDs should be numeric values.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for duplicate PMIDs in the input
+    const uniquePmids = [...new Set(pmidList)];
+
+    setIsBulkImporting(true);
+    setBulkImportResults([]);
+    setBulkImportProgress(0);
+
+    const results: BulkImportResult[] = [];
+
+    for (let i = 0; i < uniquePmids.length; i++) {
+      const pmid = uniquePmids[i];
+      
+      // Check if PMID already exists in database
+      const existingPub = (existingPublications as any[])?.find(
+        (pub: any) => pub.pmid === pmid
+      );
+
+      if (existingPub) {
+        results.push({
+          pmid,
+          status: 'skipped',
+          message: 'Already exists in database',
+          title: existingPub.title
+        });
+      } else {
+        try {
+          // Fetch publication data from PubMed
+          const response = await fetch(`/api/publications/import/pmid/${pmid}`);
+          
+          if (!response.ok) {
+            const error = await response.json();
+            results.push({
+              pmid,
+              status: 'failed',
+              message: error.message || 'Failed to fetch from PubMed'
+            });
+          } else {
+            const pubData = await response.json();
+            
+            // Save the publication
+            try {
+              const saveResponse = await apiRequest('POST', '/api/publications', {
+                title: pubData.title,
+                authors: pubData.authors,
+                journal: pubData.journal,
+                volume: pubData.volume,
+                issue: pubData.issue,
+                pages: pubData.pages,
+                doi: pubData.doi,
+                pmid: pubData.pmid,
+                abstract: pubData.abstract,
+                publicationDate: pubData.publicationDate ? new Date(pubData.publicationDate) : undefined,
+                status: 'published',
+                researchActivityId: parseInt(bulkResearchActivityId)
+              });
+              
+              if (saveResponse.ok) {
+                results.push({
+                  pmid,
+                  status: 'success',
+                  message: 'Imported successfully',
+                  title: pubData.title
+                });
+              } else {
+                const saveError = await saveResponse.json();
+                results.push({
+                  pmid,
+                  status: 'failed',
+                  message: saveError.message || 'Failed to save publication',
+                  title: pubData.title
+                });
+              }
+            } catch (saveError: any) {
+              results.push({
+                pmid,
+                status: 'failed',
+                message: saveError.message || 'Failed to save publication',
+                title: pubData.title
+              });
+            }
+          }
+        } catch (error: any) {
+          results.push({
+            pmid,
+            status: 'failed',
+            message: error.message || 'Network error'
+          });
+        }
+      }
+
+      // Update progress
+      setBulkImportProgress(Math.round(((i + 1) / uniquePmids.length) * 100));
+      setBulkImportResults([...results]);
+    }
+
+    setIsBulkImporting(false);
+    setStep('bulk-results');
+    
+    // Refresh publications list
+    queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
+  };
+
   // Add new journal to database
   const addJournalMutation = useMutation({
     mutationFn: async (journalData: any) => {
@@ -223,9 +381,12 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
     setStep('search');
     setImportedData(null);
     setSearchValue('');
+    setBulkPmids('');
     setMatchingJournals([]);
     setSelectedJournalId('');
     setShowAddJournal(false);
+    setBulkImportResults([]);
+    setBulkImportProgress(0);
     setNewJournal({
       journalName: '',
       publisher: '',
@@ -235,19 +396,124 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
     form.reset();
   };
 
+  // Calculate bulk import statistics
+  const getImportStats = () => {
+    const successful = bulkImportResults.filter(r => r.status === 'success').length;
+    const failed = bulkImportResults.filter(r => r.status === 'failed').length;
+    const skipped = bulkImportResults.filter(r => r.status === 'skipped').length;
+    return { successful, failed, skipped, total: bulkImportResults.length };
+  };
+
+  // Bulk import results view
+  if (step === 'bulk-results') {
+    const stats = getImportStats();
+    
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Bulk Import Complete</h3>
+          <p className="text-gray-600">
+            Processed {stats.total} PMID(s)
+          </p>
+        </div>
+
+        {/* Statistics Summary */}
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="bg-green-50 border-green-200">
+            <CardContent className="p-4 text-center">
+              <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-green-700">{stats.successful}</div>
+              <div className="text-sm text-green-600">Imported</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="p-4 text-center">
+              <SkipForward className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-yellow-700">{stats.skipped}</div>
+              <div className="text-sm text-yellow-600">Skipped (Duplicates)</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-red-50 border-red-200">
+            <CardContent className="p-4 text-center">
+              <XCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-red-700">{stats.failed}</div>
+              <div className="text-sm text-red-600">Failed</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed Results */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Import Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {bulkImportResults.map((result, index) => (
+                <div 
+                  key={index}
+                  className={`p-3 rounded-lg flex items-start gap-3 ${
+                    result.status === 'success' ? 'bg-green-50 border border-green-200' :
+                    result.status === 'skipped' ? 'bg-yellow-50 border border-yellow-200' :
+                    'bg-red-50 border border-red-200'
+                  }`}
+                >
+                  {result.status === 'success' ? (
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  ) : result.status === 'skipped' ? (
+                    <SkipForward className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-xs">
+                        PMID: {result.pmid}
+                      </Badge>
+                      <span className={`text-xs font-medium ${
+                        result.status === 'success' ? 'text-green-700' :
+                        result.status === 'skipped' ? 'text-yellow-700' :
+                        'text-red-700'
+                      }`}>
+                        {result.message}
+                      </span>
+                    </div>
+                    {result.title && (
+                      <p className="text-sm text-gray-600 mt-1 truncate">{result.title}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={resetForm}>
+            Import More
+          </Button>
+          <Button onClick={onClose}>
+            Done
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'search') {
     return (
       <div className="space-y-6">
         <div className="text-center">
           <p className="text-gray-600 mb-4">
-            Import publication data automatically using a PubMed ID (PMID) or DOI
+            Import publication data automatically using a PubMed ID (PMID), DOI, or bulk import multiple PMIDs
           </p>
         </div>
 
-        <Tabs value={importType} onValueChange={(value) => setImportType(value as 'pmid' | 'doi')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="pmid">PubMed ID (PMID)</TabsTrigger>
+        <Tabs value={importType} onValueChange={(value) => setImportType(value as 'pmid' | 'doi' | 'bulk')}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="pmid">Single PMID</TabsTrigger>
             <TabsTrigger value="doi">DOI</TabsTrigger>
+            <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
           </TabsList>
           
           <TabsContent value="pmid" className="space-y-4">
@@ -260,11 +526,13 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+                  data-testid="input-pmid"
                 />
                 <Button 
                   onClick={handleImport} 
                   disabled={importMutation.isPending}
                   className="flex items-center gap-2"
+                  data-testid="button-import-pmid"
                 >
                   {importMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -290,11 +558,13 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+                  data-testid="input-doi"
                 />
                 <Button 
                   onClick={handleImport} 
                   disabled={importMutation.isPending}
                   className="flex items-center gap-2"
+                  data-testid="button-import-doi"
                 >
                   {importMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -308,6 +578,74 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                 Enter the DOI to automatically fetch publication details from CrossRef
               </p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="bulk" className="space-y-4">
+            <div>
+              <Label htmlFor="bulk-sdr">Research Activity (SDR) *</Label>
+              <Select 
+                value={bulkResearchActivityId} 
+                onValueChange={setBulkResearchActivityId}
+              >
+                <SelectTrigger data-testid="select-bulk-sdr">
+                  <SelectValue placeholder="Select research activity for all imported publications" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(researchActivities as any[])?.map((activity: any) => (
+                    <SelectItem key={activity.id} value={activity.id.toString()}>
+                      {activity.sdrNumber} - {activity.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-500 mt-1">
+                All imported publications will be linked to this research activity
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="bulk-pmids">PubMed IDs (comma-separated)</Label>
+              <Textarea
+                id="bulk-pmids"
+                placeholder="Enter PMIDs separated by commas, spaces, or new lines&#10;e.g., 12345678, 23456789, 34567890"
+                value={bulkPmids}
+                onChange={(e) => setBulkPmids(e.target.value)}
+                className="min-h-[120px] font-mono text-sm"
+                data-testid="input-bulk-pmids"
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                Enter multiple PMIDs to import them all at once. Existing publications will be skipped.
+              </p>
+            </div>
+
+            {isBulkImporting && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Importing publications...</span>
+                  <span className="font-medium">{bulkImportProgress}%</span>
+                </div>
+                <Progress value={bulkImportProgress} className="h-2" />
+                {bulkImportResults.length > 0 && (
+                  <div className="text-xs text-gray-500">
+                    Processing: {bulkImportResults[bulkImportResults.length - 1]?.pmid}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Button 
+              onClick={handleBulkImport} 
+              disabled={isBulkImporting || !bulkPmids.trim()}
+              className="w-full flex items-center justify-center gap-2"
+              data-testid="button-bulk-import"
+            >
+              {isBulkImporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              {isBulkImporting ? 'Importing...' : 'Start Bulk Import'}
+            </Button>
           </TabsContent>
         </Tabs>
 
@@ -630,19 +968,39 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="journal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Journal *</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="journal"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Journal *</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="publicationDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Publication Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} 
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <FormField
@@ -720,56 +1078,12 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
 
                 <FormField
                   control={form.control}
-                  name="publicationDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Publication Date</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="date" 
-                          {...field} 
-                          value={field.value ? (field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value) : ''} 
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value || ''} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="published">Published</SelectItem>
-                          <SelectItem value="submitted">Submitted</SelectItem>
-                          <SelectItem value="in preparation">In Preparation</SelectItem>
-                          <SelectItem value="under review">Under Review</SelectItem>
-                          <SelectItem value="rejected">Rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="abstract"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Abstract</FormLabel>
                       <FormControl>
-                        <Textarea {...field} value={field.value || ''} rows={4} />
+                        <Textarea {...field} value={field.value || ''} className="min-h-[100px]" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -779,11 +1093,11 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
             </Card>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={resetForm}>
-                Start Over
+              <Button type="button" variant="outline" onClick={resetForm}>
+                Import Another
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={onClose}>
+                <Button type="button" variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
                 <Button 
