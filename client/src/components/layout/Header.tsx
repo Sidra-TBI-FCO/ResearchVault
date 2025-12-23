@@ -11,8 +11,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement search functionality here
-    console.log("Searching for:", searchQuery);
+    // TODO: Implement search functionality
   };
 
   return (

@@ -67,8 +67,6 @@ export default function IrbOfficeProtocolDetail() {
 
   const updateApplicationMutation = useMutation({
     mutationFn: async (updateData: any) => {
-      console.log('Starting IRB office update:', updateData);
-      
       const response = await fetch(`/api/irb-applications/${applicationId}`, {
         method: 'PATCH',
         headers: { 
@@ -79,13 +77,10 @@ export default function IrbOfficeProtocolDetail() {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Update failed:', response.status, errorText);
         throw new Error(`Failed to update application: ${response.status} ${errorText}`);
       }
       
-      const result = await response.json();
-      console.log('Update successful:', result);
-      return result;
+      return response.json();
     },
     onSuccess: (_, action) => {
       queryClient.invalidateQueries({ queryKey: [`/api/irb-applications/${applicationId}`] });
@@ -112,7 +107,6 @@ export default function IrbOfficeProtocolDetail() {
       setReviewType("");
     },
     onError: (error) => {
-      console.error('Mutation error:', error);
       toast({ title: "Error", description: `Failed to update protocol: ${error.message}`, variant: "destructive" });
     },
   });

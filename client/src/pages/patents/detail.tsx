@@ -18,14 +18,11 @@ export default function PatentDetail() {
   const { data: patent, isLoading: patentLoading } = useQuery<Patent>({
     queryKey: ['/api/patents', id],
     queryFn: async () => {
-      console.log("Fetching patent with ID:", id);
       const response = await fetch(`/api/patents/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch patent');
       }
-      const data = await response.json();
-      console.log("Patent data received:", data);
-      return data;
+      return response.json();
     },
     retry: 3,
     refetchOnWindowFocus: false,

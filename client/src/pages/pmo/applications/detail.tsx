@@ -89,8 +89,6 @@ export default function PmoApplicationDetail() {
 
     try {
       // TODO: Implement API call to add PI comment
-      console.log('Adding PI comment:', newComment);
-      
       toast({ 
         title: "Comment added", 
         description: "Your comment has been added successfully."

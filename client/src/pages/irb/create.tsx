@@ -121,8 +121,6 @@ export default function CreateIrb() {
   });
 
   const onSubmit = (data: CreateIrbApplicationFormValues) => {
-    console.log('Form submitted with data:', data);
-    console.log('Form validation errors:', form.formState.errors);
     createIrbApplicationMutation.mutate(data);
   };
 

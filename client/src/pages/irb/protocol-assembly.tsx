@@ -68,42 +68,35 @@ export default function ProtocolAssembly() {
 
   // Load existing protocol members and documents from application data
   useEffect(() => {
-    console.log('Application data changed:', application);
-    
     // Load protocol team members
     if (application?.protocolTeamMembers) {
       try {
-        console.log('Raw protocol team members:', application.protocolTeamMembers);
         let existingMembers;
         if (typeof application.protocolTeamMembers === 'string') {
           existingMembers = JSON.parse(application.protocolTeamMembers) as ProtocolMember[];
         } else {
           existingMembers = application.protocolTeamMembers as ProtocolMember[];
         }
-        console.log('Parsed protocol team members:', existingMembers);
         setProtocolMembers(existingMembers);
-      } catch (error) {
-        console.error('Failed to parse protocol team members:', error);
+      } catch {
+        // Failed to parse protocol team members
       }
     } else {
-      console.log('No protocol team members found, resetting to empty array');
       setProtocolMembers([]);
     }
 
     // Load existing documents
     if (application?.documents) {
       try {
-        console.log('Raw documents:', application.documents);
         let existingDocuments;
         if (typeof application.documents === 'string') {
           existingDocuments = JSON.parse(application.documents) as typeof documents;
         } else {
           existingDocuments = application.documents as typeof documents;
         }
-        console.log('Parsed documents:', existingDocuments);
         setDocuments(existingDocuments);
-      } catch (error) {
-        console.error('Failed to parse documents:', error);
+      } catch {
+        // Failed to parse documents
       }
     }
   }, [application]);

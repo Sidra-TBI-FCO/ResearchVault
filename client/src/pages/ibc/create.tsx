@@ -428,11 +428,8 @@ export default function CreateIbc() {
   // Save as Draft mutation
   const saveDraftMutation = useMutation({
     mutationFn: async (data: CreateIbcApplicationFormValues) => {
-      console.log("Saving as draft with data:", data);
-      
       // Extract research activity IDs for the junction table
       const researchActivityIds = data.researchActivityIds;
-      console.log("Extracted research activity IDs:", researchActivityIds);
       
       // Prepare the main IBC application data (excluding the junction table data)
       const { researchActivityIds: _, ...ibcApplicationData } = data;
@@ -443,8 +440,6 @@ export default function CreateIbc() {
         researchActivityIds,
         isDraft: true,
       };
-      
-      console.log("Full draft request body:", requestBody);
 
       const response = await apiRequest("POST", "/api/ibc-applications", requestBody);
       return response.json();
@@ -469,11 +464,8 @@ export default function CreateIbc() {
   // Submit Application mutation
   const submitApplicationMutation = useMutation({
     mutationFn: async (data: CreateIbcApplicationFormValues) => {
-      console.log("Submitting application with data:", data);
-      
       // Extract research activity IDs for the junction table
       const researchActivityIds = data.researchActivityIds;
-      console.log("Extracted research activity IDs:", researchActivityIds);
       
       // Prepare the main IBC application data (excluding the junction table data)
       const { researchActivityIds: _, ...ibcApplicationData } = data;
@@ -484,8 +476,6 @@ export default function CreateIbc() {
         researchActivityIds,
         isDraft: false,
       };
-      
-      console.log("Full submission request body:", requestBody);
 
       const response = await apiRequest("POST", "/api/ibc-applications", requestBody);
       return response.json();
@@ -509,13 +499,11 @@ export default function CreateIbc() {
 
   // Handler for saving as draft
   const onSaveAsDraft = (data: CreateIbcApplicationFormValues) => {
-    console.log("Saving as draft:", data);
     saveDraftMutation.mutate(data);
   };
 
   // Handler for submitting application
   const onSubmitApplication = (data: CreateIbcApplicationFormValues) => {
-    console.log("Submitting application:", data);
     submitApplicationMutation.mutate(data);
   };
 

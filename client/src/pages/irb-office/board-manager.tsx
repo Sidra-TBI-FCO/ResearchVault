@@ -135,7 +135,6 @@ export default function IrbBoardManager() {
       isActive: true
     };
 
-    console.log('Adding board member with data:', memberData);
     addBoardMemberMutation.mutate(memberData);
   };
 

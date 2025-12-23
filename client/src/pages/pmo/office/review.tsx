@@ -94,7 +94,6 @@ export default function PmoOfficeReviewDetail() {
       // If approved, create SDR entry
       if (newStatus === 'approved') {
         // TODO: Create SDR entry from approved application
-        console.log('Creating SDR entry from approved application...');
       }
       
       toast({ 
