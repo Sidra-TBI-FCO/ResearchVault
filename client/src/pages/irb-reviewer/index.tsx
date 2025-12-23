@@ -66,7 +66,7 @@ export default function IrbReviewerDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-400">IRB Reviewer Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-foreground">IRB Reviewer Dashboard</h1>
           <p className="text-gray-600 mt-1">Review assigned protocols and manage your review tasks</p>
         </div>
         <Button

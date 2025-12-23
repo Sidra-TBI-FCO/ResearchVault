@@ -222,12 +222,12 @@ export default function EditRa200() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Cannot Edit Application</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Cannot Edit Application</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">Applications can only be edited when in 'draft' or 'revision requested' status.</p>
+              <p className="text-lg text-foreground">Applications can only be edited when in 'draft' or 'revision requested' status.</p>
               <Button className="mt-4" onClick={() => setLocation(`/pmo/applications/${applicationId}`)}>
                 View Application
               </Button>
@@ -245,7 +245,7 @@ export default function EditRa200() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit RA-200 Research Activity Plan</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Edit RA-200 Research Activity Plan</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

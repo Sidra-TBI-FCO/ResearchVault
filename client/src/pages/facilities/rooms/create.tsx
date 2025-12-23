@@ -195,7 +195,7 @@ export default function CreateRoom() {
         </Button>
         <div className="flex items-center gap-2">
           <Plus className="h-5 w-5 text-blue-600" />
-          <h1 className="text-2xl font-semibold text-neutral-400">Create Room</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Create Room</h1>
         </div>
       </div>
 

@@ -78,11 +78,11 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-neutral-50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-300 uppercase tracking-wider">Project Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-300 uppercase tracking-wider">Lead Scientist</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-300 uppercase tracking-wider">Last Update</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-300 uppercase tracking-wider"></th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Project Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Lead Scientist</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -112,11 +112,11 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
                         {project.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(project.updatedAt.toString())}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <Button variant="ghost" size="icon" className="text-neutral-300 hover:text-primary-500">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary-500">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </td>
@@ -126,11 +126,11 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
             </table>
             
             <div className="p-4 border-t border-neutral-100 flex items-center justify-between">
-              <Button variant="outline" size="sm" disabled className="text-neutral-300">
+              <Button variant="outline" size="sm" disabled className="text-muted-foreground">
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Previous
               </Button>
-              <span className="text-sm text-neutral-200">Page 1 of 1</span>
+              <span className="text-sm text-muted-foreground">Page 1 of 1</span>
               <Button variant="outline" size="sm" className="text-primary-500">
                 Next
                 <ChevronRight className="ml-1 h-4 w-4" />

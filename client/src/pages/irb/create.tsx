@@ -133,7 +133,7 @@ export default function CreateIrb() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">New IRB Application</h1>
+        <h1 className="text-2xl font-semibold text-foreground">New IRB Application</h1>
       </div>
 
       <Card>

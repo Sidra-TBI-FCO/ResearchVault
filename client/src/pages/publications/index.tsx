@@ -88,7 +88,7 @@ export default function PublicationsList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-400">Publications</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Publications</h1>
           {filterResearchActivityId && researchActivity && (
             <div className="mt-1 flex items-center">
               <Badge variant="outline" className="mr-2 bg-blue-50 text-blue-700 border-blue-200">

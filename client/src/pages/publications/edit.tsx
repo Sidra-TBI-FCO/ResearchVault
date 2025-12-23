@@ -145,12 +145,12 @@ export default function PublicationEdit() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Publication Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Publication Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The publication you're trying to edit could not be found.</p>
+              <p className="text-lg text-foreground">The publication you're trying to edit could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/publications")}>
                 Return to Publications List
               </Button>
@@ -168,7 +168,7 @@ export default function PublicationEdit() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit Publication</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Edit Publication</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

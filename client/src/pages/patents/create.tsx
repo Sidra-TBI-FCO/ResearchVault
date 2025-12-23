@@ -96,7 +96,7 @@ export default function CreatePatent() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Add Patent</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Add Patent</h1>
       </div>
 
       <Card>

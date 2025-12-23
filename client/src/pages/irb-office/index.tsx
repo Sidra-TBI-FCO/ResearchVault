@@ -262,8 +262,8 @@ export default function IrbOfficePortal() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-400">IRB Office Portal</h1>
-          <p className="text-neutral-300 mt-1">
+          <h1 className="text-2xl font-semibold text-foreground">IRB Office Portal</h1>
+          <p className="text-muted-foreground mt-1">
             Manage and review institutional research protocols
           </p>
         </div>

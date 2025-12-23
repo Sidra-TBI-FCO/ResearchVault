@@ -159,11 +159,11 @@ export default function RecentActivity() {
               <p className="font-medium">
                 {activity.title}
                 {activity.description && (
-                  <span className="font-normal text-neutral-200"> {activity.description}</span>
+                  <span className="font-normal text-muted-foreground"> {activity.description}</span>
                 )}
               </p>
-              <p className="text-sm text-neutral-200">By {activity.user?.name}</p>
-              <p className="text-xs text-neutral-200 mt-1">{formatDate(activity.date)}</p>
+              <p className="text-sm text-muted-foreground">By {activity.user?.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">{formatDate(activity.date)}</p>
             </div>
           </div>
         ))}

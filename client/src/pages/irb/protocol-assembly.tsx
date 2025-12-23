@@ -449,7 +449,7 @@ export default function ProtocolAssembly() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Application
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Protocol Assembly</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Protocol Assembly</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

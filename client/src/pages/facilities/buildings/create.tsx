@@ -84,7 +84,7 @@ export default function CreateBuilding() {
         </Button>
         <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-blue-600" />
-          <h1 className="text-2xl font-semibold text-neutral-400">Create Building</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Create Building</h1>
         </div>
       </div>
 

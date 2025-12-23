@@ -317,7 +317,7 @@ export default function IrbOfficeProtocolDetail() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-400 mb-2">{application.title}</h1>
+          <h1 className="text-2xl font-semibold text-foreground mb-2">{application.title}</h1>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span>IRB Number: {application.irbNumber || "Pending"}</span>
             <span>•</span>

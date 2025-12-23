@@ -90,7 +90,7 @@ export default function ProgramsList() {
     <PermissionWrapper currentUserRole={currentUser.role} navigationItem="programs">
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-2xl font-semibold text-neutral-400">Research Programs (PRM)</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Research Programs (PRM)</h1>
           {canEdit && (
             <Link href="/programs/create">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90">

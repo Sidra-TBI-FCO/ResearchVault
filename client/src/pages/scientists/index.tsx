@@ -111,18 +111,18 @@ export default function StaffList() {
     <PermissionWrapper currentUserRole={currentUser.role} navigationItem="scientists">
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-2xl font-semibold text-neutral-400">Staff Directory</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Staff Directory</h1>
           <div className="flex items-center gap-3">
             {canEdit && (
               <Link href="/scientists/role-access-config">
-                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground" data-testid="button-configure-role-access">
                   Configure Role Based Access
                 </Button>
               </Link>
             )}
             {canEdit && (
               <Link href="/scientists/create">
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-add-staff">
                   Add Staff Member
                 </Button>
               </Link>
@@ -138,7 +138,7 @@ export default function StaffList() {
               {/* Sort Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Button variant="outline" size="sm" className="flex items-center gap-1" data-testid="button-sort-dropdown">
                     <ArrowUpDown className="h-4 w-4" />
                     Sort by: {sortField === 'name' ? 'Name' : sortField === 'department' ? 'Department' : sortField === 'jobTitle' ? 'Job Title' : 'Active SDRs'}
                   </Button>
@@ -164,6 +164,7 @@ export default function StaffList() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                data-testid="button-sort-direction"
               >
                 {sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -177,6 +178,7 @@ export default function StaffList() {
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-search-staff"
                 />
               </div>
             </div>
@@ -341,7 +343,7 @@ export default function StaffList() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center space-x-2 text-neutral-200">
+                          <div className="flex items-center space-x-2 text-muted-foreground">
                             {person.email && (
                               <a 
                                 href={`mailto:${person.email}`} 
@@ -389,7 +391,7 @@ export default function StaffList() {
                     ))}
                     {sortedStaff?.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-neutral-200">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           No staff members found matching your search.
                         </TableCell>
                       </TableRow>

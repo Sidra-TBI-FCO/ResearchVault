@@ -77,7 +77,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
         {/* Line Manager */}
         {scientist.supervisorId && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronUp className="h-4 w-4" />
               Reports to
             </div>
@@ -97,7 +97,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                   </Avatar>
                   <div className="text-left">
                     <div className="font-medium text-sm">{formatFullName(lineManager)}</div>
-                    <div className="text-xs text-neutral-500">{lineManager.jobTitle || 'No title'}</div>
+                    <div className="text-xs text-muted-foreground">{lineManager.jobTitle || 'No title'}</div>
                   </div>
                 </div>
               </Button>
@@ -107,7 +107,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
 
         {/* Current Scientist (highlighted) */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <div className="w-4 h-4" /> {/* Spacer */}
             Current
           </div>
@@ -120,7 +120,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
               </Avatar>
               <div>
                 <div className="font-medium text-sm">{formatFullName(scientist)}</div>
-                <div className="text-xs text-neutral-600">{scientist.jobTitle || 'No title'}</div>
+                <div className="text-xs text-muted-foreground">{scientist.jobTitle || 'No title'}</div>
               </div>
             </div>
           </div>
@@ -129,7 +129,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
         {/* Direct Reports */}
         {reportsLoading ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronDown className="h-4 w-4" />
               Direct Reports
             </div>
@@ -137,7 +137,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
           </div>
         ) : directReports && directReports.length > 0 ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronDown className="h-4 w-4" />
               Direct Reports ({directReports.length})
             </div>
@@ -157,7 +157,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                     </Avatar>
                     <div className="text-left">
                       <div className="font-medium text-sm">{formatFullName(report)}</div>
-                      <div className="text-xs text-neutral-500">{report.jobTitle || 'No title'}</div>
+                      <div className="text-xs text-muted-foreground">{report.jobTitle || 'No title'}</div>
                     </div>
                   </div>
                 </Button>
@@ -166,11 +166,11 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronDown className="h-4 w-4" />
               Direct Reports
             </div>
-            <div className="text-sm text-neutral-400 text-center py-4">
+            <div className="text-sm text-foreground text-center py-4">
               No direct reports
             </div>
           </div>

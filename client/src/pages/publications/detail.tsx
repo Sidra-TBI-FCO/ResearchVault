@@ -435,12 +435,12 @@ export default function PublicationDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Publication Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Publication Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The publication you're looking for could not be found.</p>
+              <p className="text-lg text-foreground">The publication you're looking for could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/publications")}>
                 Return to Publications List
               </Button>
@@ -459,7 +459,7 @@ export default function PublicationDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">{publication.title}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{publication.title}</h1>
         </div>
         <Button 
           className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
@@ -498,7 +498,7 @@ export default function PublicationDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-medium text-neutral-400">Related Research Activity</h3>
+                  <h3 className="text-sm font-medium text-foreground">Related Research Activity</h3>
                   <div className="flex items-start gap-1 mt-1">
                     <Layers className="h-3 w-3 mt-0.5 flex-shrink-0" />
                     <span className="min-w-0 break-words">
@@ -518,7 +518,7 @@ export default function PublicationDetail() {
                 </div>
                 
                 <div className="min-w-0">
-                  <h3 className="text-sm font-medium text-neutral-400">Publication Date</h3>
+                  <h3 className="text-sm font-medium text-foreground">Publication Date</h3>
                   <div className="flex items-center gap-1 mt-1">
                     <Calendar className="h-3 w-3 flex-shrink-0" />
                     <span>
@@ -530,7 +530,7 @@ export default function PublicationDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Publication Type</h3>
+                  <h3 className="text-sm font-medium text-foreground">Publication Type</h3>
                   <div className="flex items-center gap-1">
                     <Book className="h-3 w-3" />
                     <span>{publication.publicationType || 'Not specified'}</span>
@@ -538,7 +538,7 @@ export default function PublicationDetail() {
                 </div>
                 
                 <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-neutral-400">Authors</h3>
+                  <h3 className="text-sm font-medium text-foreground">Authors</h3>
                   <div className="flex items-start gap-1 mt-1">
                     <Users className="h-3 w-3 mt-0.5 flex-shrink-0" />
                     <span className="break-words">{publication.authors || 'No authors listed'}</span>
@@ -548,7 +548,7 @@ export default function PublicationDetail() {
 
               {publication.journal && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">Journal</h3>
+                  <h3 className="text-sm font-medium text-foreground">Journal</h3>
                   <p className="mt-1">
                     {publication.journal}
                     {publication.volume && (
@@ -661,7 +661,7 @@ export default function PublicationDetail() {
               
               {publication.doi && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">DOI</h3>
+                  <h3 className="text-sm font-medium text-foreground">DOI</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <ExternalLink className="h-3 w-3" />
                     <a 
@@ -678,7 +678,7 @@ export default function PublicationDetail() {
               
               {(publication.prepublicationUrl || publication.prepublicationSite) && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">Prepublication</h3>
+                  <h3 className="text-sm font-medium text-foreground">Prepublication</h3>
                   <div className="flex flex-col gap-1 mt-1">
                     {publication.prepublicationSite && (
                       <div className="flex items-center gap-2">
@@ -705,7 +705,7 @@ export default function PublicationDetail() {
               
               {publication.vettedForSubmissionByIpOffice && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">IP Office Review</h3>
+                  <h3 className="text-sm font-medium text-foreground">IP Office Review</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="h-3 w-3 rounded-full bg-green-500"></div>
                     <span className="text-green-600 text-sm font-medium">✓ Vetted for submission</span>
@@ -758,7 +758,7 @@ export default function PublicationDetail() {
                     ))}
                   </div>
                 ) : publicationAuthors.length === 0 ? (
-                  <p className="text-neutral-400 text-sm">No internal authors added yet.</p>
+                  <p className="text-foreground text-sm">No internal authors added yet.</p>
                 ) : (
                   <div className="space-y-2">
                     <Table>
@@ -861,9 +861,9 @@ export default function PublicationDetail() {
                           </SelectTrigger>
                           <SelectContent>
                             {scientistsLoading ? (
-                              <div className="p-2 text-sm text-neutral-400">Loading scientists...</div>
+                              <div className="p-2 text-sm text-foreground">Loading scientists...</div>
                             ) : availableScientists.length === 0 ? (
-                              <div className="p-2 text-sm text-neutral-400">All scientists already added</div>
+                              <div className="p-2 text-sm text-foreground">All scientists already added</div>
                             ) : (
                               availableScientists.map((scientist) => (
                                 <SelectItem key={scientist.id} value={scientist.id.toString()}>
@@ -1006,7 +1006,7 @@ export default function PublicationDetail() {
               <CardTitle>Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-neutral-400">No documents available.</p>
+              <p className="text-foreground">No documents available.</p>
               <Button variant="outline" className="w-full mt-4" disabled>
                 <FileText className="h-4 w-4 mr-2" /> Add Document
               </Button>

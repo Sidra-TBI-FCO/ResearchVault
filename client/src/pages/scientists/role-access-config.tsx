@@ -156,7 +156,7 @@ export default function RoleAccessConfig() {
               Back to Scientists
             </Button>
           </Link>
-          <h1 className="text-2xl font-semibold text-neutral-400">Configure Role Based Access</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Configure Role Based Access</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={resetToDefaults}>

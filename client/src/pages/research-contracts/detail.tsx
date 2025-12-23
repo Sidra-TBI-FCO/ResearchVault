@@ -129,12 +129,12 @@ export default function ResearchContractDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Research Contract Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Research Contract Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The research contract you're looking for could not be found.</p>
+              <p className="text-lg text-foreground">The research contract you're looking for could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/contracts")} data-testid="button-return-contracts">
                 Return to Contracts List
               </Button>
@@ -153,7 +153,7 @@ export default function ResearchContractDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">{contract.title}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{contract.title}</h1>
         </div>
         {canEditContract && (
           <Button 
@@ -198,7 +198,7 @@ export default function ResearchContractDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Related Research Activity</h3>
+                  <h3 className="text-sm font-medium text-foreground">Related Research Activity</h3>
                   <div className="flex items-center gap-1">
                     <Layers className="h-3 w-3" />
                     <span>
@@ -218,7 +218,7 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Principal Investigator</h3>
+                  <h3 className="text-sm font-medium text-foreground">Principal Investigator</h3>
                   <div className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
                     <span>
@@ -232,7 +232,7 @@ export default function ResearchContractDetail() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Contract Start Date</h3>
+                  <h3 className="text-sm font-medium text-foreground">Contract Start Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>
@@ -244,7 +244,7 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Contract End Date</h3>
+                  <h3 className="text-sm font-medium text-foreground">Contract End Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>
@@ -256,7 +256,7 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Organization Name</h3>
+                  <h3 className="text-sm font-medium text-foreground">Organization Name</h3>
                   <div className="flex items-center gap-1">
                     <Building className="h-3 w-3" />
                     <span>{contract.contractorName || 'Not specified'}</span>
@@ -264,7 +264,7 @@ export default function ResearchContractDetail() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Country</h3>
+                  <h3 className="text-sm font-medium text-foreground">Country</h3>
                   <div className="flex items-center gap-1">
                     <Globe className="h-3 w-3" />
                     <span>{contract.counterpartyCountry || 'Not specified'}</span>
@@ -272,7 +272,7 @@ export default function ResearchContractDetail() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-neutral-400">Contact Information</h3>
+                  <h3 className="text-sm font-medium text-foreground">Contact Information</h3>
                   <div className="flex items-start gap-1 mt-1">
                     <Mail className="h-3 w-3 mt-0.5" />
                     <span className="whitespace-pre-wrap">{contract.counterpartyContact || 'Not specified'}</span>
@@ -280,7 +280,7 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Contract Value</h3>
+                  <h3 className="text-sm font-medium text-foreground">Contract Value</h3>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3" />
                     <span>
@@ -292,7 +292,7 @@ export default function ResearchContractDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Contract Type</h3>
+                  <h3 className="text-sm font-medium text-foreground">Contract Type</h3>
                   <div className="flex items-center gap-1">
                     <FileText className="h-3 w-3" />
                     <span>{contract.contractType || 'Not specified'}</span>
@@ -301,7 +301,7 @@ export default function ResearchContractDetail() {
                 
                 {contract.irbProtocol && (
                   <div>
-                    <h3 className="text-sm font-medium text-neutral-400">IRB Protocol</h3>
+                    <h3 className="text-sm font-medium text-foreground">IRB Protocol</h3>
                     <div className="flex items-center gap-1">
                       <FileText className="h-3 w-3" />
                       <span>{contract.irbProtocol}</span>
@@ -311,7 +311,7 @@ export default function ResearchContractDetail() {
                 
                 {contract.ibcProtocol && (
                   <div>
-                    <h3 className="text-sm font-medium text-neutral-400">IBC Protocol</h3>
+                    <h3 className="text-sm font-medium text-foreground">IBC Protocol</h3>
                     <div className="flex items-center gap-1">
                       <FileText className="h-3 w-3" />
                       <span>{contract.ibcProtocol}</span>
@@ -327,7 +327,7 @@ export default function ResearchContractDetail() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     {researchActivity.budgetSource && researchActivity.budgetSource.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-medium text-neutral-400 mb-2">Budget Source</h4>
+                        <h4 className="text-sm font-medium text-foreground mb-2">Budget Source</h4>
                         <div className="flex flex-wrap gap-2">
                           {researchActivity.budgetSource.map((source, index) => (
                             <Badge 
@@ -345,7 +345,7 @@ export default function ResearchContractDetail() {
                     
                     {researchActivity.grantCodes && researchActivity.grantCodes.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-medium text-neutral-400 mb-2">Grant Codes</h4>
+                        <h4 className="text-sm font-medium text-foreground mb-2">Grant Codes</h4>
                         <div className="flex flex-wrap gap-2">
                           {researchActivity.grantCodes.map((code, index) => (
                             <Badge 
@@ -366,7 +366,7 @@ export default function ResearchContractDetail() {
 
               {contract.description && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">Description</h3>
+                  <h3 className="text-sm font-medium text-foreground">Description</h3>
                   <p className="mt-1">{contract.description}</p>
                 </div>
               )}
@@ -375,19 +375,19 @@ export default function ResearchContractDetail() {
                 <h3 className="text-md font-medium border-b pb-2">Financial Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <div>
-                    <p className="text-sm font-medium text-neutral-400">Internal Cost (Sidra)</p>
+                    <p className="text-sm font-medium text-foreground">Internal Cost (Sidra)</p>
                     <p className="mt-1">${contract.internalCostSidra?.toLocaleString() || 'Not specified'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-neutral-400">Internal Cost (Counterparty)</p>
+                    <p className="text-sm font-medium text-foreground">Internal Cost (Counterparty)</p>
                     <p className="mt-1">${contract.internalCostCounterparty?.toLocaleString() || 'Not specified'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-neutral-400">Money Out</p>
+                    <p className="text-sm font-medium text-foreground">Money Out</p>
                     <p className="mt-1">${contract.moneyOut?.toLocaleString() || 'Not specified'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-neutral-400">PO Relevant</p>
+                    <p className="text-sm font-medium text-foreground">PO Relevant</p>
                     <p className="mt-1">{contract.isPORelevant ? 'Yes' : 'No'}</p>
                   </div>
                 </div>
@@ -520,7 +520,7 @@ export default function ResearchContractDetail() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-2 border rounded">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-neutral-400" />
+                      <FileText className="h-4 w-4 text-foreground" />
                       <span>{contract.documents.agreement}</span>
                     </div>
                     <Button size="sm" variant="ghost" data-testid="button-document-view">
@@ -529,7 +529,7 @@ export default function ResearchContractDetail() {
                   </div>
                 </div>
               ) : (
-                <p className="text-neutral-400">No documents available.</p>
+                <p className="text-foreground">No documents available.</p>
               )}
               <Button variant="outline" className="w-full mt-4" disabled data-testid="button-add-document">
                 <FileText className="h-4 w-4 mr-2" /> Add Document
@@ -588,13 +588,13 @@ export default function ResearchContractDetail() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2" data-testid={`cell-scope-due-date-${item.id}`}>
-                              <Calendar className="h-4 w-4 text-neutral-400" />
+                              <Calendar className="h-4 w-4 text-foreground" />
                               {item.dueDate ? format(new Date(item.dueDate), 'MMM dd, yyyy') : 'Not set'}
                             </div>
                           </TableCell>
                           <TableCell className="max-w-xs">
                             <div 
-                              className="text-sm text-neutral-600" 
+                              className="text-sm text-muted-foreground" 
                               data-testid={`cell-scope-criteria-${item.id}`}
                             >
                               {item.acceptanceCriteria || 'Not specified'}
@@ -607,9 +607,9 @@ export default function ResearchContractDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <CheckSquare className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
-                  <p className="text-neutral-400">No scope of work defined.</p>
-                  <p className="text-sm text-neutral-300 mt-1">Scope items will appear here when added.</p>
+                  <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-foreground">No scope of work defined.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Scope items will appear here when added.</p>
                 </div>
               )}
             </CardContent>
@@ -651,7 +651,7 @@ export default function ResearchContractDetail() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2" data-testid={`cell-extension-end-date-${extension.id}`}>
-                              <Calendar className="h-4 w-4 text-neutral-400" />
+                              <Calendar className="h-4 w-4 text-foreground" />
                               {extension.newEndDate ? format(new Date(extension.newEndDate), 'MMM dd, yyyy') : 'Not set'}
                             </div>
                           </TableCell>
@@ -674,7 +674,7 @@ export default function ResearchContractDetail() {
                           </TableCell>
                           <TableCell className="max-w-xs">
                             <div 
-                              className="truncate text-sm text-neutral-600" 
+                              className="truncate text-sm text-muted-foreground" 
                               title={extension.notes || 'No notes'}
                               data-testid={`cell-extension-notes-${extension.id}`}
                             >
@@ -688,9 +688,9 @@ export default function ResearchContractDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Clock className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
-                  <p className="text-neutral-400">No contract extensions found.</p>
-                  <p className="text-sm text-neutral-300 mt-1">Extensions will appear here when created.</p>
+                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-foreground">No contract extensions found.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Extensions will appear here when created.</p>
                 </div>
               )}
             </CardContent>

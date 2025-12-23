@@ -263,7 +263,7 @@ export default function ContractRequest() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Request New Contract</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Request New Contract</h1>
         </div>
 
         <Form {...form}>

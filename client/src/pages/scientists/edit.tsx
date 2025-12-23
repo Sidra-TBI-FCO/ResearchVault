@@ -155,7 +155,7 @@ export default function EditScientist() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Staff Member Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Staff Member Not Found</h1>
         </div>
         <Card>
           <CardContent className="pt-6">
@@ -173,7 +173,7 @@ export default function EditScientist() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit Staff Member</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Edit Staff Member</h1>
       </div>
 
       <Card>

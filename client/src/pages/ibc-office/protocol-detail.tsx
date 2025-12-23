@@ -726,7 +726,7 @@ export default function IbcProtocolDetailPage() {
                             <div className="space-y-1.5 pl-11">
                               {/* CITI Certifications */}
                               <div className="flex items-center gap-2">
-                                <span className="text-sm text-neutral-600 w-20">CITI:</span>
+                                <span className="text-sm text-muted-foreground w-20">CITI:</span>
                                 <div className="flex gap-1 flex-wrap">
                                   <TooltipProvider>
                                     {citiCerts.length > 0 ? (
@@ -759,7 +759,7 @@ export default function IbcProtocolDetailPage() {
                               
                               {/* Lab Safety Certification */}
                               <div className="flex items-center gap-2">
-                                <span className="text-sm text-neutral-600 w-20">Lab Safety:</span>
+                                <span className="text-sm text-muted-foreground w-20">Lab Safety:</span>
                                 <TooltipProvider>
                                   {labSafetyCert ? (
                                     <Tooltip>

@@ -118,12 +118,12 @@ export default function DataManagementPlanEdit() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Data Management Plan Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Data Management Plan Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The data management plan you're trying to edit could not be found.</p>
+              <p className="text-lg text-foreground">The data management plan you're trying to edit could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/data-management")}>
                 Return to Data Management Plans List
               </Button>
@@ -141,7 +141,7 @@ export default function DataManagementPlanEdit() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit Data Management Plan</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Edit Data Management Plan</h1>
       </div>
 
       <Card>

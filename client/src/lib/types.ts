@@ -52,16 +52,36 @@ export interface EnhancedIrbApplication extends IrbApplication {
   principalInvestigator?: {
     id: number;
     name: string;
+    honorificTitle?: string;
+    firstName?: string;
+    lastName?: string;
+    jobTitle?: string;
+    email?: string;
     profileImageInitials?: string;
   };
+  researchActivity?: {
+    id: number;
+    sdrNumber: string;
+    title: string;
+  } | null;
 }
 
 export interface EnhancedIbcApplication extends IbcApplication {
   principalInvestigator?: {
     id: number;
     name: string;
+    honorificTitle?: string;
+    firstName?: string;
+    lastName?: string;
+    jobTitle?: string;
+    email?: string;
     profileImageInitials?: string;
   };
+  researchActivities?: Array<{
+    id: number;
+    sdrNumber: string;
+    title: string;
+  }>;
 }
 
 export interface EnhancedResearchContract extends ResearchContract {
@@ -72,8 +92,19 @@ export interface EnhancedResearchContract extends ResearchContract {
   principalInvestigator?: {
     id: number;
     name: string;
+    honorificTitle?: string;
+    firstName?: string;
+    lastName?: string;
+    jobTitle?: string;
+    email?: string;
     profileImageInitials?: string;
   };
+  researchActivity?: {
+    id: number;
+    sdrNumber: string;
+    title: string;
+    status?: string;
+  } | null;
 }
 
 // Dashboard types

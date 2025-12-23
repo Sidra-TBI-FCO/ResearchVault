@@ -103,9 +103,9 @@ export default function ProjectsList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-semibold text-neutral-400">Projects (PRJ)</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Projects (PRJ)</h1>
         <Link href="/projects/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-new-project">
             New Project
           </Button>
         </Link>
@@ -123,6 +123,7 @@ export default function ProjectsList() {
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="input-search-projects"
               />
             </div>
           </div>

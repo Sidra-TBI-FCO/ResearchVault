@@ -45,7 +45,7 @@ export default function DataManagementList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Data Management Plans</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Data Management Plans</h1>
         <Link href="/data-management/create">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             New Plan
@@ -108,7 +108,7 @@ export default function DataManagementList() {
                         </Link>
                       </div>
                       {plan.description && (
-                        <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-1">
                           {plan.description}
                         </div>
                       )}
@@ -121,11 +121,11 @@ export default function DataManagementList() {
                           </a>
                         </Link>
                       ) : (
-                        <span className="text-neutral-200 text-sm">—</span>
+                        <span className="text-muted-foreground text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-neutral-200">
+                      <div className="text-sm text-muted-foreground">
                         {plan.dataCollectionMethods ? (
                           <div className="line-clamp-2">{plan.dataCollectionMethods}</div>
                         ) : (
@@ -153,7 +153,7 @@ export default function DataManagementList() {
                       <span className="text-sm">{plan.retentionPeriod || "—"}</span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-neutral-200">
+                      <div className="flex items-center text-sm text-muted-foreground">
                         <CalendarClock className="h-3 w-3 mr-1" />
                         <span>{formatDate(plan.updatedAt)}</span>
                       </div>
@@ -167,7 +167,7 @@ export default function DataManagementList() {
                 ))}
                 {filteredPlans?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No data management plans found matching your search.
                     </TableCell>
                   </TableRow>

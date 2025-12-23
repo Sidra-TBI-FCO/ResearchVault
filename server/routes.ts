@@ -1411,12 +1411,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/scientists', async (req: Request, res: Response) => {
     try {
       const includeActivityCount = req.query.includeActivityCount === 'true';
+      const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       
+      // Validate pagination params if provided
+      if ((page !== undefined && (isNaN(page) || page < 1)) || 
+          (limit !== undefined && (isNaN(limit) || limit < 1))) {
+        return res.status(400).json({ message: "Invalid pagination parameters. page and limit must be positive integers." });
+      }
+      
+      let scientists;
       if (includeActivityCount) {
-        const scientists = await storage.getScientistsWithActivityCount();
-        res.json(scientists);
+        scientists = await storage.getScientistsWithActivityCount();
       } else {
-        const scientists = await storage.getScientists();
+        scientists = await storage.getScientists();
+      }
+      
+      // Apply pagination if requested
+      if (page !== undefined && limit !== undefined) {
+        const startIndex = (page - 1) * limit;
+        const paginatedScientists = scientists.slice(startIndex, startIndex + limit);
+        res.json({
+          data: paginatedScientists,
+          pagination: {
+            page,
+            limit,
+            total: scientists.length,
+            totalPages: Math.ceil(scientists.length / limit)
+          }
+        });
+      } else {
         res.json(scientists);
       }
     } catch (error) {
@@ -2539,6 +2563,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/publications', async (req: Request, res: Response) => {
     try {
       const researchActivityId = req.query.researchActivityId ? parseInt(req.query.researchActivityId as string) : undefined;
+      const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      // Validate pagination params if provided
+      if ((page !== undefined && (isNaN(page) || page < 1)) || 
+          (limit !== undefined && (isNaN(limit) || limit < 1))) {
+        return res.status(400).json({ message: "Invalid pagination parameters. page and limit must be positive integers." });
+      }
       
       let publications;
       if (researchActivityId && !isNaN(researchActivityId)) {
@@ -2560,7 +2592,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      res.json(enhancedPublications);
+      // Apply pagination if requested
+      if (page !== undefined && limit !== undefined) {
+        const startIndex = (page - 1) * limit;
+        const paginatedPublications = enhancedPublications.slice(startIndex, startIndex + limit);
+        res.json({
+          data: paginatedPublications,
+          pagination: {
+            page,
+            limit,
+            total: enhancedPublications.length,
+            totalPages: Math.ceil(enhancedPublications.length / limit)
+          }
+        });
+      } else {
+        res.json(enhancedPublications);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch publications" });
     }
@@ -3080,6 +3127,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/irb-applications', async (req: Request, res: Response) => {
     try {
       const researchActivityId = req.query.researchActivityId ? parseInt(req.query.researchActivityId as string) : undefined;
+      const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      // Validate pagination params if provided
+      if ((page !== undefined && (isNaN(page) || page < 1)) || 
+          (limit !== undefined && (isNaN(limit) || limit < 1))) {
+        return res.status(400).json({ message: "Invalid pagination parameters. page and limit must be positive integers." });
+      }
       
       let applications;
       if (researchActivityId && !isNaN(researchActivityId)) {
@@ -3113,7 +3168,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      res.json(enhancedApplications);
+      // Apply pagination if requested
+      if (page !== undefined && limit !== undefined) {
+        const startIndex = (page - 1) * limit;
+        const paginatedApplications = enhancedApplications.slice(startIndex, startIndex + limit);
+        res.json({
+          data: paginatedApplications,
+          pagination: {
+            page,
+            limit,
+            total: enhancedApplications.length,
+            totalPages: Math.ceil(enhancedApplications.length / limit)
+          }
+        });
+      } else {
+        res.json(enhancedApplications);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch IRB applications" });
     }

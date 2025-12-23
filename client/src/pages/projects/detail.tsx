@@ -100,12 +100,12 @@ export default function ProjectDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Project Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Project Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The project you're looking for could not be found.</p>
+              <p className="text-lg text-foreground">The project you're looking for could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/projects")}>
                 Return to Projects List
               </Button>
@@ -124,7 +124,7 @@ export default function ProjectDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">{project.name}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{project.name}</h1>
         </div>
         <Button 
           className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
@@ -144,14 +144,14 @@ export default function ProjectDetail() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-semibold">{project.name}</h2>
-                <div className="text-neutral-400 flex items-center gap-1 mt-1">
+                <div className="text-foreground flex items-center gap-1 mt-1">
                   <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">{project.projectId}</Badge>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Program</h3>
+                  <h3 className="text-sm font-medium text-foreground">Program</h3>
                   <div className="flex items-center gap-1">
                     <Layers className="h-3 w-3" />
                     <span>
@@ -171,7 +171,7 @@ export default function ProjectDetail() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Project Lead Investigator</h3>
+                  <h3 className="text-sm font-medium text-foreground">Project Lead Investigator</h3>
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>
@@ -191,7 +191,7 @@ export default function ProjectDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Added Date</h3>
+                  <h3 className="text-sm font-medium text-foreground">Added Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>{project.createdAt ? format(new Date(project.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
@@ -199,7 +199,7 @@ export default function ProjectDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Last Updated</h3>
+                  <h3 className="text-sm font-medium text-foreground">Last Updated</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>{project.updatedAt ? format(new Date(project.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
@@ -209,7 +209,7 @@ export default function ProjectDetail() {
 
               {project.description && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">Description</h3>
+                  <h3 className="text-sm font-medium text-foreground">Description</h3>
                   <p className="mt-1">{project.description}</p>
                 </div>
               )}
@@ -246,7 +246,7 @@ export default function ProjectDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-neutral-400">No research activities found for this project.</p>
+                <p className="text-foreground">No research activities found for this project.</p>
               )}
               <Button 
                 variant="outline" 
@@ -263,7 +263,7 @@ export default function ProjectDetail() {
               <CardTitle>Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-neutral-400">No documents available.</p>
+              <p className="text-foreground">No documents available.</p>
               <Button variant="outline" className="w-full mt-4" disabled>
                 <FileText className="h-4 w-4 mr-2" /> Add Document
               </Button>

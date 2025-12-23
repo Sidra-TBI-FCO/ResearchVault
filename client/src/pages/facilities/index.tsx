@@ -92,7 +92,7 @@ export default function FacilitiesList() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-neutral-400">Facilities</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Facilities</h1>
           <Skeleton className="h-10 w-32" />
         </div>
         <div className="space-y-4">
@@ -115,7 +115,7 @@ export default function FacilitiesList() {
     <PermissionWrapper currentUserRole={currentUser.role} navigationItem="facilities">
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-2xl font-semibold text-neutral-400">Facilities</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Facilities</h1>
           {canEdit && (
             <div className="flex gap-2">
               <Link href="/facilities/buildings/create">

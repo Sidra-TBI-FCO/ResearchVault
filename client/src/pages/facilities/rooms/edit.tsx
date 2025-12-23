@@ -232,7 +232,7 @@ export default function EditRoom() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Facilities
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Room Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Room Not Found</h1>
         </div>
         <Card>
           <CardContent className="text-center py-8">
@@ -257,7 +257,7 @@ export default function EditRoom() {
         </Button>
         <div className="flex items-center gap-2">
           <Edit className="h-5 w-5 text-blue-600" />
-          <h1 className="text-2xl font-semibold text-neutral-400">Edit Room</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Edit Room</h1>
         </div>
       </div>
 

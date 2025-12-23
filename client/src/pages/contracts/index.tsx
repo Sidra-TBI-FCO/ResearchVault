@@ -76,7 +76,7 @@ export default function ContractsList() {
     >
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-neutral-400">Research Contracts</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Research Contracts</h1>
           <div className="flex items-center gap-2">
             <Link href="/contracts/request">
               <Button 
@@ -154,11 +154,11 @@ export default function ContractsList() {
                           <a className="hover:text-primary-500 transition-colors">{contract.title}</a>
                         </Link>
                       </div>
-                      <div className="text-sm text-neutral-200 mt-1">
+                      <div className="text-sm text-muted-foreground mt-1">
                         {contract.contractorName}
                       </div>
                       {contract.principalInvestigator && (
-                        <div className="text-xs text-neutral-200 mt-1 flex items-center">
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center">
                           <span>PI: {contract.principalInvestigator.name}</span>
                         </div>
                       )}
@@ -175,13 +175,13 @@ export default function ContractsList() {
                       <div className="text-sm">
                         {contract.startDate && (
                           <div className="flex items-center mb-1">
-                            <Calendar className="h-3 w-3 mr-1 text-neutral-200" />
+                            <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Start: {formatDate(contract.startDate)}</span>
                           </div>
                         )}
                         {contract.endDate && (
                           <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1 text-neutral-200" />
+                            <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>End: {formatDate(contract.endDate)}</span>
                           </div>
                         )}
@@ -205,7 +205,7 @@ export default function ContractsList() {
                           </a>
                         </Link>
                       ) : (
-                        <span className="text-neutral-200 text-sm">—</span>
+                        <span className="text-muted-foreground text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -227,7 +227,7 @@ export default function ContractsList() {
                 ))}
                 {filteredContracts?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No contracts found matching your search.
                     </TableCell>
                   </TableRow>

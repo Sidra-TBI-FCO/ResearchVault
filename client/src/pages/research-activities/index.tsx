@@ -197,7 +197,7 @@ export default function ResearchActivitiesList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Research Activities (SDR)</h1>
         <Link href="/research-activities/create">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             New Research Activity

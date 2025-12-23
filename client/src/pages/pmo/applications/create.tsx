@@ -160,7 +160,7 @@ export default function CreateRa200() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">New RA-200 Research Activity Plan</h1>
+        <h1 className="text-2xl font-semibold text-foreground">New RA-200 Research Activity Plan</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

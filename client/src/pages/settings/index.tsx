@@ -269,8 +269,8 @@ IRIS (Intelligent Research Information Management System) is a research manageme
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <SettingsIcon className="h-6 w-6 text-neutral-400" />
-        <h1 className="text-2xl font-semibold text-neutral-400">Settings</h1>
+        <SettingsIcon className="h-6 w-6 text-foreground" />
+        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
       </div>
 
       <Tabs defaultValue="layout-theme" className="space-y-6">
