@@ -137,11 +137,18 @@ export default function IrbList() {
                       )}
                       {application.workflowStatus === 'draft' && (
                         <div className="mt-2">
-                          <Link href={`/irb/${application.id}/assembly`}>
-                            <Button size="sm" variant="outline" className="text-xs">
-                              Assemble Protocol
-                            </Button>
-                          </Link>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `/irb/${application.id}/assembly`;
+                            }}
+                            data-testid={`button-assemble-protocol-${application.id}`}
+                          >
+                            Assemble Protocol
+                          </Button>
                         </div>
                       )}
                     </TableCell>
