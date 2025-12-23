@@ -160,7 +160,7 @@ export default function IrbList() {
                           <span>{application.principalInvestigator.name}</span>
                         </div>
                       ) : (
-                        <span className="text-gray-400">Unassigned</span>
+                        <span className="text-muted-foreground">Unassigned</span>
                       )}
                     </TableCell>
                     <TableCell>
