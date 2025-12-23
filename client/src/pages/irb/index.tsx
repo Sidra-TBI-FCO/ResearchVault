@@ -50,7 +50,7 @@ export default function IrbList() {
     return (
       app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.protocolNumber && app.protocolNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.irbNumber && app.irbNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.principalInvestigator && app.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.researchActivity && app.researchActivity.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.researchActivity && app.researchActivity.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -131,7 +131,7 @@ export default function IrbList() {
                         </Link>
                       </div>
                       {application.researchActivity && (
-                        <div className="text-sm text-neutral-200 mt-1">
+                        <div className="text-sm text-muted-foreground mt-1">
                           Research Activity: <Link href={`/research-activities/${application.researchActivity.id}`}>
                             <a className="text-primary-500 hover:text-primary-600 transition-colors">
                               {application.researchActivity.sdrNumber} - {application.researchActivity.title}
@@ -151,8 +151,8 @@ export default function IrbList() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-1 text-neutral-200" />
-                        <span>{application.protocolNumber || "—"}</span>
+                        <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span>{application.irbNumber || "—"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -171,13 +171,13 @@ export default function IrbList() {
                       <div className="text-sm">
                         {application.submissionDate && (
                           <div className="flex items-center mb-1">
-                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <CalendarRange className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Submitted: {formatDate(application.submissionDate)}</span>
                           </div>
                         )}
                         {application.expirationDate && (
                           <div className="flex items-center">
-                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <CalendarRange className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Expires: {formatDate(application.expirationDate)}</span>
                           </div>
                         )}
@@ -212,7 +212,7 @@ export default function IrbList() {
                 ))}
                 {filteredApplications?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No IRB applications found matching your search.
                     </TableCell>
                   </TableRow>
