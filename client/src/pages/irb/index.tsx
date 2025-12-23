@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { EnhancedIrbApplication } from "@/lib/types";
 import { Plus, Search, MoreHorizontal, CalendarRange, FileText, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatNameWithJobTitle } from "@/utils/nameUtils";
 
 export default function IrbList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,7 +165,7 @@ export default function IrbList() {
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
                             {application.principalInvestigator.profileImageInitials}
                           </div>
-                          <span>{application.principalInvestigator.name}</span>
+                          <span>{formatNameWithJobTitle(application.principalInvestigator)}</span>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">Unassigned</span>
