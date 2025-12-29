@@ -126,6 +126,7 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- December 29, 2025. Added external profile links to Staff information page: ORCID, LinkedIn, Google Scholar, and Web of Science Author Profile with clickable buttons and branded icons
 - September 1, 2025. Added pagination (100 records per page) and column sorting to Publication Office for faster loading of 3,000+ journal records
 - September 1, 2025. Enhanced publication detail pages to show three-year impact factor comparison: year before publication, publication year (bold/larger), and most current year
 - September 1, 2025. Implemented clickable column headers with sort indicators for all JCR fields with default rank ascending sort

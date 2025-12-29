@@ -3,7 +3,8 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Scientist, ResearchActivity, Project, Program } from "@shared/schema";
-import { ArrowLeft, Mail, Building, User, Pencil, ChevronRight, ChevronDown, Folder, FileText, Users } from "lucide-react";
+import { ArrowLeft, Mail, Building, User, Pencil, ChevronRight, ChevronDown, Folder, FileText, Users, ExternalLink } from "lucide-react";
+import { SiOrcid, SiLinkedin, SiGooglescholar } from "react-icons/si";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -32,7 +33,7 @@ function ResearchActivitiesTree({ activities, navigate }: ResearchActivitiesTree
     
     if (!acc[programId]) {
       acc[programId] = {
-        program: activity.program || { id: 0, name: "No Program", programId: "NONE", description: null, createdAt: null, updatedAt: null },
+        program: activity.program || { id: 0, name: "No Program", programId: "NONE", description: null, createdAt: null, updatedAt: null, programDirectorId: null, researchCoLeadId: null, clinicalCoLead1Id: null, clinicalCoLead2Id: null },
         projects: {}
       };
     }
@@ -326,6 +327,67 @@ export default function ScientistDetail() {
                         </div>
                       )}
                     </div>
+
+                    {/* External Profile Links */}
+                    {(scientist.orcidId || scientist.linkedInUrl || scientist.googleScholarUrl || scientist.webOfScienceId) && (
+                      <div className="pt-4 border-t">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">External Profiles</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {scientist.orcidId && (
+                            <a 
+                              href={`https://orcid.org/${scientist.orcidId}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-sm"
+                              data-testid="link-orcid"
+                            >
+                              <SiOrcid className="h-4 w-4" />
+                              ORCID
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                          {scientist.linkedInUrl && (
+                            <a 
+                              href={scientist.linkedInUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm"
+                              data-testid="link-linkedin"
+                            >
+                              <SiLinkedin className="h-4 w-4" />
+                              LinkedIn
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                          {scientist.googleScholarUrl && (
+                            <a 
+                              href={scientist.googleScholarUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm"
+                              data-testid="link-google-scholar"
+                            >
+                              <SiGooglescholar className="h-4 w-4" />
+                              Google Scholar
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                          {scientist.webOfScienceId && (
+                            <a 
+                              href={`https://www.webofscience.com/wos/author/record/${scientist.webOfScienceId}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors text-sm"
+                              data-testid="link-web-of-science"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Web of Science
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

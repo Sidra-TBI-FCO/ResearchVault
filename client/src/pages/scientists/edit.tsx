@@ -68,6 +68,10 @@ export default function EditScientist() {
       profileImageInitials: "",
       supervisorId: null,
       staffType: "scientific",
+      orcidId: "",
+      linkedInUrl: "",
+      googleScholarUrl: "",
+      webOfScienceId: "",
     },
   });
 
@@ -85,7 +89,11 @@ export default function EditScientist() {
         bio: scientist.bio || "",
         profileImageInitials: scientist.profileImageInitials || "",
         supervisorId: scientist.supervisorId || null,
-        staffType: scientist.staffType || "scientific",
+        staffType: (scientist.staffType as "scientific" | "administrative") || "scientific",
+        orcidId: scientist.orcidId || "",
+        linkedInUrl: scientist.linkedInUrl || "",
+        googleScholarUrl: scientist.googleScholarUrl || "",
+        webOfScienceId: scientist.webOfScienceId || "",
       });
     }
   }, [scientist, form]);
@@ -431,6 +439,108 @@ export default function EditScientist() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* External Profile Links Section */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-medium mb-4">External Profile Links</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="orcidId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ORCID ID</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="0000-0002-1234-5678" 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Your ORCID identifier (e.g., 0000-0002-1234-5678)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="linkedInUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>LinkedIn Profile URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://linkedin.com/in/username" 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Full URL to your LinkedIn profile
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="googleScholarUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Google Scholar Profile URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://scholar.google.com/citations?user=..." 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Full URL to your Google Scholar profile
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="webOfScienceId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Web of Science Researcher ID</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="AAA-0000-0000" 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Your Web of Science Researcher ID
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <CardFooter className="flex justify-end space-x-2 px-0">
