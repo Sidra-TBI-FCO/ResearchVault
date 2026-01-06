@@ -7,16 +7,19 @@ export interface InstitutionLabels {
   tier1: string;
   tier2: string;
   tier3: string;
+  abbr1: string;
+  abbr2: string;
+  abbr3: string;
 }
 
 export interface InstitutionConfig {
   [key: string]: InstitutionLabels;
 }
 
-const defaultInstitutionLabels: InstitutionConfig = {
-  sidra: { tier1: 'Program', tier2: 'Project', tier3: 'Research Activity' },
-  hbku: { tier1: 'Scientific Center', tier2: 'Laboratory', tier3: 'Project' },
-  wcmq: { tier1: 'Department', tier2: 'Research Program', tier3: 'Study' }
+export const defaultInstitutionLabels: InstitutionConfig = {
+  sidra: { tier1: 'Program', tier2: 'Project', tier3: 'Research Activity', abbr1: 'PRM', abbr2: 'PRJ', abbr3: 'SDR' },
+  hbku: { tier1: 'Scientific Center', tier2: 'Laboratory', tier3: 'Project', abbr1: 'SC', abbr2: 'LAB', abbr3: 'PRJ' },
+  wcmq: { tier1: 'Department', tier2: 'Research Program', tier3: 'Study', abbr1: 'DPT', abbr2: 'RP', abbr3: 'STD' }
 };
 
 interface ThemeContextType {
@@ -147,8 +150,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        // Merge with defaults so new institutions get their default labels
-        return { ...defaultInstitutionLabels, ...parsed };
+        // Deep merge: merge each institution's labels with defaults to add new fields
+        const merged: InstitutionConfig = {};
+        for (const key of Object.keys(defaultInstitutionLabels)) {
+          merged[key] = {
+            ...defaultInstitutionLabels[key],
+            ...(parsed[key] || {})
+          };
+        }
+        return merged;
       } catch {
         return defaultInstitutionLabels;
       }
@@ -238,4 +248,4 @@ export function useTheme() {
   return context;
 }
 
-export { themes, defaultInstitutionLabels };
+export { themes };

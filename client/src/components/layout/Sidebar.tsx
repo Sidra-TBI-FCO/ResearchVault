@@ -125,17 +125,17 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       items: [
         { 
           href: "/pmo/programs",
-          label: `${pluralize(currentLabels.tier1)} (PRM)`,
+          label: `${pluralize(currentLabels.tier1)} (${currentLabels.abbr1 || 'PRM'})`,
           icon: <Beaker className="w-4 h-4 mr-3" />
         },
         { 
           href: "/pmo/projects",
-          label: `${pluralize(currentLabels.tier2)} (PRJ)`,
+          label: `${pluralize(currentLabels.tier2)} (${currentLabels.abbr2 || 'PRJ'})`,
           icon: <FlaskConical className="w-4 h-4 mr-3" />
         },
         { 
           href: "/pmo/research-activities",
-          label: `${pluralize(currentLabels.tier3)} (SDR)`,
+          label: `${pluralize(currentLabels.tier3)} (${currentLabels.abbr3 || 'SDR'})`,
           icon: <Database className="w-4 h-4 mr-3" />
         },
         { 

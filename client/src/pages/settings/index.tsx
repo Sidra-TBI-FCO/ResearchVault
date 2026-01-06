@@ -272,7 +272,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
     }
   ];
 
-  const handleLabelChange = (institution: string, tier: 'tier1' | 'tier2' | 'tier3', value: string) => {
+  const handleLabelChange = (institution: string, tier: 'tier1' | 'tier2' | 'tier3' | 'abbr1' | 'abbr2' | 'abbr3', value: string) => {
     setInstitutionLabels({
       ...institutionLabels,
       [institution]: {
@@ -414,11 +414,11 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                     Customize the terminology for your institution's project hierarchy
                   </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor={`${activeTheme.id}-tier1`} className="text-xs text-muted-foreground">
-                        Tier 1 (Top Level)
+                        Tier 1 Label
                       </Label>
                       <Input
                         id={`${activeTheme.id}-tier1`}
@@ -430,7 +430,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                     </div>
                     <div>
                       <Label htmlFor={`${activeTheme.id}-tier2`} className="text-xs text-muted-foreground">
-                        Tier 2 (Mid Level)
+                        Tier 2 Label
                       </Label>
                       <Input
                         id={`${activeTheme.id}-tier2`}
@@ -442,7 +442,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                     </div>
                     <div>
                       <Label htmlFor={`${activeTheme.id}-tier3`} className="text-xs text-muted-foreground">
-                        Tier 3 (Detail Level)
+                        Tier 3 Label
                       </Label>
                       <Input
                         id={`${activeTheme.id}-tier3`}
@@ -450,6 +450,50 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                         onChange={(e) => handleLabelChange(activeTheme.id, 'tier3', e.target.value)}
                         placeholder="e.g., Research Activity, Study"
                         data-testid={`input-label-${activeTheme.id}-tier3`}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-abbr1`} className="text-xs text-muted-foreground">
+                        Tier 1 Abbreviation
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-abbr1`}
+                        value={institutionLabels[activeTheme.id]?.abbr1 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'abbr1', e.target.value)}
+                        placeholder="e.g., PRM, DPT"
+                        data-testid={`input-abbr-${activeTheme.id}-abbr1`}
+                        className="uppercase"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-abbr2`} className="text-xs text-muted-foreground">
+                        Tier 2 Abbreviation
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-abbr2`}
+                        value={institutionLabels[activeTheme.id]?.abbr2 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'abbr2', e.target.value)}
+                        placeholder="e.g., PRJ, LAB"
+                        data-testid={`input-abbr-${activeTheme.id}-abbr2`}
+                        className="uppercase"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-abbr3`} className="text-xs text-muted-foreground">
+                        Tier 3 Abbreviation
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-abbr3`}
+                        value={institutionLabels[activeTheme.id]?.abbr3 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'abbr3', e.target.value)}
+                        placeholder="e.g., SDR, STD"
+                        data-testid={`input-abbr-${activeTheme.id}-abbr3`}
+                        className="uppercase"
+                        maxLength={5}
                       />
                     </div>
                   </div>
