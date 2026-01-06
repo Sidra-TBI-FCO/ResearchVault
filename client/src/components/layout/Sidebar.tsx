@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useTheme, themes } from "@/contexts/ThemeContext";
+import { useTheme, themes, type ThemeName } from "@/contexts/ThemeContext";
 
 interface DummyUser {
   id: number;
@@ -31,7 +31,18 @@ interface SidebarProps {
 export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { isHidden, isReadOnly } = usePermissions();
-  const { themeName } = useTheme();
+  const { themeName, currentLabels } = useTheme();
+
+  // Simple pluralization helper
+  const pluralize = (word: string): string => {
+    if (word.endsWith('y') && !['a','e','i','o','u'].includes(word[word.length - 2]?.toLowerCase())) {
+      return word.slice(0, -1) + 'ies';
+    }
+    if (word.endsWith('s') || word.endsWith('x') || word.endsWith('ch') || word.endsWith('sh')) {
+      return word + 'es';
+    }
+    return word + 's';
+  };
 
   const handleUserSwitch = (userId: string) => {
     onUserSwitch(parseInt(userId));
@@ -114,17 +125,17 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       items: [
         { 
           href: "/pmo/programs",
-          label: "Programs (PRM)",
+          label: `${pluralize(currentLabels.tier1)} (PRM)`,
           icon: <Beaker className="w-4 h-4 mr-3" />
         },
         { 
           href: "/pmo/projects",
-          label: "Projects (PRJ)",
+          label: `${pluralize(currentLabels.tier2)} (PRJ)`,
           icon: <FlaskConical className="w-4 h-4 mr-3" />
         },
         { 
           href: "/pmo/research-activities",
-          label: "Research Activities (SDR)",
+          label: `${pluralize(currentLabels.tier3)} (SDR)`,
           icon: <Database className="w-4 h-4 mr-3" />
         },
         { 
