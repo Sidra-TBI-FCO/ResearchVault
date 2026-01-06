@@ -126,6 +126,9 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- January 6, 2026. Added WCM-Q (Weill Cornell Medicine-Qatar) as third institution with Cornell red color theme
+- January 6, 2026. Added configurable project management labels (Tier 1/2/3) per institution in Settings with localStorage persistence
+- January 6, 2026. Renamed QBRI to HBKU (Hamad Bin Khalifa University) in theme system
 - December 29, 2025. Added external profile links to Staff information page: ORCID, LinkedIn, Google Scholar, and Web of Science Author Profile with clickable buttons and branded icons
 - September 1, 2025. Added pagination (100 records per page) and column sorting to Publication Office for faster loading of 3,000+ journal records
 - September 1, 2025. Enhanced publication detail pages to show three-year impact factor comparison: year before publication, publication year (bold/larger), and most current year

@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar } from "lucide-react";
-import { useTheme, themes } from "@/contexts/ThemeContext";
+import { useTheme, themes, defaultInstitutionLabels, type InstitutionConfig } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +66,7 @@ const statusOptions = [
 ];
 
 export default function Settings() {
-  const { mode, themeName, setMode, setTheme, toggleMode } = useTheme();
+  const { mode, themeName, setMode, setTheme, toggleMode, institutionLabels, setInstitutionLabels } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -255,16 +255,37 @@ IRIS (Intelligent Research Information Management System) is a research manageme
     {
       id: "sidra",
       name: themes.sidra.name,
-      description: "Current teal and green palette",
+      description: "Teal and green palette",
       preview: "bg-gradient-to-r from-teal-500 to-emerald-500"
     },
     {
-      id: "qbri",
-      name: themes.qbri.name,
-      description: "Qatar Biomedical Research Institute blue palette",
+      id: "hbku",
+      name: themes.hbku.name,
+      description: "Blue and indigo palette",
       preview: "bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-800"
+    },
+    {
+      id: "wcmq",
+      name: themes.wcmq.name,
+      description: "Cornell red palette",
+      preview: "bg-gradient-to-r from-red-400 via-red-500 to-red-700"
     }
   ];
+
+  const handleLabelChange = (institution: string, tier: 'tier1' | 'tier2' | 'tier3', value: string) => {
+    setInstitutionLabels({
+      ...institutionLabels,
+      [institution]: {
+        ...institutionLabels[institution],
+        [tier]: value
+      }
+    });
+  };
+
+  const resetLabelsToDefault = () => {
+    setInstitutionLabels(defaultInstitutionLabels);
+    toast({ title: "Labels reset to defaults" });
+  };
 
   return (
     <div className="space-y-6">
@@ -330,11 +351,6 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                             <div className={`w-6 h-6 rounded ${theme.preview}`}></div>
                           </div>
                           <div className="text-sm text-muted-foreground">{theme.description}</div>
-                          {theme.id === "qbri" && (
-                            <div className="text-xs text-blue-600">
-                              Features geometric patterns inspired by QBRI's visual identity
-                            </div>
-                          )}
                         </div>
                       )
                     ))}
@@ -377,6 +393,71 @@ IRIS (Intelligent Research Information Management System) is a research manageme
               </CardContent>
             </Card>
           </div>
+
+          {/* Institution Labels Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-2">
+                <span>Project Management Labels</span>
+                <Button variant="outline" size="sm" onClick={resetLabelsToDefault}>
+                  Reset to Defaults
+                </Button>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Customize the terminology for your institution's project hierarchy (Tier 1, Tier 2, Tier 3)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {themeOptions.map((theme) => (
+                  <div key={theme.id} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded ${theme.preview}`}></div>
+                      <span className="font-medium">{theme.name}</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor={`${theme.id}-tier1`} className="text-xs text-muted-foreground">
+                          Tier 1 (Top Level)
+                        </Label>
+                        <Input
+                          id={`${theme.id}-tier1`}
+                          value={institutionLabels[theme.id]?.tier1 || ''}
+                          onChange={(e) => handleLabelChange(theme.id, 'tier1', e.target.value)}
+                          placeholder="e.g., Program, Department"
+                          data-testid={`input-label-${theme.id}-tier1`}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`${theme.id}-tier2`} className="text-xs text-muted-foreground">
+                          Tier 2 (Mid Level)
+                        </Label>
+                        <Input
+                          id={`${theme.id}-tier2`}
+                          value={institutionLabels[theme.id]?.tier2 || ''}
+                          onChange={(e) => handleLabelChange(theme.id, 'tier2', e.target.value)}
+                          placeholder="e.g., Project, Laboratory"
+                          data-testid={`input-label-${theme.id}-tier2`}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`${theme.id}-tier3`} className="text-xs text-muted-foreground">
+                          Tier 3 (Detail Level)
+                        </Label>
+                        <Input
+                          id={`${theme.id}-tier3`}
+                          value={institutionLabels[theme.id]?.tier3 || ''}
+                          onChange={(e) => handleLabelChange(theme.id, 'tier3', e.target.value)}
+                          placeholder="e.g., Research Activity, Study"
+                          data-testid={`input-label-${theme.id}-tier3`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Application Info */}
           <Card>
