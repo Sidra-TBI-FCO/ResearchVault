@@ -394,70 +394,69 @@ IRIS (Intelligent Research Information Management System) is a research manageme
             </Card>
           </div>
 
-          {/* Institution Labels Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-2">
-                <span>Project Management Labels</span>
-                <Button variant="outline" size="sm" onClick={resetLabelsToDefault}>
-                  Reset to Defaults
-                </Button>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Customize the terminology for your institution's project hierarchy (Tier 1, Tier 2, Tier 3)
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {themeOptions.map((theme) => (
-                  <div key={theme.id} className="space-y-4">
+          {/* Institution Labels Configuration - Only show active institution */}
+          {(() => {
+            const activeTheme = themeOptions.find(t => t.id === themeName);
+            if (!activeTheme) return null;
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded ${theme.preview}`}></div>
-                      <span className="font-medium">{theme.name}</span>
+                      <div className={`w-4 h-4 rounded ${activeTheme.preview}`}></div>
+                      <span>{activeTheme.name} Labels</span>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <Label htmlFor={`${theme.id}-tier1`} className="text-xs text-muted-foreground">
-                          Tier 1 (Top Level)
-                        </Label>
-                        <Input
-                          id={`${theme.id}-tier1`}
-                          value={institutionLabels[theme.id]?.tier1 || ''}
-                          onChange={(e) => handleLabelChange(theme.id, 'tier1', e.target.value)}
-                          placeholder="e.g., Program, Department"
-                          data-testid={`input-label-${theme.id}-tier1`}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`${theme.id}-tier2`} className="text-xs text-muted-foreground">
-                          Tier 2 (Mid Level)
-                        </Label>
-                        <Input
-                          id={`${theme.id}-tier2`}
-                          value={institutionLabels[theme.id]?.tier2 || ''}
-                          onChange={(e) => handleLabelChange(theme.id, 'tier2', e.target.value)}
-                          placeholder="e.g., Project, Laboratory"
-                          data-testid={`input-label-${theme.id}-tier2`}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`${theme.id}-tier3`} className="text-xs text-muted-foreground">
-                          Tier 3 (Detail Level)
-                        </Label>
-                        <Input
-                          id={`${theme.id}-tier3`}
-                          value={institutionLabels[theme.id]?.tier3 || ''}
-                          onChange={(e) => handleLabelChange(theme.id, 'tier3', e.target.value)}
-                          placeholder="e.g., Research Activity, Study"
-                          data-testid={`input-label-${theme.id}-tier3`}
-                        />
-                      </div>
+                    <Button variant="outline" size="sm" onClick={resetLabelsToDefault}>
+                      Reset to Defaults
+                    </Button>
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Customize the terminology for your institution's project hierarchy
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-tier1`} className="text-xs text-muted-foreground">
+                        Tier 1 (Top Level)
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-tier1`}
+                        value={institutionLabels[activeTheme.id]?.tier1 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'tier1', e.target.value)}
+                        placeholder="e.g., Program, Department"
+                        data-testid={`input-label-${activeTheme.id}-tier1`}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-tier2`} className="text-xs text-muted-foreground">
+                        Tier 2 (Mid Level)
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-tier2`}
+                        value={institutionLabels[activeTheme.id]?.tier2 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'tier2', e.target.value)}
+                        placeholder="e.g., Project, Laboratory"
+                        data-testid={`input-label-${activeTheme.id}-tier2`}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-tier3`} className="text-xs text-muted-foreground">
+                        Tier 3 (Detail Level)
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-tier3`}
+                        value={institutionLabels[activeTheme.id]?.tier3 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'tier3', e.target.value)}
+                        placeholder="e.g., Research Activity, Study"
+                        data-testid={`input-label-${activeTheme.id}-tier3`}
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Application Info */}
           <Card>
