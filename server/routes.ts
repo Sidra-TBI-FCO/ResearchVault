@@ -1199,8 +1199,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       const activities = await storage.getRecentResearchActivities(limit);
       
-      // Research activities are returned as-is, lead scientist info comes from team membership
-      const enhancedActivities = activities;
+      // Fetch lead scientist info (PI role) for each activity
+      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
+        const members = await storage.getProjectMembers(activity.id);
+        const piMember = members.find(m => m.role === 'PI' || m.role === 'Principal Investigator');
+        
+        let leadScientist = null;
+        if (piMember) {
+          const scientist = await storage.getScientist(piMember.scientistId);
+          if (scientist && scientist.name) {
+            const initials = scientist.name
+              .split(' ')
+              .filter(n => n.length > 0)
+              .map(n => n[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2);
+            leadScientist = {
+              id: scientist.id,
+              name: scientist.name,
+              profileImageInitials: initials || '??'
+            };
+          }
+        }
+        
+        return {
+          ...activity,
+          leadScientist
+        };
+      }));
       
       res.json(enhancedActivities);
     } catch (error) {
