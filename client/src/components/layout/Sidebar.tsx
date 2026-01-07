@@ -245,12 +245,12 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         mobile ? "h-full" : ""
       )}>
         {/* Logo/Brand */}
-        <div className="h-20 flex items-center justify-between px-4 border-b border-primary/30 bg-primary">
-          <div className="flex items-center space-x-3 w-full">
+        <div className="h-20 flex items-center justify-between px-2 border-b border-primary/30 bg-primary">
+          <div className="flex items-center space-x-2 w-full">
             <img 
               src={irisLogo} 
               alt="IRIS Logo" 
-              className="h-14 w-14 flex-shrink-0"
+              className="h-16 w-16 flex-shrink-0"
             />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="font-semibold text-sm text-white leading-tight">
