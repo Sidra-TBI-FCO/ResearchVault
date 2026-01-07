@@ -3,17 +3,22 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatFullName, getInitials } from "@/utils/nameUtils";
+
+interface PersonInfo {
+  id: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageInitials?: string | null;
+}
 
 interface EnhancedResearchActivity {
   id: number;
   title: string;
   status: string;
   updatedAt: string | Date;
-  leadScientist?: {
-    id: number;
-    name: string;
-    profileImageInitials?: string;
-  };
+  leadScientist?: PersonInfo | null;
+  principalInvestigator?: PersonInfo | null;
 }
 
 interface RecentProjectsProps {
@@ -54,6 +59,24 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
     }
   };
 
+  const renderPerson = (person: PersonInfo | null | undefined, label: string) => {
+    if (!person) {
+      return <span className="text-gray-400">Unassigned</span>;
+    }
+    
+    const initials = person.profileImageInitials || getInitials(person);
+    const name = formatFullName(person);
+    
+    return (
+      <div className="flex items-center">
+        <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
+          {initials}
+        </div>
+        <span>{name}</span>
+      </div>
+    );
+  };
+
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -89,6 +112,7 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
               <thead>
                 <tr className="bg-neutral-50">
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Activity Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">PI</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Lead Scientist</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
@@ -104,21 +128,13 @@ export default function RecentProjects({ limit = 5 }: RecentProjectsProps) {
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {activity.leadScientist ? (
-                          <>
-                            <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
-                              {activity.leadScientist.profileImageInitials}
-                            </div>
-                            <span>{activity.leadScientist.name}</span>
-                          </>
-                        ) : (
-                          <span className="text-gray-400">Unassigned</span>
-                        )}
-                      </div>
+                      {renderPerson(activity.principalInvestigator, "PI")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${statusColors[activity.status as keyof typeof statusColors] || "bg-gray-100 text-gray-600"}`}>
+                      {renderPerson(activity.leadScientist, "Lead Scientist")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${statusColors[activity.status.toLowerCase() as keyof typeof statusColors] || "bg-gray-100 text-gray-600"}`}>
                         {activity.status}
                       </span>
                     </td>

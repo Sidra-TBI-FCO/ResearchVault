@@ -1199,31 +1199,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       const activities = await storage.getRecentResearchActivities(limit);
       
-      // Fetch lead scientist info for each activity
+      // Fetch lead scientist and PI info for each activity
       const enhancedActivities = await Promise.all(activities.map(async (activity) => {
         const members = await storage.getProjectMembers(activity.id);
         const leadMember = members.find(m => m.role === 'Lead Scientist');
+        const piMember = members.find(m => m.role === 'Principal Investigator');
         
         let leadScientist = null;
         if (leadMember) {
           const scientist = await storage.getScientist(leadMember.scientistId);
           if (scientist) {
-            const fullName = [scientist.firstName, scientist.lastName].filter(Boolean).join(' ');
-            const initials = [scientist.firstName?.[0], scientist.lastName?.[0]]
-              .filter(Boolean)
-              .join('')
-              .toUpperCase() || '??';
             leadScientist = {
               id: scientist.id,
-              name: fullName || 'Unknown',
-              profileImageInitials: initials
+              firstName: scientist.firstName,
+              lastName: scientist.lastName,
+              profileImageInitials: scientist.profileImageInitials
+            };
+          }
+        }
+        
+        let principalInvestigator = null;
+        if (piMember) {
+          const scientist = await storage.getScientist(piMember.scientistId);
+          if (scientist) {
+            principalInvestigator = {
+              id: scientist.id,
+              firstName: scientist.firstName,
+              lastName: scientist.lastName,
+              profileImageInitials: scientist.profileImageInitials
             };
           }
         }
         
         return {
           ...activity,
-          leadScientist
+          leadScientist,
+          principalInvestigator
         };
       }));
       
