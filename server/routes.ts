@@ -1199,14 +1199,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       const activities = await storage.getRecentResearchActivities(limit);
       
-      // Fetch lead scientist info (PI role) for each activity
+      // Fetch lead scientist info for each activity
       const enhancedActivities = await Promise.all(activities.map(async (activity) => {
         const members = await storage.getProjectMembers(activity.id);
-        const piMember = members.find(m => m.role === 'PI' || m.role === 'Principal Investigator');
+        const leadMember = members.find(m => m.role === 'Lead Scientist');
         
         let leadScientist = null;
-        if (piMember) {
-          const scientist = await storage.getScientist(piMember.scientistId);
+        if (leadMember) {
+          const scientist = await storage.getScientist(leadMember.scientistId);
           if (scientist && scientist.name) {
             const initials = scientist.name
               .split(' ')
