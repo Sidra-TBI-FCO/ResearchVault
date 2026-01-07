@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTheme, themes, type ThemeName } from "@/contexts/ThemeContext";
-import irisLogo from "@assets/image_1767696580100.png";
+import irisLogo from "@assets/image_1767775219373.png";
 
 interface DummyUser {
   id: number;
@@ -250,7 +250,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
             <img 
               src={irisLogo} 
               alt="IRIS Logo" 
-              className="h-10 w-10 flex-shrink-0 rounded"
+              className="h-14 w-14 flex-shrink-0"
             />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="font-semibold text-sm text-white leading-tight">
