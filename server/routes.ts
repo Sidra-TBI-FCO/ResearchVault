@@ -1207,18 +1207,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let leadScientist = null;
         if (leadMember) {
           const scientist = await storage.getScientist(leadMember.scientistId);
-          if (scientist && scientist.name) {
-            const initials = scientist.name
-              .split(' ')
-              .filter(n => n.length > 0)
-              .map(n => n[0])
+          if (scientist) {
+            const fullName = [scientist.firstName, scientist.lastName].filter(Boolean).join(' ');
+            const initials = [scientist.firstName?.[0], scientist.lastName?.[0]]
+              .filter(Boolean)
               .join('')
-              .toUpperCase()
-              .slice(0, 2);
+              .toUpperCase() || '??';
             leadScientist = {
               id: scientist.id,
-              name: scientist.name,
-              profileImageInitials: initials || '??'
+              name: fullName || 'Unknown',
+              profileImageInitials: initials
             };
           }
         }
