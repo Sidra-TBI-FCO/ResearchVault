@@ -53,79 +53,89 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
       transition={{ duration: 0.4 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      style={{ zIndex: isHovered ? 10 : 1 }}
+      className="relative"
+      style={{ zIndex: isHovered ? 20 : 1 }}
     >
-      <Card className="bg-slate-800/80 border-slate-700 overflow-visible transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-500/10">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center text-center">
-            <Avatar className="h-20 w-20 mb-3 ring-2 ring-teal-500/20">
-              {member.photoUrl ? (
-                <AvatarImage src={member.photoUrl} alt={`${member.firstName} ${member.lastName}`} />
-              ) : null}
-              <AvatarFallback className="bg-gradient-to-br from-teal-500 to-blue-500 text-white text-lg font-semibold">
-                {getInitials(member.firstName, member.lastName)}
-              </AvatarFallback>
-            </Avatar>
-            
-            <h3 className="text-lg font-semibold text-white">
-              {member.firstName} {member.lastName}
-            </h3>
-            
-            {member.title && (
-              <p className="text-sm text-slate-400 mb-2">{member.title}</p>
-            )}
-            
-            {member.elementType && (
-              <Badge variant="outline" className="border-teal-500/30 text-teal-400 mb-2">
-                <Icon className="h-3 w-3 mr-1" />
-                {elementTypeLabels[member.elementType] || member.elementType}
-              </Badge>
-            )}
-            
-            {member.institution && (
-              <p className="text-xs text-slate-500">{member.institution}</p>
-            )}
-            
-            <motion.div
-              initial={false}
-              animate={{
-                height: isHovered && member.bio ? 'auto' : 0,
-                opacity: isHovered && member.bio ? 1 : 0,
-                marginTop: isHovered && member.bio ? 12 : 0
-              }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="overflow-hidden"
-            >
-              {member.bio && (
-                <p className="text-sm text-slate-300">{member.bio}</p>
+      <motion.div
+        animate={{
+          scale: isHovered ? 1.08 : 1,
+          y: isHovered ? -8 : 0
+        }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+        style={{ transformOrigin: 'center center' }}
+      >
+        <Card className={`bg-slate-800/80 border-slate-700 overflow-hidden transition-shadow duration-300 ${isHovered ? 'shadow-2xl shadow-teal-500/20 border-teal-500/30' : ''}`}>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center">
+              <Avatar className="h-20 w-20 mb-3 ring-2 ring-teal-500/20">
+                {member.photoUrl ? (
+                  <AvatarImage src={member.photoUrl} alt={`${member.firstName} ${member.lastName}`} />
+                ) : null}
+                <AvatarFallback className="bg-gradient-to-br from-teal-500 to-blue-500 text-white text-lg font-semibold">
+                  {getInitials(member.firstName, member.lastName)}
+                </AvatarFallback>
+              </Avatar>
+              
+              <h3 className="text-lg font-semibold text-white">
+                {member.firstName} {member.lastName}
+              </h3>
+              
+              {member.title && (
+                <p className="text-sm text-slate-400 mb-2">{member.title}</p>
               )}
-            </motion.div>
-            
-            {(member.email || member.linkedInUrl) && (
-              <div className="flex items-center gap-3 mt-4">
-                {member.email && (
-                  <a 
-                    href={`mailto:${member.email}`}
-                    className="text-slate-400 hover:text-teal-400 transition-colors"
-                  >
-                    <Mail className="h-4 w-4" />
-                  </a>
+              
+              {member.elementType && (
+                <Badge variant="outline" className="border-teal-500/30 text-teal-400 mb-2">
+                  <Icon className="h-3 w-3 mr-1" />
+                  {elementTypeLabels[member.elementType] || member.elementType}
+                </Badge>
+              )}
+              
+              {member.institution && (
+                <p className="text-xs text-slate-500">{member.institution}</p>
+              )}
+              
+              <motion.div
+                initial={false}
+                animate={{
+                  height: isHovered && member.bio ? 'auto' : 0,
+                  opacity: isHovered && member.bio ? 1 : 0,
+                  marginTop: isHovered && member.bio ? 12 : 0
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30, delay: isHovered ? 0.05 : 0 }}
+                className="overflow-hidden"
+              >
+                {member.bio && (
+                  <p className="text-sm text-slate-300 leading-relaxed">{member.bio}</p>
                 )}
-                {member.linkedInUrl && (
-                  <a 
-                    href={member.linkedInUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-blue-400 transition-colors"
-                  >
-                    <Linkedin className="h-4 w-4" />
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              </motion.div>
+              
+              {(member.email || member.linkedInUrl) && (
+                <div className="flex items-center gap-3 mt-4">
+                  {member.email && (
+                    <a 
+                      href={`mailto:${member.email}`}
+                      className="text-slate-400 hover:text-teal-400 transition-colors"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </a>
+                  )}
+                  {member.linkedInUrl && (
+                    <a 
+                      href={member.linkedInUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-blue-400 transition-colors"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>
   );
 }
