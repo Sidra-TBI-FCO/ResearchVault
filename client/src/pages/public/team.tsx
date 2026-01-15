@@ -41,7 +41,7 @@ function getInitials(firstName: string, lastName: string): string {
   return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
 }
 
-function TeamMemberCard({ member }: { member: TeamMember }) {
+function TeamMemberCard({ member, showElementType = true }: { member: TeamMember; showElementType?: boolean }) {
   const Icon = member.elementType ? elementTypeIcons[member.elementType] : Users;
   const [isHovered, setIsHovered] = useState(false);
   
@@ -76,7 +76,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
               <p className="text-sm text-slate-400 mb-2">{member.title}</p>
             )}
             
-            {member.elementType && (
+            {showElementType && member.elementType && (
               <Badge variant="outline" className="border-teal-500/30 text-teal-400 mb-2">
                 <Icon className="h-3 w-3 mr-1" />
                 {elementTypeLabels[member.elementType] || member.elementType}
@@ -142,7 +142,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
             {member.title && (
               <p className="text-sm text-teal-400 mb-2">{member.title}</p>
             )}
-            {member.elementType && (
+            {showElementType && member.elementType && (
               <Badge variant="outline" className="border-teal-500/30 text-teal-400 mb-3">
                 <Icon className="h-3 w-3 mr-1" />
                 {elementTypeLabels[member.elementType] || member.elementType}
@@ -190,13 +190,15 @@ function TeamSection({
   subtitle, 
   icon: Icon, 
   members,
-  isLoading
+  isLoading,
+  showElementType = true
 }: { 
   title: string; 
   subtitle: string; 
   icon: typeof Users; 
   members: TeamMember[];
   isLoading: boolean;
+  showElementType?: boolean;
 }) {
   if (isLoading) {
     return (
@@ -263,7 +265,7 @@ function TeamSection({
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {members.map((member) => (
-          <TeamMemberCard key={member.id} member={member} />
+          <TeamMemberCard key={member.id} member={member} showElementType={showElementType} />
         ))}
       </div>
     </div>
@@ -344,6 +346,7 @@ export default function TeamPage() {
             icon={FlaskConical}
             members={testers}
             isLoading={isLoading}
+            showElementType={false}
           />
 
           <TeamSection
@@ -352,6 +355,7 @@ export default function TeamPage() {
             icon={Code}
             members={developers}
             isLoading={isLoading}
+            showElementType={false}
           />
         </motion.div>
       </main>
