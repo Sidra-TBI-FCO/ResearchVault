@@ -1430,3 +1430,50 @@ export const insertRa205aApplicationSchema = createInsertSchema(ra205aApplicatio
 
 export type InsertRa205aApplication = z.infer<typeof insertRa205aApplicationSchema>;
 export type Ra205aApplication = typeof ra205aApplications.$inferSelect;
+
+// Team Members - for public-facing team showcase
+export const TEAM_CATEGORY_VALUES = [
+  "lead",
+  "tester", 
+  "developer"
+] as const;
+
+export const ELEMENT_TYPE_VALUES = [
+  "project_management",
+  "irb",
+  "ibc",
+  "grants",
+  "publications",
+  "contracts",
+  "facilities",
+  "data_management"
+] as const;
+
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  title: text("title"), // Job title or academic title
+  bio: text("bio"),
+  photoUrl: text("photo_url"),
+  category: text("category").notNull(), // lead, tester, developer
+  elementType: text("element_type"), // For leads: project_management, irb, ibc, etc.
+  institution: text("institution"), // Affiliation
+  email: text("email"),
+  linkedInUrl: text("linkedin_url"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type TeamCategory = typeof TEAM_CATEGORY_VALUES[number];
+export type ElementType = typeof ELEMENT_TYPE_VALUES[number];

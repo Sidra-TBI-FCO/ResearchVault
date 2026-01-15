@@ -125,6 +125,11 @@ import CertificationsPage from "@/pages/certifications";
 // Settings
 import SettingsPage from "@/pages/settings";
 
+// Public Pages
+import LandingPage from "@/pages/public/landing";
+import DemoPage from "@/pages/public/demo";
+import TeamPage from "@/pages/public/team";
+
 // PMO Applications
 import PmoApplicationsList from "@/pages/pmo/applications/index";
 import CreateRa200 from "@/pages/pmo/applications/create-ra200";
@@ -137,12 +142,12 @@ import PmoApplicationDetail from "@/pages/pmo/applications/detail";
 import PmoOfficeReview from "@/pages/pmo/office/index";
 import PmoOfficeReviewDetail from "@/pages/pmo/office/review";
 
-function Router() {
+function AppRouter() {
   return (
     <Layout>
       <Switch>
         {/* Dashboard */}
-        <Route path="/" component={Dashboard} />
+        <Route path="/app" component={Dashboard} />
         
         {/* Scientists & Staff */}
         <Route path="/scientists" component={ScientistsList} />
@@ -301,12 +306,22 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <CurrentUserProvider>
-            <PermissionsProvider>
-              <Toaster />
-              <Router />
-            </PermissionsProvider>
-          </CurrentUserProvider>
+          <Switch>
+            {/* Public Pages - no auth required */}
+            <Route path="/" component={LandingPage} />
+            <Route path="/demo" component={DemoPage} />
+            <Route path="/team" component={TeamPage} />
+            
+            {/* Application Routes - wrapped with providers */}
+            <Route>
+              <CurrentUserProvider>
+                <PermissionsProvider>
+                  <Toaster />
+                  <AppRouter />
+                </PermissionsProvider>
+              </CurrentUserProvider>
+            </Route>
+          </Switch>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

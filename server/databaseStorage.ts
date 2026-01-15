@@ -44,7 +44,8 @@ import {
   pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
   featureRequests, FeatureRequest, InsertFeatureRequest,
   ra200Applications, Ra200Application, InsertRa200Application,
-  ra205aApplications, Ra205aApplication, InsertRa205aApplication
+  ra205aApplications, Ra205aApplication, InsertRa205aApplication,
+  teamMembers, TeamMember, InsertTeamMember
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -2372,6 +2373,41 @@ export class DatabaseStorage implements IStorage {
     return [...ra200WithType, ...ra205aWithType].sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+  }
+
+  // Team Member operations
+  async getTeamMembers(): Promise<TeamMember[]> {
+    return await db.select().from(teamMembers).orderBy(asc(teamMembers.displayOrder), asc(teamMembers.lastName));
+  }
+
+  async getTeamMember(id: number): Promise<TeamMember | undefined> {
+    const [member] = await db.select().from(teamMembers).where(eq(teamMembers.id, id));
+    return member;
+  }
+
+  async getTeamMembersByCategory(category: string): Promise<TeamMember[]> {
+    return await db.select().from(teamMembers)
+      .where(eq(teamMembers.category, category))
+      .orderBy(asc(teamMembers.displayOrder), asc(teamMembers.lastName));
+  }
+
+  async createTeamMember(insertMember: InsertTeamMember): Promise<TeamMember> {
+    const [member] = await db.insert(teamMembers).values(insertMember).returning();
+    return member;
+  }
+
+  async updateTeamMember(id: number, updates: Partial<InsertTeamMember>): Promise<TeamMember | undefined> {
+    const [updatedMember] = await db
+      .update(teamMembers)
+      .set({ ...updates, updatedAt: sql`now()` })
+      .where(eq(teamMembers.id, id))
+      .returning();
+    return updatedMember;
+  }
+
+  async deleteTeamMember(id: number): Promise<boolean> {
+    const result = await db.delete(teamMembers).where(eq(teamMembers.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 

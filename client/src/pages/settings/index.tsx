@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar } from "lucide-react";
+import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users } from "lucide-react";
 import { useTheme, themes, defaultInstitutionLabels, type InstitutionConfig } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import TeamManagement from "@/components/settings/TeamManagement";
 
 // Types for feature requests
 interface FeatureRequest {
@@ -295,10 +296,14 @@ IRIS (Intelligent Research Information Management System) is a research manageme
       </div>
 
       <Tabs defaultValue="layout-theme" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1 lg:grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1 lg:grid-cols-3">
           <TabsTrigger value="layout-theme" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             Layout & Theme
+          </TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Team Members
           </TabsTrigger>
           <TabsTrigger value="feature-requests" className="flex items-center gap-2">
             <MessageSquarePlus className="h-4 w-4" />
@@ -524,6 +529,10 @@ IRIS (Intelligent Research Information Management System) is a research manageme
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="team" className="space-y-6">
+          <TeamManagement />
         </TabsContent>
 
         <TabsContent value="feature-requests" className="space-y-6">

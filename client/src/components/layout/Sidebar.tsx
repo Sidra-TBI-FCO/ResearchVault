@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTheme, themes, type ThemeName } from "@/contexts/ThemeContext";
-import irisLogo from "@assets/image_1767775219373.png";
+import qbridgeLogo from "@assets/image_1767775219373.png";
 
 interface DummyUser {
   id: number;
@@ -248,16 +248,16 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         <div className="h-20 flex items-center justify-between px-2 border-b border-primary/30 bg-primary">
           <div className="flex items-center space-x-2 w-full">
             <img 
-              src={irisLogo} 
-              alt="IRIS Logo" 
+              src={qbridgeLogo} 
+              alt="Q-BRIDGE Logo" 
               className="h-16 w-16 flex-shrink-0"
             />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="font-semibold text-sm text-white leading-tight">
-                IRIS
+                Q-BRIDGE
               </div>
               <div className="text-xs text-white/90 leading-tight">
-                Intelligent Research Information System
+                Qatar Biomedical Research Inter-Institutional Data & Governance Ecosystem
               </div>
               <div className="text-xs text-white/70 leading-tight mt-0.5">
                 {themes[themeName].name}

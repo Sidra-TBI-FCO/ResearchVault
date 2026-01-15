@@ -126,6 +126,7 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- January 15, 2026. Added Team Management functionality to Settings with three tabs (Layout & Theme, Team Members, Feature Requests). Team members can be categorized as Element Leads, Faculty Testers, or Developers with full CRUD operations and photo support.
 - January 6, 2026. Added configurable abbreviations (PRM/PRJ/SDR etc.) per institution with sidebar integration
 - January 6, 2026. Added WCM-Q (Weill Cornell Medicine-Qatar) as third institution with Cornell red color theme
 - January 6, 2026. Added configurable project management labels (Tier 1/2/3) per institution in Settings with localStorage persistence

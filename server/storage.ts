@@ -23,7 +23,8 @@ import {
   grants, Grant, InsertGrant,
   systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
   pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
-  featureRequests, FeatureRequest, InsertFeatureRequest
+  featureRequests, FeatureRequest, InsertFeatureRequest,
+  teamMembers, TeamMember, InsertTeamMember
 } from "@shared/schema";
 
 // Storage interface with CRUD operations for all entities
@@ -270,6 +271,14 @@ export interface IStorage {
   getPmoApplication(id: number): Promise<PmoApplication | null>;
   updatePmoApplication(id: number, updates: Partial<InsertPmoApplication>): Promise<PmoApplication | null>;
   deletePmoApplication(id: number): Promise<boolean>;
+
+  // Team Member operations
+  getTeamMembers(): Promise<TeamMember[]>;
+  getTeamMember(id: number): Promise<TeamMember | undefined>;
+  getTeamMembersByCategory(category: string): Promise<TeamMember[]>;
+  createTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  updateTeamMember(id: number, member: Partial<InsertTeamMember>): Promise<TeamMember | undefined>;
+  deleteTeamMember(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

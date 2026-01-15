@@ -40,7 +40,8 @@ import {
   insertPdfImportHistorySchema,
   insertFeatureRequestSchema,
   insertRa200ApplicationSchema,
-  insertRa205aApplicationSchema
+  insertRa205aApplicationSchema,
+  insertTeamMemberSchema
 } from "@shared/schema";
 import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead } from "./auth";
 
@@ -6812,6 +6813,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting PMO application:", error);
       res.status(500).json({ message: "Failed to delete application" });
+    }
+  });
+
+  // Team Member routes (public - no auth required)
+  app.get('/api/team-members', async (req: Request, res: Response) => {
+    try {
+      const members = await storage.getTeamMembers();
+      res.json(members);
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+      res.status(500).json({ message: "Failed to fetch team members" });
+    }
+  });
+
+  app.get('/api/team-members/category/:category', async (req: Request, res: Response) => {
+    try {
+      const { category } = req.params;
+      const members = await storage.getTeamMembersByCategory(category);
+      res.json(members);
+    } catch (error) {
+      console.error("Error fetching team members by category:", error);
+      res.status(500).json({ message: "Failed to fetch team members" });
+    }
+  });
+
+  app.get('/api/team-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid team member ID" });
+      }
+
+      const member = await storage.getTeamMember(id);
+      if (!member) {
+        return res.status(404).json({ message: "Team member not found" });
+      }
+
+      res.json(member);
+    } catch (error) {
+      console.error("Error fetching team member:", error);
+      res.status(500).json({ message: "Failed to fetch team member" });
+    }
+  });
+
+  app.post('/api/team-members', async (req: Request, res: Response) => {
+    try {
+      const memberData = insertTeamMemberSchema.parse(req.body);
+      const newMember = await storage.createTeamMember(memberData);
+      res.status(201).json(newMember);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error creating team member:", error);
+        res.status(500).json({ message: "Failed to create team member" });
+      }
+    }
+  });
+
+  app.put('/api/team-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid team member ID" });
+      }
+
+      const updateData = insertTeamMemberSchema.partial().parse(req.body);
+      const updatedMember = await storage.updateTeamMember(id, updateData);
+      
+      if (!updatedMember) {
+        return res.status(404).json({ message: "Team member not found" });
+      }
+
+      res.json(updatedMember);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error updating team member:", error);
+        res.status(500).json({ message: "Failed to update team member" });
+      }
+    }
+  });
+
+  app.delete('/api/team-members/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid team member ID" });
+      }
+
+      const deleted = await storage.deleteTeamMember(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Team member not found" });
+      }
+
+      res.json({ message: "Team member deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting team member:", error);
+      res.status(500).json({ message: "Failed to delete team member" });
     }
   });
 
