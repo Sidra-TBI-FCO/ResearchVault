@@ -119,23 +119,21 @@ function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMember
           </Select>
         </div>
 
-        {formData.category === "lead" && (
-          <div>
-            <Label htmlFor="elementType">Element Type</Label>
-            <Select value={formData.elementType} onValueChange={(val) => setFormData({ ...formData, elementType: val })}>
-              <SelectTrigger data-testid="select-team-element">
-                <SelectValue placeholder="Select element" />
-              </SelectTrigger>
-              <SelectContent>
-                {elementTypeOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div>
+          <Label htmlFor="elementType">Element Focus</Label>
+          <Select value={formData.elementType} onValueChange={(val) => setFormData({ ...formData, elementType: val })}>
+            <SelectTrigger data-testid="select-team-element">
+              <SelectValue placeholder="Select element (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {elementTypeOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div>
