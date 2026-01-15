@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -42,6 +43,7 @@ function getInitials(firstName: string, lastName: string): string {
 
 function TeamMemberCard({ member }: { member: TeamMember }) {
   const Icon = member.elementType ? elementTypeIcons[member.elementType] : Users;
+  const [isHovered, setIsHovered] = useState(false);
   
   return (
     <motion.div
@@ -49,15 +51,18 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      style={{ zIndex: isHovered ? 10 : 1 }}
     >
-      <Card className="bg-slate-800/80 border-slate-700 hover-elevate overflow-visible">
-        <CardContent className="p-6 h-full">
-          <div className="flex flex-col items-center text-center h-full">
-            <Avatar className="h-24 w-24 mb-4 ring-2 ring-teal-500/20">
+      <Card className="bg-slate-800/80 border-slate-700 overflow-visible transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-500/10">
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center text-center">
+            <Avatar className="h-20 w-20 mb-3 ring-2 ring-teal-500/20">
               {member.photoUrl ? (
                 <AvatarImage src={member.photoUrl} alt={`${member.firstName} ${member.lastName}`} />
               ) : null}
-              <AvatarFallback className="bg-gradient-to-br from-teal-500 to-blue-500 text-white text-xl font-semibold">
+              <AvatarFallback className="bg-gradient-to-br from-teal-500 to-blue-500 text-white text-lg font-semibold">
                 {getInitials(member.firstName, member.lastName)}
               </AvatarFallback>
             </Avatar>
@@ -71,19 +76,30 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
             )}
             
             {member.elementType && (
-              <Badge variant="outline" className="border-teal-500/30 text-teal-400 mb-3">
+              <Badge variant="outline" className="border-teal-500/30 text-teal-400 mb-2">
                 <Icon className="h-3 w-3 mr-1" />
                 {elementTypeLabels[member.elementType] || member.elementType}
               </Badge>
             )}
             
             {member.institution && (
-              <p className="text-xs text-slate-500 mb-3">{member.institution}</p>
+              <p className="text-xs text-slate-500">{member.institution}</p>
             )}
             
-            {member.bio && (
-              <p className="text-sm text-slate-300 flex-grow">{member.bio}</p>
-            )}
+            <motion.div
+              initial={false}
+              animate={{
+                height: isHovered && member.bio ? 'auto' : 0,
+                opacity: isHovered && member.bio ? 1 : 0,
+                marginTop: isHovered && member.bio ? 12 : 0
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="overflow-hidden"
+            >
+              {member.bio && (
+                <p className="text-sm text-slate-300">{member.bio}</p>
+              )}
+            </motion.div>
             
             {(member.email || member.linkedInUrl) && (
               <div className="flex items-center gap-3 mt-4">
