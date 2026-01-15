@@ -53,18 +53,19 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
       transition={{ duration: 0.4 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative"
+      className="relative overflow-visible"
       style={{ zIndex: isHovered ? 20 : 1 }}
     >
       <motion.div
         animate={{
-          scale: isHovered ? 1.08 : 1,
-          y: isHovered ? -8 : 0
+          scale: isHovered ? 1.12 : 1,
+          y: isHovered ? -4 : 0
         }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        style={{ transformOrigin: 'center center' }}
+        style={{ transformOrigin: 'center top' }}
+        className="relative"
       >
-        <Card className={`bg-slate-800/80 border-slate-700 overflow-hidden transition-shadow duration-300 ${isHovered ? 'shadow-2xl shadow-teal-500/20 border-teal-500/30' : ''}`}>
+        <Card className={`bg-slate-800 border-slate-700 transition-shadow duration-300 ${isHovered ? 'shadow-2xl shadow-teal-500/20 border-teal-500/30' : ''}`}>
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-20 w-20 mb-3 ring-2 ring-teal-500/20">
@@ -95,23 +96,8 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
                 <p className="text-xs text-slate-500">{member.institution}</p>
               )}
               
-              <motion.div
-                initial={false}
-                animate={{
-                  height: isHovered && member.bio ? 'auto' : 0,
-                  opacity: isHovered && member.bio ? 1 : 0,
-                  marginTop: isHovered && member.bio ? 12 : 0
-                }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30, delay: isHovered ? 0.05 : 0 }}
-                className="overflow-hidden"
-              >
-                {member.bio && (
-                  <p className="text-sm text-slate-300 leading-relaxed">{member.bio}</p>
-                )}
-              </motion.div>
-              
               {(member.email || member.linkedInUrl) && (
-                <div className="flex items-center gap-3 mt-4">
+                <div className="flex items-center gap-3 mt-3">
                   {member.email && (
                     <a 
                       href={`mailto:${member.email}`}
@@ -135,6 +121,25 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
             </div>
           </CardContent>
         </Card>
+        
+        {member.bio && (
+          <motion.div
+            initial={false}
+            animate={{
+              opacity: isHovered ? 1 : 0,
+              y: isHovered ? 0 : -10,
+              scaleY: isHovered ? 1 : 0.8
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            style={{ 
+              transformOrigin: 'top center',
+              pointerEvents: isHovered ? 'auto' : 'none'
+            }}
+            className="mt-2 p-4 bg-slate-800 border border-teal-500/30 rounded-lg shadow-xl"
+          >
+            <p className="text-sm text-slate-300 leading-relaxed text-center">{member.bio}</p>
+          </motion.div>
+        )}
       </motion.div>
     </motion.div>
   );
