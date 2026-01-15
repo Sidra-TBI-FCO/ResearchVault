@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users } from "lucide-react";
 import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 interface Program {
   id: number;
@@ -58,6 +60,8 @@ export default function ProjectsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [, setLocation] = useLocation();
+  const { currentUser } = useCurrentUser();
+  const { canEdit } = useElementPermissions(currentUser.role, "projects");
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
@@ -101,14 +105,17 @@ export default function ProjectsList() {
   });
 
   return (
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="projects">
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-semibold text-foreground">Projects (PRJ)</h1>
-        <Link href="/projects/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-new-project">
-            New Project
-          </Button>
-        </Link>
+        {canEdit && (
+          <Link href="/projects/create">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-new-project">
+              New Project
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Card>
@@ -229,11 +236,13 @@ export default function ProjectsList() {
                               View Details
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/projects/${project.id}/edit`}>
-                              Edit Project
-                            </Link>
-                          </DropdownMenuItem>
+                          {canEdit && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/projects/${project.id}/edit`}>
+                                Edit Project
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -256,5 +265,6 @@ export default function ProjectsList() {
         </CardContent>
       </Card>
     </div>
+    </PermissionWrapper>
   );
 }

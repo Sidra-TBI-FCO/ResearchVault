@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users, Link as LinkIcon } from "lucide-react";
 import { formatFullName, getInitials } from "@/utils/nameUtils";
-import { usePermissions } from "@/hooks/usePermissions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
 
 interface Program {
   id: number;
@@ -92,11 +92,8 @@ export default function ResearchActivitiesList() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedProjectTab, setSelectedProjectTab] = useState<string>("all");
   const [, navigate] = useLocation();
-  
-  const { canEdit } = usePermissions();
   const { currentUser } = useCurrentUser();
-  const userRole = currentUser?.role || "Investigator";
-  const canEditActivities = canEdit(userRole, "research-activities");
+  const { canEdit: canEditActivities } = useElementPermissions(currentUser.role, "research-activities");
 
   const { data: researchActivities, isLoading: isLoadingActivities } = useQuery<ResearchActivity[]>({
     queryKey: ['/api/research-activities'],
@@ -202,6 +199,7 @@ export default function ResearchActivitiesList() {
   });
 
   return (
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="research-activities">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-foreground">Research Activities (SDR)</h1>
@@ -430,5 +428,6 @@ export default function ResearchActivitiesList() {
         </CardContent>
       </Card>
     </div>
+    </PermissionWrapper>
   );
 }
