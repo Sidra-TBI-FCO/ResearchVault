@@ -383,10 +383,13 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
               Settings
             </Link>
             <div className="border-l border-primary/30 h-5 mx-3"></div>
-            <button className="flex items-center text-sm text-muted-foreground hover:text-primary">
+            <Link 
+              href="/"
+              className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
-            </button>
+            </Link>
           </div>
         </div>
       </div>
