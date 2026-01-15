@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Users, Shield, Code, FlaskConical, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Shield, Code, FlaskConical, GripVertical, Upload, X } from "lucide-react";
 import type { TeamMember, InsertTeamMember } from "@shared/schema";
 
 const categoryOptions = [
@@ -44,6 +44,9 @@ interface TeamMemberFormProps {
 }
 
 function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMemberFormProps) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: member?.firstName || "",
     lastName: member?.lastName || "",
@@ -68,6 +71,55 @@ function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMember
         return { ...prev, categories: [...current, cat] };
       }
     });
+  };
+  
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please select an image under 5MB", variant: "destructive" });
+      return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Invalid file type", description: "Please select an image file", variant: "destructive" });
+      return;
+    }
+    
+    setIsUploading(true);
+    try {
+      const response = await fetch("/api/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: file.name,
+          size: file.size,
+          contentType: file.type,
+        }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to get upload URL");
+      
+      const { uploadURL, objectPath } = await response.json();
+      
+      const uploadResponse = await fetch(uploadURL, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      
+      if (!uploadResponse.ok) throw new Error("Failed to upload file");
+      
+      setFormData(prev => ({ ...prev, photoUrl: objectPath }));
+      toast({ title: "Photo uploaded successfully" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ title: "Upload failed", description: "Please try again or use a URL", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -177,22 +229,59 @@ function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMember
       </div>
 
       <div>
-        <Label htmlFor="photoUrl">Photo URL</Label>
-        <Input
-          id="photoUrl"
-          value={formData.photoUrl}
-          onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-          placeholder="https://example.com/photo.jpg"
-          data-testid="input-team-photo"
-        />
-        {formData.photoUrl && (
-          <div className="mt-2">
-            <Avatar className="h-16 w-16">
+        <Label>Photo</Label>
+        <div className="flex items-start gap-4 mt-2">
+          <Avatar className="h-20 w-20 ring-2 ring-muted">
+            {formData.photoUrl ? (
               <AvatarImage src={formData.photoUrl} alt="Preview" />
-              <AvatarFallback>{getInitials(formData.firstName, formData.lastName)}</AvatarFallback>
-            </Avatar>
+            ) : null}
+            <AvatarFallback className="text-lg">{getInitials(formData.firstName, formData.lastName)}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 space-y-2">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                data-testid="button-upload-photo"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isUploading ? "Uploading..." : "Upload Photo"}
+              </Button>
+              {formData.photoUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, photoUrl: "" })}
+                  data-testid="button-remove-photo"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload a profile photo (max 5MB, JPG/PNG)
+            </p>
+            <Input
+              id="photoUrl"
+              value={formData.photoUrl}
+              onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
+              placeholder="Or paste image URL"
+              className="text-xs"
+              data-testid="input-team-photo"
+            />
           </div>
-        )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
