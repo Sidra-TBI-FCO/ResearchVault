@@ -50,9 +50,9 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
     >
-      <Card className="bg-slate-800/80 border-slate-700 h-full hover-elevate overflow-visible">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center text-center">
+      <Card className="bg-slate-800/80 border-slate-700 hover-elevate overflow-visible">
+        <CardContent className="p-6 h-full">
+          <div className="flex flex-col items-center text-center h-full">
             <Avatar className="h-24 w-24 mb-4 ring-2 ring-teal-500/20">
               {member.photoUrl ? (
                 <AvatarImage src={member.photoUrl} alt={`${member.firstName} ${member.lastName}`} />
@@ -82,7 +82,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
             )}
             
             {member.bio && (
-              <p className="text-sm text-slate-300 line-clamp-3">{member.bio}</p>
+              <p className="text-sm text-slate-300 flex-grow">{member.bio}</p>
             )}
             
             {(member.email || member.linkedInUrl) && (
