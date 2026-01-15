@@ -129,6 +129,7 @@ import SettingsPage from "@/pages/settings";
 import LandingPage from "@/pages/public/landing";
 import DemoPage from "@/pages/public/demo";
 import TeamPage from "@/pages/public/team";
+import AboutPage from "@/pages/public/about";
 
 // PMO Applications
 import PmoApplicationsList from "@/pages/pmo/applications/index";
@@ -309,6 +310,7 @@ function App() {
           <Switch>
             {/* Public Pages - no auth required */}
             <Route path="/" component={LandingPage} />
+            <Route path="/about" component={AboutPage} />
             <Route path="/demo" component={DemoPage} />
             <Route path="/team" component={TeamPage} />
             
