@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -49,7 +50,7 @@ function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMember
     title: member?.title || "",
     bio: member?.bio || "",
     photoUrl: member?.photoUrl || "",
-    category: member?.category || "lead",
+    categories: member?.categories || ["lead"],
     elementType: member?.elementType || "",
     institution: member?.institution || "",
     email: member?.email || "",
@@ -57,6 +58,17 @@ function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMember
     displayOrder: member?.displayOrder ?? 0,
     isActive: member?.isActive ?? true
   });
+  
+  const toggleCategory = (cat: string) => {
+    setFormData(prev => {
+      const current = prev.categories || [];
+      if (current.includes(cat)) {
+        return { ...prev, categories: current.filter(c => c !== cat) };
+      } else {
+        return { ...prev, categories: [...current, cat] };
+      }
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,41 +111,46 @@ function TeamMemberForm({ member, onSubmit, onCancel, isSubmitting }: TeamMember
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="category">Team Category *</Label>
-          <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
-            <SelectTrigger data-testid="select-team-category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  <div className="flex items-center gap-2">
-                    <opt.icon className="h-4 w-4" />
-                    {opt.label}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="space-y-3">
+        <Label>Team Categories * (select all that apply)</Label>
+        <div className="flex flex-wrap gap-4">
+          {categoryOptions.map((opt) => (
+            <div key={opt.value} className="flex items-center gap-2">
+              <Checkbox
+                id={`cat-${opt.value}`}
+                checked={formData.categories.includes(opt.value)}
+                onCheckedChange={() => toggleCategory(opt.value)}
+                data-testid={`checkbox-team-${opt.value}`}
+              />
+              <label 
+                htmlFor={`cat-${opt.value}`}
+                className="flex items-center gap-1.5 text-sm cursor-pointer"
+              >
+                <opt.icon className="h-4 w-4" />
+                {opt.label}
+              </label>
+            </div>
+          ))}
         </div>
+        {formData.categories.length === 0 && (
+          <p className="text-sm text-destructive">Please select at least one category</p>
+        )}
+      </div>
 
-        <div>
-          <Label htmlFor="elementType">Element Focus</Label>
-          <Select value={formData.elementType} onValueChange={(val) => setFormData({ ...formData, elementType: val })}>
-            <SelectTrigger data-testid="select-team-element">
-              <SelectValue placeholder="Select element (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              {elementTypeOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <Label htmlFor="elementType">Element Focus</Label>
+        <Select value={formData.elementType} onValueChange={(val) => setFormData({ ...formData, elementType: val })}>
+          <SelectTrigger data-testid="select-team-element">
+            <SelectValue placeholder="Select element (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            {elementTypeOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
@@ -316,9 +333,9 @@ export default function TeamManagement() {
     setEditingMember(null);
   };
 
-  const leads = teamMembers.filter(m => m.category === 'lead');
-  const testers = teamMembers.filter(m => m.category === 'tester');
-  const developers = teamMembers.filter(m => m.category === 'developer');
+  const leads = teamMembers.filter(m => m.categories?.includes('lead'));
+  const testers = teamMembers.filter(m => m.categories?.includes('tester'));
+  const developers = teamMembers.filter(m => m.categories?.includes('developer'));
 
   const renderMemberCard = (member: TeamMember) => (
     <Card key={member.id} className="relative" data-testid={`card-team-member-${member.id}`}>

@@ -235,9 +235,9 @@ export default function TeamPage() {
     queryKey: ['/api/team-members'],
   });
 
-  const leads = teamMembers.filter(m => m.category === 'lead' && m.isActive);
-  const testers = teamMembers.filter(m => m.category === 'tester' && m.isActive);
-  const developers = teamMembers.filter(m => m.category === 'developer' && m.isActive);
+  const leads = teamMembers.filter(m => m.categories?.includes('lead') && m.isActive);
+  const testers = teamMembers.filter(m => m.categories?.includes('tester') && m.isActive);
+  const developers = teamMembers.filter(m => m.categories?.includes('developer') && m.isActive);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">

@@ -1456,7 +1456,7 @@ export const teamMembers = pgTable("team_members", {
   title: text("title"), // Job title or academic title
   bio: text("bio"),
   photoUrl: text("photo_url"),
-  category: text("category").notNull(), // lead, tester, developer
+  categories: text("categories").array().notNull().default([]), // Multiple: lead, tester, developer
   elementType: text("element_type"), // For leads: project_management, irb, ibc, etc.
   institution: text("institution"), // Affiliation
   email: text("email"),
