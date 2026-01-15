@@ -124,7 +124,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
           style={{ 
             pointerEvents: isHovered ? 'auto' : 'none',
           }}
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] max-w-[90vw] bg-slate-800 border border-teal-500/40 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[520px] max-w-[95vw] bg-slate-800 border border-teal-500/40 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
         >
           {member.photoUrl && (
             <div className="w-full h-48 overflow-hidden">
