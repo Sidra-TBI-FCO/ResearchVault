@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header onMenuClick={toggleMobileSidebar} />
         
-        <main className="overflow-y-auto p-6 bg-background">
+        <main className="flex-1 overflow-y-auto p-6 bg-background">
           <DatabaseStatus />
           {children}
         </main>
