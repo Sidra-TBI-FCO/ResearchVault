@@ -155,7 +155,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 <Link href="/team">
-                  <Button size="lg" variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800 text-lg px-8 py-6">
+                  <Button size="lg" className="bg-transparent border-2 border-slate-400 text-white hover:bg-slate-700 text-lg px-8 py-6">
                     Meet the Team
                   </Button>
                 </Link>
