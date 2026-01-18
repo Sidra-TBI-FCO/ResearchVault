@@ -228,6 +228,7 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   humanMaterialsTissuesOther: z.string().optional(),
   humanMaterialsOtherMaterial: z.string().optional(),
   nonHumanPrimateOrigin: z.boolean().optional(),
+  nhpExposureKit: z.boolean().optional(),
   stemCells: z.array(z.string()).optional(),
   stemCellsNihRegistry: z.boolean().optional(),
   cellLines: z.array(z.object({
@@ -461,6 +462,7 @@ export default function IbcApplicationEdit() {
       humanMaterialsTissuesOther: "",
       humanMaterialsOtherMaterial: "",
       nonHumanPrimateOrigin: false,
+      nhpExposureKit: undefined,
       stemCells: [],
       stemCellsNihRegistry: undefined,
       cellLines: [],
@@ -570,6 +572,7 @@ export default function IbcApplicationEdit() {
         humanMaterialsTissuesOther: ibcApplication.humanMaterialsTissuesOther || "",
         humanMaterialsOtherMaterial: ibcApplication.humanMaterialsOtherMaterial || "",
         nonHumanPrimateOrigin: ibcApplication.nonHumanPrimateOrigin || false,
+        nhpExposureKit: ibcApplication.nhpExposureKit ?? undefined,
         stemCells: ibcApplication.stemCells || [],
         stemCellsNihRegistry: ibcApplication.stemCellsNihRegistry ?? undefined,
         cellLines: ibcApplication.cellLines || [],
@@ -802,6 +805,8 @@ export default function IbcApplicationEdit() {
       (Array.isArray(hazardousProcedures) && hazardousProcedures.length > 0) ||
       (Array.isArray(stemCells) && stemCells.length > 0) ||
       nonHumanPrimateOrigin ||
+      // Check if nhpExposureKit has been answered
+      (form.getValues('nhpExposureKit') !== undefined && form.getValues('nhpExposureKit') !== null) ||
       // Check if stemCellsNihRegistry has been answered
       (form.getValues('stemCellsNihRegistry') !== undefined && form.getValues('stemCellsNihRegistry') !== null) ||
       // Check if the field has been answered (either Yes or No, not undefined)
@@ -874,6 +879,7 @@ export default function IbcApplicationEdit() {
     form.setValue('humanMaterialsTissuesOther', '');
     form.setValue('humanMaterialsOtherMaterial', '');
     form.setValue('nonHumanPrimateOrigin', false);
+    form.setValue('nhpExposureKit', undefined);
     form.setValue('stemCells', []);
     form.setValue('stemCellsNihRegistry', undefined);
     form.setValue('cellLines', []);
@@ -4696,6 +4702,50 @@ export default function IbcApplicationEdit() {
                             </FormItem>
                           )}
                         />
+                        
+                        {/* Conditional NHP Exposure Kit question when Non-human Primate Origin is checked */}
+                        {form.watch('nonHumanPrimateOrigin') && (
+                          <FormField
+                            control={form.control}
+                            name="nhpExposureKit"
+                            render={({ field }) => (
+                              <FormItem className="bg-gray-50 p-4 rounded-lg border border-gray-200 ml-6">
+                                <div className="space-y-3">
+                                  <FormLabel className="text-base font-medium">
+                                    Do you have an NHP Exposure Kit? <span className="text-red-500">*</span>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className="flex items-center space-x-6">
+                                      <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          checked={field.value === true}
+                                          onChange={() => field.onChange(true)}
+                                          disabled={isReadOnly}
+                                          className="w-4 h-4 text-blue-600"
+                                          data-testid="radio-nhp-exposure-kit-yes"
+                                        />
+                                        <span>Yes</span>
+                                      </label>
+                                      <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          checked={field.value === false}
+                                          onChange={() => field.onChange(false)}
+                                          disabled={isReadOnly}
+                                          className="w-4 h-4 text-blue-600"
+                                          data-testid="radio-nhp-exposure-kit-no"
+                                        />
+                                        <span>No</span>
+                                      </label>
+                                    </div>
+                                  </FormControl>
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
 
                         {/* Stem Cells */}
                         <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-4">
