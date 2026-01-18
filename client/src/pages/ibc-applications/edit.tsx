@@ -238,6 +238,7 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
     descriptor: z.string().optional(),
     biosafetyLevel: z.string(),
     acquisitionSource: z.array(z.string()),
+    acquisitionSourceOther: z.string().optional(),
     passage: z.string(),
     exposedTo: z.array(z.string()),
     willBeCultured: z.boolean(),
@@ -300,6 +301,7 @@ export default function IbcApplicationEdit() {
     descriptor: "",
     biosafetyLevel: "",
     acquisitionSource: [] as string[],
+    acquisitionSourceOther: "",
     passage: "",
     exposedTo: [] as string[],
     willBeCultured: false,
@@ -1127,6 +1129,7 @@ export default function IbcApplicationEdit() {
       descriptor: "",
       biosafetyLevel: "",
       acquisitionSource: [],
+      acquisitionSourceOther: "",
       passage: "",
       exposedTo: [],
       willBeCultured: false,
@@ -1145,6 +1148,7 @@ export default function IbcApplicationEdit() {
         descriptor: cellLine.descriptor || "",
         biosafetyLevel: cellLine.biosafetyLevel,
         acquisitionSource: cellLine.acquisitionSource || [],
+        acquisitionSourceOther: cellLine.acquisitionSourceOther || "",
         passage: cellLine.passage,
         exposedTo: cellLine.exposedTo || [],
         willBeCultured: cellLine.willBeCultured,
@@ -1176,6 +1180,15 @@ export default function IbcApplicationEdit() {
       toast({
         title: "Validation Error",
         description: "At least one Acquisition Source is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Validate Other Source text field when "Other Source" is checked
+    if (cellLineFormData.acquisitionSource.includes('Other Source') && !cellLineFormData.acquisitionSourceOther.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please list Other Acquisition Sources",
         variant: "destructive",
       });
       return;
@@ -5023,7 +5036,9 @@ export default function IbcApplicationEdit() {
                                           } else {
                                             setCellLineFormData({
                                               ...cellLineFormData,
-                                              acquisitionSource: cellLineFormData.acquisitionSource.filter(s => s !== source)
+                                              acquisitionSource: cellLineFormData.acquisitionSource.filter(s => s !== source),
+                                              // Clear the Other text field when "Other Source" is unchecked
+                                              ...(source === 'Other Source' ? { acquisitionSourceOther: '' } : {})
                                             });
                                           }
                                         }}
@@ -5033,6 +5048,22 @@ export default function IbcApplicationEdit() {
                                       <label htmlFor={`acquisition-${source}`} className="text-sm cursor-pointer">{source}</label>
                                     </div>
                                   ))}
+                                  
+                                  {/* Conditional text field for Other Source */}
+                                  {cellLineFormData.acquisitionSource.includes('Other Source') && (
+                                    <div className="mt-3 ml-6">
+                                      <label className="text-sm font-medium">
+                                        Please list Other Acquisition Sources <span className="text-red-500">*</span>
+                                      </label>
+                                      <Textarea
+                                        value={cellLineFormData.acquisitionSourceOther}
+                                        onChange={(e) => setCellLineFormData({...cellLineFormData, acquisitionSourceOther: e.target.value})}
+                                        placeholder="Please list other acquisition sources..."
+                                        className="mt-1"
+                                        data-testid="textarea-acquisition-source-other"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
