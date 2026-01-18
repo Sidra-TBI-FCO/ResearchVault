@@ -4616,6 +4616,13 @@ export default function IbcApplicationEdit() {
                                               field.onChange([...currentValues, material]);
                                             } else {
                                               field.onChange(currentValues.filter((v: string) => v !== material));
+                                              // Clear nested text fields when their parent checkboxes are unchecked
+                                              if (material === 'Tissues (List below)') {
+                                                form.setValue('humanMaterialsTissuesOther', '');
+                                              }
+                                              if (material === 'Other Material (List below)') {
+                                                form.setValue('humanMaterialsOtherMaterial', '');
+                                              }
                                             }
                                           }}
                                           className="w-4 h-4 text-blue-600"
@@ -4690,7 +4697,13 @@ export default function IbcApplicationEdit() {
                                   <input
                                     type="checkbox"
                                     checked={field.value || false}
-                                    onChange={(e) => field.onChange(e.target.checked)}
+                                    onChange={(e) => {
+                                      field.onChange(e.target.checked);
+                                      // Clear nested NHP Exposure Kit when unchecked
+                                      if (!e.target.checked) {
+                                        form.setValue('nhpExposureKit', undefined);
+                                      }
+                                    }}
                                     disabled={isReadOnly}
                                     className="w-4 h-4 text-blue-600"
                                     data-testid="checkbox-non-human-primate-origin"
@@ -4774,6 +4787,10 @@ export default function IbcApplicationEdit() {
                                               field.onChange([...currentValues, stemCell]);
                                             } else {
                                               field.onChange(currentValues.filter((v: string) => v !== stemCell));
+                                              // Clear NIH Registry when Embryonic Stem Cells is unchecked
+                                              if (stemCell === 'Embryonic Stem Cells') {
+                                                form.setValue('stemCellsNihRegistry', undefined);
+                                              }
                                             }
                                           }}
                                           className="w-4 h-4 text-blue-600"
