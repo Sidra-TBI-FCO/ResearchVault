@@ -319,8 +319,16 @@ export default function IbcApplicationEdit() {
   // State for conditional tab visibility with data protection
   const [nucleicAcidsConfirmDialog, setNucleicAcidsConfirmDialog] = useState(false);
   const [humanNhpConfirmDialog, setHumanNhpConfirmDialog] = useState(false);
+  const [animalsConfirmDialog, setAnimalsConfirmDialog] = useState(false);
+  const [microorganismsConfirmDialog, setMicroorganismsConfirmDialog] = useState(false);
+  const [arthropodsConfirmDialog, setArthropodsConfirmDialog] = useState(false);
+  const [plantsConfirmDialog, setPlantsConfirmDialog] = useState(false);
   const prevRecombinantValue = useRef<boolean | undefined>();
   const prevHumanNhpValue = useRef<boolean | undefined>();
+  const prevAnimalsValue = useRef<boolean | undefined>();
+  const prevMicroorganismsValue = useRef<boolean | undefined>();
+  const prevArthropodsValue = useRef<boolean | undefined>();
+  const prevPlantsValue = useRef<boolean | undefined>();
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -845,6 +853,55 @@ export default function IbcApplicationEdit() {
     setHumanNhpConfirmDialog(false);
   };
 
+  // Check if Animals section has data
+  const hasAnimalsData = () => {
+    const values = form.getValues();
+    const subOptions = values.animalMaterialSubOptions || [];
+    return subOptions.length > 0;
+  };
+
+  // Clear Animals sub-options data
+  const clearAnimalsData = () => {
+    form.setValue('animalMaterialSubOptions', []);
+    setAnimalsConfirmDialog(false);
+  };
+
+  // Check if Microorganisms has recombinant DNA data
+  const hasMicroorganismsData = () => {
+    const values = form.getValues();
+    return values.microorganismsRecombinantDna !== undefined && values.microorganismsRecombinantDna !== null;
+  };
+
+  // Clear Microorganisms recombinant DNA data
+  const clearMicroorganismsData = () => {
+    form.setValue('microorganismsRecombinantDna', undefined);
+    setMicroorganismsConfirmDialog(false);
+  };
+
+  // Check if Arthropods has recombinant DNA data
+  const hasArthropodsData = () => {
+    const values = form.getValues();
+    return values.arthropodsRecombinantDna !== undefined && values.arthropodsRecombinantDna !== null;
+  };
+
+  // Clear Arthropods recombinant DNA data
+  const clearArthropodsData = () => {
+    form.setValue('arthropodsRecombinantDna', undefined);
+    setArthropodsConfirmDialog(false);
+  };
+
+  // Check if Plants has recombinant DNA data
+  const hasPlantsData = () => {
+    const values = form.getValues();
+    return values.plantsRecombinantDna !== undefined && values.plantsRecombinantDna !== null;
+  };
+
+  // Clear Plants recombinant DNA data
+  const clearPlantsData = () => {
+    form.setValue('plantsRecombinantDna', undefined);
+    setPlantsConfirmDialog(false);
+  };
+
   // Watch for changes in the Basics tab questions
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -885,6 +942,66 @@ export default function IbcApplicationEdit() {
         
         prevHumanNhpValue.current = currentValue;
       }
+
+      // Handle Whole Animals/Animal Material toggle
+      if (name === 'wholeAnimalsAnimalMaterial') {
+        const currentValue = value.wholeAnimalsAnimalMaterial;
+        const previousValue = prevAnimalsValue.current;
+        
+        if (previousValue === true && currentValue === false) {
+          if (hasAnimalsData()) {
+            setAnimalsConfirmDialog(true);
+            form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false });
+          }
+        }
+        
+        prevAnimalsValue.current = currentValue;
+      }
+
+      // Handle Microorganisms toggle
+      if (name === 'microorganismsInfectiousMaterial') {
+        const currentValue = value.microorganismsInfectiousMaterial;
+        const previousValue = prevMicroorganismsValue.current;
+        
+        if (previousValue === true && currentValue === false) {
+          if (hasMicroorganismsData()) {
+            setMicroorganismsConfirmDialog(true);
+            form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false });
+          }
+        }
+        
+        prevMicroorganismsValue.current = currentValue;
+      }
+
+      // Handle Arthropods toggle
+      if (name === 'arthropods') {
+        const currentValue = value.arthropods;
+        const previousValue = prevArthropodsValue.current;
+        
+        if (previousValue === true && currentValue === false) {
+          if (hasArthropodsData()) {
+            setArthropodsConfirmDialog(true);
+            form.setValue('arthropods', true, { shouldValidate: false });
+          }
+        }
+        
+        prevArthropodsValue.current = currentValue;
+      }
+
+      // Handle Plants toggle
+      if (name === 'plants') {
+        const currentValue = value.plants;
+        const previousValue = prevPlantsValue.current;
+        
+        if (previousValue === true && currentValue === false) {
+          if (hasPlantsData()) {
+            setPlantsConfirmDialog(true);
+            form.setValue('plants', true, { shouldValidate: false });
+          }
+        }
+        
+        prevPlantsValue.current = currentValue;
+      }
     });
     
     return () => subscription.unsubscribe();
@@ -895,6 +1012,10 @@ export default function IbcApplicationEdit() {
     if (ibcApplication) {
       prevRecombinantValue.current = ibcApplication.recombinantSyntheticNucleicAcid;
       prevHumanNhpValue.current = ibcApplication.humanNonHumanPrimateMaterial;
+      prevAnimalsValue.current = ibcApplication.wholeAnimalsAnimalMaterial;
+      prevMicroorganismsValue.current = ibcApplication.microorganismsInfectiousMaterial;
+      prevArthropodsValue.current = ibcApplication.arthropods;
+      prevPlantsValue.current = ibcApplication.plants;
     }
   }, [ibcApplication]);
 
@@ -5907,6 +6028,126 @@ export default function IbcApplicationEdit() {
                 // User confirmed - proceed with data deletion
                 form.setValue('humanNonHumanPrimateMaterial', false);
                 clearHumanNhpData();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Data and Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Dialog for Animals Data Deletion */}
+      <AlertDialog open={animalsConfirmDialog} onOpenChange={setAnimalsConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have data filled in the Whole Animals/Animal Material section. 
+              If you change this answer to "No", all selected sub-options will be permanently deleted.
+              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setAnimalsConfirmDialog(false);
+            }}>
+              Cancel (Keep Data)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                form.setValue('wholeAnimalsAnimalMaterial', false);
+                clearAnimalsData();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Data and Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Dialog for Microorganisms Data Deletion */}
+      <AlertDialog open={microorganismsConfirmDialog} onOpenChange={setMicroorganismsConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have answered the recombinant DNA question for Microorganisms/Infectious Material. 
+              If you change this answer to "No", your response will be permanently deleted.
+              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setMicroorganismsConfirmDialog(false);
+            }}>
+              Cancel (Keep Data)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                form.setValue('microorganismsInfectiousMaterial', false);
+                clearMicroorganismsData();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Data and Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Dialog for Arthropods Data Deletion */}
+      <AlertDialog open={arthropodsConfirmDialog} onOpenChange={setArthropodsConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have answered the transgenic/recombinant DNA question for Arthropods. 
+              If you change this answer to "No", your response will be permanently deleted.
+              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setArthropodsConfirmDialog(false);
+            }}>
+              Cancel (Keep Data)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                form.setValue('arthropods', false);
+                clearArthropodsData();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Data and Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Dialog for Plants Data Deletion */}
+      <AlertDialog open={plantsConfirmDialog} onOpenChange={setPlantsConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have answered the transgenic/recombinant DNA question for Plants. 
+              If you change this answer to "No", your response will be permanently deleted.
+              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setPlantsConfirmDialog(false);
+            }}>
+              Cancel (Keep Data)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                form.setValue('plants', false);
+                clearPlantsData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
