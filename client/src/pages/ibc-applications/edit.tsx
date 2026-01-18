@@ -1672,14 +1672,12 @@ export default function IbcApplicationEdit() {
                                 <FormControl>
                                   <div className="space-y-3">
                                     {[
-                                      { id: "live_animals", label: "Live Animals" },
-                                      { id: "animal_tissues", label: "Animal Tissues" },
-                                      { id: "animal_cell_lines", label: "Animal Cell Lines" },
-                                      { id: "animal_blood_serum", label: "Animal Blood/Serum" },
-                                      { id: "animal_derived_products", label: "Animal-derived Products" },
-                                      { id: "transgenic_animals", label: "Transgenic Animals" },
-                                      { id: "animal_waste", label: "Animal Waste/Excretions" },
-                                      { id: "other_animal_materials", label: "Other Animal Materials" }
+                                      { id: "creating_tg_animals", label: "Creating Tg animals?" },
+                                      { id: "breeding_tg_animals", label: "Breeding Tg animals?" },
+                                      { id: "purchasing_transferring_tg_animals", label: "Purchasing or transferring Tg animals?" },
+                                      { id: "exposure_biohazardous_materials", label: "Exposure of animals to or the use of animals in conjunction with bio-hazardous materials?" },
+                                      { id: "primary_cell_culture_tissue", label: "The use of animals for primary cell culture or tissue samples?" },
+                                      { id: "other", label: "Other?" }
                                     ].map((option) => (
                                       <div key={option.id} className="flex items-center space-x-3">
                                         <Checkbox
