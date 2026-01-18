@@ -916,8 +916,9 @@ export default function IbcApplicationEdit() {
           if (hasNucleicAcidsData()) {
             // Show confirmation dialog
             setNucleicAcidsConfirmDialog(true);
-            // Revert the toggle temporarily
+            // Revert the toggle temporarily - don't update prevValue here
             form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false });
+            return; // Don't update prev value when showing dialog
           }
         }
         
@@ -937,6 +938,7 @@ export default function IbcApplicationEdit() {
             setHumanNhpConfirmDialog(true);
             // Revert the toggle temporarily
             form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false });
+            return; // Don't update prev value when showing dialog
           }
         }
         
@@ -952,6 +954,7 @@ export default function IbcApplicationEdit() {
           if (hasAnimalsData()) {
             setAnimalsConfirmDialog(true);
             form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false });
+            return; // Don't update prev value when showing dialog
           }
         }
         
@@ -967,6 +970,7 @@ export default function IbcApplicationEdit() {
           if (hasMicroorganismsData()) {
             setMicroorganismsConfirmDialog(true);
             form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false });
+            return; // Don't update prev value when showing dialog
           }
         }
         
@@ -982,6 +986,7 @@ export default function IbcApplicationEdit() {
           if (hasArthropodsData()) {
             setArthropodsConfirmDialog(true);
             form.setValue('arthropods', true, { shouldValidate: false });
+            return; // Don't update prev value when showing dialog
           }
         }
         
@@ -997,6 +1002,7 @@ export default function IbcApplicationEdit() {
           if (hasPlantsData()) {
             setPlantsConfirmDialog(true);
             form.setValue('plants', true, { shouldValidate: false });
+            return; // Don't update prev value when showing dialog
           }
         }
         
@@ -5987,6 +5993,7 @@ export default function IbcApplicationEdit() {
             <AlertDialogAction
               onClick={() => {
                 // User confirmed - proceed with data deletion
+                prevRecombinantValue.current = false;
                 form.setValue('recombinantSyntheticNucleicAcid', false);
                 clearNucleicAcidsData();
               }}
@@ -6026,6 +6033,7 @@ export default function IbcApplicationEdit() {
             <AlertDialogAction
               onClick={() => {
                 // User confirmed - proceed with data deletion
+                prevHumanNhpValue.current = false;
                 form.setValue('humanNonHumanPrimateMaterial', false);
                 clearHumanNhpData();
               }}
@@ -6056,6 +6064,7 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                prevAnimalsValue.current = false;
                 form.setValue('wholeAnimalsAnimalMaterial', false);
                 clearAnimalsData();
               }}
@@ -6086,6 +6095,7 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                prevMicroorganismsValue.current = false;
                 form.setValue('microorganismsInfectiousMaterial', false);
                 clearMicroorganismsData();
               }}
@@ -6116,6 +6126,7 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                prevArthropodsValue.current = false;
                 form.setValue('arthropods', false);
                 clearArthropodsData();
               }}
@@ -6146,6 +6157,7 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                prevPlantsValue.current = false;
                 form.setValue('plants', false);
                 clearPlantsData();
               }}
