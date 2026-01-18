@@ -956,7 +956,7 @@ export default function IbcApplicationEdit() {
             setNucleicAcidsConfirmDialog(true);
             // Revert the toggle temporarily
             isRevertingRecombinant.current = true;
-            form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false });
+            form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
             return; // Don't update prev value when showing dialog
           }
         }
@@ -983,7 +983,7 @@ export default function IbcApplicationEdit() {
             setHumanNhpConfirmDialog(true);
             // Revert the toggle temporarily
             isRevertingHumanNhp.current = true;
-            form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false });
+            form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1006,7 +1006,7 @@ export default function IbcApplicationEdit() {
           if (hasAnimalsData()) {
             setAnimalsConfirmDialog(true);
             isRevertingAnimals.current = true;
-            form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false });
+            form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1029,7 +1029,7 @@ export default function IbcApplicationEdit() {
           if (hasMicroorganismsData()) {
             setMicroorganismsConfirmDialog(true);
             isRevertingMicroorganisms.current = true;
-            form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false });
+            form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1052,7 +1052,7 @@ export default function IbcApplicationEdit() {
           if (hasArthropodsData()) {
             setArthropodsConfirmDialog(true);
             isRevertingArthropods.current = true;
-            form.setValue('arthropods', true, { shouldValidate: false });
+            form.setValue('arthropods', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1075,7 +1075,7 @@ export default function IbcApplicationEdit() {
           if (hasPlantsData()) {
             setPlantsConfirmDialog(true);
             isRevertingPlants.current = true;
-            form.setValue('plants', true, { shouldValidate: false });
+            form.setValue('plants', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
             return; // Don't update prev value when showing dialog
           }
         }
@@ -6047,14 +6047,16 @@ export default function IbcApplicationEdit() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have data filled in the Recombinant or Synthetic Nucleic Acids tab. 
-              If you change this answer to "No", all data in that tab will be permanently deleted, including:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Synthetic Experiments</li>
-                <li>NIH Guidelines sections</li>
-              </ul>
-              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                You have data filled in the Recombinant or Synthetic Nucleic Acids tab. 
+                If you change this answer to "No", all data in that tab will be permanently deleted, including:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Synthetic Experiments</li>
+                  <li>NIH Guidelines sections</li>
+                </ul>
+                <div className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -6067,9 +6069,10 @@ export default function IbcApplicationEdit() {
             <AlertDialogAction
               onClick={() => {
                 // User confirmed - proceed with data deletion
+                // IMPORTANT: Clear data FIRST, then set parent to false
+                clearNucleicAcidsData();
                 prevRecombinantValue.current = false;
                 form.setValue('recombinantSyntheticNucleicAcid', false);
-                clearNucleicAcidsData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6084,17 +6087,19 @@ export default function IbcApplicationEdit() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have data filled in the Human/NHP Material tab. 
-              If you change this answer to "No", all data in that tab will be permanently deleted, including:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Human and Non-Human Primate Origin information</li>
-                <li>Cell Lines</li>
-                <li>Hazardous Procedures</li>
-                <li>Stem Cells</li>
-                <li>Exposure Control Plan details</li>
-              </ul>
-              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                You have data filled in the Human/NHP Material tab. 
+                If you change this answer to "No", all data in that tab will be permanently deleted, including:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Human and Non-Human Primate Origin information</li>
+                  <li>Cell Lines</li>
+                  <li>Hazardous Procedures</li>
+                  <li>Stem Cells</li>
+                  <li>Exposure Control Plan details</li>
+                </ul>
+                <div className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -6125,10 +6130,12 @@ export default function IbcApplicationEdit() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have data filled in the Whole Animals/Animal Material section. 
-              If you change this answer to "No", all selected sub-options will be permanently deleted.
-              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                You have data filled in the Whole Animals/Animal Material section. 
+                If you change this answer to "No", all selected sub-options will be permanently deleted.
+                <div className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -6139,9 +6146,10 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                // IMPORTANT: Clear data FIRST, then set parent to false
+                clearAnimalsData();
                 prevAnimalsValue.current = false;
                 form.setValue('wholeAnimalsAnimalMaterial', false);
-                clearAnimalsData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6156,10 +6164,12 @@ export default function IbcApplicationEdit() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have answered the recombinant DNA question for Microorganisms/Infectious Material. 
-              If you change this answer to "No", your response will be permanently deleted.
-              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                You have answered the recombinant DNA question for Microorganisms/Infectious Material. 
+                If you change this answer to "No", your response will be permanently deleted.
+                <div className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -6170,9 +6180,10 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                // IMPORTANT: Clear data FIRST, then set parent to false
+                clearMicroorganismsData();
                 prevMicroorganismsValue.current = false;
                 form.setValue('microorganismsInfectiousMaterial', false);
-                clearMicroorganismsData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6187,10 +6198,12 @@ export default function IbcApplicationEdit() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have answered the transgenic/recombinant DNA question for Arthropods. 
-              If you change this answer to "No", your response will be permanently deleted.
-              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                You have answered the transgenic/recombinant DNA question for Arthropods. 
+                If you change this answer to "No", your response will be permanently deleted.
+                <div className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -6201,9 +6214,10 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                // IMPORTANT: Clear data FIRST, then set parent to false
+                clearArthropodsData();
                 prevArthropodsValue.current = false;
                 form.setValue('arthropods', false);
-                clearArthropodsData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6218,10 +6232,12 @@ export default function IbcApplicationEdit() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Warning: Data Will Be Deleted</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have answered the transgenic/recombinant DNA question for Plants. 
-              If you change this answer to "No", your response will be permanently deleted.
-              <p className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</p>
+            <AlertDialogDescription asChild>
+              <div>
+                You have answered the transgenic/recombinant DNA question for Plants. 
+                If you change this answer to "No", your response will be permanently deleted.
+                <div className="mt-3 font-semibold">This action cannot be undone. Are you sure you want to continue?</div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -6232,9 +6248,10 @@ export default function IbcApplicationEdit() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                // IMPORTANT: Clear data FIRST, then set parent to false
+                clearPlantsData();
                 prevPlantsValue.current = false;
                 form.setValue('plants', false);
-                clearPlantsData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
