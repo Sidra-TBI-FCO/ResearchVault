@@ -952,13 +952,11 @@ export default function IbcApplicationEdit() {
         if (previousValue === true && currentValue === false) {
           // Check if there's data in the Nucleic Acids tab
           if (hasNucleicAcidsData()) {
-            // Revert the toggle FIRST before showing dialog
+            // IMMEDIATELY revert to true to prevent nested fields from unmounting
             isRevertingRecombinant.current = true;
-            form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
-            // Show confirmation dialog after a brief delay to ensure UI updates
-            setTimeout(() => {
-              setNucleicAcidsConfirmDialog(true);
-            }, 0);
+            form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false });
+            // Show confirmation dialog
+            setNucleicAcidsConfirmDialog(true);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -981,13 +979,11 @@ export default function IbcApplicationEdit() {
         if (previousValue === true && currentValue === false) {
           // Check if there's data in the Human/NHP tab
           if (hasHumanNhpData()) {
-            // Revert the toggle FIRST before showing dialog
+            // IMMEDIATELY revert to true to prevent nested fields from unmounting
             isRevertingHumanNhp.current = true;
-            form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
-            // Show confirmation dialog after a brief delay to ensure UI updates
-            setTimeout(() => {
-              setHumanNhpConfirmDialog(true);
-            }, 0);
+            form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false });
+            // Show confirmation dialog
+            setHumanNhpConfirmDialog(true);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1008,13 +1004,11 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasAnimalsData()) {
-            // Revert the toggle FIRST before showing dialog
+            // IMMEDIATELY revert to true to prevent nested fields from unmounting
             isRevertingAnimals.current = true;
-            form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
-            // Show confirmation dialog after a brief delay to ensure UI updates
-            setTimeout(() => {
-              setAnimalsConfirmDialog(true);
-            }, 0);
+            form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false });
+            // Show confirmation dialog
+            setAnimalsConfirmDialog(true);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1035,13 +1029,11 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasMicroorganismsData()) {
-            // Revert the toggle FIRST before showing dialog
+            // IMMEDIATELY revert to true to prevent nested fields from unmounting
             isRevertingMicroorganisms.current = true;
-            form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
-            // Show confirmation dialog after a brief delay to ensure UI updates
-            setTimeout(() => {
-              setMicroorganismsConfirmDialog(true);
-            }, 0);
+            form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false });
+            // Show confirmation dialog
+            setMicroorganismsConfirmDialog(true);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1062,13 +1054,11 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasArthropodsData()) {
-            // Revert the toggle FIRST before showing dialog
+            // IMMEDIATELY revert to true to prevent nested fields from unmounting
             isRevertingArthropods.current = true;
-            form.setValue('arthropods', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
-            // Show confirmation dialog after a brief delay to ensure UI updates
-            setTimeout(() => {
-              setArthropodsConfirmDialog(true);
-            }, 0);
+            form.setValue('arthropods', true, { shouldValidate: false });
+            // Show confirmation dialog
+            setArthropodsConfirmDialog(true);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1089,13 +1079,11 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasPlantsData()) {
-            // Revert the toggle FIRST before showing dialog
+            // IMMEDIATELY revert to true to prevent nested fields from unmounting
             isRevertingPlants.current = true;
-            form.setValue('plants', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
-            // Show confirmation dialog after a brief delay to ensure UI updates
-            setTimeout(() => {
-              setPlantsConfirmDialog(true);
-            }, 0);
+            form.setValue('plants', true, { shouldValidate: false });
+            // Show confirmation dialog
+            setPlantsConfirmDialog(true);
             return; // Don't update prev value when showing dialog
           }
         }
