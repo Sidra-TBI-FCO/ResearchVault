@@ -459,6 +459,7 @@ export const ibcApplications = pgTable("ibc_applications", {
   humanMaterialsOtherMaterial: text("human_materials_other_material"), // Text input for "Other Material (List below)"
   nonHumanPrimateOrigin: boolean("non_human_primate_origin").default(false),
   stemCells: text("stem_cells").array(), // Array of selected stem cell types
+  stemCellsNihRegistry: boolean("stem_cells_nih_registry"), // Are stem cells listed in the NIH Human Embryonic Stem Cell Registry Line?
   
   // Human/NHP Section - Exposure Control Plan
   exposureControlPlanCompliance: boolean("exposure_control_plan_compliance").default(false), // I have read and agree to comply with the Exposure Control Plan

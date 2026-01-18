@@ -229,6 +229,7 @@ const editIbcApplicationSchema = insertIbcApplicationSchema.omit({
   humanMaterialsOtherMaterial: z.string().optional(),
   nonHumanPrimateOrigin: z.boolean().optional(),
   stemCells: z.array(z.string()).optional(),
+  stemCellsNihRegistry: z.boolean().optional(),
   cellLines: z.array(z.object({
     id: z.string().optional(),
     name: z.string(),
@@ -461,6 +462,7 @@ export default function IbcApplicationEdit() {
       humanMaterialsOtherMaterial: "",
       nonHumanPrimateOrigin: false,
       stemCells: [],
+      stemCellsNihRegistry: undefined,
       cellLines: [],
       exposureControlPlanCompliance: false,
       handWashingDevice: false,
@@ -569,6 +571,7 @@ export default function IbcApplicationEdit() {
         humanMaterialsOtherMaterial: ibcApplication.humanMaterialsOtherMaterial || "",
         nonHumanPrimateOrigin: ibcApplication.nonHumanPrimateOrigin || false,
         stemCells: ibcApplication.stemCells || [],
+        stemCellsNihRegistry: ibcApplication.stemCellsNihRegistry ?? undefined,
         cellLines: ibcApplication.cellLines || [],
         hazardousProcedures: ibcApplication.hazardousProcedures || [],
         exposureControlPlanCompliance: ibcApplication.exposureControlPlanCompliance || false,
@@ -799,6 +802,8 @@ export default function IbcApplicationEdit() {
       (Array.isArray(hazardousProcedures) && hazardousProcedures.length > 0) ||
       (Array.isArray(stemCells) && stemCells.length > 0) ||
       nonHumanPrimateOrigin ||
+      // Check if stemCellsNihRegistry has been answered
+      (form.getValues('stemCellsNihRegistry') !== undefined && form.getValues('stemCellsNihRegistry') !== null) ||
       // Check if the field has been answered (either Yes or No, not undefined)
       (introducingPrimateMaterialIntoAnimals !== undefined && introducingPrimateMaterialIntoAnimals !== null) ||
       (materialsContainKnownPathogens !== undefined && materialsContainKnownPathogens !== null) ||
@@ -870,6 +875,7 @@ export default function IbcApplicationEdit() {
     form.setValue('humanMaterialsOtherMaterial', '');
     form.setValue('nonHumanPrimateOrigin', false);
     form.setValue('stemCells', []);
+    form.setValue('stemCellsNihRegistry', undefined);
     form.setValue('cellLines', []);
     form.setValue('hazardousProcedures', []);
     form.setValue('exposureControlPlanCompliance', false);
@@ -4626,7 +4632,7 @@ export default function IbcApplicationEdit() {
                               name="humanMaterialsTissuesOther"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>List Tissues</FormLabel>
+                                  <FormLabel>Please list all Human Tissues <span className="text-red-500">*</span></FormLabel>
                                   <FormControl>
                                     <textarea
                                       {...field}
@@ -4732,6 +4738,50 @@ export default function IbcApplicationEdit() {
                               </FormItem>
                             )}
                           />
+                          
+                          {/* Conditional NIH Registry field when Embryonic Stem Cells is selected */}
+                          {Array.isArray(form.watch('stemCells')) && form.watch('stemCells')?.includes('Embryonic Stem Cells') && (
+                            <FormField
+                              control={form.control}
+                              name="stemCellsNihRegistry"
+                              render={({ field }) => (
+                                <FormItem className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-4">
+                                  <div className="space-y-3">
+                                    <FormLabel className="text-base font-medium">
+                                      Are stem cells listed in the NIH Human Embryonic Stem Cell Registry Line? <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                      <div className="flex items-center space-x-6">
+                                        <label className="flex items-center space-x-2 cursor-pointer">
+                                          <input
+                                            type="radio"
+                                            checked={field.value === true}
+                                            onChange={() => field.onChange(true)}
+                                            disabled={isReadOnly}
+                                            className="w-4 h-4 text-blue-600"
+                                            data-testid="radio-stem-cells-nih-registry-yes"
+                                          />
+                                          <span>Yes</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2 cursor-pointer">
+                                          <input
+                                            type="radio"
+                                            checked={field.value === false}
+                                            onChange={() => field.onChange(false)}
+                                            disabled={isReadOnly}
+                                            className="w-4 h-4 text-blue-600"
+                                            data-testid="radio-stem-cells-nih-registry-no"
+                                          />
+                                          <span>No</span>
+                                        </label>
+                                      </div>
+                                    </FormControl>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </div>
                       </div>
                     </TabsContent>
