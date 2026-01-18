@@ -799,8 +799,9 @@ export default function IbcApplicationEdit() {
       (Array.isArray(hazardousProcedures) && hazardousProcedures.length > 0) ||
       (Array.isArray(stemCells) && stemCells.length > 0) ||
       nonHumanPrimateOrigin ||
-      introducingPrimateMaterialIntoAnimals ||
-      materialsContainKnownPathogens ||
+      // Check if the field has been answered (either Yes or No, not undefined)
+      (introducingPrimateMaterialIntoAnimals !== undefined && introducingPrimateMaterialIntoAnimals !== null) ||
+      (materialsContainKnownPathogens !== undefined && materialsContainKnownPathogens !== null) ||
       (materialPathogenDetails && materialPathogenDetails.trim() !== '') ||
       (materialTreatmentDetails && materialTreatmentDetails.trim() !== '') ||
       (infectionSymptoms && infectionSymptoms.trim() !== '') ||
@@ -875,11 +876,12 @@ export default function IbcApplicationEdit() {
     form.setValue('handWashingDevice', false);
     form.setValue('laundryMethod', []);
     form.setValue('laundryMethodOther', '');
-    form.setValue('materialsContainKnownPathogens', false);
+    form.setValue('materialsContainKnownPathogens', undefined);
     form.setValue('materialPathogenDetails', '');
     form.setValue('materialTreatmentDetails', '');
     form.setValue('infectionSymptoms', '');
-    form.setValue('introducingPrimateMaterialIntoAnimals', false);
+    // Use undefined instead of false to truly clear the Yes/No radio selection
+    form.setValue('introducingPrimateMaterialIntoAnimals', undefined);
     setHumanNhpConfirmDialog(false);
   };
 
