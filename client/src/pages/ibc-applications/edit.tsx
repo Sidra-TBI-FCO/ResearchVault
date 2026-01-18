@@ -952,11 +952,13 @@ export default function IbcApplicationEdit() {
         if (previousValue === true && currentValue === false) {
           // Check if there's data in the Nucleic Acids tab
           if (hasNucleicAcidsData()) {
-            // Show confirmation dialog
-            setNucleicAcidsConfirmDialog(true);
-            // Revert the toggle temporarily
+            // Revert the toggle FIRST before showing dialog
             isRevertingRecombinant.current = true;
             form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
+            // Show confirmation dialog after a brief delay to ensure UI updates
+            setTimeout(() => {
+              setNucleicAcidsConfirmDialog(true);
+            }, 0);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -979,11 +981,13 @@ export default function IbcApplicationEdit() {
         if (previousValue === true && currentValue === false) {
           // Check if there's data in the Human/NHP tab
           if (hasHumanNhpData()) {
-            // Show confirmation dialog
-            setHumanNhpConfirmDialog(true);
-            // Revert the toggle temporarily
+            // Revert the toggle FIRST before showing dialog
             isRevertingHumanNhp.current = true;
             form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
+            // Show confirmation dialog after a brief delay to ensure UI updates
+            setTimeout(() => {
+              setHumanNhpConfirmDialog(true);
+            }, 0);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1004,9 +1008,13 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasAnimalsData()) {
-            setAnimalsConfirmDialog(true);
+            // Revert the toggle FIRST before showing dialog
             isRevertingAnimals.current = true;
             form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
+            // Show confirmation dialog after a brief delay to ensure UI updates
+            setTimeout(() => {
+              setAnimalsConfirmDialog(true);
+            }, 0);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1027,9 +1035,13 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasMicroorganismsData()) {
-            setMicroorganismsConfirmDialog(true);
+            // Revert the toggle FIRST before showing dialog
             isRevertingMicroorganisms.current = true;
             form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
+            // Show confirmation dialog after a brief delay to ensure UI updates
+            setTimeout(() => {
+              setMicroorganismsConfirmDialog(true);
+            }, 0);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1050,9 +1062,13 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasArthropodsData()) {
-            setArthropodsConfirmDialog(true);
+            // Revert the toggle FIRST before showing dialog
             isRevertingArthropods.current = true;
             form.setValue('arthropods', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
+            // Show confirmation dialog after a brief delay to ensure UI updates
+            setTimeout(() => {
+              setArthropodsConfirmDialog(true);
+            }, 0);
             return; // Don't update prev value when showing dialog
           }
         }
@@ -1073,9 +1089,13 @@ export default function IbcApplicationEdit() {
         
         if (previousValue === true && currentValue === false) {
           if (hasPlantsData()) {
-            setPlantsConfirmDialog(true);
+            // Revert the toggle FIRST before showing dialog
             isRevertingPlants.current = true;
             form.setValue('plants', true, { shouldValidate: false, shouldDirty: true, shouldTouch: true });
+            // Show confirmation dialog after a brief delay to ensure UI updates
+            setTimeout(() => {
+              setPlantsConfirmDialog(true);
+            }, 0);
             return; // Don't update prev value when showing dialog
           }
         }
