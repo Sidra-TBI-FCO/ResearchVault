@@ -6107,9 +6107,10 @@ export default function IbcApplicationEdit() {
             <AlertDialogAction
               onClick={() => {
                 // User confirmed - proceed with data deletion
+                // IMPORTANT: Clear data FIRST, then set parent to false
+                clearHumanNhpData();
                 prevHumanNhpValue.current = false;
                 form.setValue('humanNonHumanPrimateMaterial', false);
-                clearHumanNhpData();
               }}
               className="bg-red-600 hover:bg-red-700"
             >
