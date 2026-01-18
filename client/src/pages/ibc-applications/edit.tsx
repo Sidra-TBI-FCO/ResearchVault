@@ -1820,7 +1820,15 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === false}
-                                      onChange={() => field.onChange(false)}
+                                      onChange={() => {
+                                        // Check if there's data before allowing change to "No"
+                                        if (field.value === true && hasNucleicAcidsData()) {
+                                          // Show confirmation dialog - don't change the value yet
+                                          setNucleicAcidsConfirmDialog(true);
+                                        } else {
+                                          field.onChange(false);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>No</span>
@@ -1857,7 +1865,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === false}
-                                      onChange={() => field.onChange(false)}
+                                      onChange={() => {
+                                        // Check if there's data before allowing change to "No"
+                                        if (field.value === true && hasAnimalsData()) {
+                                          setAnimalsConfirmDialog(true);
+                                        } else {
+                                          field.onChange(false);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>No</span>
@@ -1945,7 +1960,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === false}
-                                      onChange={() => field.onChange(false)}
+                                      onChange={() => {
+                                        // Check if there's data before allowing change to "No"
+                                        if (field.value === true && hasHumanNhpData()) {
+                                          setHumanNhpConfirmDialog(true);
+                                        } else {
+                                          field.onChange(false);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>No</span>
@@ -2023,7 +2045,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === false}
-                                      onChange={() => field.onChange(false)}
+                                      onChange={() => {
+                                        // Check if there's data before allowing change to "No"
+                                        if (field.value === true && hasMicroorganismsData()) {
+                                          setMicroorganismsConfirmDialog(true);
+                                        } else {
+                                          field.onChange(false);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>No</span>
@@ -2174,7 +2203,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === false}
-                                      onChange={() => field.onChange(false)}
+                                      onChange={() => {
+                                        // Check if there's data before allowing change to "No"
+                                        if (field.value === true && hasArthropodsData()) {
+                                          setArthropodsConfirmDialog(true);
+                                        } else {
+                                          field.onChange(false);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>No</span>
@@ -2251,7 +2287,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === false}
-                                      onChange={() => field.onChange(false)}
+                                      onChange={() => {
+                                        // Check if there's data before allowing change to "No"
+                                        if (field.value === true && hasPlantsData()) {
+                                          setPlantsConfirmDialog(true);
+                                        } else {
+                                          field.onChange(false);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>No</span>
