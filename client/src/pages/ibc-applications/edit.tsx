@@ -329,6 +329,14 @@ export default function IbcApplicationEdit() {
   const prevMicroorganismsValue = useRef<boolean | undefined>();
   const prevArthropodsValue = useRef<boolean | undefined>();
   const prevPlantsValue = useRef<boolean | undefined>();
+  
+  // Flags to prevent re-processing during revert
+  const isRevertingRecombinant = useRef(false);
+  const isRevertingHumanNhp = useRef(false);
+  const isRevertingAnimals = useRef(false);
+  const isRevertingMicroorganisms = useRef(false);
+  const isRevertingArthropods = useRef(false);
+  const isRevertingPlants = useRef(false);
 
   const { data: ibcApplication, isLoading } = useQuery<IbcApplication>({
     queryKey: ['/api/ibc-applications', id],
@@ -907,6 +915,12 @@ export default function IbcApplicationEdit() {
     const subscription = form.watch((value, { name }) => {
       // Handle Recombinant/Synthetic Nucleic Acids toggle
       if (name === 'recombinantSyntheticNucleicAcid') {
+        // Skip if we're currently reverting
+        if (isRevertingRecombinant.current) {
+          isRevertingRecombinant.current = false;
+          return;
+        }
+        
         const currentValue = value.recombinantSyntheticNucleicAcid;
         const previousValue = prevRecombinantValue.current;
         
@@ -916,7 +930,8 @@ export default function IbcApplicationEdit() {
           if (hasNucleicAcidsData()) {
             // Show confirmation dialog
             setNucleicAcidsConfirmDialog(true);
-            // Revert the toggle temporarily - don't update prevValue here
+            // Revert the toggle temporarily
+            isRevertingRecombinant.current = true;
             form.setValue('recombinantSyntheticNucleicAcid', true, { shouldValidate: false });
             return; // Don't update prev value when showing dialog
           }
@@ -927,6 +942,12 @@ export default function IbcApplicationEdit() {
       
       // Handle Human/NHP Material toggle
       if (name === 'humanNonHumanPrimateMaterial') {
+        // Skip if we're currently reverting
+        if (isRevertingHumanNhp.current) {
+          isRevertingHumanNhp.current = false;
+          return;
+        }
+        
         const currentValue = value.humanNonHumanPrimateMaterial;
         const previousValue = prevHumanNhpValue.current;
         
@@ -937,6 +958,7 @@ export default function IbcApplicationEdit() {
             // Show confirmation dialog
             setHumanNhpConfirmDialog(true);
             // Revert the toggle temporarily
+            isRevertingHumanNhp.current = true;
             form.setValue('humanNonHumanPrimateMaterial', true, { shouldValidate: false });
             return; // Don't update prev value when showing dialog
           }
@@ -947,12 +969,19 @@ export default function IbcApplicationEdit() {
 
       // Handle Whole Animals/Animal Material toggle
       if (name === 'wholeAnimalsAnimalMaterial') {
+        // Skip if we're currently reverting
+        if (isRevertingAnimals.current) {
+          isRevertingAnimals.current = false;
+          return;
+        }
+        
         const currentValue = value.wholeAnimalsAnimalMaterial;
         const previousValue = prevAnimalsValue.current;
         
         if (previousValue === true && currentValue === false) {
           if (hasAnimalsData()) {
             setAnimalsConfirmDialog(true);
+            isRevertingAnimals.current = true;
             form.setValue('wholeAnimalsAnimalMaterial', true, { shouldValidate: false });
             return; // Don't update prev value when showing dialog
           }
@@ -963,12 +992,19 @@ export default function IbcApplicationEdit() {
 
       // Handle Microorganisms toggle
       if (name === 'microorganismsInfectiousMaterial') {
+        // Skip if we're currently reverting
+        if (isRevertingMicroorganisms.current) {
+          isRevertingMicroorganisms.current = false;
+          return;
+        }
+        
         const currentValue = value.microorganismsInfectiousMaterial;
         const previousValue = prevMicroorganismsValue.current;
         
         if (previousValue === true && currentValue === false) {
           if (hasMicroorganismsData()) {
             setMicroorganismsConfirmDialog(true);
+            isRevertingMicroorganisms.current = true;
             form.setValue('microorganismsInfectiousMaterial', true, { shouldValidate: false });
             return; // Don't update prev value when showing dialog
           }
@@ -979,12 +1015,19 @@ export default function IbcApplicationEdit() {
 
       // Handle Arthropods toggle
       if (name === 'arthropods') {
+        // Skip if we're currently reverting
+        if (isRevertingArthropods.current) {
+          isRevertingArthropods.current = false;
+          return;
+        }
+        
         const currentValue = value.arthropods;
         const previousValue = prevArthropodsValue.current;
         
         if (previousValue === true && currentValue === false) {
           if (hasArthropodsData()) {
             setArthropodsConfirmDialog(true);
+            isRevertingArthropods.current = true;
             form.setValue('arthropods', true, { shouldValidate: false });
             return; // Don't update prev value when showing dialog
           }
@@ -995,12 +1038,19 @@ export default function IbcApplicationEdit() {
 
       // Handle Plants toggle
       if (name === 'plants') {
+        // Skip if we're currently reverting
+        if (isRevertingPlants.current) {
+          isRevertingPlants.current = false;
+          return;
+        }
+        
         const currentValue = value.plants;
         const previousValue = prevPlantsValue.current;
         
         if (previousValue === true && currentValue === false) {
           if (hasPlantsData()) {
             setPlantsConfirmDialog(true);
+            isRevertingPlants.current = true;
             form.setValue('plants', true, { shouldValidate: false });
             return; // Don't update prev value when showing dialog
           }
