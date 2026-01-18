@@ -780,6 +780,17 @@ export default function IbcApplicationEdit() {
     const hazardousProcedures = form.getValues('hazardousProcedures');
     const stemCells = form.getValues('stemCells');
     const nonHumanPrimateOrigin = form.getValues('nonHumanPrimateOrigin');
+    const introducingPrimateMaterialIntoAnimals = form.getValues('introducingPrimateMaterialIntoAnimals');
+    const materialsContainKnownPathogens = form.getValues('materialsContainKnownPathogens');
+    const materialPathogenDetails = form.getValues('materialPathogenDetails');
+    const materialTreatmentDetails = form.getValues('materialTreatmentDetails');
+    const infectionSymptoms = form.getValues('infectionSymptoms');
+    const exposureControlPlanCompliance = form.getValues('exposureControlPlanCompliance');
+    const handWashingDevice = form.getValues('handWashingDevice');
+    const laundryMethod = form.getValues('laundryMethod');
+    const laundryMethodOther = form.getValues('laundryMethodOther');
+    const humanMaterialsTissuesOther = form.getValues('humanMaterialsTissuesOther');
+    const humanMaterialsOtherMaterial = form.getValues('humanMaterialsOtherMaterial');
     
     return (
       humanOrigin ||
@@ -787,7 +798,18 @@ export default function IbcApplicationEdit() {
       (Array.isArray(cellLines) && cellLines.length > 0) ||
       (Array.isArray(hazardousProcedures) && hazardousProcedures.length > 0) ||
       (Array.isArray(stemCells) && stemCells.length > 0) ||
-      nonHumanPrimateOrigin
+      nonHumanPrimateOrigin ||
+      introducingPrimateMaterialIntoAnimals ||
+      materialsContainKnownPathogens ||
+      (materialPathogenDetails && materialPathogenDetails.trim() !== '') ||
+      (materialTreatmentDetails && materialTreatmentDetails.trim() !== '') ||
+      (infectionSymptoms && infectionSymptoms.trim() !== '') ||
+      exposureControlPlanCompliance ||
+      handWashingDevice ||
+      (Array.isArray(laundryMethod) && laundryMethod.length > 0) ||
+      (laundryMethodOther && laundryMethodOther.trim() !== '') ||
+      (humanMaterialsTissuesOther && humanMaterialsTissuesOther.trim() !== '') ||
+      (humanMaterialsOtherMaterial && humanMaterialsOtherMaterial.trim() !== '')
     );
   };
 
