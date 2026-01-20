@@ -1976,7 +1976,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === true}
-                                      onChange={() => field.onChange(true)}
+                                      onChange={() => {
+                                        field.onChange(true);
+                                        // When clicking Yes, ensure the nested question is cleared (fresh start)
+                                        // Only clear if we're coming from No to Yes
+                                        if (field.value === false) {
+                                          form.setValue('introducingPrimateMaterialIntoAnimals', undefined);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>Yes</span>
@@ -1991,6 +1998,8 @@ export default function IbcApplicationEdit() {
                                           setHumanNhpConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
+                                          // Clear the nested question when changing to No
+                                          form.setValue('introducingPrimateMaterialIntoAnimals', undefined);
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
