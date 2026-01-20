@@ -1977,10 +1977,11 @@ export default function IbcApplicationEdit() {
                                       type="radio"
                                       checked={field.value === true}
                                       onChange={() => {
+                                        // Check BEFORE changing the value - if coming from No/undefined to Yes
+                                        const wasNo = field.value === false || field.value === undefined || field.value === null;
                                         field.onChange(true);
-                                        // When clicking Yes, ensure the nested question is cleared (fresh start)
-                                        // Only clear if we're coming from No to Yes
-                                        if (field.value === false) {
+                                        // When clicking Yes, ALWAYS clear the nested question to start fresh
+                                        if (wasNo) {
                                           form.setValue('introducingPrimateMaterialIntoAnimals', undefined);
                                         }
                                       }}
