@@ -1537,7 +1537,7 @@ export default function IbcApplicationEdit() {
 
       <Form {...form}>
         <form onSubmit={(e) => e.preventDefault()}>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-6">
             {/* Main Content Column */}
             <div className="flex-1 min-w-0 space-y-6">
               <Tabs defaultValue="basics" className="w-full">
@@ -6226,7 +6226,7 @@ export default function IbcApplicationEdit() {
 
             {/* Right Sidebar - Always visible */}
             <div className="w-80 flex-shrink-0 hidden lg:block">
-              <div className="sticky top-4 space-y-4">
+              <div className="sticky top-4 z-50 space-y-4">
                 {/* Communication History */}
                 {comments.length > 0 && (
                   <div className="max-h-[300px] overflow-y-auto">
