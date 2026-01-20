@@ -323,8 +323,11 @@ export default function IbcApplicationEdit() {
   // State for conditional tab visibility with data protection
   const [nucleicAcidsConfirmDialog, setNucleicAcidsConfirmDialog] = useState(false);
   const [humanNhpConfirmDialog, setHumanNhpConfirmDialog] = useState(false);
-  // Counter to force re-mount of nested fields when parent changes from No to Yes
+  // Counters to force re-mount of nested fields when parent changes from No to Yes
   const [introducingMaterialsResetKey, setIntroducingMaterialsResetKey] = useState(0);
+  const [microorganismsResetKey, setMicroorganismsResetKey] = useState(0);
+  const [arthropodsResetKey, setArthropodsResetKey] = useState(0);
+  const [plantsResetKey, setPlantsResetKey] = useState(0);
   const [animalsConfirmDialog, setAnimalsConfirmDialog] = useState(false);
   const [microorganismsConfirmDialog, setMicroorganismsConfirmDialog] = useState(false);
   const [arthropodsConfirmDialog, setArthropodsConfirmDialog] = useState(false);
@@ -2110,7 +2113,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === true}
-                                      onChange={() => field.onChange(true)}
+                                      onChange={() => {
+                                        const wasNo = field.value === false || field.value === undefined || field.value === null;
+                                        field.onChange(true);
+                                        if (wasNo) {
+                                          form.setValue('microorganismsRecombinantDna', undefined, { shouldDirty: true, shouldTouch: true });
+                                          setMicroorganismsResetKey(prev => prev + 1);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>Yes</span>
@@ -2125,6 +2135,7 @@ export default function IbcApplicationEdit() {
                                           setMicroorganismsConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
+                                          form.setValue('microorganismsRecombinantDna', undefined);
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2142,6 +2153,7 @@ export default function IbcApplicationEdit() {
                       {/* Conditional sub-question for Microorganisms */}
                       {form.watch('microorganismsInfectiousMaterial') && (
                         <FormField
+                          key={`microorganisms-recombinant-${microorganismsResetKey}`}
                           control={form.control}
                           name="microorganismsRecombinantDna"
                           render={({ field }) => (
@@ -2268,7 +2280,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === true}
-                                      onChange={() => field.onChange(true)}
+                                      onChange={() => {
+                                        const wasNo = field.value === false || field.value === undefined || field.value === null;
+                                        field.onChange(true);
+                                        if (wasNo) {
+                                          form.setValue('arthropodsRecombinantDna', undefined, { shouldDirty: true, shouldTouch: true });
+                                          setArthropodsResetKey(prev => prev + 1);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>Yes</span>
@@ -2283,6 +2302,7 @@ export default function IbcApplicationEdit() {
                                           setArthropodsConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
+                                          form.setValue('arthropodsRecombinantDna', undefined);
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2300,6 +2320,7 @@ export default function IbcApplicationEdit() {
                       {/* Conditional sub-question for Arthropods */}
                       {form.watch('arthropods') && (
                         <FormField
+                          key={`arthropods-recombinant-${arthropodsResetKey}`}
                           control={form.control}
                           name="arthropodsRecombinantDna"
                           render={({ field }) => (
@@ -2352,7 +2373,14 @@ export default function IbcApplicationEdit() {
                                     <input
                                       type="radio"
                                       checked={field.value === true}
-                                      onChange={() => field.onChange(true)}
+                                      onChange={() => {
+                                        const wasNo = field.value === false || field.value === undefined || field.value === null;
+                                        field.onChange(true);
+                                        if (wasNo) {
+                                          form.setValue('plantsRecombinantDna', undefined, { shouldDirty: true, shouldTouch: true });
+                                          setPlantsResetKey(prev => prev + 1);
+                                        }
+                                      }}
                                       className="w-4 h-4 text-blue-600"
                                     />
                                     <span>Yes</span>
@@ -2367,6 +2395,7 @@ export default function IbcApplicationEdit() {
                                           setPlantsConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
+                                          form.setValue('plantsRecombinantDna', undefined);
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2384,6 +2413,7 @@ export default function IbcApplicationEdit() {
                       {/* Conditional sub-question for Plants */}
                       {form.watch('plants') && (
                         <FormField
+                          key={`plants-recombinant-${plantsResetKey}`}
                           control={form.control}
                           name="plantsRecombinantDna"
                           render={({ field }) => (
