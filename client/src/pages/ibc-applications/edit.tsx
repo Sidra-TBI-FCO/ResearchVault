@@ -2021,10 +2021,9 @@ export default function IbcApplicationEdit() {
                                         // Check BEFORE changing the value - if coming from No/undefined to Yes
                                         const wasNo = field.value === false || field.value === undefined || field.value === null;
                                         field.onChange(true);
-                                        // When clicking Yes, ALWAYS clear the nested question to start fresh
+                                        // When clicking Yes, unregister to fully clear RHF state
                                         if (wasNo) {
-                                          form.setValue('introducingPrimateMaterialIntoAnimals', undefined, { shouldDirty: true, shouldTouch: true });
-                                          // Force re-mount of the nested FormField to clear any cached state
+                                          form.unregister('introducingPrimateMaterialIntoAnimals');
                                           setIntroducingMaterialsResetKey(prev => prev + 1);
                                         }
                                       }}
@@ -2042,8 +2041,8 @@ export default function IbcApplicationEdit() {
                                           setHumanNhpConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
-                                          // Clear the nested question when changing to No
-                                          form.setValue('introducingPrimateMaterialIntoAnimals', undefined);
+                                          // Unregister the nested question when changing to No
+                                          form.unregister('introducingPrimateMaterialIntoAnimals');
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2119,7 +2118,7 @@ export default function IbcApplicationEdit() {
                                         const wasNo = field.value === false || field.value === undefined || field.value === null;
                                         field.onChange(true);
                                         if (wasNo) {
-                                          form.setValue('microorganismsRecombinantDna', undefined, { shouldDirty: true, shouldTouch: true });
+                                          form.unregister('microorganismsRecombinantDna');
                                           setMicroorganismsResetKey(prev => prev + 1);
                                         }
                                       }}
@@ -2137,7 +2136,7 @@ export default function IbcApplicationEdit() {
                                           setMicroorganismsConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
-                                          form.setValue('microorganismsRecombinantDna', undefined);
+                                          form.unregister('microorganismsRecombinantDna');
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2286,7 +2285,7 @@ export default function IbcApplicationEdit() {
                                         const wasNo = field.value === false || field.value === undefined || field.value === null;
                                         field.onChange(true);
                                         if (wasNo) {
-                                          form.setValue('arthropodsRecombinantDna', undefined, { shouldDirty: true, shouldTouch: true });
+                                          form.unregister('arthropodsRecombinantDna');
                                           setArthropodsResetKey(prev => prev + 1);
                                         }
                                       }}
@@ -2304,7 +2303,7 @@ export default function IbcApplicationEdit() {
                                           setArthropodsConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
-                                          form.setValue('arthropodsRecombinantDna', undefined);
+                                          form.unregister('arthropodsRecombinantDna');
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2379,7 +2378,7 @@ export default function IbcApplicationEdit() {
                                         const wasNo = field.value === false || field.value === undefined || field.value === null;
                                         field.onChange(true);
                                         if (wasNo) {
-                                          form.setValue('plantsRecombinantDna', undefined, { shouldDirty: true, shouldTouch: true });
+                                          form.unregister('plantsRecombinantDna');
                                           setPlantsResetKey(prev => prev + 1);
                                         }
                                       }}
@@ -2397,7 +2396,7 @@ export default function IbcApplicationEdit() {
                                           setPlantsConfirmDialog(true);
                                         } else {
                                           field.onChange(false);
-                                          form.setValue('plantsRecombinantDna', undefined);
+                                          form.unregister('plantsRecombinantDna');
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -4795,12 +4794,12 @@ export default function IbcApplicationEdit() {
                                       const wasUnchecked = !field.value;
                                       field.onChange(e.target.checked);
                                       if (e.target.checked && wasUnchecked) {
-                                        // Clear nested NHP Exposure Kit when checking and force re-mount
-                                        form.setValue('nhpExposureKit', undefined, { shouldDirty: true, shouldTouch: true });
+                                        // Unregister to fully clear RHF state, then re-mount with fresh state
+                                        form.unregister('nhpExposureKit');
                                         setNhpExposureKitResetKey(prev => prev + 1);
                                       } else if (!e.target.checked) {
-                                        // Clear nested NHP Exposure Kit when unchecked
-                                        form.setValue('nhpExposureKit', undefined);
+                                        // Unregister nested NHP Exposure Kit when unchecked
+                                        form.unregister('nhpExposureKit');
                                       }
                                     }}
                                     disabled={isReadOnly}
@@ -4885,16 +4884,16 @@ export default function IbcApplicationEdit() {
                                             const currentValues = field.value || [];
                                             if (e.target.checked) {
                                               field.onChange([...currentValues, stemCell]);
-                                              // Clear and reset NIH Registry when Embryonic Stem Cells is checked
+                                              // Unregister to fully clear RHF state when Embryonic Stem Cells is checked
                                               if (stemCell === 'Embryonic Stem Cells') {
-                                                form.setValue('stemCellsNihRegistry', undefined, { shouldDirty: true, shouldTouch: true });
+                                                form.unregister('stemCellsNihRegistry');
                                                 setStemCellsNihRegistryResetKey(prev => prev + 1);
                                               }
                                             } else {
                                               field.onChange(currentValues.filter((v: string) => v !== stemCell));
-                                              // Clear NIH Registry when Embryonic Stem Cells is unchecked
+                                              // Unregister NIH Registry when Embryonic Stem Cells is unchecked
                                               if (stemCell === 'Embryonic Stem Cells') {
-                                                form.setValue('stemCellsNihRegistry', undefined);
+                                                form.unregister('stemCellsNihRegistry');
                                               }
                                             }
                                           }}
