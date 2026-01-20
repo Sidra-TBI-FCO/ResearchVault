@@ -14,15 +14,19 @@ import {
   Share2, CalendarClock 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function DataManagementList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { currentUser } = useCurrentUser();
 
   const { data: plans, isLoading } = useQuery<EnhancedDataManagementPlan[]>({
     queryKey: ['/api/data-management-plans'],
   });
 
-  const formatDate = (date: string | Date | undefined) => {
+  const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -46,11 +50,17 @@ export default function DataManagementList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-foreground">Data Management Plans</h1>
-        <Link href="/data-management/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            New Plan
-          </Button>
-        </Link>
+        <PermissionWrapper 
+          currentUserRole={currentUser.role} 
+          navigationItem="data-management" 
+          requiredPermissions={['canAdd']}
+        >
+          <Link href="/data-management/create">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              New Plan
+            </Button>
+          </Link>
+        </PermissionWrapper>
       </div>
 
       <Card>
@@ -159,9 +169,15 @@ export default function DataManagementList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <PermissionWrapper 
+                        currentUserRole={currentUser.role} 
+                        navigationItem="data-management" 
+                        requiredPermissions={['canEdit']}
+                      >
+                        <Button variant="ghost" size="sm" data-testid="button-more-actions">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </PermissionWrapper>
                     </TableCell>
                   </TableRow>
                 ))}

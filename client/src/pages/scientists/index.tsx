@@ -20,7 +20,7 @@ import { Plus, Search, MoreHorizontal, Mail, Phone, ChevronDown, ChevronUp, Arro
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
 import { formatFullName, formatNameWithJobTitle } from "@/utils/nameUtils";
 
 export default function StaffList() {
@@ -30,7 +30,6 @@ export default function StaffList() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [, navigate] = useLocation();
   const { currentUser } = useCurrentUser();
-  const { canEdit } = useElementPermissions(currentUser.role, "scientists");
 
   const { data: staff, isLoading } = useQuery<(Scientist & { activeResearchActivities?: number })[]>({
     queryKey: ['/api/scientists', { includeActivityCount: true }],
@@ -113,20 +112,30 @@ export default function StaffList() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <h1 className="text-2xl font-semibold text-foreground">Staff Directory</h1>
           <div className="flex items-center gap-3">
-            {canEdit && (
+            <PermissionWrapper
+              currentUserRole={currentUser.role}
+              navigationItem="scientists"
+              requiredPermissions={['canEdit']}
+              fallback={null}
+            >
               <Link href="/scientists/role-access-config">
                 <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground" data-testid="button-configure-role-access">
                   Configure Role Based Access
                 </Button>
               </Link>
-            )}
-            {canEdit && (
+            </PermissionWrapper>
+            <PermissionWrapper
+              currentUserRole={currentUser.role}
+              navigationItem="scientists"
+              requiredPermissions={['canAdd']}
+              fallback={null}
+            >
               <Link href="/scientists/create">
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-add-staff">
                   Add Staff Member
                 </Button>
               </Link>
-            )}
+            </PermissionWrapper>
           </div>
         </div>
 
@@ -377,13 +386,18 @@ export default function StaffList() {
                                   View Details
                                 </Link>
                               </DropdownMenuItem>
-                              {canEdit && (
+                              <PermissionWrapper
+                                currentUserRole={currentUser.role}
+                                navigationItem="scientists"
+                                requiredPermissions={['canEdit']}
+                                fallback={null}
+                              >
                                 <DropdownMenuItem asChild>
                                   <Link href={`/scientists/${person.id}/edit`} className="edit-button">
                                     Edit Staff Member
                                   </Link>
                                 </DropdownMenuItem>
-                              )}
+                              </PermissionWrapper>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

@@ -334,6 +334,10 @@ export default function IbcApplicationEdit() {
   const prevArthropodsValue = useRef<boolean | undefined>();
   const prevPlantsValue = useRef<boolean | undefined>();
   
+  // Track if form has been initialized from DB to prevent re-resetting after user interaction
+  const formInitializedRef = useRef(false);
+  const lastLoadedIdRef = useRef<number | null>(null);
+  
   // Flags to prevent re-processing during revert
   const isRevertingRecombinant = useRef(false);
   const isRevertingHumanNhp = useRef(false);
@@ -482,9 +486,20 @@ export default function IbcApplicationEdit() {
     },
   });
 
-  // Update form when data loads
+  // Update form when data loads - ONLY on initial load or when application ID changes
   React.useEffect(() => {
     if (ibcApplication && associatedActivities) {
+      // Only reset form if this is the first load OR if loading a different application
+      const currentId = ibcApplication.id;
+      if (formInitializedRef.current && lastLoadedIdRef.current === currentId) {
+        // Already initialized with this application, skip to prevent overwriting user changes
+        return;
+      }
+      
+      // Mark as initialized and remember which application we loaded
+      formInitializedRef.current = true;
+      lastLoadedIdRef.current = currentId;
+      
       // Set default collapsed state for hazardous procedures and synthetic experiments
       if (Array.isArray(ibcApplication.hazardousProcedures) && ibcApplication.hazardousProcedures.length > 0) {
         const collapsedIndices = new Set(ibcApplication.hazardousProcedures.map((_, index) => index));

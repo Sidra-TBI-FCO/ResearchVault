@@ -17,15 +17,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatFullName } from "@/utils/nameUtils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function ContractsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentUser } = useCurrentUser();
-  const { canEdit } = useElementPermissions(currentUser.role, "contracts");
-  
-  // Only Contract Officers and Management can create contracts directly (bypass request process)
-  const canCreateContractDirectly = currentUser.role === "Contracts Officer" || currentUser.role === "Management";
 
   const { data: contracts, isLoading } = useQuery<EnhancedResearchContract[]>({
     queryKey: ['/api/research-contracts'],
@@ -78,16 +75,26 @@ export default function ContractsList() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-foreground">Research Contracts</h1>
           <div className="flex items-center gap-2">
-            <Link href="/contracts/request">
-              <Button 
-                variant="outline"
-                data-testid="button-request-contract"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Request New Contract
-              </Button>
-            </Link>
-            {canCreateContractDirectly && (
+            <PermissionWrapper
+              requiredPermissions={['canAdd']}
+              currentUserRole={currentUser.role}
+              navigationItem="contracts"
+            >
+              <Link href="/contracts/request">
+                <Button 
+                  variant="outline"
+                  data-testid="button-request-contract"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Request New Contract
+                </Button>
+              </Link>
+            </PermissionWrapper>
+            <PermissionWrapper
+              requiredPermissions={['canAdd']}
+              currentUserRole={currentUser.role}
+              navigationItem="contracts"
+            >
               <Link href="/contracts/create">
                 <Button 
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -96,7 +103,7 @@ export default function ContractsList() {
                   New Contract
                 </Button>
               </Link>
-            )}
+            </PermissionWrapper>
           </div>
         </div>
 
@@ -219,9 +226,15 @@ export default function ContractsList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <PermissionWrapper
+                        requiredPermissions={['canEdit']}
+                        currentUserRole={currentUser.role}
+                        navigationItem="contracts"
+                      >
+                        <Button variant="ghost" size="sm" data-testid="button-contract-actions">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </PermissionWrapper>
                     </TableCell>
                   </TableRow>
                 ))}

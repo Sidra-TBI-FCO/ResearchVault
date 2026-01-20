@@ -20,6 +20,9 @@ import { Plus, Search, MoreHorizontal, CalendarRange, Bookmark, FileText, Downlo
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import PublicationImport from "./import";
 
 export default function PublicationsList() {
@@ -28,6 +31,7 @@ export default function PublicationsList() {
   const [filterResearchActivityId, setFilterResearchActivityId] = useState<number | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { currentUser } = useCurrentUser();
   
   // Parse query params to check for research activity filter
   useEffect(() => {
@@ -109,26 +113,44 @@ export default function PublicationsList() {
           )}
         </div>
         <div className="flex gap-2">
-          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                Import Publication
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Import Publication</DialogTitle>
-              </DialogHeader>
-              <PublicationImport onClose={() => setImportDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
-          <Link href="/publications/create">
-            <Button className="flex items-center gap-2 bg-[#2D9C95] hover:bg-[#238B7A] text-white">
-              <Plus className="h-4 w-4" />
-              Add Publication
-            </Button>
-          </Link>
+          {currentUser && (
+            <>
+              <PermissionWrapper
+                currentUserRole={currentUser.role}
+                navigationItem="publications"
+                requiredPermissions={['canAdd']}
+                fallback={null}
+              >
+                <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Import Publication
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Import Publication</DialogTitle>
+                    </DialogHeader>
+                    <PublicationImport onClose={() => setImportDialogOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+              </PermissionWrapper>
+              <PermissionWrapper
+                currentUserRole={currentUser.role}
+                navigationItem="publications"
+                requiredPermissions={['canAdd']}
+                fallback={null}
+              >
+                <Link href="/publications/create">
+                  <Button className="flex items-center gap-2 bg-[#2D9C95] hover:bg-[#238B7A] text-white">
+                    <Plus className="h-4 w-4" />
+                    Add Publication
+                  </Button>
+                </Link>
+              </PermissionWrapper>
+            </>
+          )}
         </div>
       </div>
 
@@ -250,11 +272,20 @@ export default function PublicationsList() {
                               View Details
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/publications/${publication.id}/edit`}>
-                              Edit Publication
-                            </Link>
-                          </DropdownMenuItem>
+                          {currentUser && (
+                            <PermissionWrapper
+                              currentUserRole={currentUser.role}
+                              navigationItem="publications"
+                              requiredPermissions={['canEdit']}
+                              fallback={null}
+                            >
+                              <DropdownMenuItem asChild>
+                                <Link href={`/publications/${publication.id}/edit`}>
+                                  Edit Publication
+                                </Link>
+                              </DropdownMenuItem>
+                            </PermissionWrapper>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

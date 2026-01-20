@@ -5,8 +5,9 @@ import { Eye } from "lucide-react";
 
 interface PermissionWrapperProps {
   children: ReactNode;
-  currentUserRole: string;
-  navigationItem: string;
+  currentUserRole?: string;
+  navigationItem?: string;
+  requiredPermissions?: ('canEdit' | 'canAdd' | 'canView' | 'canDelete')[];
   fallback?: ReactNode;
   showReadOnlyBanner?: boolean;
 }
@@ -15,39 +16,68 @@ export function PermissionWrapper({
   children, 
   currentUserRole, 
   navigationItem, 
+  requiredPermissions,
   fallback = null,
   showReadOnlyBanner = true 
 }: PermissionWrapperProps) {
-  const { isHidden, isReadOnly } = usePermissions();
+  const { isHidden, isReadOnly, canEdit, canView } = usePermissions();
 
-  // If the section is hidden, don't render anything
-  if (isHidden(currentUserRole, navigationItem)) {
-    return <>{fallback}</>;
+  // Handle button-level permission checking with requiredPermissions
+  if (requiredPermissions && currentUserRole && navigationItem) {
+    const hasRequiredPermission = requiredPermissions.every(permission => {
+      if (permission === 'canEdit') {
+        return canEdit(currentUserRole, navigationItem);
+      } else if (permission === 'canView') {
+        return canView(currentUserRole, navigationItem);
+      } else if (permission === 'canAdd') {
+        // canAdd is treated the same as canEdit for now
+        return canEdit(currentUserRole, navigationItem);
+      } else if (permission === 'canDelete') {
+        // canDelete is treated the same as canEdit for now
+        return canEdit(currentUserRole, navigationItem);
+      }
+      return false;
+    });
+
+    if (!hasRequiredPermission) {
+      return <>{fallback}</>;
+    }
+
+    // If user has permission, render normally (no read-only banner for buttons)
+    return <>{children}</>;
   }
 
-  // If it's read-only, wrap with read-only styling and banner
-  if (isReadOnly(currentUserRole, navigationItem)) {
-    return (
-      <div className="space-y-4">
-        {showReadOnlyBanner && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">View Only Mode</span>
-              <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
-                Read Only
-              </Badge>
+  // Handle page-level permission checking with currentUserRole and navigationItem
+  if (currentUserRole && navigationItem) {
+    // If the section is hidden, don't render anything
+    if (isHidden(currentUserRole, navigationItem)) {
+      return <>{fallback}</>;
+    }
+
+    // If it's read-only, wrap with read-only styling and banner
+    if (isReadOnly(currentUserRole, navigationItem)) {
+      return (
+        <div className="space-y-4">
+          {showReadOnlyBanner && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">View Only Mode</span>
+                <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                  Read Only
+                </Badge>
+              </div>
+              <p className="text-xs text-primary/80 mt-1">
+                You have view-only access to this section. Contact an administrator to request edit permissions.
+              </p>
             </div>
-            <p className="text-xs text-primary/80 mt-1">
-              You have view-only access to this section. Contact an administrator to request edit permissions.
-            </p>
+          )}
+          <div className="read-only-content">
+            {children}
           </div>
-        )}
-        <div className="read-only-content">
-          {children}
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   // Full access - render normally
