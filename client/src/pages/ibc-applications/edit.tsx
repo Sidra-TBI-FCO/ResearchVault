@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist, type Certification, type CertificationModule } from "@shared/schema";
 import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import IbcFacilitiesTab from "@/components/IbcFacilitiesTab";
@@ -4947,15 +4948,69 @@ export default function IbcApplicationEdit() {
                         <div className="flex justify-between items-center">
                           <h3 className="text-lg font-semibold">Cell Lines</h3>
                           {!isReadOnly && (
-                            <Button
-                              type="button"
-                              onClick={openAddCellLineDialog}
-                              className="flex items-center gap-2"
-                              data-testid="button-add-cell-line"
-                            >
-                              <Plus className="w-4 h-4" />
-                              Add Cell Line
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={openAddCellLineDialog}
+                                className="flex items-center gap-2"
+                                data-testid="button-add-cell-line"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add Cell Line
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                    disabled={(form.watch('cellLines')?.length || 0) === 0}
+                                    data-testid="button-edit-cell-line-dropdown"
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                    Edit Cell Line
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {form.watch('cellLines')?.map((cellLine, index) => (
+                                    <DropdownMenuItem
+                                      key={index}
+                                      onClick={() => openEditCellLineDialog(index)}
+                                      data-testid={`dropdown-edit-cell-line-${index}`}
+                                    >
+                                      {cellLine.name || `Cell Line ${index + 1}`}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                    disabled={(form.watch('cellLines')?.length || 0) === 0}
+                                    data-testid="button-remove-cell-lines-dropdown"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Remove Cell Lines
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {form.watch('cellLines')?.map((cellLine, index) => (
+                                    <DropdownMenuItem
+                                      key={index}
+                                      onClick={() => deleteCellLine(index)}
+                                      className="text-red-600"
+                                      data-testid={`dropdown-remove-cell-line-${index}`}
+                                    >
+                                      {cellLine.name || `Cell Line ${index + 1}`}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           )}
                         </div>
 
