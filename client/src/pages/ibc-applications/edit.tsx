@@ -527,6 +527,7 @@ export default function IbcApplicationEdit() {
         humanNonHumanPrimateMaterial: ibcApplication.humanNonHumanPrimateMaterial || false,
         introducingPrimateMaterialIntoAnimals: ibcApplication.introducingPrimateMaterialIntoAnimals ?? undefined,
         microorganismsInfectiousMaterial: ibcApplication.microorganismsInfectiousMaterial || false,
+        microorganismsRecombinantDna: ibcApplication.introducingRecombinantDnaToMicroorganisms ?? undefined,
         biologicalToxins: ibcApplication.biologicalToxins || false,
         nanoparticles: ibcApplication.nanoparticles || false,
         arthropods: ibcApplication.arthropods || false,
@@ -1391,7 +1392,7 @@ export default function IbcApplicationEdit() {
   };
 
   const handleSave = async (data: EditIbcApplicationFormValues) => {
-    const { teamMembers, researchActivityIds, submissionComment, ...ibcData } = data;
+    const { teamMembers, researchActivityIds, submissionComment, microorganismsRecombinantDna, ...ibcData } = data;
     
     const piId = data.principalInvestigatorId;
     let membersToSave = teamMembers || [];
@@ -1416,7 +1417,15 @@ export default function IbcApplicationEdit() {
       }
     }
     
-    return await saveMutation.mutateAsync({ ...ibcData, protocolTeamMembers, piResponses });
+    // Map form field to database field
+    const dataToSave = {
+      ...ibcData,
+      introducingRecombinantDnaToMicroorganisms: microorganismsRecombinantDna,
+      protocolTeamMembers,
+      piResponses
+    };
+    
+    return await saveMutation.mutateAsync(dataToSave);
   };
 
   const handleSubmit = async (data: EditIbcApplicationFormValues) => {
@@ -1430,7 +1439,7 @@ export default function IbcApplicationEdit() {
       return;
     }
 
-    const { teamMembers, researchActivityIds, submissionComment: formComment, ...ibcData } = data;
+    const { teamMembers, researchActivityIds, submissionComment: formComment, microorganismsRecombinantDna, ...ibcData } = data;
     
     const piId = data.principalInvestigatorId;
     let membersToSave = teamMembers || [];
@@ -1444,11 +1453,15 @@ export default function IbcApplicationEdit() {
     // Keep existing piResponses for backward compatibility
     let piResponses = ibcApplication?.piResponses || [];
     
-    return await submitMutation.mutateAsync({ 
-      ...ibcData, 
-      protocolTeamMembers, 
+    // Map form field to database field
+    const dataToSubmit = {
+      ...ibcData,
+      introducingRecombinantDnaToMicroorganisms: microorganismsRecombinantDna,
+      protocolTeamMembers,
       piResponses
-    });
+    };
+    
+    return await submitMutation.mutateAsync(dataToSubmit);
   };
 
   if (isLoading) {
