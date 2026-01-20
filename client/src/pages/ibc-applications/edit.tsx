@@ -383,6 +383,7 @@ export default function IbcApplicationEdit() {
   const isReadOnly = ibcApplication?.status?.toLowerCase() !== 'draft';
 
   const form = useForm<EditIbcApplicationFormValues>({
+    mode: 'onChange', // Track changes in real-time
     resolver: zodResolver(editIbcApplicationSchema),
     defaultValues: {
       cayuseProtocolNumber: "",
@@ -717,6 +718,9 @@ export default function IbcApplicationEdit() {
   const { data: certificationModules } = useQuery<CertificationModule[]>({
     queryKey: ['/api/certification-modules'],
   });
+
+  // Track if form has unsaved changes
+  const { isDirty } = form.formState;
 
   // Get all team member IDs
   const teamMemberIds = form.watch('teamMembers')?.map(m => m.scientistId).filter(Boolean) || [];
@@ -6262,14 +6266,22 @@ export default function IbcApplicationEdit() {
                   </Card>
                 )}
 
+                {/* Unsaved Changes Indicator */}
+                {isDirty && !isReadOnly && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 {!isReadOnly && (
                   <div className="flex flex-col gap-2">
                     <Button 
                       type="button" 
                       disabled={saveMutation.isPending || submitMutation.isPending}
-                      variant="outline"
-                      className="w-full"
+                      variant={isDirty ? "default" : "outline"}
+                      className={`w-full ${isDirty ? "animate-pulse bg-amber-500 hover:bg-amber-600 text-white" : ""}`}
                       onClick={async () => {
                         const formData = form.getValues();
                         try {
@@ -6280,7 +6292,7 @@ export default function IbcApplicationEdit() {
                       }}
                     >
                       {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Save Draft
+                      {isDirty ? "Save Changes" : "Save Draft"}
                     </Button>
                     <Button 
                       type="button" 
@@ -6354,12 +6366,21 @@ export default function IbcApplicationEdit() {
               </Card>
             )}
 
+            {/* Mobile Unsaved Changes Indicator */}
+            {isDirty && !isReadOnly && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
+              </div>
+            )}
+
             {!isReadOnly && (
               <div className="flex gap-4">
                 <Button 
                   type="button" 
                   disabled={saveMutation.isPending || submitMutation.isPending}
-                  variant="outline"
+                  variant={isDirty ? "default" : "outline"}
+                  className={isDirty ? "animate-pulse bg-amber-500 hover:bg-amber-600 text-white" : ""}
                   onClick={async () => {
                     const formData = form.getValues();
                     try {
@@ -6370,7 +6391,7 @@ export default function IbcApplicationEdit() {
                   }}
                 >
                   {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Draft
+                  {isDirty ? "Save Changes" : "Save Draft"}
                 </Button>
                 <Button 
                   type="button" 
