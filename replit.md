@@ -126,6 +126,8 @@ The Research Portal System is a full-stack web application built for managing sc
 - Backup and recovery procedures (external to application)
 
 ## Changelog
+- January 20, 2026. Redesigned IBC application edit page with two-column layout: main form on left, sticky right sidebar with Communication History, Submission Comment, and Save/Submit buttons for better usability
+- January 20, 2026. Removed redundant Risk Group Classification field from IBC applications as Biosafety Level already provides this information
 - January 15, 2026. Added Team Management functionality to Settings with three tabs (Layout & Theme, Team Members, Feature Requests). Team members can be categorized as Element Leads, Faculty Testers, or Developers with full CRUD operations and photo support.
 - January 6, 2026. Added configurable abbreviations (PRM/PRJ/SDR etc.) per institution with sidebar integration
 - January 6, 2026. Added WCM-Q (Weill Cornell Medicine-Qatar) as third institution with Cornell red color theme
