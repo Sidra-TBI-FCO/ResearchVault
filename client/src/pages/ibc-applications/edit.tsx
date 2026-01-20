@@ -1936,9 +1936,9 @@ export default function IbcApplicationEdit() {
                           control={form.control}
                           name="animalMaterialSubOptions"
                           render={({ field }) => (
-                            <FormItem className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 ml-8">
+                            <FormItem className="bg-blue-50 p-4 rounded-lg border border-blue-200 ml-8">
                               <div className="space-y-4">
-                                <FormLabel className="text-base font-medium text-yellow-800">
+                                <FormLabel className="text-base font-medium text-blue-800">
                                   Please select all that apply to your research:
                                 </FormLabel>
                                 <FormControl>
@@ -2043,9 +2043,9 @@ export default function IbcApplicationEdit() {
                           control={form.control}
                           name="introducingPrimateMaterialIntoAnimals"
                           render={({ field }) => (
-                            <FormItem className="bg-orange-50 p-4 rounded-lg border border-orange-200 ml-8">
+                            <FormItem className="bg-blue-50 p-4 rounded-lg border border-blue-200 ml-8">
                               <div className="space-y-3">
-                                <FormLabel className="text-base font-medium text-orange-800">
+                                <FormLabel className="text-base font-medium text-blue-800">
                                   Will you be introducing these materials into animals?
                                 </FormLabel>
                                 <FormControl>
@@ -3395,9 +3395,9 @@ export default function IbcApplicationEdit() {
                       )}
                     />
                     
-                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h4 className="text-sm font-medium text-yellow-800 mb-2">Important Exemption Limitations</h4>
-                      <p className="text-xs text-yellow-700">
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">Important Exemption Limitations</h4>
+                      <p className="text-xs text-blue-700">
                         These exemptions do NOT apply to: (1) experiments involving &gt;10 liters of culture, 
                         (2) experiments with DNA from Risk Groups 3, 4, or restricted organisms, 
                         (3) deliberate cloning of toxin genes with LD50 &lt; 100 ng/kg, or 
