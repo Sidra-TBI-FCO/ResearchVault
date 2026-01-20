@@ -6457,7 +6457,7 @@ export default function IbcApplicationEdit() {
                 // IMPORTANT: Clear data FIRST, then set parent to false
                 clearNucleicAcidsData();
                 prevRecombinantValue.current = false;
-                form.setValue('recombinantSyntheticNucleicAcid', false);
+                form.setValue('recombinantSyntheticNucleicAcid', false, { shouldDirty: true });
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6500,7 +6500,7 @@ export default function IbcApplicationEdit() {
                 // IMPORTANT: Clear data FIRST, then set parent to false
                 clearHumanNhpData();
                 prevHumanNhpValue.current = false;
-                form.setValue('humanNonHumanPrimateMaterial', false);
+                form.setValue('humanNonHumanPrimateMaterial', false, { shouldDirty: true });
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6534,7 +6534,7 @@ export default function IbcApplicationEdit() {
                 // IMPORTANT: Clear data FIRST, then set parent to false
                 clearAnimalsData();
                 prevAnimalsValue.current = false;
-                form.setValue('wholeAnimalsAnimalMaterial', false);
+                form.setValue('wholeAnimalsAnimalMaterial', false, { shouldDirty: true });
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6568,7 +6568,7 @@ export default function IbcApplicationEdit() {
                 // IMPORTANT: Clear data FIRST, then set parent to false
                 clearMicroorganismsData();
                 prevMicroorganismsValue.current = false;
-                form.setValue('microorganismsInfectiousMaterial', false);
+                form.setValue('microorganismsInfectiousMaterial', false, { shouldDirty: true });
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6602,7 +6602,7 @@ export default function IbcApplicationEdit() {
                 // IMPORTANT: Clear data FIRST, then set parent to false
                 clearArthropodsData();
                 prevArthropodsValue.current = false;
-                form.setValue('arthropods', false);
+                form.setValue('arthropods', false, { shouldDirty: true });
               }}
               className="bg-red-600 hover:bg-red-700"
             >
@@ -6636,7 +6636,7 @@ export default function IbcApplicationEdit() {
                 // IMPORTANT: Clear data FIRST, then set parent to false
                 clearPlantsData();
                 prevPlantsValue.current = false;
-                form.setValue('plants', false);
+                form.setValue('plants', false, { shouldDirty: true });
               }}
               className="bg-red-600 hover:bg-red-700"
             >
