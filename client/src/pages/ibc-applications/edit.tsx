@@ -531,7 +531,9 @@ export default function IbcApplicationEdit() {
         biologicalToxins: ibcApplication.biologicalToxins || false,
         nanoparticles: ibcApplication.nanoparticles || false,
         arthropods: ibcApplication.arthropods || false,
+        arthropodsRecombinantDna: ibcApplication.transgenicArthropodsOrExposure ?? undefined,
         plants: ibcApplication.plants || false,
+        plantsRecombinantDna: ibcApplication.transgenicPlantsOrExposure ?? undefined,
         riskGroupClassification: ibcApplication.riskGroupClassification || "",
         protocolSummary: ibcApplication.protocolSummary || "",
         
@@ -1392,7 +1394,7 @@ export default function IbcApplicationEdit() {
   };
 
   const handleSave = async (data: EditIbcApplicationFormValues) => {
-    const { teamMembers, researchActivityIds, submissionComment, microorganismsRecombinantDna, ...ibcData } = data;
+    const { teamMembers, researchActivityIds, submissionComment, microorganismsRecombinantDna, arthropodsRecombinantDna, plantsRecombinantDna, ...ibcData } = data;
     
     const piId = data.principalInvestigatorId;
     let membersToSave = teamMembers || [];
@@ -1417,10 +1419,12 @@ export default function IbcApplicationEdit() {
       }
     }
     
-    // Map form field to database field
+    // Map form fields to database fields
     const dataToSave = {
       ...ibcData,
       introducingRecombinantDnaToMicroorganisms: microorganismsRecombinantDna,
+      transgenicArthropodsOrExposure: arthropodsRecombinantDna,
+      transgenicPlantsOrExposure: plantsRecombinantDna,
       protocolTeamMembers,
       piResponses
     };
@@ -1439,7 +1443,7 @@ export default function IbcApplicationEdit() {
       return;
     }
 
-    const { teamMembers, researchActivityIds, submissionComment: formComment, microorganismsRecombinantDna, ...ibcData } = data;
+    const { teamMembers, researchActivityIds, submissionComment: formComment, microorganismsRecombinantDna, arthropodsRecombinantDna, plantsRecombinantDna, ...ibcData } = data;
     
     const piId = data.principalInvestigatorId;
     let membersToSave = teamMembers || [];
@@ -1453,10 +1457,12 @@ export default function IbcApplicationEdit() {
     // Keep existing piResponses for backward compatibility
     let piResponses = ibcApplication?.piResponses || [];
     
-    // Map form field to database field
+    // Map form fields to database fields
     const dataToSubmit = {
       ...ibcData,
       introducingRecombinantDnaToMicroorganisms: microorganismsRecombinantDna,
+      transgenicArthropodsOrExposure: arthropodsRecombinantDna,
+      transgenicPlantsOrExposure: plantsRecombinantDna,
       protocolTeamMembers,
       piResponses
     };
