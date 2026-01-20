@@ -1536,8 +1536,11 @@ export default function IbcApplicationEdit() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-          <Tabs defaultValue="basics" className="w-full">
+        <form onSubmit={(e) => e.preventDefault()}>
+          <div className="flex gap-6">
+            {/* Main Content Column */}
+            <div className="flex-1 min-w-0 space-y-6">
+              <Tabs defaultValue="basics" className="w-full">
             <TabsList className="w-full justify-start overflow-x-auto px-6 gap-2" style={{scrollPaddingLeft: '24px', scrollPaddingRight: '24px'}}>
               <TabsTrigger value="basics" className="whitespace-nowrap flex-shrink-0">Basics</TabsTrigger>
               <TabsTrigger value="staff" className="whitespace-nowrap flex-shrink-0">Staff</TabsTrigger>
@@ -1765,30 +1768,6 @@ export default function IbcApplicationEdit() {
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="riskGroupClassification"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Risk Group Classification</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select risk group" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Risk Group 1">Risk Group 1 - No or low risk</SelectItem>
-                            <SelectItem value="Risk Group 2">Risk Group 2 - Moderate risk</SelectItem>
-                            <SelectItem value="Risk Group 3">Risk Group 3 - High risk</SelectItem>
-                            <SelectItem value="Risk Group 4">Risk Group 4 - Extreme danger</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   {/* Legacy Biosafety Checkboxes for compatibility */}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -6242,94 +6221,188 @@ export default function IbcApplicationEdit() {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
+              </Tabs>
+            </div>
 
-          {/* Communication History */}
-          {comments.length > 0 && (
-            <div className="mt-6">
+            {/* Right Sidebar - Always visible */}
+            <div className="w-80 flex-shrink-0 hidden lg:block">
+              <div className="sticky top-4 space-y-4">
+                {/* Communication History */}
+                {comments.length > 0 && (
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <TimelineComments 
+                      application={ibcApplication} 
+                      comments={comments} 
+                      title="Communication History"
+                    />
+                  </div>
+                )}
+
+                {/* Submission Comment - Required when submitting */}
+                {!isReadOnly && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Submission Comment
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Required when submitting application
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <Textarea
+                        placeholder="Explain changes or additional information..."
+                        value={submissionComment}
+                        onChange={(e) => setSubmissionComment(e.target.value)}
+                        rows={3}
+                        className="resize-none text-sm"
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Action Buttons */}
+                {!isReadOnly && (
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      type="button" 
+                      disabled={saveMutation.isPending || submitMutation.isPending}
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        const formData = form.getValues();
+                        try {
+                          await handleSave(formData);
+                        } catch (error) {
+                          console.error('Error in handleSave:', error);
+                        }
+                      }}
+                    >
+                      {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Draft
+                    </Button>
+                    <Button 
+                      type="button" 
+                      disabled={saveMutation.isPending || submitMutation.isPending || !submissionComment.trim()}
+                      className="w-full bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                      onClick={async () => {
+                        const formData = form.getValues();
+                        try {
+                          await handleSubmit(formData);
+                        } catch (error) {
+                          console.error('Error in handleSubmit:', error);
+                        }
+                      }}
+                    >
+                      {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Submit Application
+                    </Button>
+                  </div>
+                )}
+                
+                {isReadOnly && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <Eye className="h-4 w-4" />
+                      <span className="text-sm font-medium">Read-Only Mode</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This application has been submitted and cannot be edited.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile fallback - show at bottom on smaller screens */}
+          <div className="lg:hidden mt-6 space-y-4">
+            {/* Communication History */}
+            {comments.length > 0 && (
               <TimelineComments 
                 application={ibcApplication} 
                 comments={comments} 
                 title="Communication History"
               />
-            </div>
-          )}
+            )}
 
-          {/* Submission Comment - Required when submitting */}
-          {!isReadOnly && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Submission Comment
-                </CardTitle>
-                <CardDescription>
-                  Provide a comment explaining your submission (required when submitting application)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Explain the purpose of this submission, any changes made, or additional information for the IBC office..."
-                  value={submissionComment}
-                  onChange={(e) => setSubmissionComment(e.target.value)}
-                  rows={4}
-                  className="resize-none"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  This comment will be recorded with your submission and visible to the IBC office and reviewers
-                </p>
-              </CardContent>
-            </Card>
-          )}
+            {/* Submission Comment */}
+            {!isReadOnly && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Submission Comment
+                  </CardTitle>
+                  <CardDescription>
+                    Provide a comment explaining your submission (required when submitting application)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    placeholder="Explain the purpose of this submission, any changes made, or additional information for the IBC office..."
+                    value={submissionComment}
+                    onChange={(e) => setSubmissionComment(e.target.value)}
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    This comment will be recorded with your submission and visible to the IBC office and reviewers
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
-          {!isReadOnly && (
-            <div className="flex gap-4 pt-6">
-              <Button 
-                type="button" 
-                disabled={saveMutation.isPending || submitMutation.isPending}
-                variant="outline"
-                onClick={async () => {
-                  const formData = form.getValues();
-                  try {
-                    await handleSave(formData);
-                  } catch (error) {
-                    console.error('Error in handleSave:', error);
-                  }
-                }}
-              >
-                {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Draft
-              </Button>
-              <Button 
-                type="button" 
-                disabled={saveMutation.isPending || submitMutation.isPending || !submissionComment.trim()}
-                className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
-                onClick={async () => {
-                  const formData = form.getValues();
-                  try {
-                    await handleSubmit(formData);
-                  } catch (error) {
-                    console.error('Error in handleSubmit:', error);
-                  }
-                }}
-              >
-                {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Submit Application
-              </Button>
-            </div>
-          )}
-          
-          {isReadOnly && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-6">
-              <div className="flex items-center space-x-2 text-gray-600">
-                <Eye className="h-4 w-4" />
-                <span className="text-sm font-medium">Read-Only Mode</span>
+            {!isReadOnly && (
+              <div className="flex gap-4">
+                <Button 
+                  type="button" 
+                  disabled={saveMutation.isPending || submitMutation.isPending}
+                  variant="outline"
+                  onClick={async () => {
+                    const formData = form.getValues();
+                    try {
+                      await handleSave(formData);
+                    } catch (error) {
+                      console.error('Error in handleSave:', error);
+                    }
+                  }}
+                >
+                  {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Draft
+                </Button>
+                <Button 
+                  type="button" 
+                  disabled={saveMutation.isPending || submitMutation.isPending || !submissionComment.trim()}
+                  className="bg-sidra-teal hover:bg-sidra-teal-dark text-white"
+                  onClick={async () => {
+                    const formData = form.getValues();
+                    try {
+                      await handleSubmit(formData);
+                    } catch (error) {
+                      console.error('Error in handleSubmit:', error);
+                    }
+                  }}
+                >
+                  {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Submit Application
+                </Button>
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                This application has been submitted and cannot be edited. Contact the IBC office if changes are needed.
-              </p>
-            </div>
-          )}
+            )}
+            
+            {isReadOnly && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <Eye className="h-4 w-4" />
+                  <span className="text-sm font-medium">Read-Only Mode</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  This application has been submitted and cannot be edited. Contact the IBC office if changes are needed.
+                </p>
+              </div>
+            )}
+          </div>
         </form>
       </Form>
 
