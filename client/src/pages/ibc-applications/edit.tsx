@@ -328,6 +328,8 @@ export default function IbcApplicationEdit() {
   const [microorganismsResetKey, setMicroorganismsResetKey] = useState(0);
   const [arthropodsResetKey, setArthropodsResetKey] = useState(0);
   const [plantsResetKey, setPlantsResetKey] = useState(0);
+  const [nhpExposureKitResetKey, setNhpExposureKitResetKey] = useState(0);
+  const [stemCellsNihRegistryResetKey, setStemCellsNihRegistryResetKey] = useState(0);
   const [animalsConfirmDialog, setAnimalsConfirmDialog] = useState(false);
   const [microorganismsConfirmDialog, setMicroorganismsConfirmDialog] = useState(false);
   const [arthropodsConfirmDialog, setArthropodsConfirmDialog] = useState(false);
@@ -4790,9 +4792,14 @@ export default function IbcApplicationEdit() {
                                     type="checkbox"
                                     checked={field.value || false}
                                     onChange={(e) => {
+                                      const wasUnchecked = !field.value;
                                       field.onChange(e.target.checked);
-                                      // Clear nested NHP Exposure Kit when unchecked
-                                      if (!e.target.checked) {
+                                      if (e.target.checked && wasUnchecked) {
+                                        // Clear nested NHP Exposure Kit when checking and force re-mount
+                                        form.setValue('nhpExposureKit', undefined, { shouldDirty: true, shouldTouch: true });
+                                        setNhpExposureKitResetKey(prev => prev + 1);
+                                      } else if (!e.target.checked) {
+                                        // Clear nested NHP Exposure Kit when unchecked
                                         form.setValue('nhpExposureKit', undefined);
                                       }
                                     }}
@@ -4811,6 +4818,7 @@ export default function IbcApplicationEdit() {
                         {/* Conditional NHP Exposure Kit question when Non-human Primate Origin is checked */}
                         {form.watch('nonHumanPrimateOrigin') && (
                           <FormField
+                            key={`nhp-exposure-kit-${nhpExposureKitResetKey}`}
                             control={form.control}
                             name="nhpExposureKit"
                             render={({ field }) => (
@@ -4877,6 +4885,11 @@ export default function IbcApplicationEdit() {
                                             const currentValues = field.value || [];
                                             if (e.target.checked) {
                                               field.onChange([...currentValues, stemCell]);
+                                              // Clear and reset NIH Registry when Embryonic Stem Cells is checked
+                                              if (stemCell === 'Embryonic Stem Cells') {
+                                                form.setValue('stemCellsNihRegistry', undefined, { shouldDirty: true, shouldTouch: true });
+                                                setStemCellsNihRegistryResetKey(prev => prev + 1);
+                                              }
                                             } else {
                                               field.onChange(currentValues.filter((v: string) => v !== stemCell));
                                               // Clear NIH Registry when Embryonic Stem Cells is unchecked
@@ -4901,6 +4914,7 @@ export default function IbcApplicationEdit() {
                           {/* Conditional NIH Registry field when Embryonic Stem Cells is selected */}
                           {Array.isArray(form.watch('stemCells')) && form.watch('stemCells')?.includes('Embryonic Stem Cells') && (
                             <FormField
+                              key={`stem-cells-nih-registry-${stemCellsNihRegistryResetKey}`}
                               control={form.control}
                               name="stemCellsNihRegistry"
                               render={({ field }) => (
