@@ -323,6 +323,8 @@ export default function IbcApplicationEdit() {
   // State for conditional tab visibility with data protection
   const [nucleicAcidsConfirmDialog, setNucleicAcidsConfirmDialog] = useState(false);
   const [humanNhpConfirmDialog, setHumanNhpConfirmDialog] = useState(false);
+  // Counter to force re-mount of nested fields when parent changes from No to Yes
+  const [introducingMaterialsResetKey, setIntroducingMaterialsResetKey] = useState(0);
   const [animalsConfirmDialog, setAnimalsConfirmDialog] = useState(false);
   const [microorganismsConfirmDialog, setMicroorganismsConfirmDialog] = useState(false);
   const [arthropodsConfirmDialog, setArthropodsConfirmDialog] = useState(false);
@@ -1997,7 +1999,9 @@ export default function IbcApplicationEdit() {
                                         field.onChange(true);
                                         // When clicking Yes, ALWAYS clear the nested question to start fresh
                                         if (wasNo) {
-                                          form.setValue('introducingPrimateMaterialIntoAnimals', undefined);
+                                          form.setValue('introducingPrimateMaterialIntoAnimals', undefined, { shouldDirty: true, shouldTouch: true });
+                                          // Force re-mount of the nested FormField to clear any cached state
+                                          setIntroducingMaterialsResetKey(prev => prev + 1);
                                         }
                                       }}
                                       className="w-4 h-4 text-blue-600"
@@ -2033,6 +2037,7 @@ export default function IbcApplicationEdit() {
                       {/* Conditional sub-question for Human/Non-Human Primate Material */}
                       {form.watch('humanNonHumanPrimateMaterial') && (
                         <FormField
+                          key={`introducing-materials-${introducingMaterialsResetKey}`}
                           control={form.control}
                           name="introducingPrimateMaterialIntoAnimals"
                           render={({ field }) => (
