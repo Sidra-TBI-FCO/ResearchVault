@@ -260,6 +260,12 @@ function parseObjectPath(path: string): {
   };
 }
 
+// Returns the appropriate storage service based on STORAGE_TYPE env var.
+// Use "local" for Docker/self-hosted deployments; defaults to Replit mode.
+export function createObjectStorageService(): ObjectStorageService {
+  return new ObjectStorageService();
+}
+
 async function signObjectURL({
   bucketName,
   objectName,
