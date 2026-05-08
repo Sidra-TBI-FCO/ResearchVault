@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { registerAuthRoutes } from "./auth";
+import { registerAuthRoutes, getAuthMode, demoBannerMiddleware } from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { createHash } from "crypto";
@@ -41,22 +41,10 @@ app.use(session({
   }
 }));
 
-// Development middleware to bridge dummy users with session-based auth
-if (process.env.NODE_ENV !== 'production') {
-  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
-    // If no session user is set, use a default development user
-    if (!req.session.user) {
-      // Default to Management user for development access
-      req.session.user = {
-        id: 8,
-        username: 'iris.admin',
-        name: 'Iris Administrator', 
-        email: 'iris.admin@research.org',
-        role: 'Management'
-      };
-    }
-    next();
-  });
+// Demo mode: auto-inject a guest user so the app runs without login.
+// Also applies in development when AUTH_MODE is unset or "demo".
+if (getAuthMode() === "demo") {
+  app.use("/api", demoBannerMiddleware);
 }
 
 app.use((req, res, next) => {

@@ -2,157 +2,217 @@ import { users } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
-import { Request, Response, NextFunction } from "express";
+import { type Request, type Response, type NextFunction } from "express";
 import session from "express-session";
 
-// Extend Express.Session interface to include our user property
+// ── Session types ──────────────────────────────────────────────────────────────
+
 declare module "express-session" {
   interface SessionData {
-    user?: {
-      id: number;
-      username: string;
-      name: string;
-      email: string;
-      role: string;
+    user?: SessionUser;
+    oidcState?: string;
+    oidcNonce?: string;
+  }
+}
+
+export interface SessionUser {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+// ── Auth mode ──────────────────────────────────────────────────────────────────
+
+export type AuthMode = "demo" | "local" | "ldap" | "oidc";
+
+export function getAuthMode(): AuthMode {
+  const mode = (process.env.AUTH_MODE || "local").toLowerCase();
+  if (mode === "demo" || mode === "ldap" || mode === "oidc") return mode;
+  return "local";
+}
+
+// ── Password hashing ───────────────────────────────────────────────────────────
+
+export function hashPassword(password: string): string {
+  return createHash("sha256").update(password).digest("hex");
+}
+
+// ── Middleware ─────────────────────────────────────────────────────────────────
+
+// Demo mode: auto-inject a configurable guest user for every request
+export function demoBannerMiddleware(req: Request, _res: Response, next: NextFunction) {
+  if (!req.session.user) {
+    req.session.user = {
+      id: 0,
+      username: process.env.DEMO_USERNAME || "demo.user",
+      name: process.env.DEMO_NAME || "Demo User",
+      email: process.env.DEMO_EMAIL || "demo@researchvault.local",
+      role: process.env.DEMO_ROLE || "Management",
     };
   }
+  next();
 }
 
-/**
- * Utility function to hash a password using SHA-256
- */
-export function hashPassword(password: string): string {
-  return createHash('sha256').update(password).digest('hex');
-}
-
-/**
- * Middleware to check if user is authenticated
- */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.user) {
-    return next();
-  }
-  
+  if (getAuthMode() === "demo") return next(); // demo bypasses auth
+  if (req.session?.user) return next();
   res.status(401).json({ message: "Unauthorized. Please log in." });
 }
 
-/**
- * Middleware to check if user is an admin
- */
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.user && req.session.user.role === 'admin') {
-    return next();
-  }
-  
+  if (req.session?.user?.role === "admin") return next();
   res.status(403).json({ message: "Forbidden. Admin access required." });
 }
 
-/**
- * Middleware to check if user is a contracts officer
- */
 export function requireContractsOfficer(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.user && 
-      (req.session.user.role === 'Contracts Officer' || req.session.user.role === 'admin' || req.session.user.role === 'Management')) {
-    return next();
-  }
-  
+  const role = req.session?.user?.role;
+  if (role === "Contracts Officer" || role === "admin" || role === "Management") return next();
   res.status(403).json({ message: "Forbidden. Contracts officer access required." });
 }
 
-/**
- * Middleware to check if user can read contracts (own contracts + officers can see all)
- */
 export function requireContractsRead(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.user) {
-    // Add user info to request for filtering in routes
+  if (req.session?.user) {
     (req as any).currentUser = req.session.user;
     return next();
   }
-  
   res.status(401).json({ message: "Unauthorized. Please log in." });
 }
 
-/**
- * Login a user
- */
-export async function loginUser(username: string, password: string) {
-  try {
-    // Hash the password for comparison
-    const hashedPassword = hashPassword(password);
-    
-    // Find the user
-    const user = await db.select().from(users).where(eq(users.username, username));
-    
-    if (user.length === 0) {
-      return { success: false, message: "User not found" };
-    }
-    
-    const foundUser = user[0];
-    
-    // Check the password
-    if (foundUser.password !== hashedPassword) {
-      return { success: false, message: "Invalid password" };
-    }
-    
-    // Return user data (excluding the password hash)
-    return { 
-      success: true, 
-      user: {
-        id: foundUser.id,
-        username: foundUser.username,
-        name: foundUser.name,
-        email: foundUser.email,
-        role: foundUser.role
-      }
-    };
-  } catch (error) {
-    console.error("Login error:", error);
-    return { success: false, message: "An error occurred during login" };
+// ── Local auth helpers ─────────────────────────────────────────────────────────
+
+async function findOrCreateExternalUser(
+  username: string,
+  name: string,
+  email: string,
+): Promise<SessionUser | null> {
+  let [user] = await db.select().from(users).where(eq(users.username, username));
+
+  if (!user) {
+    // Create a new user record for external-auth users (no password)
+    const [created] = await db
+      .insert(users)
+      .values({ username, name, email, password: "", role: "Investigator" })
+      .returning();
+    user = created;
   }
+
+  if (!user) return null;
+  return { id: user.id, username: user.username, name: user.name ?? username, email: user.email ?? email, role: user.role ?? "Investigator" };
 }
 
-/**
- * Register auth routes
- */
+// ── Route registration ─────────────────────────────────────────────────────────
+
 export function registerAuthRoutes(app: any) {
-  // Login route
-  app.post('/api/auth/login', async (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
-    }
-    
-    const result = await loginUser(username, password);
-    
-    if (result.success) {
-      // Set user in session
-      req.session.user = result.user;
-      return res.json({ user: result.user });
-    } else {
-      return res.status(401).json({ message: result.message });
-    }
-  });
-  
-  // Logout route
-  app.post('/api/auth/logout', (req: Request, res: Response) => {
-    req.session.destroy((err: any) => {
-      if (err) {
-        return res.status(500).json({ message: "Failed to log out" });
-      }
-      
-      res.clearCookie('connect.sid');
-      return res.json({ message: "Logged out successfully" });
+  const mode = getAuthMode();
+
+  // Public: returns auth configuration so the client can adapt the UI
+  app.get("/api/auth/config", (_req: Request, res: Response) => {
+    const { getOidcConfig } = require("./authProviders/oidc");
+    const oidcCfg = mode === "oidc" ? getOidcConfig() : null;
+    res.json({
+      mode,
+      oidcProviderName: oidcCfg?.providerName ?? null,
     });
   });
-  
-  // Get current user
-  app.get('/api/auth/me', (req: Request, res: Response) => {
-    if (req.session && req.session.user) {
-      return res.json({ user: req.session.user });
-    }
-    
-    return res.status(401).json({ message: "Not authenticated" });
+
+  // Current user
+  app.get("/api/auth/me", (req: Request, res: Response) => {
+    if (req.session?.user) return res.json({ user: req.session.user });
+    res.status(401).json({ message: "Not authenticated" });
   });
 
+  // ── Login (local + ldap share the same endpoint) ──
+  if (mode === "local" || mode === "ldap") {
+    app.post("/api/auth/login", async (req: Request, res: Response) => {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      let sessionUser: SessionUser | null = null;
+
+      if (mode === "local") {
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.username, username));
+
+        if (!user || user.password !== hashPassword(password)) {
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
+        sessionUser = { id: user.id, username: user.username, name: user.name ?? username, email: user.email ?? "", role: user.role ?? "Investigator" };
+
+      } else {
+        // LDAP
+        const { authenticateLdap } = await import("./authProviders/ldap");
+        const result = await authenticateLdap(username, password);
+        if (!result.success || !result.user) {
+          return res.status(401).json({ message: result.message || "Invalid credentials" });
+        }
+        sessionUser = await findOrCreateExternalUser(
+          result.user.username,
+          result.user.name,
+          result.user.email,
+        );
+        if (!sessionUser) {
+          return res.status(500).json({ message: "Failed to create user session" });
+        }
+      }
+
+      req.session.user = sessionUser;
+      return res.json({ user: sessionUser });
+    });
+  }
+
+  // ── OIDC flow ──
+  if (mode === "oidc") {
+    app.get("/api/auth/oidc", async (req: Request, res: Response) => {
+      try {
+        const { startOidcFlow } = await import("./authProviders/oidc");
+        await startOidcFlow(req, res);
+      } catch (err) {
+        console.error("OIDC start error:", err);
+        res.status(500).json({ message: "Failed to start SSO login" });
+      }
+    });
+
+    app.get("/api/auth/callback", async (req: Request, res: Response) => {
+      try {
+        const { handleOidcCallback } = await import("./authProviders/oidc");
+        const result = await handleOidcCallback(req);
+        if (!result.success || !result.user) {
+          return res.redirect(`/login?error=${encodeURIComponent(result.message || "Login failed")}`);
+        }
+
+        const sessionUser = await findOrCreateExternalUser(
+          result.user.username,
+          result.user.name,
+          result.user.email,
+        );
+        if (!sessionUser) {
+          return res.redirect("/login?error=session_error");
+        }
+
+        req.session.user = sessionUser;
+        res.redirect("/");
+      } catch (err) {
+        console.error("OIDC callback error:", err);
+        res.redirect("/login?error=callback_error");
+      }
+    });
+  }
+
+  // Logout (all modes)
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    if (mode === "demo") {
+      return res.json({ message: "Demo mode — logout is a no-op" });
+    }
+    req.session.destroy((err: any) => {
+      if (err) return res.status(500).json({ message: "Failed to log out" });
+      res.clearCookie("connect.sid");
+      res.json({ message: "Logged out successfully" });
+    });
+  });
 }

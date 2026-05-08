@@ -125,6 +125,10 @@ import CertificationsPage from "@/pages/certifications";
 // Settings
 import SettingsPage from "@/pages/settings";
 
+// Auth
+import LoginPage from "@/pages/auth/login";
+import { AuthProvider, RequireAuth } from "@/hooks/useAuth";
+
 // PMO Applications
 import PmoApplicationsList from "@/pages/pmo/applications/index";
 import CreateRa200 from "@/pages/pmo/applications/create-ra200";
@@ -139,7 +143,10 @@ import PmoOfficeReviewDetail from "@/pages/pmo/office/review";
 
 function Router() {
   return (
-    <Layout>
+    <Switch>
+      <Route path="/login" component={LoginPage} />
+      <RequireAuth>
+      <Layout>
       <Switch>
         {/* Dashboard */}
         <Route path="/" component={Dashboard} />
@@ -292,7 +299,9 @@ function Router() {
         {/* Fallback to 404 */}
         <Route component={NotFound} />
       </Switch>
-    </Layout>
+      </Layout>
+      </RequireAuth>
+    </Switch>
   );
 }
 
@@ -301,12 +310,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <CurrentUserProvider>
-            <PermissionsProvider>
-              <Toaster />
-              <Router />
-            </PermissionsProvider>
-          </CurrentUserProvider>
+          <AuthProvider>
+            <CurrentUserProvider>
+              <PermissionsProvider>
+                <Toaster />
+                <Router />
+              </PermissionsProvider>
+            </CurrentUserProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
