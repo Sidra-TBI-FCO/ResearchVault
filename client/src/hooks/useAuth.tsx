@@ -10,13 +10,17 @@ interface User {
   role: string;
 }
 
+export interface AuthConfig {
+  mode: 'demo' | 'local' | 'ldap' | 'oidc';
+  oidcProviderName: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
+  authConfig: AuthConfig | null;
   loading: boolean;
-  availableUsers: User[];
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  switchUser: (userId: number) => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -25,153 +29,81 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  
-  // Check if user is authenticated and load available users
+
   useEffect(() => {
-    const initializeAuth = async () => {
+    const init = async () => {
       try {
-        // Check current user
-        const authResponse = await fetch('/api/auth/me');
-        if (authResponse.ok) {
-          const authData = await authResponse.json();
-          setUser(authData.user);
+        const [cfgRes, meRes] = await Promise.all([
+          fetch('/api/auth/config'),
+          fetch('/api/auth/me'),
+        ]);
+
+        if (cfgRes.ok) {
+          const cfg: AuthConfig = await cfgRes.json();
+          setAuthConfig(cfg);
         }
-        
-        // Load available users for switching
-        const usersResponse = await fetch('/api/auth/users');
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json();
-          setAvailableUsers(usersData.users);
+
+        if (meRes.ok) {
+          const data = await meRes.json();
+          setUser(data.user);
         }
-      } catch (error) {
-        // Fail silently, user is not authenticated or users can't be loaded
+      } catch {
+        // fail silently — app will redirect to /login if unauthenticated
       } finally {
         setLoading(false);
       }
     };
-    
-    initializeAuth();
+    init();
   }, []);
-  
-  // Login function
+
   const login = async (username: string, password: string): Promise<boolean> => {
     setLoading(true);
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        toast({
-          title: 'Login successful',
-          description: `Welcome back, ${data.user.name}!`,
-        });
+        toast({ title: 'Welcome back', description: data.user.name });
         return true;
       } else {
-        const errorData = await response.json();
-        toast({
-          title: 'Login failed',
-          description: errorData.message || 'Invalid username or password',
-          variant: 'destructive',
-        });
+        const err = await response.json();
+        toast({ title: 'Sign in failed', description: err.message || 'Invalid credentials', variant: 'destructive' });
         return false;
       }
-    } catch (error) {
-      toast({
-        title: 'Login error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Sign in error', description: 'An unexpected error occurred.', variant: 'destructive' });
       return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Logout function
-  const logout = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-      setUser(null);
-      navigate('/login');
-      toast({
-        title: 'Logout successful',
-        description: 'You have been logged out.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Logout error',
-        description: 'An error occurred during logout.',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Switch user function (for development/testing)
-  const switchUser = async (userId: number): Promise<boolean> => {
-    setLoading(true);
+  const logout = async (): Promise<void> => {
     try {
-      const response = await fetch('/api/auth/switch-user', {
-        method: 'POST',
-        body: JSON.stringify({ userId }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        toast({
-          title: 'User switched',
-          description: `Now viewing as ${data.user.name}`,
-        });
-        return true;
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: 'Switch user failed',
-          description: errorData.message || 'Failed to switch user',
-          variant: 'destructive',
-        });
-        return false;
-      }
-    } catch (error) {
-      toast({
-        title: 'Switch user error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-      return false;
+      await fetch('/api/auth/logout', { method: 'POST' });
     } finally {
-      setLoading(false);
+      setUser(null);
+      if (authConfig?.mode !== 'demo') navigate('/login');
     }
   };
-  
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        authConfig,
         loading,
-        availableUsers,
         login,
         logout,
-        switchUser,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
       }}
@@ -183,37 +115,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
-// Route guard component to protect routes
-export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }> = ({ 
-  children, 
-  adminOnly = false 
+// Route guard — sends unauthenticated users to /login.
+// In demo mode the server already injects a user, so /api/auth/me always succeeds.
+export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }> = ({
+  children,
+  adminOnly = false,
 }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, isAdmin, loading, authConfig } = useAuth();
   const [, navigate] = useLocation();
-  
+
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        navigate('/login');
-      } else if (adminOnly && !isAdmin) {
-        navigate('/');
-      }
-    }
-  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly]);
-  
+    if (loading) return;
+    if (authConfig?.mode === 'demo') return; // demo always passes
+    if (!isAuthenticated) navigate('/login');
+    else if (adminOnly && !isAdmin) navigate('/');
+  }, [isAuthenticated, isAdmin, loading, authConfig, navigate, adminOnly]);
+
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading…</p>
+      </div>
+    );
   }
-  
-  if (!isAuthenticated || (adminOnly && !isAdmin)) {
+
+  if (authConfig?.mode !== 'demo' && (!isAuthenticated || (adminOnly && !isAdmin))) {
     return null;
   }
-  
+
   return <>{children}</>;
 };
