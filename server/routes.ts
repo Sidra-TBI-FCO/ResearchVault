@@ -7,6 +7,7 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
 } from "./objectStorage";
+import { LocalObjectStorageService } from "./localObjectStorage";
 import {
   insertScientistSchema,
   insertResearchActivitySchema,
@@ -44,6 +45,12 @@ import {
 } from "@shared/schema";
 import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead } from "./auth";
 
+const isLocalStorage = process.env.STORAGE_TYPE === "local";
+
+function getObjectStorageService(): ObjectStorageService | LocalObjectStorageService {
+  return isLocalStorage ? new LocalObjectStorageService() : new ObjectStorageService();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
   const apiRouter = app.route('/api');
@@ -62,13 +69,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Object Storage Routes
   app.post("/api/objects/upload", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+    const objectStorageService = getObjectStorageService();
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       res.json({ uploadURL });
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  // Local filesystem upload handler (used when STORAGE_TYPE=local)
+  app.put("/api/objects/local-upload/:id", async (req, res) => {
+    if (!isLocalStorage) return res.status(404).end();
+    try {
+      const { id } = req.params;
+      const chunks: Buffer[] = [];
+      req.on("data", (chunk: Buffer) => chunks.push(chunk));
+      req.on("end", async () => {
+        const localService = new LocalObjectStorageService();
+        await localService.saveFile(id, Buffer.concat(chunks), req.headers["content-type"] || "application/octet-stream");
+        res.status(200).end();
+      });
+      req.on("error", () => res.status(500).json({ error: "Upload failed" }));
+    } catch (error) {
+      console.error("Local upload error:", error);
+      res.status(500).json({ error: "Upload failed" });
     }
   });
 
@@ -1169,7 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/objects/:objectPath(*)", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+    const objectStorageService = getObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
         req.path,

@@ -1,0 +1,10 @@
+node_modules
+dist
+.DS_Store
+.git
+.gitignore
+*.tar.gz
+attached_assets
+.env
+.env.*
+docker-compose.override.yml
