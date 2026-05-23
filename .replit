@@ -3,7 +3,7 @@ run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
-channel = "stable-25_05"
+channel = "stable-24_05"
 packages = ["jq", "tesseract", "poppler_utils", "imagemagick"]
 
 [deployment]
@@ -15,8 +15,10 @@ run = ["npm", "run", "start"]
 localPort = 5000
 externalPort = 80
 
-<<<<<<< HEAD
-=======
+[[ports]]
+localPort = 37227
+externalPort = 4200
+
 [[ports]]
 localPort = 39325
 externalPort = 3001
@@ -33,7 +35,6 @@ externalPort = 3003
 localPort = 46637
 externalPort = 3000
 
->>>>>>> e8e3e01d54a26660d12f0582dc53ef0522fcadb8
 [workflows]
 runButton = "Project"
 
@@ -56,9 +57,3 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
-expertMode = true
-integrations = ["javascript_object_storage:2.0.0"]
-
-[postMerge]
-path = "scripts/post-merge.sh"
-timeoutMs = 20000
