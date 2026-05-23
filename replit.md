@@ -1,5 +1,44 @@
 # Research Portal System - Architecture Summary
 
+## Product
+
+### One-liner
+Q-BRIDGE is a shared research governance portal that lets Qatar's biomedical institutions run IRB, IBC, grant, and publication workflows in one place.
+
+### What it does
+Q-BRIDGE replaces the scattered spreadsheets, email threads, and PDF forms that research offices use to track compliance and project activity. Investigators submit IRB and IBC applications through structured multi-tab forms, office reviewers move them through a status workflow with timestamped comments, and the same records connect to the underlying scientists, programs, projects, grants, contracts, patents, and publications. Staff can see a unified history of every submission, revision, and approval against the project it belongs to.
+
+### Who it's for
+- Principal investigators and research scientists
+- IRB and IBC office staff and reviewers
+- Research program and project managers (PMO)
+- Grants and contracts administrators
+- Publications office staff tracking journal metrics
+
+### Key features
+- IRB and IBC application workflow with reviewer comments
+- Multi-institution support (Sidra, HBKU, WCM-Q) with theming
+- Scientists, programs, projects, and research activities registry
+- Grants, contracts, patents, and publications tracking
+- Journal impact factor lookup across 28,000+ journals
+- Facilities, rooms, and biosafety PPE management
+- Document uploads attached to applications and contracts
+
+### Tech stack
+- React 18 + TypeScript + Vite frontend
+- shadcn/ui on Radix primitives, Tailwind CSS, Framer Motion
+- TanStack Query, Wouter routing, React Hook Form + Zod
+- Express.js backend on Node.js with TypeScript
+- PostgreSQL (Neon serverless) via Drizzle ORM
+- Session auth (express-session + connect-pg-simple, Passport local)
+- Google Cloud Storage with Uppy for document uploads
+
+### Audience tags
+Sidra scientists, Academic partners, Clinicians
+
+### Status
+Internal pilot
+
 ## Overview
 
 The Research Portal System is a full-stack web application built for managing scientific research activities, including scientists, programs, projects, publications, patents, and regulatory applications (IRB/IBC). The application follows a modern monorepo structure with a React frontend and Express.js backend, utilizing PostgreSQL for data persistence.
