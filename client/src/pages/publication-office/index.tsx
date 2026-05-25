@@ -1957,7 +1957,7 @@ export default function PublicationOffice() {
 
       {/* Journal Detail Modal */}
       <Dialog open={isJournalModalOpen} onOpenChange={setIsJournalModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[95vh] h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
