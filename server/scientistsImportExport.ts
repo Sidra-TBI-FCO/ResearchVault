@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 import { Scientist, InsertScientist } from "@shared/schema";
 
 export const EXPORT_COLUMNS: Array<{ header: string; key: keyof Scientist | "supervisorEmail" }> = [
@@ -76,7 +78,6 @@ export function buildExportBuffer(
 
 export function parseUploadedFile(base64: string, fileName: string): Record<string, any>[] {
   const buf = Buffer.from(base64, "base64");
-  const isCsv = fileName.toLowerCase().endsWith(".csv");
   const wb = XLSX.read(buf, { type: "buffer", raw: false });
   const sheetName = wb.SheetNames[0];
   if (!sheetName) throw new Error("File contains no sheets");
@@ -84,9 +85,6 @@ export function parseUploadedFile(base64: string, fileName: string): Record<stri
   const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: "", raw: false });
   return rows;
 }
-
-// Row schema for import — what we extract from each file row (without id)
-const ROW_REQUIRED_HONORIFICS = ["Dr.", "Prof.", "Mr.", "Ms.", "Mrs.", "Mx.", "none"];
 
 const fileRowSchema = z.object({
   staffId: z.string().trim().optional(),
@@ -114,10 +112,24 @@ export interface ImportRowError {
   errors: string[];
 }
 
+export interface ReferencingRecord {
+  table: string;
+  column: string;
+  count: number;
+  sampleIds: number[];
+}
+
+export interface DeleteCandidate {
+  id: number;
+  email: string;
+  name: string;
+  referencedBy?: ReferencingRecord[];
+}
+
 export interface ImportPreview {
   toInsert: FileRow[];
   toUpdate: Array<{ existingId: number; row: FileRow }>;
-  toDelete: Array<{ id: number; email: string; name: string }>;
+  toDelete: DeleteCandidate[];
   errors: ImportRowError[];
   unchanged: number;
 }
@@ -142,17 +154,20 @@ export function buildImportPreview(
   let unchanged = 0;
 
   const existingByEmail = new Map<string, Scientist>();
-  existing.forEach(s => existingByEmail.set(s.email.toLowerCase(), s));
+  const existingByStaffId = new Map<string, Scientist>();
+  existing.forEach(s => {
+    existingByEmail.set(s.email.toLowerCase(), s);
+    if (s.staffId) existingByStaffId.set(s.staffId, s);
+  });
 
   const seenEmails = new Set<string>();
   const seenStaffIds = new Set<string>();
-  const validRows: FileRow[] = [];
+  // Each entry: { row, rowNumber, matchedId }
+  const matched: Array<{ row: FileRow; rowNumber: number; matchedId: number | null }> = [];
 
   fileRows.forEach((raw, idx) => {
-    const rowNumber = idx + 2; // header row is row 1
+    const rowNumber = idx + 2; // header is row 1
     const normalised = normaliseRow(raw);
-
-    // Strip empty optional strings → undefined so optional schema works
     for (const k of Object.keys(normalised)) {
       if (normalised[k] === "") normalised[k] = undefined;
     }
@@ -191,74 +206,76 @@ export function buildImportPreview(
       rowErrors.push("A staff member cannot be their own line manager");
     }
 
+    // Match: staffId first, then email, with conflict detection
+    const staffIdMatch = row.staffId ? existingByStaffId.get(row.staffId) : undefined;
+    const emailMatch = existingByEmail.get(row.email);
+
+    if (staffIdMatch && emailMatch && staffIdMatch.id !== emailMatch.id) {
+      rowErrors.push(
+        `Conflict: Staff ID '${row.staffId}' belongs to ${staffIdMatch.firstName} ${staffIdMatch.lastName} (${staffIdMatch.email}) but Email '${row.email}' belongs to ${emailMatch.firstName} ${emailMatch.lastName}. They point to different existing staff.`
+      );
+    }
+
     if (rowErrors.length) {
       errors.push({ rowNumber, identifier, errors: rowErrors });
       return;
     }
 
-    validRows.push(row);
+    const matchedRecord = staffIdMatch ?? emailMatch ?? null;
+    matched.push({ row, rowNumber, matchedId: matchedRecord ? matchedRecord.id : null });
   });
 
-  // Second pass: resolve supervisor emails against existing + new
+  // Resolve supervisor emails against existing + planned file rows
   const allKnownEmails = new Set<string>([
     ...Array.from(existingByEmail.keys()),
-    ...validRows.map(r => r.email),
+    ...matched.map(m => m.row.email),
   ]);
 
-  validRows.forEach((row, i) => {
+  matched.forEach(({ row, rowNumber, matchedId }) => {
     if (row.supervisorEmail && !allKnownEmails.has(row.supervisorEmail)) {
-      const rowNumber = fileRows.findIndex(
-        (r, j) => {
-          const n = normaliseRow(r);
-          return n.email && String(n.email).toLowerCase().trim() === row.email;
-        }
-      );
       errors.push({
-        rowNumber: rowNumber === -1 ? i + 2 : rowNumber + 2,
+        rowNumber,
         identifier: row.email,
         errors: [`Line manager email '${row.supervisorEmail}' is not in the file or current staff list`],
       });
       return;
     }
 
-    const existingRecord = existingByEmail.get(row.email);
-    if (existingRecord) {
-      // Check if anything actually changed
-      const supervisorIdNow = row.supervisorEmail
-        ? Array.from(existingByEmail.values()).find(s => s.email.toLowerCase() === row.supervisorEmail)?.id ?? null
-        : null;
-
-      const matches =
-        (existingRecord.staffId ?? "") === (row.staffId ?? "") &&
-        existingRecord.honorificTitle === row.honorificTitle &&
-        existingRecord.firstName === row.firstName &&
-        existingRecord.lastName === row.lastName &&
-        existingRecord.email.toLowerCase() === row.email &&
-        (existingRecord.jobTitle ?? "") === (row.jobTitle ?? "") &&
-        existingRecord.staffType === row.staffType &&
-        (existingRecord.department ?? "") === (row.department ?? "") &&
-        (existingRecord.profileImageInitials ?? "") === (row.profileImageInitials ?? "") &&
-        (existingRecord.supervisorId ?? null) === supervisorIdNow &&
-        (existingRecord.orcidId ?? "") === (row.orcidId ?? "") &&
-        (existingRecord.linkedInUrl ?? "") === (row.linkedInUrl ?? "") &&
-        (existingRecord.googleScholarUrl ?? "") === (row.googleScholarUrl ?? "") &&
-        (existingRecord.webOfScienceId ?? "") === (row.webOfScienceId ?? "") &&
-        (existingRecord.bio ?? "") === (row.bio ?? "");
-
-      if (matches) {
-        unchanged++;
-      } else {
-        toUpdate.push({ existingId: existingRecord.id, row });
-      }
-    } else {
+    if (matchedId == null) {
       toInsert.push(row);
+      return;
     }
+
+    const existingRecord = existing.find(s => s.id === matchedId)!;
+    const supervisorIdNow = row.supervisorEmail
+      ? existing.find(s => s.email.toLowerCase() === row.supervisorEmail)?.id ?? null
+      : null;
+
+    const matches =
+      (existingRecord.staffId ?? "") === (row.staffId ?? "") &&
+      existingRecord.honorificTitle === row.honorificTitle &&
+      existingRecord.firstName === row.firstName &&
+      existingRecord.lastName === row.lastName &&
+      existingRecord.email.toLowerCase() === row.email &&
+      (existingRecord.jobTitle ?? "") === (row.jobTitle ?? "") &&
+      existingRecord.staffType === row.staffType &&
+      (existingRecord.department ?? "") === (row.department ?? "") &&
+      (existingRecord.profileImageInitials ?? "") === (row.profileImageInitials ?? "") &&
+      (existingRecord.supervisorId ?? null) === supervisorIdNow &&
+      (existingRecord.orcidId ?? "") === (row.orcidId ?? "") &&
+      (existingRecord.linkedInUrl ?? "") === (row.linkedInUrl ?? "") &&
+      (existingRecord.googleScholarUrl ?? "") === (row.googleScholarUrl ?? "") &&
+      (existingRecord.webOfScienceId ?? "") === (row.webOfScienceId ?? "") &&
+      (existingRecord.bio ?? "") === (row.bio ?? "");
+
+    if (matches) unchanged++;
+    else toUpdate.push({ existingId: matchedId, row });
   });
 
-  // Anything in DB but not in file → delete
-  const fileEmails = new Set(validRows.map(r => r.email));
-  const toDelete = existing
-    .filter(s => !fileEmails.has(s.email.toLowerCase()))
+  // Anything in DB but not matched → delete
+  const matchedIds = new Set(matched.filter(m => m.matchedId != null).map(m => m.matchedId!));
+  const toDelete: DeleteCandidate[] = existing
+    .filter(s => !matchedIds.has(s.id))
     .map(s => ({
       id: s.id,
       email: s.email,
@@ -266,6 +283,95 @@ export function buildImportPreview(
     }));
 
   return { toInsert, toUpdate, toDelete, errors, unchanged };
+}
+
+/**
+ * Query pg_catalog for every FK whose target is `scientists.id`, then for each
+ * candidate scientist id, count and sample referencing rows. Returns a map of
+ * scientistId → list of {table, column, count, sampleIds}. Rows with no
+ * references are absent from the map.
+ */
+export async function findReferencingRecords(
+  database: PgDatabase<any, any, any>,
+  scientistIds: number[]
+): Promise<Map<number, ReferencingRecord[]>> {
+  const result = new Map<number, ReferencingRecord[]>();
+  if (scientistIds.length === 0) return result;
+
+  // 1. Discover all FKs pointing at scientists.id
+  const fkRows = await database.execute<{ table_name: string; column_name: string }>(sql`
+    SELECT
+      tc.table_name AS table_name,
+      kcu.column_name AS column_name
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage kcu
+      ON tc.constraint_name = kcu.constraint_name
+     AND tc.table_schema = kcu.table_schema
+    JOIN information_schema.constraint_column_usage ccu
+      ON ccu.constraint_name = tc.constraint_name
+     AND ccu.table_schema = tc.table_schema
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND ccu.table_name = 'scientists'
+      AND ccu.column_name = 'id'
+      AND tc.table_name <> 'scientists';
+  `);
+
+  const fks = (fkRows as any).rows ?? (fkRows as any);
+
+  // 2. For each (table, column), query who references our candidate ids
+  for (const fk of fks as Array<{ table_name: string; column_name: string }>) {
+    const ident = (s: string) => '"' + s.replace(/"/g, '""') + '"';
+    const tbl = ident(fk.table_name);
+    const col = ident(fk.column_name);
+
+    // Use sql.raw for identifiers (safe — we just quoted) and parameterise the id list
+    const refRows = await database.execute<{ ref_id: number; pk_id: number }>(sql.raw(
+      `SELECT ${col} AS ref_id, id AS pk_id
+         FROM ${tbl}
+        WHERE ${col} = ANY (ARRAY[${scientistIds.join(",")}]::int[])`
+    ));
+
+    const rows = (refRows as any).rows ?? (refRows as any);
+    const byScientist = new Map<number, number[]>();
+    for (const r of rows as Array<{ ref_id: number; pk_id: number }>) {
+      if (!byScientist.has(r.ref_id)) byScientist.set(r.ref_id, []);
+      byScientist.get(r.ref_id)!.push(r.pk_id);
+    }
+
+    byScientist.forEach((ids, scientistId) => {
+      if (!result.has(scientistId)) result.set(scientistId, []);
+      result.get(scientistId)!.push({
+        table: fk.table_name,
+        column: fk.column_name,
+        count: ids.length,
+        sampleIds: ids.slice(0, 5),
+      });
+    });
+  }
+
+  return result;
+}
+
+export async function enrichDeletesWithReferences(
+  preview: ImportPreview,
+  database: PgDatabase<any, any, any>
+): Promise<void> {
+  if (preview.toDelete.length === 0) return;
+  const refs = await findReferencingRecords(database, preview.toDelete.map(d => d.id));
+  for (const d of preview.toDelete) {
+    const r = refs.get(d.id);
+    if (r && r.length > 0) {
+      d.referencedBy = r;
+      const summary = r
+        .map(x => `${x.table}.${x.column} (${x.count} row${x.count === 1 ? "" : "s"}; ids: ${x.sampleIds.join(", ")}${x.count > x.sampleIds.length ? "…" : ""})`)
+        .join("; ");
+      preview.errors.push({
+        rowNumber: 0,
+        identifier: `${d.name} <${d.email}>`,
+        errors: [`Cannot delete: still referenced by ${summary}. Reassign these rows before re-importing.`],
+      });
+    }
+  }
 }
 
 export function rowToInsertScientist(

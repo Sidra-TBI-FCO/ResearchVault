@@ -43,10 +43,16 @@ import { formatFullName, formatNameWithJobTitle } from "@/utils/nameUtils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface ReferencingRecord {
+  table: string;
+  column: string;
+  count: number;
+  sampleIds: number[];
+}
 interface ImportPreview {
   toInsert: any[];
   toUpdate: Array<{ existingId: number; row: any }>;
-  toDelete: Array<{ id: number; email: string; name: string }>;
+  toDelete: Array<{ id: number; email: string; name: string; referencedBy?: ReferencingRecord[] }>;
   errors: Array<{ rowNumber: number; identifier: string; errors: string[] }>;
   unchanged: number;
 }
@@ -234,15 +240,24 @@ function StaffImportExportButtons() {
                   </div>
                 )}
 
-                {preview.toDelete.length > 0 && preview.errors.length === 0 && (
+                {preview.toDelete.length > 0 && (
                   <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
-                    <div className="font-semibold text-amber-800 mb-1">Will be deleted:</div>
-                    <div className="text-amber-900 max-h-24 overflow-y-auto" data-testid="preview-delete-list">
-                      {preview.toDelete.map(d => d.name || d.email).join(", ")}
-                    </div>
-                    <div className="text-xs text-amber-700 mt-2">
-                      Note: deletion will be blocked if any of these are still referenced elsewhere (e.g. as a PI, supervisor, or author).
-                    </div>
+                    <div className="font-semibold text-amber-800 mb-1">Staff missing from file (will be deleted):</div>
+                    <ul className="text-amber-900 max-h-40 overflow-y-auto space-y-1" data-testid="preview-delete-list">
+                      {preview.toDelete.map(d => (
+                        <li key={d.id}>
+                          <span className="font-medium">{d.name || d.email}</span>
+                          {d.referencedBy && d.referencedBy.length > 0 && (
+                            <span className="text-red-700 ml-1">
+                              — blocked: referenced by{" "}
+                              {d.referencedBy
+                                .map(r => `${r.table}.${r.column} (${r.count} row${r.count === 1 ? "" : "s"}, ids: ${r.sampleIds.join(", ")}${r.count > r.sampleIds.length ? "…" : ""})`)
+                                .join("; ")}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>

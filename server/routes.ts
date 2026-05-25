@@ -14,8 +14,8 @@ import {
   buildExportBuffer,
   parseUploadedFile,
   buildImportPreview,
+  enrichDeletesWithReferences,
   rowToInsertScientist,
-  FileRow,
 } from "./scientistsImportExport";
 import {
   insertScientistSchema,
@@ -1886,6 +1886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const existing = await storage.getScientists();
       const preview = buildImportPreview(fileRows, existing);
+      await enrichDeletesWithReferences(preview, db);
       res.json(preview);
     } catch (error) {
       console.error('Staff import preview failed:', error);
@@ -1912,11 +1913,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const existing = await storage.getScientists();
       const preview = buildImportPreview(fileRows, existing);
+      await enrichDeletesWithReferences(preview, db);
 
       if (preview.errors.length > 0) {
         return res.status(400).json({
           message: 'Import has validation errors. Re-run preview and fix them first.',
           errors: preview.errors,
+          toDelete: preview.toDelete,
         });
       }
 
@@ -1956,9 +1959,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await tx.delete(scientists).where(inArray(scientists.id, preview.toDelete.map(d => d.id)));
             } catch (e: any) {
               if (e?.code === '23503') {
-                const referenced = preview.toDelete.map(d => d.name || d.email).join(', ');
+                const detail = e?.detail ? ` Database detail: ${e.detail}` : '';
                 throw new Error(
-                  `Cannot delete one or more staff because they are still referenced elsewhere (e.g. as PI, supervisor, author, or reviewer). Affected: ${referenced}. Reassign or remove those references first, then re-import.`
+                  `Cannot delete one or more staff because they are still referenced by another record (FK violation).${detail} Re-run preview to see exactly which records reference them, reassign those, then re-import.`
                 );
               }
               throw e;
