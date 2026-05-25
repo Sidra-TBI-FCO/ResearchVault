@@ -4,8 +4,9 @@ import fs from 'fs';
 function parseCSV() {
   const csvContent = fs.readFileSync('../attached_assets/JCR2023_1756802332065.csv', 'utf8');
   const lines = csvContent.split('\n');
-  const headers = lines[0].split(',');
-  
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const categoryIdx = headers.findIndex(h => h === 'category' || h === 'subject area' || h === 'subjectarea' || h === 'field');
+
   const data = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -35,6 +36,7 @@ function parseCSV() {
       const rank = parseInt(values[3]) || null; // Rank column
       
       if (!isNaN(impactFactor) && values[0] && values[0].trim()) {
+        const category = categoryIdx >= 0 ? (values[categoryIdx] || '').replace(/^"|"$/g, '').trim() || null : null;
         data.push({
           journalName: values[0], // Journal name
           abbreviatedJournal: null, // Not available in this format
@@ -42,6 +44,7 @@ function parseCSV() {
           publisher: null, // Not available in this format
           issn: null, // Not available in this format
           eissn: null, // Not available in this format
+          field: category, // Subject Area / Category if present in CSV
           totalCites: null, // Not available in this format
           totalArticles: null, // Not available in this format
           citableItems: null, // Not available in this format

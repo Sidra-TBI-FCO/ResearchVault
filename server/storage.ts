@@ -19,7 +19,9 @@ import {
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
   rolePermissions, RolePermission, InsertRolePermission,
-  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
+  journals, Journal, InsertJournal,
+  journalImpactFactorMetrics, JournalImpactFactorMetric, InsertJournalImpactFactorMetric,
+  JournalImpactFactor, InsertJournalImpactFactor,
   grants, Grant, InsertGrant,
   systemConfigurations, SystemConfiguration, InsertSystemConfiguration,
   pdfImportHistory, PdfImportHistory, InsertPdfImportHistory,
@@ -218,14 +220,24 @@ export interface IStorage {
   updateRolePermission(jobTitle: string, navigationItem: string, accessLevel: string): Promise<RolePermission | undefined>;
   updateRolePermissionsBulk(permissions: Array<{jobTitle: string, navigationItem: string, accessLevel: string}>): Promise<RolePermission[]>;
 
-  // Journal Impact Factor operations
-  getJournalImpactFactors(): Promise<JournalImpactFactor[]>;
-  getJournalImpactFactor(id: number): Promise<JournalImpactFactor | undefined>;
+  // Journal & Impact Factor operations
+  getJournalImpactFactors(options?: {
+    limit?: number;
+    offset?: number;
+    sortField?: string;
+    sortDirection?: 'asc' | 'desc';
+    searchTerm?: string;
+    fields?: string[];
+  }): Promise<{ data: JournalImpactFactor[]; total: number }>;
+  getJournalImpactFactor(journalId: number): Promise<JournalImpactFactor | undefined>;
   getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined>;
   getHistoricalImpactFactors(journalName: string): Promise<JournalImpactFactor[]>;
+  getHistoricalImpactFactorsByJournalId(journalId: number): Promise<JournalImpactFactor[]>;
   createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor>;
-  updateJournalImpactFactor(id: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined>;
-  deleteJournalImpactFactor(id: number): Promise<boolean>;
+  updateJournalImpactFactor(journalId: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined>;
+  updateJournalField(journalId: number, field: string | null): Promise<Journal | undefined>;
+  getJournalFields(): Promise<string[]>;
+  deleteJournalImpactFactor(journalId: number): Promise<boolean>;
 
   // Grant operations
   getGrants(): Promise<Grant[]>;

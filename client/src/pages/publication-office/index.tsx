@@ -17,8 +17,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -64,11 +66,57 @@ export default function PublicationOffice() {
   const [editForm, setEditForm] = useState<Partial<InsertJournalImpactFactor>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [yearFilter, setYearFilter] = useState("all");
+  const [fieldFilter, setFieldFilter] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [editingFieldJournalId, setEditingFieldJournalId] = useState<number | null>(null);
+  const [fieldDraft, setFieldDraft] = useState<string>("");
   const limit = 100;
+
+  // JCR column tooltips
+  const columnTooltips: Record<string, string> = {
+    journalName: "Full journal title as listed in JCR.",
+    abbreviatedJournal: "Standard ISO 4 abbreviation used in citations.",
+    field: "JCR subject category / discipline this journal is classified under.",
+    issn: "Print International Standard Serial Number.",
+    eissn: "Electronic International Standard Serial Number.",
+    year: "Year the metrics below were reported by JCR.",
+    impactFactor: "Journal Impact Factor (JIF): citations in the JCR year to items published in the prior 2 years, divided by the number of citable items.",
+    fiveYearJif: "5-Year JIF: citations to items published in the prior 5 years, divided by citable items over the same window.",
+    jifWithoutSelfCites: "JIF excluding the journal's own self-citations.",
+    jci: "Journal Citation Indicator: field-normalized citation impact (1.0 = world average).",
+    quartile: "Quartile within the subject category (Q1 = top 25%).",
+    rank: "Rank within the journal's subject category.",
+    totalCites: "Total citations received by the journal in the JCR year.",
+    totalArticles: "Total articles published in the JCR year.",
+    citableItems: "Items classified as citable (articles and reviews).",
+    citedHalfLife: "Median age (years) of items cited from this journal in the JCR year.",
+    citingHalfLife: "Median age (years) of items this journal cited in the JCR year.",
+    publisher: "Journal publisher.",
+  };
+  const SortableHeader = ({ field, label }: { field: string; label: string }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" onClick={() => handleSort(field)} className="flex items-center gap-1 p-0 h-auto font-semibold">
+            {label} {getSortIcon(field)}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{columnTooltips[field] ?? label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+  const PlainHeader = ({ field, label }: { field: string; label: string }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="font-semibold cursor-help">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{columnTooltips[field] ?? label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
   
   // Journal detail modal state
   const [selectedJournal, setSelectedJournal] = useState<JournalImpactFactor | null>(null);
@@ -87,30 +135,23 @@ export default function PublicationOffice() {
   const offset = (currentPage - 1) * limit;
   
   const { data: impactFactorsResult, isLoading } = useQuery({
-    queryKey: ['/api/journal-impact-factors', { 
-      limit, 
-      offset, 
-      sortField, 
-      sortDirection, 
-      searchTerm: debouncedSearchTerm, 
-      yearFilter 
+    queryKey: ['/api/journal-impact-factors', {
+      limit,
+      offset,
+      sortField,
+      sortDirection,
+      searchTerm: debouncedSearchTerm,
+      fields: fieldFilter.join(','),
     }],
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
         sortField,
-        sortDirection
+        sortDirection,
       });
-      
-      if (debouncedSearchTerm) {
-        params.append('searchTerm', debouncedSearchTerm);
-      }
-      
-      if (yearFilter && yearFilter !== "all") {
-        params.append('yearFilter', yearFilter);
-      }
-      
+      if (debouncedSearchTerm) params.append('searchTerm', debouncedSearchTerm);
+      if (fieldFilter.length > 0) params.append('fields', fieldFilter.join(','));
       const response = await fetch(`/api/journal-impact-factors?${params}`);
       if (!response.ok) throw new Error('Failed to fetch impact factors');
       return response.json();
@@ -121,16 +162,47 @@ export default function PublicationOffice() {
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
 
-  // Query for historical data of selected journal
-  const { data: historicalData = [] } = useQuery({
-    queryKey: ['/api/journal-impact-factors/historical', selectedJournal?.journalName],
+  // Distinct field list for the multi-select filter
+  const { data: availableFields = [] } = useQuery<string[]>({
+    queryKey: ['/api/journal-impact-factors/fields'],
     queryFn: async () => {
-      if (!selectedJournal?.journalName) return [];
-      const response = await fetch(`/api/journal-impact-factors/historical/${encodeURIComponent(selectedJournal.journalName)}`);
+      const response = await fetch('/api/journal-impact-factors/fields');
+      if (!response.ok) throw new Error('Failed to fetch fields');
+      return response.json();
+    },
+  });
+
+  // Query for historical data of selected journal (by journalId)
+  const { data: historicalData = [] } = useQuery<JournalImpactFactor[]>({
+    queryKey: ['/api/journal-impact-factors', selectedJournal?.journalId, 'history'],
+    queryFn: async () => {
+      const jid = selectedJournal?.journalId;
+      if (!jid) return [];
+      const response = await fetch(`/api/journal-impact-factors/${jid}/history`);
       if (!response.ok) throw new Error('Failed to fetch historical data');
       return response.json();
     },
-    enabled: !!selectedJournal && isJournalModalOpen
+    enabled: !!selectedJournal?.journalId && isJournalModalOpen,
+  });
+
+  // Inline field edit mutation
+  const updateFieldMutation = useMutation({
+    mutationFn: async ({ journalId, field }: { journalId: number; field: string | null }) => {
+      const response = await fetch(`/api/journal-impact-factors/${journalId}/field`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field }),
+      });
+      if (!response.ok) throw new Error('Failed to update field');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+      setEditingFieldJournalId(null);
+      setFieldDraft("");
+      toast({ description: "Field updated" });
+    },
+    onError: () => toast({ description: "Failed to update field", variant: "destructive" }),
   });
 
   // Publication queries for the first two tabs
@@ -323,15 +395,16 @@ export default function PublicationOffice() {
   });
 
   const handleEdit = (factor: JournalImpactFactor) => {
-    setEditingId(factor.id);
+    setEditingId(factor.journalId);
     setEditForm({
       journalName: factor.journalName,
-      year: factor.year,
-      impactFactor: factor.impactFactor,
+      year: factor.year ?? new Date().getFullYear(),
+      impactFactor: factor.impactFactor as any,
       quartile: factor.quartile,
       rank: factor.rank,
       totalCitations: factor.totalCitations,
-      publisher: factor.publisher
+      publisher: factor.publisher,
+      field: factor.field,
     });
   };
 
@@ -1036,19 +1109,69 @@ export default function PublicationOffice() {
                 />
               </div>
             </div>
-            <div className="w-32">
-              <Label htmlFor="year">Year</Label>
-              <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Years" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  <SelectItem value="2022">2022</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="w-72">
+              <Label>Field</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                    data-testid="button-field-filter"
+                  >
+                    <span className="truncate">
+                      {fieldFilter.length === 0
+                        ? 'All Fields'
+                        : fieldFilter.length === 1
+                          ? fieldFilter[0]
+                          : `${fieldFilter.length} fields selected`}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="p-2 border-b flex items-center justify-between">
+                    <span className="text-sm font-medium">Filter by field</span>
+                    {fieldFilter.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => { setFieldFilter([]); setCurrentPage(1); }}
+                        data-testid="button-clear-field-filter"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+                    {availableFields.length === 0 ? (
+                      <div className="text-sm text-muted-foreground p-2">No fields available yet.</div>
+                    ) : (
+                      availableFields.map((f) => {
+                        const checked = fieldFilter.includes(f);
+                        return (
+                          <label
+                            key={f}
+                            className="flex items-center gap-2 text-sm py-1 px-2 hover:bg-muted/50 rounded cursor-pointer"
+                            data-testid={`option-field-${f}`}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                setCurrentPage(1);
+                                setFieldFilter((prev) =>
+                                  c ? [...prev, f] : prev.filter((x) => x !== f)
+                                );
+                              }}
+                            />
+                            <span className="truncate">{f}</span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
@@ -1065,94 +1188,40 @@ export default function PublicationOffice() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">
-                    <Button variant="ghost" onClick={() => handleSort('journalName')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Journal Name {getSortIcon('journalName')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="min-w-[150px]">Abbreviated</TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('year')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Year {getSortIcon('year')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>ISSN</TableHead>
-                  <TableHead>eISSN</TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('impactFactor')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JIF {getSortIcon('impactFactor')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('fiveYearJif')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      5-Year JIF {getSortIcon('fiveYearJif')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('jifWithoutSelfCites')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JIF w/o Self {getSortIcon('jifWithoutSelfCites')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('jci')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JCI {getSortIcon('jci')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('quartile')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Quartile {getSortIcon('quartile')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('rank')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Rank {getSortIcon('rank')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('totalCites')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Total Cites {getSortIcon('totalCites')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('totalArticles')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Total Articles {getSortIcon('totalArticles')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('citableItems')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Citable Items {getSortIcon('citableItems')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('citedHalfLife')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Cited Half-Life {getSortIcon('citedHalfLife')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('citingHalfLife')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Citing Half-Life {getSortIcon('citingHalfLife')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="min-w-[150px]">
-                    <Button variant="ghost" onClick={() => handleSort('publisher')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Publisher {getSortIcon('publisher')}
-                    </Button>
-                  </TableHead>
+                  <TableHead className="min-w-[200px]"><SortableHeader field="journalName" label="Journal Name" /></TableHead>
+                  <TableHead className="min-w-[150px]"><PlainHeader field="abbreviatedJournal" label="Abbreviated" /></TableHead>
+                  <TableHead className="min-w-[180px]"><SortableHeader field="field" label="Field" /></TableHead>
+                  <TableHead><SortableHeader field="year" label="Year" /></TableHead>
+                  <TableHead><PlainHeader field="issn" label="ISSN" /></TableHead>
+                  <TableHead><PlainHeader field="eissn" label="eISSN" /></TableHead>
+                  <TableHead><SortableHeader field="impactFactor" label="JIF" /></TableHead>
+                  <TableHead><SortableHeader field="fiveYearJif" label="5-Year JIF" /></TableHead>
+                  <TableHead><SortableHeader field="jifWithoutSelfCites" label="JIF w/o Self" /></TableHead>
+                  <TableHead><SortableHeader field="jci" label="JCI" /></TableHead>
+                  <TableHead><SortableHeader field="quartile" label="Quartile" /></TableHead>
+                  <TableHead><SortableHeader field="rank" label="Rank" /></TableHead>
+                  <TableHead><SortableHeader field="totalCites" label="Total Cites" /></TableHead>
+                  <TableHead><SortableHeader field="totalArticles" label="Total Articles" /></TableHead>
+                  <TableHead><SortableHeader field="citableItems" label="Citable Items" /></TableHead>
+                  <TableHead><SortableHeader field="citedHalfLife" label="Cited Half-Life" /></TableHead>
+                  <TableHead><SortableHeader field="citingHalfLife" label="Citing Half-Life" /></TableHead>
+                  <TableHead className="min-w-[150px]"><SortableHeader field="publisher" label="Publisher" /></TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {impactFactors.map((factor: JournalImpactFactor) => (
                   <TableRow 
-                    key={factor.id} 
+                    key={factor.journalId} 
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => {
                       setSelectedJournal(factor);
                       setIsJournalModalOpen(true);
                     }}
+                    data-testid={`row-journal-${factor.journalId}`}
                   >
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           value={editForm.journalName || ''}
                           onChange={(e) => setEditForm({ ...editForm, journalName: e.target.value })}
@@ -1165,8 +1234,48 @@ export default function PublicationOffice() {
                     <TableCell>
                       {factor.abbreviatedJournal}
                     </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {editingFieldJournalId === factor.journalId ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            value={fieldDraft}
+                            onChange={(e) => setFieldDraft(e.target.value)}
+                            className="h-7 text-xs w-40"
+                            data-testid={`input-field-${factor.journalId}`}
+                            autoFocus
+                          />
+                          <Button
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => updateFieldMutation.mutate({ journalId: factor.journalId, field: fieldDraft.trim() || null })}
+                            disabled={updateFieldMutation.isPending}
+                            data-testid={`button-save-field-${factor.journalId}`}
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2"
+                            onClick={() => { setEditingFieldJournalId(null); setFieldDraft(""); }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-left text-xs hover:underline w-full"
+                          onClick={() => { setEditingFieldJournalId(factor.journalId); setFieldDraft(factor.field ?? ""); }}
+                          data-testid={`button-edit-field-${factor.journalId}`}
+                          title="Click to edit field"
+                        >
+                          {factor.field || <span className="text-muted-foreground italic">— set field —</span>}
+                        </button>
+                      )}
+                    </TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           type="number"
                           value={editForm.year?.toString() || ''}
@@ -1174,17 +1283,17 @@ export default function PublicationOffice() {
                           className="w-20"
                         />
                       ) : (
-                        factor.year
+                        factor.year ?? <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-xs">{factor.issn}</TableCell>
                     <TableCell className="text-xs">{factor.eissn}</TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           type="number"
                           step="0.001"
-                          value={editForm.impactFactor || ''}
+                          value={editForm.impactFactor as any || ''}
                           onChange={(e) => setEditForm({ ...editForm, impactFactor: parseFloat(e.target.value) })}
                           className="w-24"
                         />
@@ -1196,13 +1305,13 @@ export default function PublicationOffice() {
                     <TableCell>{factor.jifWithoutSelfCites}</TableCell>
                     <TableCell>{factor.jci}</TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           value={editForm.quartile || ''}
                           onChange={(e) => setEditForm({ ...editForm, quartile: e.target.value })}
                           className="w-16"
                         />
-                      ) : (
+                      ) : factor.quartile ? (
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
                           factor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
                           factor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
@@ -1211,10 +1320,10 @@ export default function PublicationOffice() {
                         }`}>
                           {factor.quartile}
                         </span>
-                      )}
+                      ) : null}
                     </TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           type="number"
                           value={editForm.rank || ''}
@@ -1231,7 +1340,7 @@ export default function PublicationOffice() {
                     <TableCell>{factor.citedHalfLife}</TableCell>
                     <TableCell>{factor.citingHalfLife}</TableCell>
                     <TableCell className="text-xs">
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           value={editForm.publisher || ''}
                           onChange={(e) => setEditForm({ ...editForm, publisher: e.target.value })}
@@ -1242,7 +1351,7 @@ export default function PublicationOffice() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="sm"
@@ -1271,7 +1380,7 @@ export default function PublicationOffice() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => deleteMutation.mutate(factor.id)}
+                            onClick={() => deleteMutation.mutate(factor.journalId)}
                             disabled={deleteMutation.isPending}
                           >
                             <X className="h-4 w-4" />
@@ -1484,6 +1593,55 @@ export default function PublicationOffice() {
                     <p><span className="font-medium">Publisher:</span> {selectedJournal.publisher ?? 'N/A'}</p>
                     <p><span className="font-medium">ISSN:</span> {selectedJournal.issn ?? 'N/A'}</p>
                     <p><span className="font-medium">eISSN:</span> {selectedJournal.eissn ?? 'N/A'}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Field:</span>
+                      {editingFieldJournalId === selectedJournal.journalId ? (
+                        <>
+                          <Input
+                            value={fieldDraft}
+                            onChange={(e) => setFieldDraft(e.target.value)}
+                            className="h-7 text-xs w-48"
+                            data-testid="input-modal-field"
+                          />
+                          <Button
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => {
+                              const jid = selectedJournal.journalId;
+                              updateFieldMutation.mutate(
+                                { journalId: jid, field: fieldDraft.trim() || null },
+                                { onSuccess: () => setSelectedJournal({ ...selectedJournal, field: fieldDraft.trim() || null }) }
+                              );
+                            }}
+                            disabled={updateFieldMutation.isPending}
+                            data-testid="button-save-modal-field"
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2"
+                            onClick={() => { setEditingFieldJournalId(null); setFieldDraft(""); }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span>{selectedJournal.field || <span className="italic text-muted-foreground">not set</span>}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2"
+                            onClick={() => { setEditingFieldJournalId(selectedJournal.journalId); setFieldDraft(selectedJournal.field ?? ""); }}
+                            data-testid="button-edit-modal-field"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>

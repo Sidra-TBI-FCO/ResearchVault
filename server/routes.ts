@@ -5771,7 +5771,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sortField = req.query.sortField as string || 'rank';
       const sortDirection = (req.query.sortDirection as 'asc' | 'desc') || 'asc';
       const searchTerm = req.query.searchTerm as string || '';
-      const yearFilter = req.query.yearFilter as string || '';
+      const fieldsParam = req.query.fields as string | undefined;
+      const fields = fieldsParam ? fieldsParam.split(',').map(s => s.trim()).filter(Boolean) : [];
 
       const result = await storage.getJournalImpactFactors({
         limit,
@@ -5779,9 +5780,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sortField,
         sortDirection,
         searchTerm,
-        yearFilter
+        fields,
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error('Error fetching journal impact factors:', error);
@@ -5789,22 +5790,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/journal-impact-factors/fields', async (_req: Request, res: Response) => {
+    try {
+      const fields = await storage.getJournalFields();
+      res.json(fields);
+    } catch (error) {
+      console.error('Error fetching journal fields:', error);
+      res.status(500).json({ message: "Failed to fetch journal fields" });
+    }
+  });
+
   app.get('/api/journal-impact-factors/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid impact factor ID" });
+        return res.status(400).json({ message: "Invalid journal ID" });
       }
 
       const factor = await storage.getJournalImpactFactor(id);
       if (!factor) {
-        return res.status(404).json({ message: "Impact factor not found" });
+        return res.status(404).json({ message: "Journal not found" });
       }
 
       res.json(factor);
     } catch (error) {
-      console.error('Error fetching journal impact factor:', error);
-      res.status(500).json({ message: "Failed to fetch journal impact factor" });
+      console.error('Error fetching journal:', error);
+      res.status(500).json({ message: "Failed to fetch journal" });
+    }
+  });
+
+  app.get('/api/journal-impact-factors/:id/history', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid journal ID" });
+      }
+      const history = await storage.getHistoricalImpactFactorsByJournalId(id);
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching journal history:', error);
+      res.status(500).json({ message: "Failed to fetch journal history" });
+    }
+  });
+
+  app.patch('/api/journal-impact-factors/:id/field', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid journal ID" });
+      }
+      const fieldValue: string | null = req.body?.field == null || req.body.field === '' ? null : String(req.body.field);
+      const updated = await storage.updateJournalField(id, fieldValue);
+      if (!updated) return res.status(404).json({ message: "Journal not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating journal field:', error);
+      res.status(500).json({ message: "Failed to update journal field" });
     }
   });
 
@@ -5880,6 +5921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             publisher: row.publisher || null,
             issn: row.issn || null,
             eissn: row.eissn || null,
+            field: row.field || row.category || row.subjectArea || row.subject_area || row['Subject Area'] || row['Category'] || null,
             totalCites: row.totalCites || null,
             totalArticles: row.totalArticles || null,
             citableItems: row.citableItems || null,

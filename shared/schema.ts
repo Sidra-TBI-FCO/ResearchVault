@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex, date, numeric } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -1048,40 +1049,96 @@ export type RolePermission = typeof rolePermissions.$inferSelect;
 export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 
 // Journal Impact Factors schema
-export const journalImpactFactors = pgTable("journal_impact_factors", {
+// Journals: one row per journal with stable metadata
+export const journals = pgTable("journals", {
   id: serial("id").primaryKey(),
   journalName: text("journal_name").notNull(),
   abbreviatedJournal: text("abbreviated_journal"),
-  year: integer("year").notNull(),
   publisher: text("publisher"),
   issn: text("issn"),
   eissn: text("eissn"),
+  field: text("field"), // JCR category / subject area
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  journalNameIdx: uniqueIndex("journals_name_lower_idx").on(sql`lower(${table.journalName})`),
+}));
+
+// Per-year impact factor metrics for a journal
+export const journalImpactFactorMetrics = pgTable("journal_impact_factor_metrics", {
+  id: serial("id").primaryKey(),
+  journalId: integer("journal_id").notNull().references(() => journals.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
   totalCites: integer("total_cites"),
   totalArticles: integer("total_articles"),
   citableItems: integer("citable_items"),
   citedHalfLife: numeric("cited_half_life", { precision: 10, scale: 3 }),
   citingHalfLife: numeric("citing_half_life", { precision: 10, scale: 3 }),
-  impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }), // JIF 2024
+  impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }),
   fiveYearJif: numeric("five_year_jif", { precision: 10, scale: 3 }),
   jifWithoutSelfCites: numeric("jif_without_self_cites", { precision: 10, scale: 3 }),
   jci: numeric("jci", { precision: 10, scale: 3 }),
-  quartile: text("quartile"), // Q1, Q2, Q3, Q4
+  quartile: text("quartile"),
   rank: integer("rank"),
-  totalCitations: integer("total_citations"), // Keep for backward compatibility
+  totalCitations: integer("total_citations"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  journalYearIdx: uniqueIndex("journal_metrics_journal_year_idx").on(table.journalId, table.year),
+}));
 
-// Create unique index for journal + year combination
-
-export const insertJournalImpactFactorSchema = createInsertSchema(journalImpactFactors).omit({
+export const insertJournalSchema = createInsertSchema(journals).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
+export const insertJournalImpactFactorMetricSchema = createInsertSchema(journalImpactFactorMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertJournal = z.infer<typeof insertJournalSchema>;
+export type Journal = typeof journals.$inferSelect;
+export type InsertJournalImpactFactorMetric = z.infer<typeof insertJournalImpactFactorMetricSchema>;
+export type JournalImpactFactorMetric = typeof journalImpactFactorMetrics.$inferSelect;
+
+// Backwards-compatible flattened shape used by existing callers/UIs:
+// journal metadata + a single year's metrics merged together.
+export type JournalImpactFactor = JournalImpactFactorMetric & {
+  journalName: string;
+  abbreviatedJournal: string | null;
+  publisher: string | null;
+  issn: string | null;
+  eissn: string | null;
+  field: string | null;
+};
+
+// Backwards-compatible insert shape accepted by CSV import / single-row create:
+// callers send journal metadata + per-year metrics in a single object.
+export const insertJournalImpactFactorSchema = z.object({
+  journalName: z.string(),
+  abbreviatedJournal: z.string().nullable().optional(),
+  publisher: z.string().nullable().optional(),
+  issn: z.string().nullable().optional(),
+  eissn: z.string().nullable().optional(),
+  field: z.string().nullable().optional(),
+  year: z.number(),
+  totalCites: z.number().nullable().optional(),
+  totalArticles: z.number().nullable().optional(),
+  citableItems: z.number().nullable().optional(),
+  citedHalfLife: z.union([z.string(), z.number()]).nullable().optional(),
+  citingHalfLife: z.union([z.string(), z.number()]).nullable().optional(),
+  impactFactor: z.union([z.string(), z.number()]).nullable().optional(),
+  fiveYearJif: z.union([z.string(), z.number()]).nullable().optional(),
+  jifWithoutSelfCites: z.union([z.string(), z.number()]).nullable().optional(),
+  jci: z.union([z.string(), z.number()]).nullable().optional(),
+  quartile: z.string().nullable().optional(),
+  rank: z.number().nullable().optional(),
+  totalCitations: z.number().nullable().optional(),
+});
 export type InsertJournalImpactFactor = z.infer<typeof insertJournalImpactFactorSchema>;
-export type JournalImpactFactor = typeof journalImpactFactors.$inferSelect;
 
 // Grants schema
 export const grants = pgTable("grants", {

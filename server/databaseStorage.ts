@@ -33,7 +33,9 @@ import {
   ibcBackboneSourceRooms, IbcBackboneSourceRoom, InsertIbcBackboneSourceRoom,
   ibcApplicationPpe, IbcApplicationPpe, InsertIbcApplicationPpe,
   rolePermissions, RolePermission, InsertRolePermission,
-  journalImpactFactors, JournalImpactFactor, InsertJournalImpactFactor,
+  journals, Journal, InsertJournal,
+  journalImpactFactorMetrics, JournalImpactFactorMetric, InsertJournalImpactFactorMetric,
+  JournalImpactFactor, InsertJournalImpactFactor,
   grants, Grant, InsertGrant,
   grantResearchActivities, GrantResearchActivity, InsertGrantResearchActivity,
   grantProgressReports, GrantProgressReport, InsertGrantProgressReport,
@@ -1738,93 +1740,293 @@ export class DatabaseStorage implements IStorage {
     sortField?: string;
     sortDirection?: 'asc' | 'desc';
     searchTerm?: string;
-    yearFilter?: string;
+    fields?: string[];
   }): Promise<{ data: JournalImpactFactor[]; total: number }> {
-    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc', searchTerm = '', yearFilter = '' } = options || {};
-    
-    // Build where clauses for filtering
-    const whereConditions = [];
-    
+    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc', searchTerm = '', fields = [] } = options || {};
+
+    const whereConditions: any[] = [];
     if (searchTerm.trim()) {
       whereConditions.push(
         or(
-          ilike(journalImpactFactors.journalName, `%${searchTerm}%`),
-          ilike(journalImpactFactors.publisher, `%${searchTerm}%`)
+          ilike(journals.journalName, `%${searchTerm}%`),
+          ilike(journals.publisher, `%${searchTerm}%`)
         )
       );
     }
-    
-    if (yearFilter.trim()) {
-      const year = parseInt(yearFilter);
-      if (!isNaN(year)) {
-        whereConditions.push(eq(journalImpactFactors.year, year));
-      }
+    if (fields.length > 0) {
+      whereConditions.push(inArray(journals.field, fields));
     }
-    
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : sql`1=1`;
-    
-    // Build the order by clause based on sortField and sortDirection
-    let orderBy;
-    const column = journalImpactFactors[sortField as keyof typeof journalImpactFactors];
-    if (column) {
-      orderBy = sortDirection === 'asc' ? asc(column) : desc(column);
-    } else {
-      // Default to rank ascending
-      orderBy = asc(journalImpactFactors.rank);
-    }
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    // Get total count with filters
+    // Latest metric row per journal (highest year)
+    const latestMetricSubquery = db
+      .select({
+        journalId: journalImpactFactorMetrics.journalId,
+        maxYear: sql<number>`max(${journalImpactFactorMetrics.year})`.as('max_year'),
+      })
+      .from(journalImpactFactorMetrics)
+      .groupBy(journalImpactFactorMetrics.journalId)
+      .as('latest_year');
+
+    const journalColumnMap: Record<string, any> = {
+      journalName: journals.journalName,
+      publisher: journals.publisher,
+      field: journals.field,
+    };
+    const metricColumnMap: Record<string, any> = {
+      year: journalImpactFactorMetrics.year,
+      impactFactor: journalImpactFactorMetrics.impactFactor,
+      fiveYearJif: journalImpactFactorMetrics.fiveYearJif,
+      jifWithoutSelfCites: journalImpactFactorMetrics.jifWithoutSelfCites,
+      jci: journalImpactFactorMetrics.jci,
+      quartile: journalImpactFactorMetrics.quartile,
+      rank: journalImpactFactorMetrics.rank,
+      totalCites: journalImpactFactorMetrics.totalCites,
+      totalArticles: journalImpactFactorMetrics.totalArticles,
+      citableItems: journalImpactFactorMetrics.citableItems,
+      citedHalfLife: journalImpactFactorMetrics.citedHalfLife,
+      citingHalfLife: journalImpactFactorMetrics.citingHalfLife,
+    };
+    const sortColumn = journalColumnMap[sortField] ?? metricColumnMap[sortField] ?? journalImpactFactorMetrics.rank;
+    const orderBy = sortDirection === 'asc' ? asc(sortColumn) : desc(sortColumn);
+
     const [{ count: total }] = await db
       .select({ count: sql`count(*)`.mapWith(Number) })
-      .from(journalImpactFactors)
-      .where(whereClause);
+      .from(journals)
+      .where(whereClause ?? sql`1=1`);
 
-    // Get paginated data with filters
-    const data = await db.select().from(journalImpactFactors)
-      .where(whereClause)
-      .orderBy(orderBy)
+    const rows = await db
+      .select({
+        metric: journalImpactFactorMetrics,
+        journal: journals,
+      })
+      .from(journals)
+      .leftJoin(latestMetricSubquery, eq(latestMetricSubquery.journalId, journals.id))
+      .leftJoin(
+        journalImpactFactorMetrics,
+        and(
+          eq(journalImpactFactorMetrics.journalId, journals.id),
+          eq(journalImpactFactorMetrics.year, latestMetricSubquery.maxYear),
+        )
+      )
+      .where(whereClause ?? sql`1=1`)
+      .orderBy(orderBy, asc(journals.journalName))
       .limit(limit)
       .offset(offset);
 
+    const data = rows.map((row) => this.mergeJournalAndMetric(row.journal, row.metric));
     return { data, total };
   }
 
-  async getJournalImpactFactor(id: number): Promise<JournalImpactFactor | undefined> {
-    const [factor] = await db.select().from(journalImpactFactors).where(eq(journalImpactFactors.id, id));
-    return factor;
+  private mergeJournalAndMetric(journal: Journal, metric: JournalImpactFactorMetric | null): JournalImpactFactor {
+    const m: any = metric ?? {};
+    return {
+      id: m.id ?? null,
+      journalId: journal.id,
+      year: m.year ?? null,
+      totalCites: m.totalCites ?? null,
+      totalArticles: m.totalArticles ?? null,
+      citableItems: m.citableItems ?? null,
+      citedHalfLife: m.citedHalfLife ?? null,
+      citingHalfLife: m.citingHalfLife ?? null,
+      impactFactor: m.impactFactor ?? null,
+      fiveYearJif: m.fiveYearJif ?? null,
+      jifWithoutSelfCites: m.jifWithoutSelfCites ?? null,
+      jci: m.jci ?? null,
+      quartile: m.quartile ?? null,
+      rank: m.rank ?? null,
+      totalCitations: m.totalCitations ?? null,
+      createdAt: m.createdAt ?? journal.createdAt,
+      updatedAt: m.updatedAt ?? journal.updatedAt,
+      journalName: journal.journalName,
+      abbreviatedJournal: journal.abbreviatedJournal,
+      publisher: journal.publisher,
+      issn: journal.issn,
+      eissn: journal.eissn,
+      field: journal.field,
+    } as unknown as JournalImpactFactor;
+  }
+
+  async getJournalImpactFactor(journalId: number): Promise<JournalImpactFactor | undefined> {
+    const [journal] = await db.select().from(journals).where(eq(journals.id, journalId));
+    if (!journal) return undefined;
+    const [metric] = await db
+      .select()
+      .from(journalImpactFactorMetrics)
+      .where(eq(journalImpactFactorMetrics.journalId, journalId))
+      .orderBy(desc(journalImpactFactorMetrics.year))
+      .limit(1);
+    return this.mergeJournalAndMetric(journal, metric ?? null);
   }
 
   async getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined> {
-    const [factor] = await db.select().from(journalImpactFactors)
+    const [journal] = await db.select().from(journals)
+      .where(ilike(journals.journalName, journalName));
+    if (!journal) return undefined;
+    const [metric] = await db.select().from(journalImpactFactorMetrics)
       .where(and(
-        ilike(journalImpactFactors.journalName, journalName),
-        eq(journalImpactFactors.year, year)
+        eq(journalImpactFactorMetrics.journalId, journal.id),
+        eq(journalImpactFactorMetrics.year, year),
       ));
-    return factor;
+    if (!metric) return undefined;
+    return this.mergeJournalAndMetric(journal, metric);
   }
 
   async getHistoricalImpactFactors(journalName: string): Promise<JournalImpactFactor[]> {
-    return await db.select().from(journalImpactFactors)
-      .where(ilike(journalImpactFactors.journalName, journalName))
-      .orderBy(asc(journalImpactFactors.year));
+    const [journal] = await db.select().from(journals)
+      .where(ilike(journals.journalName, journalName));
+    if (!journal) return [];
+    return this.getHistoricalImpactFactorsByJournalId(journal.id);
+  }
+
+  async getHistoricalImpactFactorsByJournalId(journalId: number): Promise<JournalImpactFactor[]> {
+    const [journal] = await db.select().from(journals).where(eq(journals.id, journalId));
+    if (!journal) return [];
+    const metrics = await db.select().from(journalImpactFactorMetrics)
+      .where(eq(journalImpactFactorMetrics.journalId, journalId))
+      .orderBy(asc(journalImpactFactorMetrics.year));
+    return metrics.map((m) => this.mergeJournalAndMetric(journal, m));
   }
 
   async createJournalImpactFactor(factor: InsertJournalImpactFactor): Promise<JournalImpactFactor> {
-    const [newFactor] = await db.insert(journalImpactFactors).values(factor).returning();
-    return newFactor;
-  }
+    const name = (factor.journalName ?? '').trim();
+    if (!name) throw new Error('journalName is required');
 
-  async updateJournalImpactFactor(id: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined> {
-    const [updatedFactor] = await db
-      .update(journalImpactFactors)
-      .set({ ...factor, updatedAt: sql`now()` })
-      .where(eq(journalImpactFactors.id, id))
+    // Find or create journal (case-insensitive)
+    let [journal] = await db.select().from(journals)
+      .where(sql`lower(${journals.journalName}) = lower(${name})`);
+
+    if (!journal) {
+      const [created] = await db.insert(journals).values({
+        journalName: name,
+        abbreviatedJournal: factor.abbreviatedJournal ?? null,
+        publisher: factor.publisher ?? null,
+        issn: factor.issn ?? null,
+        eissn: factor.eissn ?? null,
+        field: factor.field ?? null,
+      }).returning();
+      journal = created;
+    } else {
+      // Update metadata where new value is provided and old is empty
+      const updates: Partial<InsertJournal> = {};
+      if (factor.abbreviatedJournal && !journal.abbreviatedJournal) updates.abbreviatedJournal = factor.abbreviatedJournal;
+      if (factor.publisher && !journal.publisher) updates.publisher = factor.publisher;
+      if (factor.issn && !journal.issn) updates.issn = factor.issn;
+      if (factor.eissn && !journal.eissn) updates.eissn = factor.eissn;
+      if (factor.field && !journal.field) updates.field = factor.field;
+      if (Object.keys(updates).length > 0) {
+        const [updated] = await db.update(journals)
+          .set({ ...updates, updatedAt: sql`now()` })
+          .where(eq(journals.id, journal.id))
+          .returning();
+        journal = updated;
+      }
+    }
+
+    // Build metric values: only include keys explicitly present in the input
+    // so partial PATCH updates don't null out untouched columns on conflict.
+    const providedMetric: Record<string, any> = {};
+    const setIfPresent = (key: string, raw: any, toStr = false) => {
+      if (raw === undefined) return;
+      providedMetric[key] = raw === null ? null : (toStr ? String(raw) : raw);
+    };
+    setIfPresent('totalCites', factor.totalCites);
+    setIfPresent('totalArticles', factor.totalArticles);
+    setIfPresent('citableItems', factor.citableItems);
+    setIfPresent('citedHalfLife', factor.citedHalfLife, true);
+    setIfPresent('citingHalfLife', factor.citingHalfLife, true);
+    setIfPresent('impactFactor', factor.impactFactor, true);
+    setIfPresent('fiveYearJif', factor.fiveYearJif, true);
+    setIfPresent('jifWithoutSelfCites', factor.jifWithoutSelfCites, true);
+    setIfPresent('jci', factor.jci, true);
+    setIfPresent('quartile', factor.quartile);
+    setIfPresent('rank', factor.rank);
+    setIfPresent('totalCitations', factor.totalCitations);
+
+    // For INSERT, fill omitted columns with null (only on first creation).
+    const insertValues: any = {
+      journalId: journal.id,
+      year: factor.year,
+      totalCites: null,
+      totalArticles: null,
+      citableItems: null,
+      citedHalfLife: null,
+      citingHalfLife: null,
+      impactFactor: null,
+      fiveYearJif: null,
+      jifWithoutSelfCites: null,
+      jci: null,
+      quartile: null,
+      rank: null,
+      totalCitations: null,
+      ...providedMetric,
+    };
+
+    // On conflict, ONLY update keys the caller actually provided so untouched
+    // metric columns are preserved.
+    const [metric] = await db.insert(journalImpactFactorMetrics)
+      .values(insertValues)
+      .onConflictDoUpdate({
+        target: [journalImpactFactorMetrics.journalId, journalImpactFactorMetrics.year],
+        set: { ...providedMetric, updatedAt: sql`now()` },
+      })
       .returning();
-    return updatedFactor;
+
+    return this.mergeJournalAndMetric(journal, metric);
   }
 
-  async deleteJournalImpactFactor(id: number): Promise<boolean> {
-    const result = await db.delete(journalImpactFactors).where(eq(journalImpactFactors.id, id));
+  async updateJournalImpactFactor(journalId: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined> {
+    const [journal] = await db.select().from(journals).where(eq(journals.id, journalId));
+    if (!journal) return undefined;
+
+    // Update journal-level metadata if present
+    const journalUpdates: Partial<InsertJournal> = {};
+    if (factor.journalName !== undefined) journalUpdates.journalName = factor.journalName;
+    if (factor.abbreviatedJournal !== undefined) journalUpdates.abbreviatedJournal = factor.abbreviatedJournal ?? null;
+    if (factor.publisher !== undefined) journalUpdates.publisher = factor.publisher ?? null;
+    if (factor.issn !== undefined) journalUpdates.issn = factor.issn ?? null;
+    if (factor.eissn !== undefined) journalUpdates.eissn = factor.eissn ?? null;
+    if (factor.field !== undefined) journalUpdates.field = factor.field ?? null;
+    let updatedJournal = journal;
+    if (Object.keys(journalUpdates).length > 0) {
+      const [u] = await db.update(journals)
+        .set({ ...journalUpdates, updatedAt: sql`now()` })
+        .where(eq(journals.id, journalId))
+        .returning();
+      updatedJournal = u;
+    }
+
+    // If a year is provided, update or insert that year's metric
+    if (factor.year !== undefined) {
+      return this.createJournalImpactFactor({
+        ...factor,
+        journalName: updatedJournal.journalName,
+        year: factor.year,
+      } as InsertJournalImpactFactor);
+    }
+
+    return this.getJournalImpactFactor(journalId);
+  }
+
+  async updateJournalField(journalId: number, field: string | null): Promise<Journal | undefined> {
+    const [updated] = await db.update(journals)
+      .set({ field, updatedAt: sql`now()` })
+      .where(eq(journals.id, journalId))
+      .returning();
+    return updated;
+  }
+
+  async getJournalFields(): Promise<string[]> {
+    const rows = await db
+      .selectDistinct({ field: journals.field })
+      .from(journals)
+      .where(sql`${journals.field} IS NOT NULL AND ${journals.field} <> ''`)
+      .orderBy(asc(journals.field));
+    return rows.map((r) => r.field!).filter(Boolean);
+  }
+
+  async deleteJournalImpactFactor(journalId: number): Promise<boolean> {
+    const result = await db.delete(journals).where(eq(journals.id, journalId));
     return (result.rowCount ?? 0) > 0;
   }
 
