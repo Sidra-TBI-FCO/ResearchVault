@@ -19,12 +19,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { formatFullName } from "@/utils/nameUtils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertScientistSchema, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 // Extend the insert schema with additional validations
 const editScientistSchema = insertScientistSchema.extend({
@@ -99,6 +110,53 @@ export default function EditScientist() {
       });
     }
   }, [scientist, form]);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const deleteScientistMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/scientists/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.status === 204) return { ok: true } as const;
+      // Parse 409 (referenced elsewhere) / 404 / 500 etc. — the server
+      // returns { message, blockedBy: { table: count, ... }, details? }
+      // on 409 and { message } otherwise.
+      let body: any = {};
+      try { body = await response.json(); } catch {}
+      const err: any = new Error(body.message || "Failed to delete staff member");
+      err.status = response.status;
+      err.blockedBy = body.blockedBy;
+      throw err;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
+      toast({
+        title: "Staff member deleted",
+        description: "The staff record has been removed.",
+      });
+      navigate("/scientists");
+    },
+    onError: (error: any) => {
+      if (error?.status === 409 && error.blockedBy) {
+        const lines = Object.entries(error.blockedBy as Record<string, number>)
+          .map(([table, count]) => `• ${table}: ${count}`)
+          .join("\n");
+        toast({
+          title: "Cannot delete this staff member",
+          description: `Still referenced by:\n${lines}\n\nReassign or remove these references first.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error?.message || "There was an error deleting the staff member.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
 
   const updateScientistMutation = useMutation({
     mutationFn: async (data: EditScientistFormValues) => {
@@ -542,27 +600,71 @@ export default function EditScientist() {
                 </div>
               </div>
 
-              <CardFooter className="flex justify-end space-x-2 px-0">
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate("/scientists")}
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={updateScientistMutation.isPending}
-                >
-                  {updateScientistMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    'Update Scientist'
-                  )}
-                </Button>
+              <CardFooter className="flex justify-between items-center px-0">
+                <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={deleteScientistMutation.isPending}
+                      data-testid="button-delete-scientist"
+                    >
+                      {deleteScientistMutation.isPending ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Deleting...</>
+                      ) : (
+                        <><Trash2 className="mr-2 h-4 w-4" />Delete</>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this staff member?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This permanently removes the record. If the person is
+                        still referenced anywhere (as a PI, line manager,
+                        project member, author, etc.) the delete will be
+                        blocked and we'll show you what to reassign first.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel data-testid="button-delete-cancel">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        data-testid="button-delete-confirm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          deleteScientistMutation.mutate(undefined, {
+                            onSettled: () => setDeleteOpen(false),
+                          });
+                        }}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/scientists")}
+                    type="button"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateScientistMutation.isPending}
+                  >
+                    {updateScientistMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Scientist'
+                    )}
+                  </Button>
+                </div>
               </CardFooter>
             </form>
           </Form>

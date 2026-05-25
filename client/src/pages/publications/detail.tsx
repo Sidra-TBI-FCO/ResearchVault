@@ -136,7 +136,6 @@ export default function PublicationDetail() {
         credentials: 'include',
         body: JSON.stringify({
           status: data.status,
-          changedBy: 1, // TODO: Get from auth context
           updatedFields: data.updatedFields,
           changes: data.changes,
         }),
@@ -1227,14 +1226,21 @@ function StatusUpdateForm({
   const currentStatus = publication.status || 'Concept';
   
   const getNextStatuses = (status: string) => {
-    const transitions = {
-      'Concept': ['Complete Draft'],
-      'Complete Draft': ['Vetted for submission'],
-      'Vetted for submission': ['Submitted for review with pre-publication', 'Submitted for review without pre-publication'],
-      'Submitted for review with pre-publication': ['Under review'],
-      'Submitted for review without pre-publication': ['Under review'],
-      'Under review': ['Accepted/In Press'],
-      'Accepted/In Press': ['Published']
+    // Keep in sync with validTransitions in server/routes.ts publication
+    // status route. Includes forward transitions, one-hop revert paths, and
+    // terminal exits (Rejected/Withdrawn).
+    const transitions: Record<string, string[]> = {
+      'Concept': ['Complete Draft', 'Withdrawn'],
+      'Complete Draft': ['Vetted for submission', 'Concept', 'Rejected', 'Withdrawn'],
+      'Vetted for submission': ['Submitted for review with pre-publication', 'Submitted for review without pre-publication', 'Complete Draft', 'Rejected', 'Withdrawn'],
+      'Submitted for review with pre-publication': ['Under review', 'Vetted for submission', 'Rejected', 'Withdrawn'],
+      'Submitted for review without pre-publication': ['Under review', 'Vetted for submission', 'Rejected', 'Withdrawn'],
+      'Under review': ['Accepted/In Press', 'Submitted for review with pre-publication', 'Submitted for review without pre-publication', 'Rejected', 'Withdrawn'],
+      'Accepted/In Press': ['Published', 'Under review', 'Withdrawn'],
+      'Published': ['Accepted/In Press'],
+      'Published *': ['Published'],
+      'Rejected': ['Under review', 'Vetted for submission'],
+      'Withdrawn': ['Concept'],
     };
     return transitions[status] || [];
   };

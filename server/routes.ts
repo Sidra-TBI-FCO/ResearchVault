@@ -16,6 +16,7 @@ import {
   buildImportPreview,
   enrichDeletesWithReferences,
   rowToInsertScientist,
+  findReferencingRecords,
 } from "./scientistsImportExport";
 import {
   insertScientistSchema,
@@ -2045,14 +2046,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid scientist ID" });
       }
 
+      // Make sure the scientist exists before we go FK-hunting so the
+      // 404 path stays distinguishable from the 409 "blocked" path.
+      const existing = await storage.getScientist(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Scientist not found" });
+      }
+
+      // Block hard-deletes when this scientist is still referenced anywhere
+      // (program director/co-lead, project members, publication authors,
+      // IRB/IBC PIs, line manager of another scientist, etc.). We reuse the
+      // import flow's reference scanner so the rules stay in one place.
+      const refs = await findReferencingRecords(db, [id]);
+      const blockers = [...(refs.get(id) ?? [])];
+
+      // findReferencingRecords intentionally skips the scientists self-ref
+      // (supervisor_id) because the import flow needs to reason about it
+      // alongside in-flight updates. For a single-row delete there is no
+      // such nuance — anyone still listing this scientist as their line
+      // manager is a blocker, so check it directly here.
+      const supervisedRows = await db
+        .select({ id: scientists.id })
+        .from(scientists)
+        .where(eq(scientists.supervisorId, id));
+      if (supervisedRows.length > 0) {
+        blockers.push({
+          table: "scientists",
+          column: "supervisor_id",
+          count: supervisedRows.length,
+          sampleIds: supervisedRows.slice(0, 5).map(r => r.id),
+        });
+      }
+
+      if (blockers.length > 0) {
+        const blockedBy: Record<string, number> = {};
+        let totalRows = 0;
+        for (const r of blockers) {
+          blockedBy[r.table] = (blockedBy[r.table] ?? 0) + r.count;
+          totalRows += r.count;
+        }
+        return res.status(409).json({
+          message: `Cannot delete: referenced by ${totalRows} record${totalRows === 1 ? "" : "s"} across ${blockers.length} table${blockers.length === 1 ? "" : "s"}.`,
+          blockedBy,
+          details: blockers,
+        });
+      }
+
       const success = await storage.deleteScientist(id);
-      
       if (!success) {
         return res.status(404).json({ message: "Scientist not found" });
       }
-      
+
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting scientist:", error);
       res.status(500).json({ message: "Failed to delete scientist" });
     }
   });
@@ -2998,11 +3045,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid publication ID" });
       }
 
-      const { status, changedBy, changes, updatedFields } = req.body;
-      
-      if (!status || !changedBy) {
-        return res.status(400).json({ message: "Status and changedBy are required" });
+      const { status, changes, updatedFields } = req.body;
+
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
       }
+
+      // Resolve the acting user from the session — never trust the client to
+      // attribute a status change to someone else.
+      const sessionUserId = req.session?.user?.id;
+      if (!sessionUserId) {
+        return res.status(401).json({ message: "You must be signed in to change publication status." });
+      }
+      const changedBy = sessionUserId;
 
       // Validate status transition
       const currentPublication = await storage.getPublication(id);
@@ -3011,15 +3066,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Publication not found" });
       }
 
-      // Status validation logic
-      const validTransitions = {
-        'Concept': ['Complete Draft'],
-        'Complete Draft': ['Vetted for submission'],
-        'Vetted for submission': ['Submitted for review with pre-publication', 'Submitted for review without pre-publication'],
-        'Submitted for review with pre-publication': ['Under review'],
-        'Submitted for review without pre-publication': ['Under review'],
-        'Under review': ['Accepted/In Press'],
-        'Accepted/In Press': ['Published']
+      // Status validation logic. Each entry lists every status reachable from
+      // the key — forward transitions, revert paths (one hop back), and
+      // terminal exits (Rejected/Withdrawn). Keep in sync with the
+      // `getNextStatuses` map in client/src/pages/publications/detail.tsx.
+      const validTransitions: Record<string, string[]> = {
+        'Concept': ['Complete Draft', 'Withdrawn'],
+        'Complete Draft': ['Vetted for submission', 'Concept', 'Rejected', 'Withdrawn'],
+        'Vetted for submission': ['Submitted for review with pre-publication', 'Submitted for review without pre-publication', 'Complete Draft', 'Rejected', 'Withdrawn'],
+        'Submitted for review with pre-publication': ['Under review', 'Vetted for submission', 'Rejected', 'Withdrawn'],
+        'Submitted for review without pre-publication': ['Under review', 'Vetted for submission', 'Rejected', 'Withdrawn'],
+        'Under review': ['Accepted/In Press', 'Submitted for review with pre-publication', 'Submitted for review without pre-publication', 'Rejected', 'Withdrawn'],
+        'Accepted/In Press': ['Published', 'Under review', 'Withdrawn'],
+        'Published': ['Accepted/In Press'],
+        'Published *': ['Published'],
+        'Rejected': ['Under review', 'Vetted for submission'],
+        'Withdrawn': ['Concept'],
       };
 
       const currentStatus = currentPublication.status || 'Concept';
