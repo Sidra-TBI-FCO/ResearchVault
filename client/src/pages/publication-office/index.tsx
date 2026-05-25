@@ -579,16 +579,16 @@ export default function PublicationOffice() {
 
   if (isLoading && activeTab === "impact-factors") {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-6">
         <div className="text-center">Loading impact factors...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Outcome Office</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Outcome Office</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
