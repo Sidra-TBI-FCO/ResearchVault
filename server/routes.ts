@@ -10,8 +10,8 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { db } from "./db";
-import { scientists, publicationAuthors, journals, journalImpactFactorMetrics } from "@shared/schema";
-import { eq, inArray } from "drizzle-orm";
+import { scientists, publicationAuthors, journals, journalImpactFactorMetrics, manuscriptHistory, users } from "@shared/schema";
+import { eq, inArray, desc } from "drizzle-orm";
 import {
   buildExportBuffer,
   parseUploadedFile,
@@ -2953,13 +2953,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const publication = await storage.createPublication(publicationData);
-      
-      // Create initial history entry for publication creation
+
+      // Create initial history entry for publication creation. Attribute it
+      // to the session user so the timeline shows who created the record;
+      // fall back to the legacy default user id 1 only if no session exists.
       await storage.createManuscriptHistoryEntry({
         publicationId: publication.id,
         fromStatus: '',
         toStatus: publication.status || 'Concept',
-        changedBy: 1, // Default user - could be enhanced with actual session user
+        changedBy: req.session?.user?.id ?? 1,
         changeReason: 'Publication created',
       });
       
@@ -3032,9 +3034,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid publication ID" });
       }
 
-      const history = await storage.getManuscriptHistory(id);
+      // Status changes now record the real session user id in `changed_by`.
+      // Older rows may instead hold a scientist id (or the legacy default
+      // user id 1), so we left-join both tables and prefer the users.name
+      // when it exists, falling back to the scientist's full name.
+      const rows = await db
+        .select({
+          id: manuscriptHistory.id,
+          publicationId: manuscriptHistory.publicationId,
+          fromStatus: manuscriptHistory.fromStatus,
+          toStatus: manuscriptHistory.toStatus,
+          changedField: manuscriptHistory.changedField,
+          oldValue: manuscriptHistory.oldValue,
+          newValue: manuscriptHistory.newValue,
+          changedBy: manuscriptHistory.changedBy,
+          changeReason: manuscriptHistory.changeReason,
+          createdAt: manuscriptHistory.createdAt,
+          userName: users.name,
+          scientistFirstName: scientists.firstName,
+          scientistLastName: scientists.lastName,
+        })
+        .from(manuscriptHistory)
+        .leftJoin(users, eq(manuscriptHistory.changedBy, users.id))
+        .leftJoin(scientists, eq(manuscriptHistory.changedBy, scientists.id))
+        .where(eq(manuscriptHistory.publicationId, id))
+        .orderBy(desc(manuscriptHistory.createdAt));
+
+      const history = rows.map((r) => {
+        const scientistName = r.scientistFirstName || r.scientistLastName
+          ? `${r.scientistFirstName ?? ''} ${r.scientistLastName ?? ''}`.trim()
+          : null;
+        return {
+          id: r.id,
+          publicationId: r.publicationId,
+          fromStatus: r.fromStatus,
+          toStatus: r.toStatus,
+          changedField: r.changedField,
+          oldValue: r.oldValue,
+          newValue: r.newValue,
+          changedBy: r.changedBy,
+          changedByName: r.userName ?? scientistName ?? null,
+          changeReason: r.changeReason,
+          createdAt: r.createdAt,
+        };
+      });
+
       res.json(history);
     } catch (error) {
+      console.error('Error fetching manuscript history:', error);
       res.status(500).json({ message: "Failed to fetch manuscript history" });
     }
   });

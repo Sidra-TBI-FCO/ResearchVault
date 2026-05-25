@@ -23,6 +23,49 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { formatFullName } from "@/utils/nameUtils";
 
+// Linear forward order of the publication workflow. Used to tell whether a
+// status change moves the publication forward, sideways, or back. Keep in
+// sync with the validTransitions map in server/routes.ts.
+const STATUS_FORWARD_ORDER: string[] = [
+  'Concept',
+  'Complete Draft',
+  'Vetted for submission',
+  'Submitted for review with pre-publication',
+  'Submitted for review without pre-publication',
+  'Under review',
+  'Accepted/In Press',
+  'Published',
+  'Published *',
+];
+
+type TransitionKind = 'forward' | 'revert' | 'reject' | 'withdraw' | 'create' | 'field';
+
+function classifyStatusTransition(
+  fromStatus: string | null,
+  toStatus: string,
+): TransitionKind {
+  if (toStatus === 'Rejected') return 'reject';
+  if (toStatus === 'Withdrawn') return 'withdraw';
+  if (!fromStatus) return 'create';
+  // Field-change history rows carry from === to.
+  if (fromStatus === toStatus) return 'field';
+  // Coming back out of a terminal exit is a revert.
+  if (fromStatus === 'Rejected' || fromStatus === 'Withdrawn') return 'revert';
+  const fromIdx = STATUS_FORWARD_ORDER.indexOf(fromStatus);
+  const toIdx = STATUS_FORWARD_ORDER.indexOf(toStatus);
+  if (fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx) return 'revert';
+  return 'forward';
+}
+
+const TRANSITION_STYLES: Record<TransitionKind, { border: string; bg: string; badge: string; label: string }> = {
+  forward:  { border: 'border-green-300',  bg: '',              badge: 'border-green-300 text-green-700',   label: 'Forward' },
+  revert:   { border: 'border-amber-400',  bg: 'bg-amber-50',   badge: 'border-amber-400 text-amber-700',   label: 'Reverted' },
+  reject:   { border: 'border-red-400',    bg: 'bg-red-50',     badge: 'border-red-400 text-red-700',       label: 'Rejected' },
+  withdraw: { border: 'border-red-400',    bg: 'bg-red-50',     badge: 'border-red-400 text-red-700',       label: 'Withdrawn' },
+  create:   { border: 'border-blue-300',   bg: '',              badge: 'border-blue-300 text-blue-700',     label: 'Created' },
+  field:    { border: 'border-gray-200',   bg: '',              badge: 'border-gray-300 text-gray-600',     label: 'Field change' },
+};
+
 export default function PublicationDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -79,8 +122,12 @@ export default function PublicationDetail() {
     queryKey: [`/api/scientists`],
   });
 
-  // Manuscript history query
-  const { data: manuscriptHistory = [], isLoading: historyLoading } = useQuery<ManuscriptHistory[]>({
+  // Manuscript history query — the API enriches each row with the
+  // `changedByName` of the user (or scientist, for legacy rows) who
+  // performed the status change.
+  const { data: manuscriptHistory = [], isLoading: historyLoading } = useQuery<
+    (ManuscriptHistory & { changedByName: string | null })[]
+  >({
     queryKey: [`/api/publications/${id}/history`],
     enabled: !!publication,
   });
@@ -1123,26 +1170,45 @@ export default function PublicationDetail() {
                 <p className="text-sm text-gray-500">No changes recorded yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {manuscriptHistory.map((entry) => (
-                    <div key={entry.id} className="border-l-2 border-gray-200 pl-3 py-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">
-                          {entry.fromStatus} → {entry.toStatus}
-                        </span>
-                        <span className="text-gray-500">
-                          {format(new Date(entry.createdAt), 'MMM d, yyyy HH:mm')}
-                        </span>
-                      </div>
-                      {entry.changeReason && (
-                        <p className="text-sm text-gray-600 mt-1">{entry.changeReason}</p>
-                      )}
-                      {entry.changedField && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {entry.changedField}: "{entry.oldValue}" → "{entry.newValue}"
+                  {manuscriptHistory.map((entry) => {
+                    const kind = classifyStatusTransition(entry.fromStatus, entry.toStatus);
+                    const styles = TRANSITION_STYLES[kind];
+                    return (
+                      <div
+                        key={entry.id}
+                        className={`border-l-2 ${styles.border} ${styles.bg} pl-3 py-2 rounded-r`}
+                        data-testid={`history-entry-${entry.id}`}
+                      >
+                        <div className="flex items-center flex-wrap gap-2 text-sm">
+                          <span className="font-medium">
+                            {entry.fromStatus || '—'} → {entry.toStatus}
+                          </span>
+                          {kind !== 'forward' && kind !== 'field' && (
+                            <Badge variant="outline" className={styles.badge} data-testid={`badge-transition-${entry.id}`}>
+                              {styles.label}
+                            </Badge>
+                          )}
+                          <span className="text-gray-500">
+                            {format(new Date(entry.createdAt), 'MMM d, yyyy HH:mm')}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1" data-testid={`text-actor-${entry.id}`}>
+                          by{' '}
+                          <span className="font-medium">
+                            {entry.changedByName ?? 'Unknown user'}
+                          </span>
                         </p>
-                      )}
-                    </div>
-                  ))}
+                        {entry.changeReason && (
+                          <p className="text-sm text-gray-600 mt-1">{entry.changeReason}</p>
+                        )}
+                        {entry.changedField && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {entry.changedField}: "{entry.oldValue}" → "{entry.newValue}"
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
