@@ -75,13 +75,6 @@ export default function PublicationOffice() {
   const [debouncedIfRange, setDebouncedIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportYear, setExportYear] = useState<string>("");
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedIfRange(ifRange);
-      setCurrentPage(1);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [ifRange]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -1282,6 +1275,11 @@ export default function PublicationOffice() {
                 step={IF_SLIDER_STEP}
                 minStepsBetweenThumbs={1}
                 onValueChange={(v) => setIfRange([v[0], v[1]] as [number, number])}
+                onValueCommit={(v) => {
+                  const next: [number, number] = [v[0], v[1]];
+                  setDebouncedIfRange(next);
+                  setCurrentPage(1);
+                }}
                 className="relative flex w-full touch-none select-none items-center h-9"
                 data-testid="slider-impact-factor"
               >
