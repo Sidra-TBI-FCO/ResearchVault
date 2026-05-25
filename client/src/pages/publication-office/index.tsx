@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -67,6 +68,18 @@ export default function PublicationOffice() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [fieldFilter, setFieldFilter] = useState<string[]>([]);
+  const IF_SLIDER_MIN = 0;
+  const IF_SLIDER_MAX = 100;
+  const IF_SLIDER_STEP = 0.5;
+  const [ifRange, setIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
+  const [debouncedIfRange, setDebouncedIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedIfRange(ifRange);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [ifRange]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -180,6 +193,8 @@ export default function PublicationOffice() {
       sortDirection,
       searchTerm: debouncedSearchTerm,
       fields: fieldFilter.join(','),
+      minIf: debouncedIfRange[0],
+      maxIf: debouncedIfRange[1],
     }],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -190,6 +205,8 @@ export default function PublicationOffice() {
       });
       if (debouncedSearchTerm) params.append('searchTerm', debouncedSearchTerm);
       if (fieldFilter.length > 0) params.append('fields', fieldFilter.join(','));
+      if (debouncedIfRange[0] > IF_SLIDER_MIN) params.append('minImpactFactor', String(debouncedIfRange[0]));
+      if (debouncedIfRange[1] < IF_SLIDER_MAX) params.append('maxImpactFactor', String(debouncedIfRange[1]));
       const response = await fetch(`/api/journal-impact-factors?${params}`);
       if (!response.ok) throw new Error('Failed to fetch impact factors');
       return response.json();
@@ -1159,6 +1176,47 @@ export default function PublicationOffice() {
                   className="pl-10"
                 />
               </div>
+            </div>
+            <div className="w-80">
+              <div className="flex items-center justify-between mb-1">
+                <Label>Impact Factor range</Label>
+                <span className="text-xs text-muted-foreground tabular-nums" data-testid="text-if-range">
+                  {ifRange[0].toFixed(1)} – {ifRange[1] >= IF_SLIDER_MAX ? `${IF_SLIDER_MAX}+` : ifRange[1].toFixed(1)}
+                </span>
+              </div>
+              <SliderPrimitive.Root
+                value={ifRange}
+                min={IF_SLIDER_MIN}
+                max={IF_SLIDER_MAX}
+                step={IF_SLIDER_STEP}
+                minStepsBetweenThumbs={1}
+                onValueChange={(v) => setIfRange([v[0], v[1]] as [number, number])}
+                className="relative flex w-full touch-none select-none items-center h-9"
+                data-testid="slider-impact-factor"
+              >
+                <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
+                  <SliderPrimitive.Range className="absolute h-full bg-primary" />
+                </SliderPrimitive.Track>
+                <SliderPrimitive.Thumb
+                  className="block h-5 w-5 rounded-full border-2 border-primary bg-background shadow ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Minimum impact factor"
+                />
+                <SliderPrimitive.Thumb
+                  className="block h-5 w-5 rounded-full border-2 border-primary bg-background shadow ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Maximum impact factor"
+                />
+              </SliderPrimitive.Root>
+              {(ifRange[0] > IF_SLIDER_MIN || ifRange[1] < IF_SLIDER_MAX) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs mt-1"
+                  onClick={() => setIfRange([IF_SLIDER_MIN, IF_SLIDER_MAX])}
+                  data-testid="button-clear-if-range"
+                >
+                  Reset range
+                </Button>
+              )}
             </div>
             <div className="w-72">
               <Label>Field</Label>

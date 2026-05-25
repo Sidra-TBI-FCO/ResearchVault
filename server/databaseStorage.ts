@@ -1741,8 +1741,10 @@ export class DatabaseStorage implements IStorage {
     sortDirection?: 'asc' | 'desc';
     searchTerm?: string;
     fields?: string[];
+    minImpactFactor?: number;
+    maxImpactFactor?: number;
   }): Promise<{ data: JournalImpactFactor[]; total: number }> {
-    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc', searchTerm = '', fields = [] } = options || {};
+    const { limit = 100, offset = 0, sortField = 'rank', sortDirection = 'asc', searchTerm = '', fields = [], minImpactFactor, maxImpactFactor } = options || {};
 
     const whereConditions: any[] = [];
     if (searchTerm.trim()) {
@@ -1756,6 +1758,30 @@ export class DatabaseStorage implements IStorage {
     if (fields.length > 0) {
       whereConditions.push(inArray(journals.field, fields));
     }
+
+    // Impact factor range filter — applies to each journal's latest IF.
+    // Implemented as a subquery so it also constrains the count(*) query.
+    const ifRangeActive = (minImpactFactor != null && Number.isFinite(minImpactFactor))
+      || (maxImpactFactor != null && Number.isFinite(maxImpactFactor));
+    if (ifRangeActive) {
+      const minCond = minImpactFactor != null && Number.isFinite(minImpactFactor)
+        ? sql`m.impact_factor >= ${minImpactFactor}`
+        : sql`TRUE`;
+      const maxCond = maxImpactFactor != null && Number.isFinite(maxImpactFactor)
+        ? sql`m.impact_factor <= ${maxImpactFactor}`
+        : sql`TRUE`;
+      whereConditions.push(sql`${journals.id} IN (
+        SELECT m.journal_id
+        FROM ${journalImpactFactorMetrics} m
+        INNER JOIN (
+          SELECT journal_id, MAX(year) AS max_year
+          FROM ${journalImpactFactorMetrics}
+          GROUP BY journal_id
+        ) ly ON ly.journal_id = m.journal_id AND ly.max_year = m.year
+        WHERE m.impact_factor IS NOT NULL AND ${minCond} AND ${maxCond}
+      )`);
+    }
+
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
     // Latest metric row per journal (highest year)

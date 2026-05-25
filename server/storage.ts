@@ -228,6 +228,8 @@ export interface IStorage {
     sortDirection?: 'asc' | 'desc';
     searchTerm?: string;
     fields?: string[];
+    minImpactFactor?: number;
+    maxImpactFactor?: number;
   }): Promise<{ data: JournalImpactFactor[]; total: number }>;
   getJournalImpactFactor(journalId: number): Promise<JournalImpactFactor | undefined>;
   getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined>;

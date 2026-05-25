@@ -5773,6 +5773,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const searchTerm = req.query.searchTerm as string || '';
       const fieldsParam = req.query.fields as string | undefined;
       const fields = fieldsParam ? fieldsParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const parseFloatParam = (v: any) => {
+        if (v == null || v === '') return undefined;
+        const n = parseFloat(String(v));
+        return Number.isFinite(n) ? n : undefined;
+      };
+      const minImpactFactor = parseFloatParam(req.query.minImpactFactor);
+      const maxImpactFactor = parseFloatParam(req.query.maxImpactFactor);
 
       const result = await storage.getJournalImpactFactors({
         limit,
@@ -5781,6 +5788,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sortDirection,
         searchTerm,
         fields,
+        minImpactFactor,
+        maxImpactFactor,
       });
 
       res.json(result);
