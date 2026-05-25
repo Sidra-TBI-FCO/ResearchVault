@@ -31,17 +31,18 @@ export default function PublicationsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, navigate] = useLocation();
   const [filterResearchActivityId, setFilterResearchActivityId] = useState<number | null>(null);
+  const [filterJournal, setFilterJournal] = useState<string | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { toast } = useToast();
   const { currentUser } = useCurrentUser();
-  
-  // Parse query params to check for research activity filter
+
+  // Parse query params (research activity + journal filter from Outcomes Office)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const researchActivityId = params.get('researchActivityId');
-    if (researchActivityId) {
-      setFilterResearchActivityId(parseInt(researchActivityId, 10));
-    }
+    setFilterResearchActivityId(researchActivityId ? parseInt(researchActivityId, 10) : null);
+    const journal = params.get('journal');
+    setFilterJournal(journal ? journal : null);
   }, [location]);
 
   const { data: publications, isLoading } = useQuery<EnhancedPublication[]>({
@@ -76,7 +77,13 @@ export default function PublicationsList() {
     if (filterResearchActivityId && publication.researchActivityId !== filterResearchActivityId) {
       return false;
     }
-    
+
+    // Journal filter (deep-link from Outcomes Office, case-insensitive)
+    if (filterJournal) {
+      const j = (publication.journal ?? '').trim().toLowerCase();
+      if (j !== filterJournal.trim().toLowerCase()) return false;
+    }
+
     // Then apply search query filter
     if (searchQuery) {
       return (
@@ -108,6 +115,28 @@ export default function PublicationsList() {
                   setFilterResearchActivityId(null);
                   window.history.pushState({}, '', '/publications');
                 }}
+              >
+                Clear Filter
+              </Button>
+            </div>
+          )}
+          {filterJournal && (
+            <div className="mt-1 flex items-center" data-testid="banner-journal-filter">
+              <Badge variant="outline" className="mr-2 bg-amber-50 text-amber-800 border-amber-200">
+                Filtered by Journal: {filterJournal}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-sm text-amber-700"
+                onClick={() => {
+                  setFilterJournal(null);
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete('journal');
+                  const qs = params.toString();
+                  window.history.pushState({}, '', '/publications' + (qs ? `?${qs}` : ''));
+                }}
+                data-testid="button-clear-journal-filter"
               >
                 Clear Filter
               </Button>

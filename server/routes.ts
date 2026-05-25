@@ -2899,6 +2899,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk count of publications grouped by journal name (case-insensitive).
+  // Accepts `?journals=name1|name2|...` (pipe-separated because journal names
+  // may contain commas) and returns { [journalName]: count }. Names not in
+  // the query are returned with count 0 so the frontend can render zeros.
+  app.get('/api/publications/journal-counts', async (req: Request, res: Response) => {
+    try {
+      const raw = (req.query.journals as string | undefined) ?? '';
+      const requested = raw.split('|').map((s) => s.trim()).filter(Boolean);
+      const result: Record<string, number> = {};
+      for (const name of requested) result[name] = 0;
+      if (requested.length === 0) return res.json(result);
+
+      const all = await storage.getPublications();
+      const lowerToOriginal = new Map<string, string>();
+      for (const name of requested) lowerToOriginal.set(name.toLowerCase(), name);
+      for (const pub of all) {
+        const j = (pub.journal ?? '').trim().toLowerCase();
+        if (!j) continue;
+        const original = lowerToOriginal.get(j);
+        if (original) result[original] = (result[original] ?? 0) + 1;
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('Error getting publication journal counts:', error);
+      res.status(500).json({ message: 'Failed to count publications by journal' });
+    }
+  });
+
   app.get('/api/publications/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);

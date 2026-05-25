@@ -1,6 +1,6 @@
 // @ts-nocheck — Pre-existing TypeScript errors in this file are suppressed so `npx tsc --noEmit` runs clean and new code in other files gets reliable type-checking feedback.
 // Most errors here stem from untyped `useQuery` results (data inferred as `unknown`), drifted shared/schema field renames, and form values typed as `unknown`. They are not known runtime bugs but should be fixed file-by-file as each is next touched: remove this directive, run `npx tsc --noEmit`, and resolve what surfaces.
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, Cell } from "recharts";
 import type { JournalImpactFactor, InsertJournalImpactFactor, Publication } from "@shared/schema";
@@ -104,6 +104,7 @@ export default function PublicationOffice() {
   const [debouncedIfRange, setDebouncedIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportYear, setExportYear] = useState<string>("");
+  const [, navigate] = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -241,6 +242,44 @@ export default function PublicationOffice() {
   const impactFactors = impactFactorsResult?.data || [];
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
+
+  // Publication counts for the journals currently shown on the IF page.
+  // Pipe-separated because journal names can contain commas.
+  const visibleJournalNames = useMemo(
+    () => Array.from(new Set((impactFactors as JournalImpactFactor[]).map((j) => j.journalName).filter(Boolean))),
+    [impactFactors]
+  );
+  const { data: journalPubCounts = {} } = useQuery<Record<string, number>>({
+    queryKey: ['/api/publications/journal-counts', 'batch', visibleJournalNames.join('|')],
+    queryFn: async () => {
+      if (visibleJournalNames.length === 0) return {};
+      const qs = new URLSearchParams({ journals: visibleJournalNames.join('|') });
+      const res = await fetch(`/api/publications/journal-counts?${qs.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch journal counts');
+      return res.json();
+    },
+    enabled: visibleJournalNames.length > 0,
+  });
+
+  // Count for the currently selected journal (used in the detail modal).
+  const { data: selectedJournalPubCount = 0 } = useQuery<number>({
+    queryKey: ['/api/publications/journal-counts', 'single', selectedJournal?.journalName ?? ''],
+    queryFn: async () => {
+      const name = selectedJournal?.journalName;
+      if (!name) return 0;
+      const qs = new URLSearchParams({ journals: name });
+      const res = await fetch(`/api/publications/journal-counts?${qs.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch journal count');
+      const data = await res.json();
+      return data[name] ?? 0;
+    },
+    enabled: !!selectedJournal?.journalName && isJournalModalOpen,
+  });
+
+  const goToPublicationsForJournal = (name: string) => {
+    setIsJournalModalOpen(false);
+    navigate(`/publications?journal=${encodeURIComponent(name)}`);
+  };
 
   // Available metric years for the export-year picker
   const { data: availableYears = [] } = useQuery<number[]>({
@@ -1575,6 +1614,7 @@ export default function PublicationOffice() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[200px]"><SortableHeader field="journalName" label="Journal Name" /></TableHead>
+                  <TableHead className="w-[90px]"><span className="text-xs font-medium">Pubs</span></TableHead>
                   <TableHead className="min-w-[150px]"><PlainHeader field="abbreviatedJournal" label="Abbreviated" /></TableHead>
                   <TableHead className="min-w-[180px]"><SortableHeader field="field" label="Field" /></TableHead>
                   <TableHead><SortableHeader field="year" label="Year" /></TableHead>
@@ -1616,6 +1656,34 @@ export default function PublicationOffice() {
                       ) : (
                         <span className="font-medium">{factor.journalName}</span>
                       )}
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const count = journalPubCounts[factor.journalName] ?? 0;
+                        if (count === 0) {
+                          return (
+                            <Badge
+                              variant="outline"
+                              className="text-muted-foreground font-normal"
+                              data-testid={`badge-pubcount-${factor.journalId}`}
+                            >
+                              0
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <Badge
+                            variant="secondary"
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                            onClick={() => goToPublicationsForJournal(factor.journalName)}
+                            title={`View ${count} publication${count === 1 ? '' : 's'} in ${factor.journalName}`}
+                            data-testid={`badge-pubcount-${factor.journalId}`}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            {count}
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {factor.abbreviatedJournal}
@@ -1979,6 +2047,24 @@ export default function PublicationOffice() {
                     <p><span className="font-medium">Publisher:</span> {selectedJournal.publisher ?? 'N/A'}</p>
                     <p><span className="font-medium">ISSN:</span> {selectedJournal.issn ?? 'N/A'}</p>
                     <p><span className="font-medium">eISSN:</span> {selectedJournal.eissn ?? 'N/A'}</p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="font-medium">Publications in portal:</span>
+                      {selectedJournalPubCount === 0 ? (
+                        <Badge variant="outline" className="text-muted-foreground font-normal" data-testid="badge-modal-pubcount">
+                          None
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                          onClick={() => goToPublicationsForJournal(selectedJournal.journalName)}
+                          data-testid="badge-modal-pubcount"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          {selectedJournalPubCount} — view in Publications
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Field:</span>
                       {editingFieldJournalId === selectedJournal.journalId ? (
