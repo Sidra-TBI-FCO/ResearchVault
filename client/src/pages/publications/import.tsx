@@ -642,7 +642,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
         </Tabs>
 
         <div className="flex justify-end">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} data-testid="button-cancel-import">
             Cancel
           </Button>
         </div>
@@ -768,6 +768,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedJournalId(journal.id.toString())}
+                      data-testid={`option-matching-journal-${journal.id}`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -803,6 +804,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                     setNewJournal(prev => ({ ...prev, journalName: importedData.journal }));
                     setShowAddJournal(true);
                   }}
+                  data-testid="button-show-add-journal"
                 >
                   <Plus className="h-4 w-4" />
                   Add "{importedData.journal}" to Database
@@ -828,6 +830,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                         value={newJournal.journalName}
                         onChange={(e) => setNewJournal(prev => ({ ...prev, journalName: e.target.value }))}
                         placeholder="e.g., Nature, Science"
+                        data-testid="input-new-journal-name"
                       />
                     </div>
                     <div>
@@ -837,6 +840,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                         value={newJournal.publisher}
                         onChange={(e) => setNewJournal(prev => ({ ...prev, publisher: e.target.value }))}
                         placeholder="e.g., Nature Publishing Group"
+                        data-testid="input-new-journal-publisher"
                       />
                     </div>
                   </div>
@@ -851,6 +855,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                         value={newJournal.impactFactor}
                         onChange={(e) => setNewJournal(prev => ({ ...prev, impactFactor: e.target.value }))}
                         placeholder="e.g., 42.778"
+                        data-testid="input-new-journal-impact-factor"
                       />
                     </div>
                     <div>
@@ -860,6 +865,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                         type="number"
                         value={newJournal.year}
                         onChange={(e) => setNewJournal(prev => ({ ...prev, year: parseInt(e.target.value) || new Date().getFullYear() }))}
+                        data-testid="input-new-journal-year"
                       />
                     </div>
                   </div>
@@ -869,6 +875,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                       variant="outline" 
                       onClick={() => setShowAddJournal(false)}
                       disabled={addJournalMutation.isPending}
+                      data-testid="button-cancel-add-journal"
                     >
                       Cancel
                     </Button>
@@ -876,6 +883,7 @@ export default function PublicationImport({ onClose }: PublicationImportProps) {
                       onClick={handleAddJournal}
                       disabled={addJournalMutation.isPending}
                       className="flex items-center gap-2"
+                      data-testid="button-save-new-journal"
                     >
                       {addJournalMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

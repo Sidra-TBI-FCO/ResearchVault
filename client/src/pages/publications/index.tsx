@@ -27,7 +27,7 @@ import PublicationImport from "./import";
 
 export default function PublicationsList() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [filterResearchActivityId, setFilterResearchActivityId] = useState<number | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -171,22 +171,7 @@ export default function PublicationsList() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 py-3">
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-5 w-64" />
-                    <div className="flex gap-4">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-8 w-20" />
-                </div>
-              ))}
-            </div>
-          ) : (
+          {(
             <Table>
               <TableHeader>
                 <TableRow>
@@ -199,11 +184,36 @@ export default function PublicationsList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPublications?.map((publication) => (
+                {isLoading && Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={`pub-skeleton-${i}`} data-testid={`row-publication-skeleton-${i}`}>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-[80%]" />
+                        <Skeleton className="h-3 w-[60%]" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))}
+                {!isLoading && (filteredPublications?.length ?? 0) === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground" data-testid="text-publications-empty">
+                      {searchQuery
+                        ? "No publications match your search."
+                        : "No publications yet. Use \"Import Publication\" or \"Add Publication\" to add one."}
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && filteredPublications?.map((publication) => (
                   <TableRow 
                     key={publication.id} 
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => window.location.href = `/publications/${publication.id}`}
+                    onClick={() => navigate(`/publications/${publication.id}`)}
+                    data-testid={`row-publication-${publication.id}`}
                   >
                     <TableCell>
                       <div className="font-medium">
@@ -291,13 +301,6 @@ export default function PublicationsList() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {filteredPublications?.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-600">
-                      No publications found matching your search.
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           )}

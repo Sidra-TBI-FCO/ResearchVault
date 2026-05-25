@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Scientist } from "@shared/schema";
 import { ChevronUp, ChevronDown, Users } from "lucide-react";
-import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { formatFullName } from "@/utils/nameUtils";
+import { ScientistAvatar } from "@/components/ScientistAvatar";
 
 interface OrgChartProps {
   scientistId: number;
@@ -90,11 +90,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                 onClick={() => onNavigate(lineManager.id)}
               >
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                      {lineManager.profileImageInitials || getInitials(lineManager)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ScientistAvatar scientist={lineManager} className="h-8 w-8" fallbackClassName="text-xs" />
                   <div className="text-left">
                     <div className="font-medium text-sm">{formatFullName(lineManager)}</div>
                     <div className="text-xs text-muted-foreground">{lineManager.jobTitle || 'No title'}</div>
@@ -113,11 +109,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
           </div>
           <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                  {scientist.profileImageInitials || getInitials(scientist)}
-                </AvatarFallback>
-              </Avatar>
+              <ScientistAvatar scientist={scientist} className="h-8 w-8" fallbackClassName="text-xs" />
               <div>
                 <div className="font-medium text-sm">{formatFullName(scientist)}</div>
                 <div className="text-xs text-muted-foreground">{scientist.jobTitle || 'No title'}</div>
@@ -150,11 +142,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                   onClick={() => onNavigate(report.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-neutral-100 text-neutral-700 text-xs">
-                        {report.profileImageInitials || getInitials(report)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ScientistAvatar scientist={report} className="h-8 w-8" fallbackClassName="bg-neutral-100 text-neutral-700 text-xs" />
                     <div className="text-left">
                       <div className="font-medium text-sm">{formatFullName(report)}</div>
                       <div className="text-xs text-muted-foreground">{report.jobTitle || 'No title'}</div>

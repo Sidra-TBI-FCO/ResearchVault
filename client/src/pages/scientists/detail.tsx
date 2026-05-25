@@ -7,13 +7,13 @@ import { ArrowLeft, Mail, Building, User, Pencil, ChevronRight, ChevronDown, Fol
 import { SiOrcid, SiLinkedin, SiGooglescholar } from "react-icons/si";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScientistAvatar } from "@/components/ScientistAvatar";
 import React, { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PublicationsList } from "@/components/PublicationsList";
 import { PublicationCharts } from "@/components/PublicationCharts";
 import { OrgChart } from "@/components/OrgChart";
-import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { formatFullName } from "@/utils/nameUtils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Tree structure component for research activities
@@ -281,11 +281,7 @@ export default function ScientistDetail() {
           </CardHeader>
           <CardContent>
                 <div className="flex items-start gap-6">
-                  <Avatar className="h-24 w-24 text-lg">
-                    <AvatarFallback className="bg-primary-100 text-primary-700">
-                      {scientist.profileImageInitials || getInitials(scientist)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ScientistAvatar scientist={scientist} className="h-24 w-24 text-lg" />
                   <div className="space-y-4">
                     <div>
                       <h2 className="text-xl font-semibold">

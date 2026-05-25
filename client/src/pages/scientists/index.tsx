@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PermissionWrapper } from "@/components/PermissionWrapper";
 import { formatFullName, formatNameWithJobTitle } from "@/utils/nameUtils";
+import { ScientistAvatar } from "@/components/ScientistAvatar";
 import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -647,9 +648,7 @@ export default function StaffList() {
                       >
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium">
-                              {person.profileImageInitials || formatFullName(person).split(' ').map(n => n[0]).join('')}
-                            </div>
+                            <ScientistAvatar scientist={person} className="h-8 w-8 text-xs" />
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">{formatFullName(person)}</span>

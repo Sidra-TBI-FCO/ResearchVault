@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import * as SliderPrimitive from "@radix-ui/react-slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +28,32 @@ import { Link } from "wouter";
 import { format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, Cell } from "recharts";
 import type { JournalImpactFactor, InsertJournalImpactFactor, Publication } from "@shared/schema";
+
+interface SavedSearch {
+  id?: string;
+  name: string;
+  filters: {
+    startDate: string;
+    endDate: string;
+    journal: string;
+    scientist: string;
+    status: string;
+  };
+  createdAt?: string;
+}
+
+interface SidraRanking {
+  id: number;
+  honorificTitle?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  jobTitle?: string | null;
+  department?: string | null;
+  publicationsCount: number;
+  sidraScore: number;
+  missingImpactFactorPublications: string[];
+  calculationDetails: any;
+}
 
 export default function PublicationOffice() {
   const { toast } = useToast();
@@ -41,7 +68,7 @@ export default function PublicationOffice() {
   const [exportJournal, setExportJournal] = useState("");
   const [exportScientist, setExportScientist] = useState("");
   const [exportStatus, setExportStatus] = useState("");
-  const [savedSearches, setSavedSearches] = useState<any[]>([]);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [searchName, setSearchName] = useState("");
   const [exportResults, setExportResults] = useState<{count: number, formattedText: string, publications: any[]} | null>(null);
   
@@ -52,12 +79,12 @@ export default function PublicationOffice() {
   const [correspondingAuthorMultiplier, setCorrespondingAuthorMultiplier] = useState(2);
   const [seniorAuthorMultiplier, setSeniorAuthorMultiplier] = useState(2);
   const [impactFactorYear, setImpactFactorYear] = useState("publication"); // "prior", "publication", "latest"
-  const [sidraRankings, setSidraRankings] = useState<any[]>([]);
-  const [selectedScientistDetails, setSelectedScientistDetails] = useState<any>(null);
+  const [sidraRankings, setSidraRankings] = useState<SidraRanking[]>([]);
+  const [selectedScientistDetails, setSelectedScientistDetails] = useState<SidraRanking | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Function to open calculation details modal
-  const openCalculationDetails = (scientist: any) => {
+  const openCalculationDetails = (scientist: SidraRanking) => {
     setSelectedScientistDetails(scientist);
     setIsDetailsModalOpen(true);
   };
@@ -1216,9 +1243,24 @@ export default function PublicationOffice() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {sidraRankings.length === 0 ? (
+                          {calculateSidraScoresMutation.isPending ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                              <TableRow key={`sidra-skeleton-${i}`} data-testid={`row-sidra-skeleton-${i}`}>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell>
+                                  <div className="space-y-2">
+                                    <Skeleton className="h-4 w-40" />
+                                    <Skeleton className="h-3 w-24" />
+                                  </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-5 w-12 ml-auto" /></TableCell>
+                              </TableRow>
+                            ))
+                          ) : sidraRankings.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                              <TableCell colSpan={5} className="text-center py-8 text-gray-500" data-testid="text-sidra-rankings-empty">
                                 Click "Calculate Scores" to generate rankings
                               </TableCell>
                             </TableRow>
@@ -1436,7 +1478,7 @@ export default function PublicationOffice() {
                 </Button>
               )}
             </div>
-            <div className="w-72">
+            <div className="w-72 shrink-0">
               <Label>Field</Label>
               <Popover>
                 <PopoverTrigger asChild>
