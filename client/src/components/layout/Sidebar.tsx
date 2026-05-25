@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { useTheme, themes, type ThemeName } from "@/contexts/ThemeContext";
 import qbridgeLogo from "@assets/image_1767775219373.png";
 
@@ -33,6 +34,8 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
   const [location] = useLocation();
   const { isHidden, isReadOnly } = usePermissions();
   const { themeName, currentLabels } = useTheme();
+  const { authConfig, logout } = useAuth();
+  const ssoEnabled = authConfig.ssoEnabled;
 
   // Simple pluralization helper
   const pluralize = (word: string): string => {
@@ -282,28 +285,32 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
             </div>
             <div className="flex-1">
               <div className="font-medium text-card-foreground">{currentUser.role}</div>
-              <div className="text-xs text-muted-foreground">Role-based Testing</div>
+              <div className="text-xs text-muted-foreground">
+                {ssoEnabled ? 'Signed in with Microsoft' : 'Role-based Testing'}
+              </div>
             </div>
           </div>
-          
-          {/* Role Selector */}
-          <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
-            <SelectTrigger className="w-full h-8 text-xs">
-              <SelectValue placeholder="Switch role..." />
-            </SelectTrigger>
-            <SelectContent>
-              {availableUsers.map((user) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
-                      {getInitials(user.role)}
+
+          {/* Role Selector (hidden when Microsoft sign-in is enabled) */}
+          {!ssoEnabled && (
+            <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
+              <SelectTrigger className="w-full h-8 text-xs">
+                <SelectValue placeholder="Switch role..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    <div className="flex items-center space-x-2">
+                      <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
+                        {getInitials(user.role)}
+                      </div>
+                      <span>{user.role}</span>
                     </div>
-                    <span>{user.role}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Navigation */}
@@ -383,13 +390,15 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
               Settings
             </Link>
             <div className="border-l border-primary/30 h-5 mx-3"></div>
-            <Link 
-              href="/"
-              className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer"
+            <button
+              type="button"
+              onClick={() => { void logout(); }}
+              className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer bg-transparent border-0 p-0"
+              data-testid="button-logout"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
-            </Link>
+            </button>
           </div>
         </div>
       </div>

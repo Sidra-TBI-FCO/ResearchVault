@@ -6,7 +6,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -16,18 +15,14 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
-  const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { login, loading } = useAuth();
-  
+  const { login, loading, authConfig, loginWithMicrosoft } = useAuth();
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-    },
+    defaultValues: { username: '', password: '' },
   });
-  
+
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     const success = await login(values.username, values.password);
     if (success) {
@@ -43,50 +38,65 @@ export default function LoginPage() {
             Research Portal Login
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access the research management system
+            {authConfig.ssoEnabled
+              ? 'Sign in with your institutional Microsoft account'
+              : 'Enter your credentials to access the research management system'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your username" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Enter your password"
-                        autoComplete="off" data-1p-ignore="true" data-lpignore="true"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Logging in...' : 'Log in'}
-              </Button>
-            </form>
-          </Form>
+          {authConfig.ssoEnabled ? (
+            <Button
+              type="button"
+              className="w-full"
+              onClick={loginWithMicrosoft}
+              disabled={loading}
+              data-testid="button-login-microsoft"
+            >
+              Sign in with Microsoft
+            </Button>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your username" autoComplete="off" data-1p-ignore="true" data-lpignore="true" data-testid="input-username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Enter your password"
+                          autoComplete="off" data-1p-ignore="true" data-lpignore="true"
+                          data-testid="input-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" className="w-full" disabled={loading} data-testid="button-login">
+                  {loading ? 'Logging in...' : 'Log in'}
+                </Button>
+              </form>
+            </Form>
+          )}
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">

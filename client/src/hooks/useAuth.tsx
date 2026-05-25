@@ -10,11 +10,18 @@ interface User {
   role: string;
 }
 
+interface AuthConfig {
+  ssoEnabled: boolean;
+  provider: 'local' | 'entra';
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   availableUsers: User[];
+  authConfig: AuthConfig;
   login: (username: string, password: string) => Promise<boolean>;
+  loginWithMicrosoft: () => void;
   logout: () => Promise<void>;
   switchUser: (userId: number) => Promise<boolean>;
   isAuthenticated: boolean;
@@ -26,56 +33,53 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [authConfig, setAuthConfig] = useState<AuthConfig>({ ssoEnabled: false, provider: 'local' });
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  
-  // Check if user is authenticated and load available users
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check current user
+        const configResponse = await fetch('/api/auth/config');
+        if (configResponse.ok) {
+          setAuthConfig(await configResponse.json());
+        }
+
         const authResponse = await fetch('/api/auth/me');
         if (authResponse.ok) {
           const authData = await authResponse.json();
           setUser(authData.user);
         }
-        
-        // Load available users for switching
+
         const usersResponse = await fetch('/api/auth/users');
         if (usersResponse.ok) {
           const usersData = await usersResponse.json();
           setAvailableUsers(usersData.users);
         }
       } catch (error) {
-        // Fail silently, user is not authenticated or users can't be loaded
+        // Fail silently
       } finally {
         setLoading(false);
       }
     };
-    
+
     initializeAuth();
   }, []);
-  
-  // Login function
+
   const login = async (username: string, password: string): Promise<boolean> => {
     setLoading(true);
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ username, password }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        toast({
-          title: 'Login successful',
-          description: `Welcome back, ${data.user.name}!`,
-        });
+        toast({ title: 'Login successful', description: `Welcome back, ${data.user.name}!` });
         return true;
       } else {
         const errorData = await response.json();
@@ -97,20 +101,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
   };
-  
-  // Logout function
+
+  const loginWithMicrosoft = () => {
+    window.location.href = '/api/auth/microsoft/login';
+  };
+
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-      setUser(null);
-      navigate('/login');
-      toast({
-        title: 'Logout successful',
-        description: 'You have been logged out.',
-      });
+      if (authConfig.ssoEnabled) {
+        const response = await fetch('/api/auth/microsoft/logout', { method: 'POST' });
+        setUser(null);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.logoutUrl) {
+            window.location.href = data.logoutUrl;
+            return;
+          }
+        }
+        navigate('/login');
+      } else {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        setUser(null);
+        navigate('/login');
+        toast({ title: 'Logout successful', description: 'You have been logged out.' });
+      }
     } catch (error) {
       toast({
         title: 'Logout error',
@@ -122,25 +137,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Switch user function (for development/testing)
   const switchUser = async (userId: number): Promise<boolean> => {
+    if (authConfig.ssoEnabled) {
+      toast({
+        title: 'Not available',
+        description: 'Role switching is disabled when Microsoft sign-in is enabled.',
+        variant: 'destructive',
+      });
+      return false;
+    }
     setLoading(true);
     try {
       const response = await fetch('/api/auth/switch-user', {
         method: 'POST',
         body: JSON.stringify({ userId }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        toast({
-          title: 'User switched',
-          description: `Now viewing as ${data.user.name}`,
-        });
+        toast({ title: 'User switched', description: `Now viewing as ${data.user.name}` });
         return true;
       } else {
         const errorData = await response.json();
@@ -162,14 +179,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
   };
-  
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         availableUsers,
+        authConfig,
         login,
+        loginWithMicrosoft,
         logout,
         switchUser,
         isAuthenticated: !!user,
@@ -189,14 +208,13 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Route guard component to protect routes
-export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }> = ({ 
-  children, 
-  adminOnly = false 
+export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }> = ({
+  children,
+  adminOnly = false,
 }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
   const [, navigate] = useLocation();
-  
+
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
@@ -206,14 +224,14 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
       }
     }
   }, [isAuthenticated, isAdmin, loading, navigate, adminOnly]);
-  
+
   if (loading) {
     return <div>Loading...</div>;
   }
-  
+
   if (!isAuthenticated || (adminOnly && !isAdmin)) {
     return null;
   }
-  
+
   return <>{children}</>;
 };

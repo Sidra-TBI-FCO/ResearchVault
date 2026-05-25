@@ -3,8 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users } from "lucide-react";
+import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users, ShieldCheck, KeyRound } from "lucide-react";
 import { useTheme, themes, defaultInstitutionLabels, type InstitutionConfig } from "@/contexts/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,6 +69,7 @@ const statusOptions = [
 
 export default function Settings() {
   const { mode, themeName, setMode, setTheme, toggleMode, institutionLabels, setInstitutionLabels } = useTheme();
+  const { authConfig } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -296,7 +298,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
       </div>
 
       <Tabs defaultValue="layout-theme" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1 lg:grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 lg:grid-cols-4">
           <TabsTrigger value="layout-theme" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             Layout & Theme
@@ -304,6 +306,10 @@ IRIS (Intelligent Research Information Management System) is a research manageme
           <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Team Members
+          </TabsTrigger>
+          <TabsTrigger value="authentication" className="flex items-center gap-2" data-testid="tab-authentication">
+            <ShieldCheck className="h-4 w-4" />
+            Authentication
           </TabsTrigger>
           <TabsTrigger value="feature-requests" className="flex items-center gap-2">
             <MessageSquarePlus className="h-4 w-4" />
@@ -533,6 +539,134 @@ IRIS (Intelligent Research Information Management System) is a research manageme
 
         <TabsContent value="team" className="space-y-6">
           <TeamManagement />
+        </TabsContent>
+
+        <TabsContent value="authentication" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5" />
+                Sign-in Mode
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-1">
+                  <div className="font-medium" data-testid="text-auth-mode">
+                    {authConfig.ssoEnabled
+                      ? "Microsoft Entra ID (SSO)"
+                      : "Role emulation (development mode)"}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {authConfig.ssoEnabled
+                      ? "Users sign in with their Microsoft work account. The role selector and local login form are hidden."
+                      : "Anyone can pick a role from the sidebar to emulate that user. No real authentication is enforced."}
+                  </div>
+                </div>
+                <Badge
+                  variant={authConfig.ssoEnabled ? "default" : "secondary"}
+                  data-testid="badge-auth-status"
+                >
+                  {authConfig.ssoEnabled ? "SSO ON" : "SSO OFF"}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="rounded-md border p-3">
+                  <div className="text-xs uppercase text-muted-foreground">Provider</div>
+                  <div className="font-medium">{authConfig.provider}</div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs uppercase text-muted-foreground">Logout endpoint</div>
+                  <div className="font-medium">
+                    {authConfig.ssoEnabled
+                      ? "Microsoft end-session"
+                      : "Local /api/auth/logout"}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Switching on Microsoft Entra ID SSO
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                SSO is enabled automatically when the environment variables below are
+                present on the server. Set them in the institution's production
+                deployment and restart the app — no code changes required.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ol className="list-decimal list-inside space-y-2 text-sm">
+                <li>
+                  In the institution's Azure portal, register an app and add a redirect
+                  URI of <code className="px-1 rounded bg-muted">https://&lt;your-host&gt;/api/auth/microsoft/callback</code>.
+                </li>
+                <li>Create a client secret and copy its value.</li>
+                <li>Set the environment variables below in the deployment.</li>
+                <li>Restart the app. The server log will show
+                  <code className="px-1 mx-1 rounded bg-muted">[auth] Microsoft Entra ID sign-in ENABLED</code>
+                  and the login page will show a single "Sign in with Microsoft" button.</li>
+                <li>To turn SSO back off, unset any of the four required variables and restart.</li>
+              </ol>
+
+              <div className="rounded-md border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-2 font-medium">Variable</th>
+                      <th className="text-left p-2 font-medium">Required</th>
+                      <th className="text-left p-2 font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AZURE_TENANT_ID</td>
+                      <td className="p-2">Yes</td>
+                      <td className="p-2 text-muted-foreground">Entra ID tenant (directory) ID</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AZURE_CLIENT_ID</td>
+                      <td className="p-2">Yes</td>
+                      <td className="p-2 text-muted-foreground">Application (client) ID of the Entra app registration</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AZURE_CLIENT_SECRET</td>
+                      <td className="p-2">Yes</td>
+                      <td className="p-2 text-muted-foreground">Client secret value from the Entra app registration</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AZURE_REDIRECT_URI</td>
+                      <td className="p-2">Yes</td>
+                      <td className="p-2 text-muted-foreground">Must exactly match a redirect URI on the app registration</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AZURE_DEFAULT_ROLE</td>
+                      <td className="p-2">No</td>
+                      <td className="p-2 text-muted-foreground">Role assigned to new users on first sign-in (default Investigator)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AZURE_POST_LOGOUT_REDIRECT_URI</td>
+                      <td className="p-2">No</td>
+                      <td className="p-2 text-muted-foreground">Where Microsoft sends users after sign-out (defaults to /login)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+                <AlertCircle className="h-4 w-4 mt-0.5 text-amber-600" />
+                <div>
+                  When SSO is enabled, the sidebar role selector and the local username /
+                  password form are hidden. New users are auto-provisioned from their
+                  Microsoft profile and assigned the default role above.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="feature-requests" className="space-y-6">

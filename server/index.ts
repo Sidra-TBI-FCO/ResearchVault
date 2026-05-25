@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { registerAuthRoutes } from "./auth";
+import { isEntraEnabled, logEntraStatus, registerEntraRoutes } from "./entraAuth";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { createHash } from "crypto";
@@ -41,8 +42,10 @@ app.use(session({
   }
 }));
 
-// Development middleware to bridge dummy users with session-based auth
-if (process.env.NODE_ENV !== 'production') {
+// Development middleware to bridge dummy users with session-based auth.
+// Skipped entirely when Microsoft Entra ID sign-in is enabled, so the real
+// session user is the only source of identity.
+if (process.env.NODE_ENV !== 'production' && !isEntraEnabled) {
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     // If no session user is set, use a default development user
     if (!req.session.user) {
@@ -90,9 +93,13 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Log Microsoft Entra ID sign-in status on startup
+  logEntraStatus();
+
   // Register authentication routes
   registerAuthRoutes(app);
-  
+  registerEntraRoutes(app);
+
   // Register API routes
   const server = await registerRoutes(app);
 

@@ -164,6 +164,46 @@ The Research Portal System is a full-stack web application built for managing sc
 - Environment-based configuration
 - Backup and recovery procedures (external to application)
 
+## Microsoft Entra ID sign-in
+
+The app supports authenticating users against Microsoft Entra ID (Azure AD). It is **off by default** — when none of the env vars below are set, the app runs in the original role-emulation mode (the role selector in the sidebar and the local login form remain active).
+
+### Enabling per-institution
+
+**Before flipping the env vars**, apply the schema migration that adds the
+`users.auth_provider` (default `'local'`, NOT NULL) and `users.entra_oid`
+(nullable, unique) columns the provisioning flow depends on. Either:
+
+- Run `npm run db:push` against the target database, or
+- Apply `migrations/20260525_add_entra_auth_columns.sql` directly.
+
+The migration is idempotent (uses `IF NOT EXISTS`) and safe on existing rows.
+Without it, the first Microsoft sign-in will fail when looking up / inserting
+the user record.
+
+Then set these environment variables in the institution's production deployment (each institution registers its own app in its own tenant):
+
+| Variable | Required | Description |
+|---|---|---|
+| `AZURE_TENANT_ID` | yes | Entra ID tenant (directory) ID, e.g. `00000000-0000-0000-0000-000000000000` |
+| `AZURE_CLIENT_ID` | yes | Application (client) ID of the Entra app registration |
+| `AZURE_CLIENT_SECRET` | yes | Client secret value from the Entra app registration |
+| `AZURE_REDIRECT_URI` | yes | Must exactly match a redirect URI on the Entra app registration, e.g. `https://qbridge.sidra.org/api/auth/microsoft/callback` |
+| `AZURE_DEFAULT_ROLE` | no | App role assigned to new users on first sign-in (default `Investigator`) |
+| `AZURE_POST_LOGOUT_REDIRECT_URI` | no | Where Microsoft sends the user after sign-out (defaults to `<host>/login`) |
+
+When all four required vars are present:
+- The local username/password form and the sidebar role selector are hidden.
+- The login page shows a single "Sign in with Microsoft" button.
+- New users are auto-provisioned from their Microsoft profile (matched on `oid`, falling back to email) and assigned `AZURE_DEFAULT_ROLE`.
+- Sign-out clears the local session and redirects through Microsoft's end-session endpoint.
+
+The server logs `[auth] Microsoft Entra ID sign-in ENABLED/DISABLED` on startup so the active state is easy to confirm.
+
+### Disabling
+
+Unset (or leave unset) any of the required vars and restart the app. Behaviour returns to the role-emulation flow with no Microsoft redirects.
+
 ## Changelog
 - January 20, 2026. Redesigned IBC application edit page with two-column layout: main form on left, sticky right sidebar with Communication History, Submission Comment, and Save/Submit buttons for better usability
 - January 20, 2026. Removed redundant Risk Group Classification field from IBC applications as Biosafety Level already provides this information

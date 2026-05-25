@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
 import { Request, Response, NextFunction } from "express";
 import session from "express-session";
+import { isEntraEnabled } from "./entraAuth";
 
 // Extend Express.Session interface to include our user property
 declare module "express-session" {
@@ -115,8 +116,23 @@ export async function loginUser(username: string, password: string) {
  * Register auth routes
  */
 export function registerAuthRoutes(app: any) {
+  // Auth configuration (used by the frontend to decide whether to render the
+  // role-selector/local-login or the Microsoft sign-in button).
+  app.get('/api/auth/config', (_req: Request, res: Response) => {
+    res.json({
+      ssoEnabled: isEntraEnabled,
+      provider: isEntraEnabled ? 'entra' : 'local',
+    });
+  });
+
   // Login route
   app.post('/api/auth/login', async (req: Request, res: Response) => {
+    if (isEntraEnabled) {
+      return res.status(403).json({
+        message: "Local login is disabled. Please sign in with Microsoft.",
+      });
+    }
+
     const { username, password } = req.body;
     
     if (!username || !password) {

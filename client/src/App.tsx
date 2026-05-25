@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import { PermissionsProvider } from "@/hooks/usePermissions";
 import { CurrentUserProvider } from "@/hooks/useCurrentUser";
+import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // Dashboard
@@ -124,6 +125,20 @@ import CertificationsPage from "@/pages/certifications";
 
 // Settings
 import SettingsPage from "@/pages/settings";
+import LoginPage from "@/pages/auth/login";
+import { useAuth, RequireAuth } from "@/hooks/useAuth";
+
+function AuthenticatedAppRoutes() {
+  const { authConfig } = useAuth();
+  if (authConfig.ssoEnabled) {
+    return (
+      <RequireAuth>
+        <AppRouter />
+      </RequireAuth>
+    );
+  }
+  return <AppRouter />;
+}
 
 // Public Pages
 import LandingPage from "@/pages/public/landing";
@@ -316,12 +331,19 @@ function App() {
             
             {/* Application Routes - wrapped with providers */}
             <Route>
-              <CurrentUserProvider>
-                <PermissionsProvider>
-                  <Toaster />
-                  <AppRouter />
-                </PermissionsProvider>
-              </CurrentUserProvider>
+              <AuthProvider>
+                <CurrentUserProvider>
+                  <PermissionsProvider>
+                    <Toaster />
+                    <Switch>
+                      <Route path="/login" component={LoginPage} />
+                      <Route>
+                        <AuthenticatedAppRoutes />
+                      </Route>
+                    </Switch>
+                  </PermissionsProvider>
+                </CurrentUserProvider>
+              </AuthProvider>
             </Route>
           </Switch>
         </TooltipProvider>
