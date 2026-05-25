@@ -236,6 +236,10 @@ export const insertPublicationSchema = createInsertSchema(publications).omit({
 }).extend({
   publicationDate: z.preprocess(
     (val) => {
+      // Empty string from a cleared <input type="date"> must become null —
+      // `new Date("")` produces an Invalid Date which then fails z.date()
+      // validation, blocking the user from clearing a publication date.
+      if (val === '' || val == null) return null;
       if (typeof val === 'string') {
         return new Date(val);
       }

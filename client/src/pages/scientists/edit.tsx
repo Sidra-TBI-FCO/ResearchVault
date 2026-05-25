@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertScientistSchema, type Scientist } from "@shared/schema";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -104,7 +104,11 @@ export default function EditScientist() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
+      // Invalidate every scientist/staff list view in one place — keeps the
+      // sidebar staff dropdown, investigators, and scientific-staff pickers
+      // in sync after an edit. Individual scientist detail is invalidated
+      // separately.
+      invalidateScientistLists();
       queryClient.invalidateQueries({ queryKey: ['/api/scientists', id] });
       toast({
         title: "Staff member updated",

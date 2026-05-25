@@ -49,10 +49,21 @@ export default function CreatePublication() {
     queryKey: ['/api/research-activities'],
   });
 
-  // Default form values
+  // Default form values — every controlled <input> needs a defined initial
+  // value or React will warn that the field is switching between
+  // uncontrolled/controlled the first time the user types.
   const defaultValues: Partial<CreatePublicationFormValues> = {
     status: "Concept",
     publicationType: "Journal Article",
+    title: "",
+    abstract: "",
+    authors: "",
+    journal: "",
+    volume: "",
+    issue: "",
+    pages: "",
+    doi: "",
+    publicationDate: "",
   };
 
   const form = useForm<CreatePublicationFormValues>({

@@ -381,17 +381,18 @@ export default function PublicationDetail() {
     enabled: !!publication?.researchActivityId,
   });
   
-  // Fetch patents related to the same research activity
+  // Fetch patents related to the same research activity. Filter at the API
+  // layer (researchActivityId query param) so we don't pull the full patents
+  // list down to the browser just to discard most of it.
   const { data: relatedPatents, isLoading: patentsLoading } = useQuery<Patent[]>({
-    queryKey: ['/api/patents', publication?.researchActivityId],
+    queryKey: ['/api/patents', { researchActivityId: publication?.researchActivityId }],
     queryFn: async () => {
       if (!publication?.researchActivityId) return [];
-      const response = await fetch('/api/patents');
+      const response = await fetch(`/api/patents?researchActivityId=${publication.researchActivityId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch patents');
       }
-      const patents = await response.json();
-      return patents.filter(patent => patent.researchActivityId === publication.researchActivityId);
+      return response.json();
     },
     enabled: !!publication?.researchActivityId,
     retry: 2,

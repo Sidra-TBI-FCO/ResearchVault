@@ -19,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertScientistSchema } from "@shared/schema";
 import { Scientist } from "@shared/schema";
@@ -73,7 +73,7 @@ export default function CreateScientist() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
+      invalidateScientistLists();
       toast({
         title: "Scientist created",
         description: "The scientist has been successfully added to the system.",

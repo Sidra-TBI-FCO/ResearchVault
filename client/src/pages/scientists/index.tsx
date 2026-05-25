@@ -40,7 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PermissionWrapper } from "@/components/PermissionWrapper";
 import { formatFullName, formatNameWithJobTitle } from "@/utils/nameUtils";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface ReferencingRecord {
@@ -114,7 +114,7 @@ function StaffImportExportButtons() {
       return res.json();
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/scientists"] });
+      invalidateScientistLists();
       toast({
         title: "Import applied",
         description: `Inserted ${data.inserted}, updated ${data.updated}, deleted ${data.deleted}, unchanged ${data.unchanged}.`,

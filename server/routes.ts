@@ -8,7 +8,7 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { db } from "./db";
-import { scientists } from "@shared/schema";
+import { scientists, publicationAuthors, journals, journalImpactFactorMetrics } from "@shared/schema";
 import { eq, inArray } from "drizzle-orm";
 import {
   buildExportBuffer,
@@ -1682,165 +1682,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get only scientific staff (exclude administrative staff)
       const allScientists = await storage.getScientists();
-      const scientists = allScientists.filter(scientist => scientist.staffType === 'scientific');
-      
-      // Calculate scores for each scientist
-      const rankings = await Promise.all(scientists.map(async (scientist) => {
+      const scientificScientists = allScientists.filter(s => s.staffType === 'scientific');
+
+      if (scientificScientists.length === 0) {
+        return res.json([]);
+      }
+
+      const scientificIds = scientificScientists.map(s => s.id);
+      const currentYear = new Date().getFullYear();
+      const cutoffDate = new Date();
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - years);
+
+      // Batched: all publications, authorships for scientific staff, and all
+      // journal IF metrics — fetched once instead of per-(scientist × publication).
+      // Previously this route issued one publication_authors query per
+      // publication and one impact-factor query per publication, which scaled
+      // as O(scientists × publications × authorships).
+      const [allPublications, allAuthorRows, allMetricRows] = await Promise.all([
+        storage.getPublications(),
+        db
+          .select({
+            publicationId: publicationAuthors.publicationId,
+            scientistId: publicationAuthors.scientistId,
+            authorshipType: publicationAuthors.authorshipType,
+          })
+          .from(publicationAuthors)
+          .where(inArray(publicationAuthors.scientistId, scientificIds)),
+        db
+          .select({
+            journalName: journals.journalName,
+            year: journalImpactFactorMetrics.year,
+            impactFactor: journalImpactFactorMetrics.impactFactor,
+          })
+          .from(journalImpactFactorMetrics)
+          .innerJoin(journals, eq(journalImpactFactorMetrics.journalId, journals.id)),
+      ]);
+
+      // scientistId -> publicationId -> combined authorshipType string
+      // (kept as comma-joined to match the existing split(',') multiplier logic)
+      const authorshipByScientist = new Map<number, Map<number, string>>();
+      for (const row of allAuthorRows) {
+        let m = authorshipByScientist.get(row.scientistId);
+        if (!m) { m = new Map(); authorshipByScientist.set(row.scientistId, m); }
+        const existing = m.get(row.publicationId);
+        m.set(row.publicationId, existing ? `${existing},${row.authorshipType}` : row.authorshipType);
+      }
+
+      // lower(journalName) -> year -> impactFactor (numeric)
+      const ifByJournalYear = new Map<string, Map<number, number>>();
+      for (const m of allMetricRows) {
+        const ifVal = m.impactFactor != null ? parseFloat(String(m.impactFactor)) : NaN;
+        if (!Number.isFinite(ifVal)) continue;
+        const key = m.journalName.toLowerCase();
+        let yearMap = ifByJournalYear.get(key);
+        if (!yearMap) { yearMap = new Map(); ifByJournalYear.set(key, yearMap); }
+        yearMap.set(m.year, ifVal);
+      }
+
+      const lookupIf = (journalName: string, year: number): number | null => {
+        const yearMap = ifByJournalYear.get(journalName.trim().toLowerCase());
+        if (!yearMap) return null;
+        const v = yearMap.get(year);
+        return v != null ? v : null;
+      };
+
+      const rankings = scientificScientists.map((scientist) => {
         let totalScore = 0;
         let publicationsCount = 0;
-        let missingImpactFactorPublications: string[] = [];
-        let calculationDetails: any[] = [];
-        
-        try {
-          // Get all publications and filter for ones where this scientist is an internal author
-          const allPublications = await storage.getPublications();
-          const scientistPublications = [];
-          
-          // First, get all publications where this scientist is an internal author
+        const missingImpactFactorPublications: string[] = [];
+        const calculationDetails: any[] = [];
+
+        const authorshipMap = authorshipByScientist.get(scientist.id);
+        if (authorshipMap) {
           for (const publication of allPublications) {
-            try {
-              const authors = await storage.getPublicationAuthors(publication.id);
-              const scientistAuthor = authors.find(author => author.scientistId === scientist.id);
-              
-              if (scientistAuthor) {
-                // Check if publication is within time period
-                if (publication.publicationDate) {
-                  const pubDate = new Date(publication.publicationDate);
-                  const cutoffDate = new Date();
-                  cutoffDate.setFullYear(cutoffDate.getFullYear() - years);
-                  
-                  if (pubDate >= cutoffDate) {
-                    scientistPublications.push({
-                      ...publication,
-                      authorshipType: scientistAuthor.authorshipType
-                    });
-                  }
-                }
+            const authorshipTypeStr = authorshipMap.get(publication.id);
+            if (!authorshipTypeStr) continue;
+            if (!publication.publicationDate) continue;
+
+            const pubDate = new Date(publication.publicationDate);
+            if (pubDate < cutoffDate) continue;
+            if (!publication.status || !['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) continue;
+            if (!publication.journal || publication.journal.trim() === '') continue;
+
+            const pubYear = pubDate.getFullYear();
+            let targetYear: number;
+            if (impactFactorYear === "prior") targetYear = pubYear - 1;
+            else if (impactFactorYear === "publication") targetYear = pubYear;
+            else targetYear = currentYear;
+
+            let ifValue = lookupIf(publication.journal, targetYear);
+            let actualYear = targetYear;
+            let usedFallback = false;
+
+            if (ifValue == null) {
+              usedFallback = true;
+              const fallbackYears = impactFactorYear === "latest"
+                ? Array.from({ length: Math.max(0, currentYear - 1 - 2020 + 1) }, (_, i) => currentYear - 1 - i)
+                : [targetYear + 1, targetYear - 1, targetYear + 2, targetYear - 2].filter(y => y >= 2020);
+              for (const fy of fallbackYears) {
+                const v = lookupIf(publication.journal, fy);
+                if (v != null) { ifValue = v; actualYear = fy; break; }
               }
-            } catch (error) {
-              console.error(`Error checking authorship for publication ${publication.id}:`, error);
+            }
+
+            if (ifValue == null || !Number.isFinite(ifValue)) {
+              missingImpactFactorPublications.push(publication.title);
               continue;
             }
-          }
-          
-          // Now calculate scores for publications where scientist is internal author
-          for (const publication of scientistPublications) {
-            try {
-              // Only count published publications with impact factors
-              if (!publication.status || !['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) {
-                continue;
+
+            publicationsCount++;
+
+            const authorshipTypes = authorshipTypeStr.split(',').map(t => t.trim());
+            let multiplier = 1;
+            let appliedMultipliers: string[] = [];
+            for (const type of authorshipTypes) {
+              const mul = finalMultipliers[type];
+              if (mul != null && !isNaN(mul)) {
+                if (mul > multiplier) { multiplier = mul; appliedMultipliers = [type]; }
+                else if (mul === multiplier && !appliedMultipliers.includes(type)) { appliedMultipliers.push(type); }
               }
-              
-              if (!publication.journal || publication.journal.trim() === '') {
-                continue;
-              }
-              
-              // Get journal impact factor based on configured year
-              const pubYear = publication.publicationDate ? new Date(publication.publicationDate).getFullYear() : new Date().getFullYear();
-              
-              let targetYear;
-              if (impactFactorYear === "prior") {
-                targetYear = pubYear - 1;
-              } else if (impactFactorYear === "publication") {
-                targetYear = pubYear;
-              } else { // "latest"
-                targetYear = new Date().getFullYear();
-              }
-              
-              let impactFactor;
-              let actualYear = targetYear;
-              let usedFallback = false;
-              
-              try {
-                console.log(`Looking for impact factor: journal="${publication.journal.trim()}", targetYear=${targetYear}`);
-                impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), targetYear);
-                
-                // If no impact factor found for target year, try fallback years
-                if (!impactFactor) {
-                  console.log(`No impact factor found for ${publication.journal.trim()} in ${targetYear}, trying fallbacks...`);
-                  usedFallback = true;
-                  if (impactFactorYear === "latest") {
-                    // For latest, try previous years going back from current year
-                    for (let fallbackYear = new Date().getFullYear() - 1; fallbackYear >= 2020; fallbackYear--) {
-                      impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
-                      if (impactFactor) {
-                        console.log(`Found fallback impact factor for ${publication.journal.trim()} in ${fallbackYear}`);
-                        actualYear = fallbackYear;
-                        break;
-                      }
-                    }
-                  } else {
-                    // For prior/publication year, try adjacent years
-                    const fallbackYears = [targetYear + 1, targetYear - 1, targetYear + 2, targetYear - 2];
-                    for (const fallbackYear of fallbackYears) {
-                      if (fallbackYear >= 2020) {
-                        impactFactor = await storage.getImpactFactorByJournalAndYear(publication.journal.trim(), fallbackYear);
-                        if (impactFactor) {
-                          console.log(`Found fallback impact factor for ${publication.journal.trim()} in ${fallbackYear}`);
-                          actualYear = fallbackYear;
-                          break;
-                        }
-                      }
-                    }
-                  }
-                } else {
-                  console.log(`Found exact impact factor for ${publication.journal.trim()} in ${targetYear}: ${impactFactor.impactFactor}`);
-                }
-              } catch (error) {
-                console.error(`Error getting impact factor for journal "${publication.journal}" year ${targetYear}:`, error);
-                continue;
-              }
-              
-              if (!impactFactor?.impactFactor || isNaN(impactFactor.impactFactor)) {
-                // Track publications without impact factors
-                missingImpactFactorPublications.push(publication.title);
-                continue;
-              }
-              
-              publicationsCount++;
-              
-              // Parse authorship types and apply multipliers
-              const authorshipTypes = publication.authorshipType.split(',').map(type => type.trim());
-              let multiplier = 1; // Base multiplier
-              let appliedMultipliers: string[] = [];
-              
-              for (const type of authorshipTypes) {
-                if (finalMultipliers[type] && !isNaN(finalMultipliers[type])) {
-                  if (finalMultipliers[type] > multiplier) {
-                    multiplier = finalMultipliers[type];
-                    appliedMultipliers = [type];
-                  } else if (finalMultipliers[type] === multiplier && !appliedMultipliers.includes(type)) {
-                    appliedMultipliers.push(type);
-                  }
-                }
-              }
-              
-              const publicationScore = impactFactor.impactFactor * multiplier;
-              totalScore += publicationScore;
-              
-              // Store calculation details
-              calculationDetails.push({
-                title: publication.title,
-                journal: publication.journal,
-                publicationDate: publication.publicationDate,
-                impactFactor: impactFactor.impactFactor,
-                targetYear: targetYear,
-                actualYear: actualYear,
-                usedFallback: usedFallback,
-                authorshipTypes: authorshipTypes,
-                appliedMultipliers: appliedMultipliers,
-                multiplier: multiplier,
-                publicationScore: publicationScore
-              });
-            } catch (pubError) {
-              console.error(`Error processing publication ${publication.id} for scientist ${scientist.id}:`, pubError);
-              continue;
             }
+
+            const publicationScore = ifValue * multiplier;
+            totalScore += publicationScore;
+
+            calculationDetails.push({
+              title: publication.title,
+              journal: publication.journal,
+              publicationDate: publication.publicationDate,
+              impactFactor: ifValue,
+              targetYear,
+              actualYear,
+              usedFallback,
+              authorshipTypes,
+              appliedMultipliers,
+              multiplier,
+              publicationScore,
+            });
           }
-        } catch (scientistError) {
-          console.error(`Error processing scientist ${scientist.id}:`, scientistError);
         }
-        
+
         return {
           id: scientist.id,
           honorificTitle: scientist.honorificTitle,
@@ -1851,13 +1832,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           publicationsCount,
           sidraScore: totalScore,
           missingImpactFactorPublications,
-          calculationDetails
+          calculationDetails,
         };
-      }));
-      
+      });
+
       // Sort by score descending
       rankings.sort((a, b) => b.sidraScore - a.sidraScore);
-      
+
       res.json(rankings);
     } catch (error) {
       console.error('Error calculating Sidra scores:', error);
@@ -3251,9 +3232,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/patents', async (req: Request, res: Response) => {
     try {
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
-      
+      const researchActivityId = req.query.researchActivityId ? parseInt(req.query.researchActivityId as string) : undefined;
+
       let patents;
-      if (projectId && !isNaN(projectId)) {
+      if (researchActivityId !== undefined && !isNaN(researchActivityId)) {
+        // Filter at the DB level so the patents detail page doesn't have to
+        // download the full patent list and filter client-side.
+        patents = await storage.getPatentsForResearchActivity(researchActivityId);
+      } else if (projectId && !isNaN(projectId)) {
         patents = await storage.getPatentsForProject(projectId);
       } else {
         patents = await storage.getPatents();

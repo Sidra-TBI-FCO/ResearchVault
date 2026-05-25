@@ -279,6 +279,17 @@ export default function PublicationOffice() {
     enabled: !!selectedJournal?.journalId && isJournalModalOpen,
   });
 
+  // Invalidate every cache entry that depends on journal/IF data, including
+  // the per-journal modal queries keyed by selectedJournal.journalId. The
+  // bare '/api/journal-impact-factors' key is a prefix match so it also
+  // covers the modal keys, but we list the field/years queries explicitly
+  // because they live under different top-level keys.
+  const invalidateJournalCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/fields'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/years'] });
+  };
+
   // Inline field edit mutation
   const updateFieldMutation = useMutation({
     mutationFn: async ({ journalId, field }: { journalId: number; field: string | null }) => {
@@ -291,7 +302,7 @@ export default function PublicationOffice() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+      invalidateJournalCaches();
       setEditingFieldJournalId(null);
       setFieldDraft("");
       toast({ description: "Field updated" });
@@ -462,7 +473,7 @@ export default function PublicationOffice() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+      invalidateJournalCaches();
       setEditingId(null);
       setEditForm({});
       toast({ description: "Impact factor updated successfully" });
@@ -480,7 +491,7 @@ export default function PublicationOffice() {
       if (!response.ok) throw new Error('Failed to delete impact factor');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+      invalidateJournalCaches();
       toast({ description: "Impact factor deleted successfully" });
     },
     onError: () => {

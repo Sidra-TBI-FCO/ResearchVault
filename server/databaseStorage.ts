@@ -151,24 +151,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getScientistsWithActivityCount(): Promise<(Scientist & { activeResearchActivities: number })[]> {
-    const scientistsData = await db.select().from(scientists).orderBy(scientists.lastName, scientists.firstName);
-    
-    // Get activity count for each scientist
-    const scientistsWithCount = await Promise.all(
-      scientistsData.map(async (scientist) => {
-        const activities = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(projectMembers)
-          .where(eq(projectMembers.scientistId, scientist.id));
-        
-        return {
-          ...scientist,
-          activeResearchActivities: activities[0]?.count || 0
-        };
+    // Single query: LEFT JOIN project_members and GROUP BY scientist. Avoids the
+    // N+1 pattern of issuing one COUNT(*) per scientist.
+    const rows = await db
+      .select({
+        scientist: scientists,
+        count: sql<number>`count(${projectMembers.id})`.mapWith(Number),
       })
-    );
-    
-    return scientistsWithCount;
+      .from(scientists)
+      .leftJoin(projectMembers, eq(projectMembers.scientistId, scientists.id))
+      .groupBy(scientists.id)
+      .orderBy(scientists.lastName, scientists.firstName);
+
+    return rows.map((r) => ({
+      ...r.scientist,
+      activeResearchActivities: r.count ?? 0,
+    }));
   }
 
   async getScientist(id: number): Promise<Scientist | undefined> {
@@ -1816,9 +1814,20 @@ export class DatabaseStorage implements IStorage {
     const sortColumn = journalColumnMap[sortField] ?? metricColumnMap[sortField] ?? journalImpactFactorMetrics.rank;
     const orderBy = sortDirection === 'asc' ? asc(sortColumn) : desc(sortColumn);
 
+    // Count and data queries share the same from/join/where chain so they can
+    // never disagree on what "one row" is — critical for pagination correctness
+    // when the IF range or other filters are active.
     const [{ count: total }] = await db
-      .select({ count: sql`count(*)`.mapWith(Number) })
+      .select({ count: sql`count(distinct ${journals.id})`.mapWith(Number) })
       .from(journals)
+      .leftJoin(latestMetricSubquery, eq(latestMetricSubquery.journalId, journals.id))
+      .leftJoin(
+        journalImpactFactorMetrics,
+        and(
+          eq(journalImpactFactorMetrics.journalId, journals.id),
+          eq(journalImpactFactorMetrics.year, latestMetricSubquery.maxYear),
+        )
+      )
       .where(whereClause ?? sql`1=1`);
 
     const rows = await db
