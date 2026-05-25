@@ -73,6 +73,8 @@ export default function PublicationOffice() {
   const IF_SLIDER_STEP = 0.5;
   const [ifRange, setIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
   const [debouncedIfRange, setDebouncedIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportYear, setExportYear] = useState<string>("");
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedIfRange(ifRange);
@@ -216,6 +218,36 @@ export default function PublicationOffice() {
   const impactFactors = impactFactorsResult?.data || [];
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
+
+  // Available metric years for the export-year picker
+  const { data: availableYears = [] } = useQuery<number[]>({
+    queryKey: ['/api/journal-impact-factors/years'],
+    queryFn: async () => {
+      const response = await fetch('/api/journal-impact-factors/years');
+      if (!response.ok) throw new Error('Failed to fetch years');
+      return response.json();
+    },
+  });
+
+  useEffect(() => {
+    if (!exportYear && availableYears.length > 0) {
+      setExportYear(String(availableYears[0]));
+    }
+  }, [availableYears, exportYear]);
+
+  const handleExportImpactFactors = () => {
+    if (!exportYear) {
+      toast({ title: "Select a year", description: "Choose a year to export.", variant: "destructive" });
+      return;
+    }
+    const params = new URLSearchParams({ year: exportYear });
+    if (debouncedSearchTerm) params.append('searchTerm', debouncedSearchTerm);
+    if (fieldFilter.length > 0) params.append('fields', fieldFilter.join(','));
+    if (debouncedIfRange[0] > IF_SLIDER_MIN) params.append('minImpactFactor', String(debouncedIfRange[0]));
+    if (debouncedIfRange[1] < IF_SLIDER_MAX) params.append('maxImpactFactor', String(debouncedIfRange[1]));
+    window.location.href = `/api/journal-impact-factors/export?${params.toString()}`;
+    setExportDialogOpen(false);
+  };
 
   // Distinct field list for the multi-select filter
   const { data: availableFields = [] } = useQuery<string[]>({
@@ -1155,6 +1187,65 @@ export default function PublicationOffice() {
                   className="hidden"
                 />
               </Label>
+              <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" data-testid="button-open-export-dialog">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Export Impact Factors</DialogTitle>
+                    <DialogDescription>
+                      Exports one row per journal for the selected year. The current search, field, and impact-factor-range filters are applied.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div>
+                      <Label htmlFor="export-year">Year</Label>
+                      <Select value={exportYear} onValueChange={setExportYear}>
+                        <SelectTrigger id="export-year" data-testid="select-export-year">
+                          <SelectValue placeholder="Select a year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((y) => (
+                            <SelectItem key={y} value={String(y)} data-testid={`option-export-year-${y}`}>
+                              {y}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div>Filters that will be applied:</div>
+                      <ul className="list-disc pl-5">
+                        <li>Search: {debouncedSearchTerm ? <span className="font-mono">{debouncedSearchTerm}</span> : <span className="italic">none</span>}</li>
+                        <li>
+                          Fields: {fieldFilter.length === 0
+                            ? <span className="italic">all</span>
+                            : fieldFilter.length <= 2
+                              ? fieldFilter.join(', ')
+                              : `${fieldFilter.length} selected`}
+                        </li>
+                        <li>
+                          Impact factor:{' '}
+                          {debouncedIfRange[0] === IF_SLIDER_MIN && debouncedIfRange[1] >= IF_SLIDER_MAX
+                            ? <span className="italic">any</span>
+                            : <span className="tabular-nums">{debouncedIfRange[0].toFixed(1)} – {debouncedIfRange[1] >= IF_SLIDER_MAX ? `${IF_SLIDER_MAX}+` : debouncedIfRange[1].toFixed(1)}</span>}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setExportDialogOpen(false)} data-testid="button-cancel-export">Cancel</Button>
+                    <Button onClick={handleExportImpactFactors} disabled={!exportYear} data-testid="button-confirm-export">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download CSV
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 

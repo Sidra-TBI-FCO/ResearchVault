@@ -240,6 +240,14 @@ export interface IStorage {
   updateJournalField(journalId: number, field: string | null): Promise<Journal | undefined>;
   getJournalFields(): Promise<string[]>;
   getFieldImpactFactorDistribution(field: string): Promise<Array<{ journalId: number; journalName: string; impactFactor: number; year: number }>>;
+  getJournalImpactFactorYears(): Promise<number[]>;
+  exportJournalImpactFactorsForYear(options: {
+    year: number;
+    searchTerm?: string;
+    fields?: string[];
+    minImpactFactor?: number;
+    maxImpactFactor?: number;
+  }): Promise<JournalImpactFactor[]>;
   deleteJournalImpactFactor(journalId: number): Promise<boolean>;
 
   // Grant operations

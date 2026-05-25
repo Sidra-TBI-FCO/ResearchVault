@@ -5799,6 +5799,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/journal-impact-factors/years', async (_req: Request, res: Response) => {
+    try {
+      const years = await storage.getJournalImpactFactorYears();
+      res.json(years);
+    } catch (error) {
+      console.error('Error fetching journal IF years:', error);
+      res.status(500).json({ message: "Failed to fetch journal impact factor years" });
+    }
+  });
+
+  app.get('/api/journal-impact-factors/export', async (req: Request, res: Response) => {
+    try {
+      const year = parseInt(String(req.query.year ?? ''), 10);
+      if (!Number.isFinite(year)) {
+        return res.status(400).json({ message: "year query parameter is required" });
+      }
+      const searchTerm = (req.query.searchTerm as string) || '';
+      const fieldsParam = req.query.fields as string | undefined;
+      const fields = fieldsParam ? fieldsParam.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      const parseFloatParam = (v: any) => {
+        if (v == null || v === '') return undefined;
+        const n = parseFloat(String(v));
+        return Number.isFinite(n) ? n : undefined;
+      };
+      const minImpactFactor = parseFloatParam(req.query.minImpactFactor);
+      const maxImpactFactor = parseFloatParam(req.query.maxImpactFactor);
+
+      const rows = await storage.exportJournalImpactFactorsForYear({
+        year, searchTerm, fields, minImpactFactor, maxImpactFactor,
+      });
+
+      const headers = [
+        'journalName', 'abbreviatedJournal', 'publisher', 'issn', 'eissn', 'field', 'year',
+        'impactFactor', 'fiveYearJif', 'jifWithoutSelfCites', 'jci', 'quartile', 'rank',
+        'totalCites', 'totalArticles', 'citableItems', 'citedHalfLife', 'citingHalfLife',
+      ];
+      const escape = (v: any) => {
+        if (v == null) return '';
+        const s = String(v);
+        return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines: string[] = [headers.join(',')];
+      for (const r of rows as any[]) {
+        lines.push(headers.map((h) => escape(r[h])).join(','));
+      }
+      const csv = lines.join('\n') + '\n';
+
+      const filenameParts = [`impact-factors-${year}`];
+      if (fields.length > 0) filenameParts.push(`fields-${fields.length}`);
+      if (minImpactFactor != null || maxImpactFactor != null) {
+        filenameParts.push(`if-${minImpactFactor ?? ''}-${maxImpactFactor ?? ''}`);
+      }
+      const filename = `${filenameParts.join('_')}.csv`;
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting journal impact factors:', error);
+      res.status(500).json({ message: "Failed to export journal impact factors" });
+    }
+  });
+
   app.get('/api/journal-impact-factors/fields', async (_req: Request, res: Response) => {
     try {
       const fields = await storage.getJournalFields();

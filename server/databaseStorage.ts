@@ -2051,6 +2051,56 @@ export class DatabaseStorage implements IStorage {
     return rows.map((r) => r.field!).filter(Boolean);
   }
 
+  async getJournalImpactFactorYears(): Promise<number[]> {
+    const rows = await db
+      .selectDistinct({ year: journalImpactFactorMetrics.year })
+      .from(journalImpactFactorMetrics)
+      .orderBy(desc(journalImpactFactorMetrics.year));
+    return rows.map((r) => r.year as unknown as number).filter((y) => Number.isFinite(y));
+  }
+
+  /**
+   * Stream-friendly export: one row per journal for the requested year,
+   * honouring the same search/fields/IF-range filters as the list view.
+   */
+  async exportJournalImpactFactorsForYear(options: {
+    year: number;
+    searchTerm?: string;
+    fields?: string[];
+    minImpactFactor?: number;
+    maxImpactFactor?: number;
+  }): Promise<JournalImpactFactor[]> {
+    const { year, searchTerm = '', fields = [], minImpactFactor, maxImpactFactor } = options;
+
+    const whereConditions: any[] = [eq(journalImpactFactorMetrics.year, year)];
+    if (searchTerm.trim()) {
+      whereConditions.push(
+        or(
+          ilike(journals.journalName, `%${searchTerm}%`),
+          ilike(journals.publisher, `%${searchTerm}%`),
+        ),
+      );
+    }
+    if (fields.length > 0) {
+      whereConditions.push(inArray(journals.field, fields));
+    }
+    if (minImpactFactor != null && Number.isFinite(minImpactFactor)) {
+      whereConditions.push(sql`${journalImpactFactorMetrics.impactFactor} >= ${minImpactFactor}`);
+    }
+    if (maxImpactFactor != null && Number.isFinite(maxImpactFactor)) {
+      whereConditions.push(sql`${journalImpactFactorMetrics.impactFactor} <= ${maxImpactFactor}`);
+    }
+
+    const rows = await db
+      .select({ metric: journalImpactFactorMetrics, journal: journals })
+      .from(journals)
+      .innerJoin(journalImpactFactorMetrics, eq(journalImpactFactorMetrics.journalId, journals.id))
+      .where(and(...whereConditions))
+      .orderBy(asc(journalImpactFactorMetrics.rank), asc(journals.journalName));
+
+    return rows.map((r) => this.mergeJournalAndMetric(r.journal, r.metric));
+  }
+
   async deleteJournalImpactFactor(journalId: number): Promise<boolean> {
     const result = await db.delete(journals).where(eq(journals.id, journalId));
     return (result.rowCount ?? 0) > 0;
