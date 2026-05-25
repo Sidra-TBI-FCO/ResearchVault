@@ -166,6 +166,7 @@ export default function PublicationOffice() {
   
   // Journal detail modal state
   const [selectedJournal, setSelectedJournal] = useState<JournalImpactFactor | null>(null);
+  const [distHideLowIf, setDistHideLowIf] = useState(false);
   const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
 
   // Debounce search term to reduce API calls
@@ -1936,17 +1937,34 @@ export default function PublicationOffice() {
 
               {/* Field IF Distribution */}
               <div>
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Impact Factor Distribution in Field
-                  {fieldDistribution?.field && (
-                    <span className="text-sm font-normal text-muted-foreground">
-                      — {fieldDistribution.field} ({fieldDistribution.distribution.length} journals)
-                    </span>
-                  )}
-                </h4>
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Impact Factor Distribution in Field
+                    {fieldDistribution?.field && (() => {
+                      const total = fieldDistribution.distribution.length;
+                      const shown = distHideLowIf
+                        ? fieldDistribution.distribution.filter((d) => d.impactFactor >= 3).length
+                        : total;
+                      return (
+                        <span className="text-sm font-normal text-muted-foreground">
+                          — {fieldDistribution.field} ({distHideLowIf ? `${shown} of ${total}` : `${total}`} journals)
+                        </span>
+                      );
+                    })()}
+                  </h4>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer select-none" data-testid="label-dist-hide-low-if">
+                    <Checkbox
+                      checked={distHideLowIf}
+                      onCheckedChange={(c) => setDistHideLowIf(c === true)}
+                      data-testid="checkbox-dist-hide-low-if"
+                    />
+                    <span>Hide journals with IF &lt; 3</span>
+                  </label>
+                </div>
                 {(() => {
-                  const dist = fieldDistribution?.distribution ?? [];
+                  const distAll = fieldDistribution?.distribution ?? [];
+                  const dist = distHideLowIf ? distAll.filter((d) => d.impactFactor >= 3) : distAll;
                   if (!selectedJournal.field) {
                     return (
                       <div className="h-64 flex items-center justify-center text-muted-foreground" data-testid="field-distribution-no-field">
