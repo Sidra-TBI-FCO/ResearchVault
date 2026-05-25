@@ -7,6 +7,16 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
 } from "./objectStorage";
+import { db } from "./db";
+import { scientists } from "@shared/schema";
+import { eq, inArray } from "drizzle-orm";
+import {
+  buildExportBuffer,
+  parseUploadedFile,
+  buildImportPreview,
+  rowToInsertScientist,
+  FileRow,
+} from "./scientistsImportExport";
 import {
   insertScientistSchema,
   insertResearchActivitySchema,
@@ -1568,6 +1578,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export all scientists as XLSX or CSV (must be registered before /:id)
+  app.get('/api/scientists/export', async (req: Request, res: Response) => {
+    try {
+      const format = (req.query.format === 'csv' ? 'csv' : 'xlsx') as 'csv' | 'xlsx';
+      const allScientists = await storage.getScientists();
+      const { buffer, mime, filename } = buildExportBuffer(allScientists, format);
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(buffer);
+    } catch (error) {
+      console.error('Staff export failed:', error);
+      res.status(500).json({ message: 'Failed to export staff' });
+    }
+  });
+
   // Get scientists filtered by role for room supervisor/manager selection
   app.get('/api/scientists/investigators', async (req: Request, res: Response) => {
     try {
@@ -1837,6 +1862,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error calculating Sidra scores:', error);
       res.status(500).json({ message: "Failed to calculate Sidra scores" });
+    }
+  });
+
+  // Roughly 8 MB of base64 → ~6 MB decoded file. Plenty for staff lists; blocks runaway payloads.
+  const MAX_IMPORT_B64_LEN = 8 * 1024 * 1024;
+
+  // Preview an import file — no DB writes
+  app.post('/api/scientists/import/preview', async (req: Request, res: Response) => {
+    try {
+      const { fileBase64, fileName } = req.body ?? {};
+      if (!fileBase64 || !fileName) {
+        return res.status(400).json({ message: 'fileBase64 and fileName are required' });
+      }
+      if (typeof fileBase64 !== 'string' || fileBase64.length > MAX_IMPORT_B64_LEN) {
+        return res.status(413).json({ message: 'Import file is too large (max ~6MB).' });
+      }
+      let fileRows;
+      try {
+        fileRows = parseUploadedFile(String(fileBase64), String(fileName));
+      } catch (e: any) {
+        return res.status(400).json({ message: `Could not parse file: ${e?.message || e}` });
+      }
+      const existing = await storage.getScientists();
+      const preview = buildImportPreview(fileRows, existing);
+      res.json(preview);
+    } catch (error) {
+      console.error('Staff import preview failed:', error);
+      res.status(500).json({ message: 'Failed to build import preview' });
+    }
+  });
+
+  // Apply a previously-previewed import inside a single transaction
+  app.post('/api/scientists/import/apply', async (req: Request, res: Response) => {
+    try {
+      const { fileBase64, fileName } = req.body ?? {};
+      if (!fileBase64 || !fileName) {
+        return res.status(400).json({ message: 'fileBase64 and fileName are required' });
+      }
+      if (typeof fileBase64 !== 'string' || fileBase64.length > MAX_IMPORT_B64_LEN) {
+        return res.status(413).json({ message: 'Import file is too large (max ~6MB).' });
+      }
+      let fileRows;
+      try {
+        fileRows = parseUploadedFile(String(fileBase64), String(fileName));
+      } catch (e: any) {
+        return res.status(400).json({ message: `Could not parse file: ${e?.message || e}` });
+      }
+
+      const existing = await storage.getScientists();
+      const preview = buildImportPreview(fileRows, existing);
+
+      if (preview.errors.length > 0) {
+        return res.status(400).json({
+          message: 'Import has validation errors. Re-run preview and fix them first.',
+          errors: preview.errors,
+        });
+      }
+
+      try {
+        const summary = await db.transaction(async (tx) => {
+          // 1. Insert new rows first (without supervisor, then patch)
+          const insertedIdByEmail = new Map<string, number>();
+          for (const row of preview.toInsert) {
+            const payload = rowToInsertScientist(row, new Map()); // no supervisor yet
+            payload.supervisorId = null;
+            const [inserted] = await tx.insert(scientists).values(payload).returning();
+            insertedIdByEmail.set(row.email, inserted.id);
+          }
+
+          // 2. Build full email → id map (existing + inserted)
+          const emailToId = new Map<string, number>();
+          existing.forEach(s => emailToId.set(s.email.toLowerCase(), s.id));
+          insertedIdByEmail.forEach((id, email) => emailToId.set(email, id));
+
+          // 3. Apply updates (and patch supervisor on inserted rows)
+          for (const { existingId, row } of preview.toUpdate) {
+            const payload = rowToInsertScientist(row, emailToId);
+            await tx.update(scientists).set(payload).where(eq(scientists.id, existingId));
+          }
+          for (const row of preview.toInsert) {
+            if (!row.supervisorEmail) continue;
+            const sid = emailToId.get(row.supervisorEmail);
+            const ownId = insertedIdByEmail.get(row.email);
+            if (sid && ownId) {
+              await tx.update(scientists).set({ supervisorId: sid }).where(eq(scientists.id, ownId));
+            }
+          }
+
+          // 4. Delete missing rows. Postgres will throw 23503 on FK violation; we wrap to give a clear error.
+          if (preview.toDelete.length > 0) {
+            try {
+              await tx.delete(scientists).where(inArray(scientists.id, preview.toDelete.map(d => d.id)));
+            } catch (e: any) {
+              if (e?.code === '23503') {
+                const referenced = preview.toDelete.map(d => d.name || d.email).join(', ');
+                throw new Error(
+                  `Cannot delete one or more staff because they are still referenced elsewhere (e.g. as PI, supervisor, author, or reviewer). Affected: ${referenced}. Reassign or remove those references first, then re-import.`
+                );
+              }
+              throw e;
+            }
+          }
+
+          return {
+            inserted: preview.toInsert.length,
+            updated: preview.toUpdate.length,
+            deleted: preview.toDelete.length,
+            unchanged: preview.unchanged,
+          };
+        });
+
+        res.json(summary);
+      } catch (e: any) {
+        return res.status(409).json({ message: e?.message || 'Import failed' });
+      }
+    } catch (error) {
+      console.error('Staff import apply failed:', error);
+      res.status(500).json({ message: 'Failed to apply staff import' });
     }
   });
 
