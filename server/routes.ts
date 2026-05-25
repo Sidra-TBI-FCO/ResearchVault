@@ -1579,7 +1579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export all scientists as XLSX or CSV (must be registered before /:id)
-  app.get('/api/scientists/export', async (req: Request, res: Response) => {
+  app.get('/api/scientists/export', requireAuth, async (req: Request, res: Response) => {
     try {
       const format = (req.query.format === 'csv' ? 'csv' : 'xlsx') as 'csv' | 'xlsx';
       const allScientists = await storage.getScientists();
@@ -1869,7 +1869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const MAX_IMPORT_B64_LEN = 8 * 1024 * 1024;
 
   // Preview an import file — no DB writes
-  app.post('/api/scientists/import/preview', async (req: Request, res: Response) => {
+  app.post('/api/scientists/import/preview', requireAuth, async (req: Request, res: Response) => {
     try {
       const { fileBase64, fileName } = req.body ?? {};
       if (!fileBase64 || !fileName) {
@@ -1895,7 +1895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Apply a previously-previewed import inside a single transaction
-  app.post('/api/scientists/import/apply', async (req: Request, res: Response) => {
+  app.post('/api/scientists/import/apply', requireAuth, async (req: Request, res: Response) => {
     try {
       const { fileBase64, fileName } = req.body ?? {};
       if (!fileBase64 || !fileName) {

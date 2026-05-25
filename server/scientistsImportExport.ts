@@ -286,10 +286,88 @@ export function buildImportPreview(
 }
 
 /**
- * Query pg_catalog for every FK whose target is `scientists.id`, then for each
- * candidate scientist id, count and sample referencing rows. Returns a map of
- * scientistId → list of {table, column, count, sampleIds}. Rows with no
- * references are absent from the map.
+ * Explicit list of every (table, column) pair that points at a scientist row,
+ * even when the column is a plain integer with no DB-level FK constraint
+ * (which is the case for most references in this codebase). Includes
+ * scientists.supervisor_id (self-reference).
+ *
+ * Keep this in sync with `// references scientists.id` comments in
+ * shared/schema.ts. Unknown columns are silently filtered at runtime against
+ * information_schema, so an entry that doesn't exist won't crash — it just
+ * won't be checked.
+ */
+const SCIENTIST_REF_COLUMNS: Array<{ table: string; column: string }> = [
+  { table: "scientists", column: "supervisor_id" },
+  { table: "programs", column: "program_director_id" },
+  { table: "programs", column: "research_co_lead_id" },
+  { table: "programs", column: "clinical_co_lead_1_id" },
+  { table: "programs", column: "clinical_co_lead_2_id" },
+  { table: "projects", column: "principal_investigator_id" },
+  { table: "research_activities", column: "budget_holder_id" },
+  { table: "research_activities", column: "line_manager_id" },
+  { table: "research_activities", column: "staff_scientist_id" },
+  { table: "project_members", column: "scientist_id" },
+  { table: "publication_authors", column: "scientist_id" },
+  { table: "manuscript_history", column: "changed_by" },
+  { table: "irb_applications", column: "principal_investigator_id" },
+  { table: "irb_submissions", column: "submitted_by" },
+  { table: "irb_documents", column: "uploaded_by" },
+  { table: "ibc_applications", column: "principal_investigator_id" },
+  { table: "ibc_application_comments", column: "author_id" },
+  { table: "ibc_submissions", column: "submitted_by" },
+  { table: "ibc_submissions", column: "reviewed_by" },
+  { table: "ibc_documents", column: "uploaded_by" },
+  { table: "irb_board_members", column: "scientist_id" },
+  { table: "ibc_board_members", column: "scientist_id" },
+  { table: "research_contracts", column: "lead_pi_id" },
+  { table: "research_contract_documents", column: "uploaded_by" },
+  { table: "rooms", column: "roomSupervisorId" },
+  { table: "rooms", column: "roomManagerId" },
+  { table: "grants", column: "lpi_id" },
+  { table: "grant_progress_reports", column: "uploaded_by" },
+  { table: "certifications", column: "scientist_id" },
+  { table: "certifications", column: "uploaded_by" },
+  { table: "pdf_import_history", column: "uploaded_by" },
+  { table: "ra200_applications", column: "lead_scientist_id" },
+  { table: "ra200_applications", column: "budget_holder_id" },
+  { table: "ra200_applications", column: "submitted_by" },
+  { table: "ra205a_applications", column: "lead_scientist_id" },
+  { table: "ra205a_applications", column: "budget_holder_id" },
+  { table: "ra205a_applications", column: "current_pi_id" },
+  { table: "ra205a_applications", column: "new_pi_id" },
+  { table: "ra205a_applications", column: "submitted_by" },
+];
+
+let cachedRefColumns: Array<{ table: string; column: string }> | null = null;
+
+async function getValidRefColumns(
+  database: PgDatabase<any, any, any>
+): Promise<Array<{ table: string; column: string }>> {
+  if (cachedRefColumns) return cachedRefColumns;
+
+  const rows = await database.execute<{ table_name: string; column_name: string }>(sql`
+    SELECT table_name, column_name
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+  `);
+  const present = (rows as any).rows ?? (rows as any);
+  const presentSet = new Set<string>(
+    (present as Array<{ table_name: string; column_name: string }>).map(
+      r => `${r.table_name}::${r.column_name}`
+    )
+  );
+
+  cachedRefColumns = SCIENTIST_REF_COLUMNS.filter(rc =>
+    presentSet.has(`${rc.table}::${rc.column}`)
+  );
+  return cachedRefColumns;
+}
+
+/**
+ * For each candidate scientist id, find every row across all known
+ * scientist-linked columns (FK-constrained or not) that still references it.
+ * Returns a map keyed by scientist id. Scientists with zero references are
+ * absent from the map.
  */
 export async function findReferencingRecords(
   database: PgDatabase<any, any, any>,
@@ -298,33 +376,17 @@ export async function findReferencingRecords(
   const result = new Map<number, ReferencingRecord[]>();
   if (scientistIds.length === 0) return result;
 
-  // 1. Discover all FKs pointing at scientists.id
-  const fkRows = await database.execute<{ table_name: string; column_name: string }>(sql`
-    SELECT
-      tc.table_name AS table_name,
-      kcu.column_name AS column_name
-    FROM information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu
-      ON tc.constraint_name = kcu.constraint_name
-     AND tc.table_schema = kcu.table_schema
-    JOIN information_schema.constraint_column_usage ccu
-      ON ccu.constraint_name = tc.constraint_name
-     AND ccu.table_schema = tc.table_schema
-    WHERE tc.constraint_type = 'FOREIGN KEY'
-      AND ccu.table_name = 'scientists'
-      AND ccu.column_name = 'id'
-      AND tc.table_name <> 'scientists';
-  `);
+  const refCols = await getValidRefColumns(database);
+  const candidateSet = new Set(scientistIds);
 
-  const fks = (fkRows as any).rows ?? (fkRows as any);
+  const ident = (s: string) => '"' + s.replace(/"/g, '""') + '"';
 
-  // 2. For each (table, column), query who references our candidate ids
-  for (const fk of fks as Array<{ table_name: string; column_name: string }>) {
-    const ident = (s: string) => '"' + s.replace(/"/g, '""') + '"';
-    const tbl = ident(fk.table_name);
-    const col = ident(fk.column_name);
+  for (const fk of refCols) {
+    const tbl = ident(fk.table);
+    const col = ident(fk.column);
+    const isSelfRef = fk.table === "scientists";
 
-    // Use sql.raw for identifiers (safe — we just quoted) and parameterise the id list
+    // sql.raw for already-quoted identifiers; parameterise the id list
     const refRows = await database.execute<{ ref_id: number; pk_id: number }>(sql.raw(
       `SELECT ${col} AS ref_id, id AS pk_id
          FROM ${tbl}
@@ -334,6 +396,9 @@ export async function findReferencingRecords(
     const rows = (refRows as any).rows ?? (refRows as any);
     const byScientist = new Map<number, number[]>();
     for (const r of rows as Array<{ ref_id: number; pk_id: number }>) {
+      // Self-ref: if the referencing scientist is ALSO being deleted in the same
+      // batch, both go away together — don't flag it as a blocker.
+      if (isSelfRef && candidateSet.has(r.pk_id)) continue;
       if (!byScientist.has(r.ref_id)) byScientist.set(r.ref_id, []);
       byScientist.get(r.ref_id)!.push(r.pk_id);
     }
@@ -341,8 +406,8 @@ export async function findReferencingRecords(
     byScientist.forEach((ids, scientistId) => {
       if (!result.has(scientistId)) result.set(scientistId, []);
       result.get(scientistId)!.push({
-        table: fk.table_name,
-        column: fk.column_name,
+        table: fk.table,
+        column: fk.column,
         count: ids.length,
         sampleIds: ids.slice(0, 5),
       });
