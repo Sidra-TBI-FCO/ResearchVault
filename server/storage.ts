@@ -237,6 +237,7 @@ export interface IStorage {
   updateJournalImpactFactor(journalId: number, factor: Partial<InsertJournalImpactFactor>): Promise<JournalImpactFactor | undefined>;
   updateJournalField(journalId: number, field: string | null): Promise<Journal | undefined>;
   getJournalFields(): Promise<string[]>;
+  getFieldImpactFactorDistribution(field: string): Promise<Array<{ journalId: number; journalName: string; impactFactor: number; year: number }>>;
   deleteJournalImpactFactor(journalId: number): Promise<boolean>;
 
   // Grant operations

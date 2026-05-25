@@ -2030,6 +2030,49 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  /**
+   * Return every journal's most-recent impact factor within a given field,
+   * so the frontend can plot a distribution and mark a single journal's
+   * position within it. Skips journals with no metric rows or null IF.
+   */
+  async getFieldImpactFactorDistribution(field: string): Promise<Array<{ journalId: number; journalName: string; impactFactor: number; year: number }>> {
+    const latestPerJournal = db
+      .select({
+        journalId: journalImpactFactorMetrics.journalId,
+        maxYear: sql<number>`max(${journalImpactFactorMetrics.year})`.as('max_year'),
+      })
+      .from(journalImpactFactorMetrics)
+      .groupBy(journalImpactFactorMetrics.journalId)
+      .as('latest_year');
+
+    const rows = await db
+      .select({
+        journalId: journals.id,
+        journalName: journals.journalName,
+        impactFactor: journalImpactFactorMetrics.impactFactor,
+        year: journalImpactFactorMetrics.year,
+      })
+      .from(journals)
+      .innerJoin(latestPerJournal, eq(latestPerJournal.journalId, journals.id))
+      .innerJoin(
+        journalImpactFactorMetrics,
+        and(
+          eq(journalImpactFactorMetrics.journalId, journals.id),
+          eq(journalImpactFactorMetrics.year, latestPerJournal.maxYear),
+        ),
+      )
+      .where(and(eq(journals.field, field), sql`${journalImpactFactorMetrics.impactFactor} IS NOT NULL`));
+
+    return rows
+      .map((r) => ({
+        journalId: r.journalId,
+        journalName: r.journalName,
+        impactFactor: parseFloat(r.impactFactor as unknown as string),
+        year: r.year as unknown as number,
+      }))
+      .filter((r) => Number.isFinite(r.impactFactor));
+  }
+
   // Grant operations
   async getGrants(): Promise<Grant[]> {
     return await db.select().from(grants).orderBy(desc(grants.createdAt));

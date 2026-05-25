@@ -24,7 +24,7 @@ import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLef
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, Cell } from "recharts";
 import type { JournalImpactFactor, InsertJournalImpactFactor, Publication } from "@shared/schema";
 
 export default function PublicationOffice() {
@@ -218,6 +218,19 @@ export default function PublicationOffice() {
       if (!jid) return [];
       const response = await fetch(`/api/journal-impact-factors/${jid}/history`);
       if (!response.ok) throw new Error('Failed to fetch historical data');
+      return response.json();
+    },
+    enabled: !!selectedJournal?.journalId && isJournalModalOpen,
+  });
+
+  // Query for field-wide IF distribution of selected journal
+  const { data: fieldDistribution } = useQuery<{ field: string | null; distribution: Array<{ journalId: number; journalName: string; impactFactor: number; year: number }> }>({
+    queryKey: ['/api/journal-impact-factors', selectedJournal?.journalId, 'field-distribution'],
+    queryFn: async () => {
+      const jid = selectedJournal?.journalId;
+      if (!jid) return { field: null, distribution: [] };
+      const response = await fetch(`/api/journal-impact-factors/${jid}/field-distribution`);
+      if (!response.ok) throw new Error('Failed to fetch field distribution');
       return response.json();
     },
     enabled: !!selectedJournal?.journalId && isJournalModalOpen,
@@ -1772,6 +1785,136 @@ export default function PublicationOffice() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Field IF Distribution */}
+              <div>
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Impact Factor Distribution in Field
+                  {fieldDistribution?.field && (
+                    <span className="text-sm font-normal text-muted-foreground">
+                      — {fieldDistribution.field} ({fieldDistribution.distribution.length} journals)
+                    </span>
+                  )}
+                </h4>
+                {(() => {
+                  const dist = fieldDistribution?.distribution ?? [];
+                  if (!selectedJournal.field) {
+                    return (
+                      <div className="h-64 flex items-center justify-center text-muted-foreground" data-testid="field-distribution-no-field">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>Assign a field to this journal to see its distribution</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (dist.length < 2) {
+                    return (
+                      <div className="h-64 flex items-center justify-center text-muted-foreground" data-testid="field-distribution-empty">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>Not enough journals in this field to build a distribution</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Current journal's IF (most recent)
+                  const latest = historicalData.length > 0
+                    ? historicalData.reduce((a, b) => (b.year > a.year ? b : a))
+                    : selectedJournal;
+                  const currentIfRaw = latest.impactFactor;
+                  const currentIf = currentIfRaw != null ? parseFloat(currentIfRaw as unknown as string) : NaN;
+
+                  // Build histogram bins (log-friendly: cap at 99th percentile to avoid one-bin domination)
+                  const values = dist.map((d) => d.impactFactor).sort((a, b) => a - b);
+                  const minV = values[0];
+                  const p99 = values[Math.floor(values.length * 0.99)] ?? values[values.length - 1];
+                  const maxV = Math.max(p99, Number.isFinite(currentIf) ? currentIf : 0);
+                  const binCount = Math.min(30, Math.max(10, Math.ceil(Math.sqrt(values.length))));
+                  const binWidth = (maxV - minV) / binCount || 1;
+                  const bins = Array.from({ length: binCount }, (_, i) => {
+                    const start = minV + i * binWidth;
+                    const end = i === binCount - 1 ? maxV : start + binWidth;
+                    return { start, end, mid: (start + end) / 2, count: 0, isCurrent: false };
+                  });
+                  for (const v of values) {
+                    let idx = Math.floor((v - minV) / binWidth);
+                    if (idx >= binCount) idx = binCount - 1;
+                    if (idx < 0) idx = 0;
+                    bins[idx].count++;
+                  }
+                  // Mark the bin containing the current journal's IF
+                  let currentBinIdx = -1;
+                  if (Number.isFinite(currentIf)) {
+                    currentBinIdx = Math.floor((currentIf - minV) / binWidth);
+                    if (currentBinIdx >= binCount) currentBinIdx = binCount - 1;
+                    if (currentBinIdx >= 0 && currentBinIdx < binCount) bins[currentBinIdx].isCurrent = true;
+                  }
+
+                  // Percentile rank of current journal within the field
+                  let percentile: number | null = null;
+                  if (Number.isFinite(currentIf)) {
+                    const below = values.filter((v) => v <= currentIf).length;
+                    percentile = Math.round((below / values.length) * 100);
+                  }
+
+                  return (
+                    <>
+                      {Number.isFinite(currentIf) && percentile != null && (
+                        <p className="text-sm text-muted-foreground mb-2" data-testid="text-field-percentile">
+                          <span className="font-medium text-foreground">{selectedJournal.journalName}</span>
+                          {' '}has IF <span className="font-medium text-foreground">{currentIf.toFixed(3)}</span>,
+                          ranking in the <span className="font-medium text-foreground">{percentile}th percentile</span> of its field.
+                        </p>
+                      )}
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={bins}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="mid"
+                              type="number"
+                              domain={[minV, maxV]}
+                              tickFormatter={(v: number) => v.toFixed(1)}
+                              label={{ value: 'Impact Factor', position: 'insideBottom', offset: -4 }}
+                            />
+                            <YAxis allowDecimals={false} label={{ value: 'Journals', angle: -90, position: 'insideLeft' }} />
+                            <ChartTooltip
+                              formatter={(value: any) => [value, 'Journals']}
+                              labelFormatter={(_: any, payload: any) => {
+                                const b = payload?.[0]?.payload;
+                                if (!b) return '';
+                                return `IF ${b.start.toFixed(2)} – ${b.end.toFixed(2)}`;
+                              }}
+                            />
+                            <Bar dataKey="count">
+                              {bins.map((b, i) => (
+                                <Cell key={i} fill={b.isCurrent ? '#dc2626' : '#94a3b8'} />
+                              ))}
+                            </Bar>
+                            {Number.isFinite(currentIf) && (
+                              <ReferenceLine
+                                x={currentIf}
+                                stroke="#dc2626"
+                                strokeWidth={2}
+                                strokeDasharray="4 2"
+                                label={{ value: 'This journal', position: 'top', fill: '#dc2626', fontSize: 12 }}
+                              />
+                            )}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {p99 < values[values.length - 1] && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          X-axis capped at 99th percentile ({p99.toFixed(1)}) to keep bin widths readable; max IF in field is {values[values.length - 1].toFixed(1)}.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Additional Metrics */}

@@ -5833,6 +5833,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/journal-impact-factors/:id/field-distribution', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid journal ID" });
+      }
+      const journal = await storage.getJournalImpactFactor(id);
+      if (!journal) return res.status(404).json({ message: "Journal not found" });
+      if (!journal.field) {
+        return res.json({ field: null, distribution: [] });
+      }
+      const distribution = await storage.getFieldImpactFactorDistribution(journal.field);
+      res.json({ field: journal.field, distribution });
+    } catch (error) {
+      console.error('Error fetching field IF distribution:', error);
+      res.status(500).json({ message: "Failed to fetch field impact factor distribution" });
+    }
+  });
+
   app.patch('/api/journal-impact-factors/:id/field', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
