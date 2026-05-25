@@ -536,32 +536,145 @@ export default function PublicationOffice() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
-    const lines = text.split('\n');
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      // Simple CSV parsing - could be enhanced for complex cases
-      const values = line.split(',');
-      if (values.length >= 18) {
-        const impactFactorStr = values[12];
-        const impactFactor = parseFloat(impactFactorStr);
-        
-        if (!isNaN(impactFactor)) {
-          data.push({
-            journalName: values[1],
-            year: 2024,
-            impactFactor: impactFactor,
-            quartile: values[16],
-            rank: parseInt(values[17]?.split('/')[0]) || null,
-            totalCitations: parseInt(values[7]) || null,
-            publisher: values[4] || null
-          });
+    // RFC 4180-ish CSV parser: handles quoted fields, escaped quotes ("") and CRLF
+    const parseCsv = (text: string): string[][] => {
+      const rows: string[][] = [];
+      let row: string[] = [];
+      let field = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; }
+            else { inQuotes = false; }
+          } else {
+            field += c;
+          }
+        } else {
+          if (c === '"') { inQuotes = true; }
+          else if (c === ',') { row.push(field); field = ''; }
+          else if (c === '\n' || c === '\r') {
+            if (c === '\r' && text[i + 1] === '\n') i++;
+            row.push(field); field = '';
+            if (row.length > 1 || row[0] !== '') rows.push(row);
+            row = [];
+          } else {
+            field += c;
+          }
         }
       }
+      if (field !== '' || row.length > 0) { row.push(field); rows.push(row); }
+      return rows;
+    };
+
+    const numOrNull = (v: string | undefined) => {
+      if (v == null) return null;
+      const t = v.trim();
+      if (t === '') return null;
+      const n = parseFloat(t);
+      return Number.isFinite(n) ? n : null;
+    };
+    const intOrNull = (v: string | undefined) => {
+      if (v == null) return null;
+      const t = v.trim();
+      if (t === '') return null;
+      // accept "1" or "1/250" (rank/total)
+      const n = parseInt(t.split('/')[0], 10);
+      return Number.isFinite(n) ? n : null;
+    };
+    const strOrNull = (v: string | undefined) => {
+      if (v == null) return null;
+      const t = v.trim();
+      return t === '' ? null : t;
+    };
+
+    const text = await file.text();
+    const rows = parseCsv(text);
+    if (rows.length < 2) {
+      toast({ description: "CSV is empty or has no data rows", variant: "destructive" });
+      event.target.value = '';
+      return;
+    }
+
+    // Map headers (case-insensitive) to column index. Accept the export's header names
+    // and common aliases.
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    const aliases: Record<string, string[]> = {
+      journalName: ['journalname', 'journal name', 'journal', 'full journal title'],
+      abbreviatedJournal: ['abbreviatedjournal', 'abbreviated journal', 'abbreviation', 'iso abbreviation'],
+      publisher: ['publisher'],
+      issn: ['issn'],
+      eissn: ['eissn', 'e-issn'],
+      field: ['field', 'category', 'subject', 'subjectarea', 'subject area'],
+      year: ['year', 'jcr year'],
+      impactFactor: ['impactfactor', 'impact factor', 'jif', '2024 jif', 'journal impact factor'],
+      fiveYearJif: ['fiveyearjif', '5-year jif', '5 year jif', 'five year jif'],
+      jifWithoutSelfCites: ['jifwithoutselfcites', 'jif without self cites', 'jif w/o self cites'],
+      jci: ['jci'],
+      quartile: ['quartile', 'jif quartile'],
+      rank: ['rank', 'jif rank'],
+      totalCites: ['totalcites', 'total cites', 'totalcitations', 'total citations'],
+      totalArticles: ['totalarticles', 'total articles'],
+      citableItems: ['citableitems', 'citable items'],
+      citedHalfLife: ['citedhalflife', 'cited half-life', 'cited half life'],
+      citingHalfLife: ['citinghalflife', 'citing half-life', 'citing half life'],
+    };
+    const idx: Record<string, number> = {};
+    for (const [key, names] of Object.entries(aliases)) {
+      idx[key] = headers.findIndex((h) => names.includes(h));
+    }
+
+    if (idx.journalName === -1) {
+      toast({
+        description: "CSV is missing required column 'journalName'. The CSV exported from this page is the perfect template.",
+        variant: "destructive",
+      });
+      event.target.value = '';
+      return;
+    }
+
+    const data: any[] = [];
+    let skipped = 0;
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (row.length === 1 && row[0].trim() === '') continue;
+      const get = (key: string) => (idx[key] >= 0 ? row[idx[key]] : undefined);
+
+      const journalName = strOrNull(get('journalName'));
+      const impactFactor = numOrNull(get('impactFactor'));
+      const year = intOrNull(get('year'));
+      if (!journalName || impactFactor == null || year == null) { skipped++; continue; }
+
+      data.push({
+        journalName,
+        abbreviatedJournal: strOrNull(get('abbreviatedJournal')),
+        publisher: strOrNull(get('publisher')),
+        issn: strOrNull(get('issn')),
+        eissn: strOrNull(get('eissn')),
+        field: strOrNull(get('field')),
+        year,
+        impactFactor,
+        fiveYearJif: numOrNull(get('fiveYearJif')),
+        jifWithoutSelfCites: numOrNull(get('jifWithoutSelfCites')),
+        jci: numOrNull(get('jci')),
+        quartile: strOrNull(get('quartile')),
+        rank: intOrNull(get('rank')),
+        totalCites: intOrNull(get('totalCites')),
+        totalArticles: intOrNull(get('totalArticles')),
+        citableItems: intOrNull(get('citableItems')),
+        citedHalfLife: numOrNull(get('citedHalfLife')),
+        citingHalfLife: numOrNull(get('citingHalfLife')),
+      });
+    }
+
+    if (data.length === 0) {
+      toast({
+        description: `No valid rows found. Each row needs at least journalName, year, and impactFactor. (${skipped} skipped)`,
+        variant: "destructive",
+      });
+      event.target.value = '';
+      return;
     }
 
     try {
@@ -570,13 +683,17 @@ export default function PublicationOffice() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csvData: data })
       });
-      
       const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
-      toast({ description: `Imported ${result.imported} of ${result.total} records` });
+      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/years'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/fields'] });
+      toast({
+        description: `Imported ${result.imported} of ${result.total} records${skipped > 0 ? ` (${skipped} skipped — missing required fields)` : ''}`,
+      });
     } catch (error) {
       toast({ description: "Failed to import CSV data", variant: "destructive" });
     }
+    event.target.value = '';
   };
 
   // Publication status update mutations
