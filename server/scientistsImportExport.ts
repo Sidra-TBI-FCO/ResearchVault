@@ -225,11 +225,13 @@ export function buildImportPreview(
     matched.push({ row, rowNumber, matchedId: matchedRecord ? matchedRecord.id : null });
   });
 
-  // Resolve supervisor emails against existing + planned file rows
-  const allKnownEmails = new Set<string>([
-    ...Array.from(existingByEmail.keys()),
-    ...matched.map(m => m.row.email),
-  ]);
+  // Supervisor emails must resolve against the FINAL intended set — i.e.
+  // every row that will exist in the DB after the import (matched updates,
+  // unchanged matches, and new inserts). This deliberately excludes the
+  // emails of existing scientists that aren't in the file, since those rows
+  // will be deleted and pointing at them would resolve to nothing at apply
+  // time.
+  const allKnownEmails = new Set<string>(matched.map(m => m.row.email));
 
   matched.forEach(({ row, rowNumber, matchedId }) => {
     if (row.supervisorEmail && !allKnownEmails.has(row.supervisorEmail)) {
@@ -381,12 +383,15 @@ export async function findReferencingRecords(
 
   const ident = (s: string) => '"' + s.replace(/"/g, '""') + '"';
 
-  for (const fk of refCols) {
+  // Skip the scientists self-ref here — the caller computes it in-memory
+  // because the answer depends on in-flight updates (a row being updated to
+  // a new supervisor shouldn't block its old supervisor's deletion).
+  const nonSelfCols = refCols.filter(rc => rc.table !== "scientists");
+
+  for (const fk of nonSelfCols) {
     const tbl = ident(fk.table);
     const col = ident(fk.column);
-    const isSelfRef = fk.table === "scientists";
 
-    // sql.raw for already-quoted identifiers; parameterise the id list
     const refRows = await database.execute<{ ref_id: number; pk_id: number }>(sql.raw(
       `SELECT ${col} AS ref_id, id AS pk_id
          FROM ${tbl}
@@ -396,9 +401,6 @@ export async function findReferencingRecords(
     const rows = (refRows as any).rows ?? (refRows as any);
     const byScientist = new Map<number, number[]>();
     for (const r of rows as Array<{ ref_id: number; pk_id: number }>) {
-      // Self-ref: if the referencing scientist is ALSO being deleted in the same
-      // batch, both go away together — don't flag it as a blocker.
-      if (isSelfRef && candidateSet.has(r.pk_id)) continue;
       if (!byScientist.has(r.ref_id)) byScientist.set(r.ref_id, []);
       byScientist.get(r.ref_id)!.push(r.pk_id);
     }
@@ -417,23 +419,89 @@ export async function findReferencingRecords(
   return result;
 }
 
+/**
+ * Compute scientists.supervisor_id self-reference blockers, taking the
+ * planned import into account: a row whose supervisor will be reassigned by
+ * this import is NOT a blocker for the old supervisor's deletion, and a
+ * referencing row that is itself being deleted is also not a blocker.
+ */
+function computeSelfRefBlockers(
+  toDeleteIds: Set<number>,
+  existing: Scientist[],
+  toUpdateByExistingId: Map<number, FileRow>,
+  emailToId: Map<string, number>
+): Map<number, ReferencingRecord> {
+  const byTarget = new Map<number, number[]>();
+  for (const s of existing) {
+    if (s.supervisorId == null) continue;
+    if (!toDeleteIds.has(s.supervisorId)) continue;
+    if (toDeleteIds.has(s.id)) continue; // referencer also being deleted
+
+    // If s is being updated, check its NEW supervisor — only block if it
+    // still points at the deletion target.
+    const newRow = toUpdateByExistingId.get(s.id);
+    if (newRow) {
+      const newSupId = newRow.supervisorEmail
+        ? emailToId.get(newRow.supervisorEmail) ?? null
+        : null;
+      if (newSupId !== s.supervisorId) continue; // reassigned away
+    }
+
+    if (!byTarget.has(s.supervisorId)) byTarget.set(s.supervisorId, []);
+    byTarget.get(s.supervisorId)!.push(s.id);
+  }
+
+  const out = new Map<number, ReferencingRecord>();
+  byTarget.forEach((ids, targetId) => {
+    out.set(targetId, {
+      table: "scientists",
+      column: "supervisor_id",
+      count: ids.length,
+      sampleIds: ids.slice(0, 5),
+    });
+  });
+  return out;
+}
+
 export async function enrichDeletesWithReferences(
   preview: ImportPreview,
-  database: PgDatabase<any, any, any>
+  database: PgDatabase<any, any, any>,
+  existing: Scientist[]
 ): Promise<void> {
   if (preview.toDelete.length === 0) return;
-  const refs = await findReferencingRecords(database, preview.toDelete.map(d => d.id));
+
+  const toDeleteIds = new Set(preview.toDelete.map(d => d.id));
+
+  // Build the post-import email→id map the apply step will use, so the
+  // self-reference check reflects the intended final state.
+  const emailToId = new Map<string, number>();
+  for (const s of existing) emailToId.set(s.email.toLowerCase(), s.id);
+  for (const { existingId, row } of preview.toUpdate) emailToId.set(row.email, existingId);
+  for (const d of preview.toDelete) emailToId.delete(d.email.toLowerCase());
+  // toInsert rows have no id yet, so unresolved-on-insert is fine here —
+  // a row referencing a new scientist's email simply won't appear as a
+  // self-ref blocker (the new scientist isn't a delete candidate anyway).
+
+  const toUpdateByExistingId = new Map<number, FileRow>(
+    preview.toUpdate.map(u => [u.existingId, u.row])
+  );
+
+  const externalRefs = await findReferencingRecords(database, preview.toDelete.map(d => d.id));
+  const selfRefs = computeSelfRefBlockers(toDeleteIds, existing, toUpdateByExistingId, emailToId);
+
   for (const d of preview.toDelete) {
-    const r = refs.get(d.id);
-    if (r && r.length > 0) {
-      d.referencedBy = r;
-      const summary = r
+    const combined: ReferencingRecord[] = [...(externalRefs.get(d.id) ?? [])];
+    const self = selfRefs.get(d.id);
+    if (self) combined.push(self);
+    if (combined.length > 0) {
+      d.referencedBy = combined;
+      const summary = combined
         .map(x => `${x.table}.${x.column} (${x.count} row${x.count === 1 ? "" : "s"}; ids: ${x.sampleIds.join(", ")}${x.count > x.sampleIds.length ? "…" : ""})`)
         .join("; ");
       preview.errors.push({
         rowNumber: 0,
         identifier: `${d.name} <${d.email}>`,
-        errors: [`Cannot delete: still referenced by ${summary}. Reassign these rows before re-importing.`],
+        errors: [`Cannot delete: still referenced by ${summary}. Reassign these rows in the import file before re-importing.`],
       });
     }
   }

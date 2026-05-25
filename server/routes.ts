@@ -1886,7 +1886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const existing = await storage.getScientists();
       const preview = buildImportPreview(fileRows, existing);
-      await enrichDeletesWithReferences(preview, db);
+      await enrichDeletesWithReferences(preview, db, existing);
       res.json(preview);
     } catch (error) {
       console.error('Staff import preview failed:', error);
@@ -1913,7 +1913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const existing = await storage.getScientists();
       const preview = buildImportPreview(fileRows, existing);
-      await enrichDeletesWithReferences(preview, db);
+      await enrichDeletesWithReferences(preview, db, existing);
 
       if (preview.errors.length > 0) {
         return res.status(400).json({
