@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +72,44 @@ export default function PublicationOffice() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [editingFieldJournalId, setEditingFieldJournalId] = useState<number | null>(null);
   const [fieldDraft, setFieldDraft] = useState<string>("");
+
+  // Synced top-of-table horizontal scrollbar so users can scroll the wide
+  // Impact Factors table without scrolling all the way to the bottom.
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+  const syncingRef = useRef(false);
+
+  const handleTopScroll = () => {
+    if (syncingRef.current || !tableScrollRef.current || !topScrollRef.current) return;
+    syncingRef.current = true;
+    tableScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    syncingRef.current = false;
+  };
+  const handleTableScroll = () => {
+    if (syncingRef.current || !tableScrollRef.current || !topScrollRef.current) return;
+    syncingRef.current = true;
+    topScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+    syncingRef.current = false;
+  };
+
+  // Keep the top scrollbar's inner spacer the same width as the table so the
+  // two scroll positions stay in lockstep when columns or data change.
+  useLayoutEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const sync = () => setTableScrollWidth(el.scrollWidth);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+    };
+  });
+
   const limit = 100;
 
   // JCR column tooltips
@@ -1184,7 +1222,22 @@ export default function PublicationOffice() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Top horizontal scrollbar synced with the table below, so users
+              can scroll the wide table without having to scroll to its bottom. */}
+          <div
+            ref={topScrollRef}
+            onScroll={handleTopScroll}
+            className="overflow-x-auto overflow-y-hidden"
+            style={{ height: 14 }}
+            data-testid="impact-factors-top-scrollbar"
+          >
+            <div style={{ width: tableScrollWidth, height: 1 }} />
+          </div>
+          <div
+            ref={tableScrollRef}
+            onScroll={handleTableScroll}
+            className="overflow-x-auto"
+          >
             <Table>
               <TableHeader>
                 <TableRow>
