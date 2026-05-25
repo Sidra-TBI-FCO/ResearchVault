@@ -183,9 +183,10 @@ function StaffImportExportButtons() {
           <DialogHeader>
             <DialogTitle>Import staff from file</DialogTitle>
             <DialogDescription>
-              Upload an .xlsx or .csv file (typically one previously exported and edited). Staff are matched by Email.
-              Rows in the file replace the current staff list: matching rows update, new rows insert, and rows missing
-              from the file are deleted.
+              Upload an .xlsx or .csv file (typically one previously exported and edited). Staff are matched by{" "}
+              <strong>Staff ID</strong> first, then <strong>Email</strong> as a fallback. Rows in the file replace
+              the current staff list: matched rows update, new rows insert, and rows missing from the file are
+              deleted (if not referenced elsewhere).
             </DialogDescription>
           </DialogHeader>
 
@@ -238,6 +239,40 @@ function StaffImportExportButtons() {
                       ))}
                     </ul>
                   </div>
+                )}
+
+                {preview.toInsert.length > 0 && (
+                  <details className="rounded border border-green-300 bg-green-50 p-3 text-sm">
+                    <summary className="font-semibold text-green-800 cursor-pointer">
+                      {preview.toInsert.length} new staff member(s) to insert
+                    </summary>
+                    <ul className="mt-2 max-h-40 overflow-y-auto space-y-1 text-green-900" data-testid="preview-insert-list">
+                      {preview.toInsert.map((r, i) => (
+                        <li key={i}>
+                          <span className="font-medium">{r.firstName} {r.lastName}</span>{" "}
+                          <span className="text-xs">&lt;{r.email}&gt;</span>
+                          {r.staffId && <span className="text-xs ml-1">[ID: {r.staffId}]</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+
+                {preview.toUpdate.length > 0 && (
+                  <details className="rounded border border-blue-300 bg-blue-50 p-3 text-sm">
+                    <summary className="font-semibold text-blue-800 cursor-pointer">
+                      {preview.toUpdate.length} existing staff member(s) to update
+                    </summary>
+                    <ul className="mt-2 max-h-40 overflow-y-auto space-y-1 text-blue-900" data-testid="preview-update-list">
+                      {preview.toUpdate.map((u, i) => (
+                        <li key={i}>
+                          <span className="font-medium">{u.row.firstName} {u.row.lastName}</span>{" "}
+                          <span className="text-xs">&lt;{u.row.email}&gt;</span>
+                          {u.row.staffId && <span className="text-xs ml-1">[ID: {u.row.staffId}]</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 )}
 
                 {preview.toDelete.length > 0 && (

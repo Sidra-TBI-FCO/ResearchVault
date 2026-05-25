@@ -1925,25 +1925,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         const summary = await db.transaction(async (tx) => {
-          // 1. Insert new rows first (without supervisor, then patch)
+          // 1. Insert new rows first (without supervisor — we patch in step 4).
           const insertedIdByEmail = new Map<string, number>();
           for (const row of preview.toInsert) {
-            const payload = rowToInsertScientist(row, new Map()); // no supervisor yet
+            const payload = rowToInsertScientist(row, new Map());
             payload.supervisorId = null;
             const [inserted] = await tx.insert(scientists).values(payload).returning();
             insertedIdByEmail.set(row.email, inserted.id);
           }
 
-          // 2. Build full email → id map (existing + inserted)
+          // 2. Build the intended-final email→id map. Critically, for rows
+          //    being updated this uses the NEW email from the file, not the
+          //    old email in the DB — otherwise a row that references the
+          //    new email of another updated row would silently resolve to
+          //    null (corrupting the hierarchy).
           const emailToId = new Map<string, number>();
-          existing.forEach(s => emailToId.set(s.email.toLowerCase(), s.id));
+          // Baseline: existing emails (covers unchanged rows and gives a
+          //  starting point for matched rows).
+          for (const s of existing) emailToId.set(s.email.toLowerCase(), s.id);
+          // Override: matched rows keep their existing id but adopt their
+          //  new file email. Their old email is no longer the canonical key
+          //  for that record, but leaving it in the map is harmless because
+          //  the preview step already validated against the new email set.
+          for (const { existingId, row } of preview.toUpdate) {
+            emailToId.set(row.email, existingId);
+          }
+          // Add freshly-inserted rows.
           insertedIdByEmail.forEach((id, email) => emailToId.set(email, id));
+          // Remove rows being deleted so nothing resolves to a doomed id.
+          for (const d of preview.toDelete) emailToId.delete(d.email.toLowerCase());
 
-          // 3. Apply updates (and patch supervisor on inserted rows)
+          // 3. Defensive consistency check: every supervisorEmail in the
+          //    file must resolve. Preview validated this against
+          //    allKnownEmails, but we re-check against the post-deletion
+          //    map so we never silently write supervisorId = null.
+          const unresolved: string[] = [];
+          const checkSupervisor = (rowEmail: string, supervisorEmail?: string) => {
+            if (supervisorEmail && !emailToId.has(supervisorEmail)) {
+              unresolved.push(`${rowEmail} → ${supervisorEmail}`);
+            }
+          };
+          for (const { row } of preview.toUpdate) checkSupervisor(row.email, row.supervisorEmail);
+          for (const row of preview.toInsert) checkSupervisor(row.email, row.supervisorEmail);
+          if (unresolved.length > 0) {
+            throw new Error(
+              `Some line manager emails cannot be resolved against the imported set: ${unresolved.join(", ")}. Re-run preview, fix the file, and try again.`
+            );
+          }
+
+          // 4. Apply updates (uses the post-rename email→id map for supervisor resolution).
           for (const { existingId, row } of preview.toUpdate) {
             const payload = rowToInsertScientist(row, emailToId);
             await tx.update(scientists).set(payload).where(eq(scientists.id, existingId));
           }
+          // Patch supervisor on freshly-inserted rows.
           for (const row of preview.toInsert) {
             if (!row.supervisorEmail) continue;
             const sid = emailToId.get(row.supervisorEmail);
