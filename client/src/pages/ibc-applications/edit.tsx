@@ -6288,7 +6288,7 @@ export default function IbcApplicationEdit() {
 
             {/* Right Sidebar - Collapsible on desktop to free up editing width */}
             <div className={`${sidebarCollapsed ? "w-10" : "w-80"} flex-shrink-0 hidden lg:block transition-[width] duration-200`}>
-              <div className="sticky top-4 z-50 space-y-4 h-[calc(100vh-6rem)] overflow-y-auto pr-1">
+              <div className="sticky top-4 z-50 flex flex-col gap-4 max-h-[calc(100vh-6rem)]">
                 {/* Collapse / expand toggle */}
                 {sidebarCollapsed ? (
                   <button
@@ -6320,52 +6320,66 @@ export default function IbcApplicationEdit() {
                   </div>
                 )}
 
-                {/* Communication History */}
-                {!sidebarCollapsed && comments.length > 0 && (
-                  <div className="max-h-[300px] overflow-y-auto">
-                    <TimelineComments 
-                      application={ibcApplication} 
-                      comments={comments} 
-                      title="Communication History"
-                    />
-                  </div>
-                )}
-
-                {/* Submission Comment - Required when submitting */}
-                {!sidebarCollapsed && !isReadOnly && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        Submission Comment
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Required when submitting application
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <Textarea
-                        placeholder="Explain changes or additional information..."
-                        value={submissionComment}
-                        onChange={(e) => setSubmissionComment(e.target.value)}
-                        rows={3}
-                        className="resize-none text-sm"
+                {/* Scrollable content region: history + submission comment */}
+                {!sidebarCollapsed && (
+                  <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+                    {/* Communication History */}
+                    {comments.length > 0 && (
+                      <TimelineComments 
+                        application={ibcApplication} 
+                        comments={comments} 
+                        title="Communication History"
                       />
-                    </CardContent>
-                  </Card>
-                )}
+                    )}
 
-                {/* Unsaved Changes Indicator */}
-                {!sidebarCollapsed && isDirty && !isReadOnly && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                    <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
+                    {/* Submission Comment - Required when submitting */}
+                    {!isReadOnly && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            Submission Comment
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            Required when submitting application
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <Textarea
+                            placeholder="Explain changes or additional information..."
+                            value={submissionComment}
+                            onChange={(e) => setSubmissionComment(e.target.value)}
+                            rows={3}
+                            className="resize-none text-sm"
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Read-Only Mode notice */}
+                    {isReadOnly && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <Eye className="h-4 w-4" />
+                          <span className="text-sm font-medium">Read-Only Mode</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          This application has been submitted and cannot be edited.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Action Buttons */}
+                {/* Pinned action footer - always visible, never cut off */}
                 {!sidebarCollapsed && !isReadOnly && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex-shrink-0 space-y-2 border-t pt-3">
+                    {isDirty && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
+                      </div>
+                    )}
                     <Button 
                       type="button" 
                       disabled={saveMutation.isPending || submitMutation.isPending}
@@ -6399,18 +6413,6 @@ export default function IbcApplicationEdit() {
                       {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Submit Application
                     </Button>
-                  </div>
-                )}
-                
-                {!sidebarCollapsed && isReadOnly && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      <Eye className="h-4 w-4" />
-                      <span className="text-sm font-medium">Read-Only Mode</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      This application has been submitted and cannot be edited.
-                    </p>
                   </div>
                 )}
               </div>
