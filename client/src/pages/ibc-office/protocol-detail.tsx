@@ -29,6 +29,7 @@ import {
   X,
   Maximize2,
   Minimize2,
+  Printer,
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -58,9 +59,11 @@ function safeDate(value: any): string {
   return isNaN(dt.getTime()) ? "" : format(dt, "MMM d, yyyy");
 }
 
-export default function IbcProtocolDetailPage() {
+export default function IbcProtocolDetailPage(
+  { applicationId: applicationIdProp, printMode = false }: { applicationId?: number; printMode?: boolean } & Record<string, any> = {}
+) {
   const [, params] = useRoute("/ibc-office/protocol-detail/:id");
-  const applicationId = params?.id ? parseInt(params.id) : null;
+  const applicationId = applicationIdProp ?? (params?.id ? parseInt(params.id) : null);
   const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
   const [reviewComments, setReviewComments] = useState("");
   const [selectedReviewers, setSelectedReviewers] = useState<number[]>([]);
@@ -203,6 +206,17 @@ export default function IbcProtocolDetailPage() {
           {application.title && <p className="text-sm text-gray-500 mt-1">{application.title}</p>}
         </div>
         <div className="flex items-center space-x-2">
+          {!printMode && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(`/ibc-applications/${applicationId}/print`, "_blank")}
+              data-testid="button-download-pdf"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+          )}
           <Badge className={currentStatus?.color} data-testid="badge-status">
             <StatusIcon className="h-3 w-3 mr-1" />
             {currentStatus?.label || application.status}
@@ -218,9 +232,11 @@ export default function IbcProtocolDetailPage() {
 
       <IbcProtocolView
         applicationId={applicationId}
+        printMode={printMode}
         sidebar={
           <>
             {/* Officer Actions */}
+            {!printMode && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Officer Actions</CardTitle>
@@ -504,15 +520,16 @@ export default function IbcProtocolDetailPage() {
                 )}
               </CardContent>
             </Card>
+            )}
 
             {/* Communication History */}
-            <Card>
+            <Card className="print:break-inside-avoid print:shadow-none print:border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Communication History</CardTitle>
               </CardHeader>
               <CardContent>
                 {comments && comments.length > 0 ? (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                  <div className={printMode ? "space-y-3" : "space-y-3 max-h-96 overflow-y-auto"}>
                     {[...comments]
                       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                       .map((comment: any, index: number) => (
@@ -580,6 +597,13 @@ export default function IbcProtocolDetailPage() {
           </>
         }
       />
+
+      {printMode && (
+        <div className="print-footer" data-testid="text-print-footer">
+          {application.ibcNumber || "IBC Application"}
+          {application.title ? ` — ${application.title}` : ""}
+        </div>
+      )}
     </div>
   );
 }

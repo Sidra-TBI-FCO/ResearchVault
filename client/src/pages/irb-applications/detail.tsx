@@ -5,7 +5,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResearchActivity, IrbApplication, Scientist, DataManagementPlan } from "@shared/schema";
-import { ArrowLeft, Calendar, FileText, Layers, Users, ClipboardCheck, Edit, History } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Layers, Users, ClipboardCheck, Edit, History, Printer } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -276,6 +276,14 @@ export default function IrbApplicationDetail() {
             applicationId={id}
             currentStatus={irbApplication.workflowStatus || 'draft'}
           />
+          <Button
+            variant="outline"
+            onClick={() => window.open(`/irb-applications/${id}/print`, "_blank")}
+            data-testid="button-download-pdf"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
           <Button 
             variant="outline"
             onClick={() => navigate(`/irb-applications/${id}/edit`)}

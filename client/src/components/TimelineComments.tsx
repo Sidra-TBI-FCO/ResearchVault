@@ -39,13 +39,15 @@ interface TimelineCommentsProps {
   comments: Comment[];
   title?: string;
   showHeader?: boolean;
+  includeStatusChanges?: boolean;
 }
 
 export default function TimelineComments({ 
   application, 
   comments, 
   title = "Timeline & Comments",
-  showHeader = true 
+  showHeader = true,
+  includeStatusChanges = false
 }: TimelineCommentsProps) {
   
   const createTimelineEntries = (): TimelineEntry[] => {
@@ -151,8 +153,30 @@ export default function TimelineComments({
     // Add comments from the separate comments table
     if (comments && comments.length > 0) {
       comments.forEach((comment: Comment) => {
-        // Skip status_change comments as they're redundant with the status timeline events above
+        // status_change comments are normally redundant with the date-derived status
+        // events above, but for a complete printed/audit record we render every
+        // recorded transition (e.g. triage_complete, revisions_requested, resubmitted)
+        // that the fixed date fields cannot capture.
         if (comment.commentType === 'status_change') {
+          if (!includeStatusChanges) {
+            return;
+          }
+          timelineEntries.push({
+            date: new Date(comment.createdAt),
+            type: 'status',
+            element: (
+              <div className="flex items-start space-x-2">
+                <AlertTriangle className="h-4 w-4 text-slate-500 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Status Change</p>
+                  <p className="text-sm text-gray-500">{comment.comment}</p>
+                  {comment.authorName && (
+                    <p className="text-xs text-gray-400">{comment.authorName}</p>
+                  )}
+                </div>
+              </div>
+            )
+          });
           return;
         }
         

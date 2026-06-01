@@ -376,3 +376,53 @@
     display: none;
   }
 }
+/* ---- Print / Save as PDF (IBC & IRB full application export) ---- */
+@media screen {
+  .print-footer {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+    /* Native page numbering in the bottom margin box (browsers that support
+       CSS Paged Media margin boxes). The browser's own "Headers and footers"
+       option provides the same Page X / Y stamp as a fallback. */
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10px;
+      color: #6b7280;
+    }
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  /* Hide anything explicitly marked as screen-only chrome */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Preserve status colors, badges, and themed backgrounds when printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Repeating footer with the application identifier on every printed page */
+  .print-footer {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 10px;
+    color: #6b7280;
+    padding: 4px 0;
+    border-top: 1px solid #e5e7eb;
+    text-align: left;
+  }
+}

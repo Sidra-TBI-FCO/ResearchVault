@@ -89,6 +89,8 @@ import IbcList from "@/pages/ibc";
 import CreateIbc from "@/pages/ibc/create";
 import IbcApplicationDetail from "@/pages/ibc-applications/detail";
 import EditIbcApplication from "@/pages/ibc-applications/edit";
+import IbcApplicationPrintPage from "@/pages/ibc-applications/print";
+import IrbApplicationPrintPage from "@/pages/irb-applications/print";
 
 // IBC Office
 import IbcOfficePage from "@/pages/ibc-office";
@@ -138,6 +140,16 @@ function AuthenticatedAppRoutes() {
     );
   }
   return <AppRouter />;
+}
+
+// Applies the same auth gating as AuthenticatedAppRoutes but WITHOUT the app
+// Layout chrome — used for the dedicated print routes.
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { authConfig } = useAuth();
+  if (authConfig.ssoEnabled) {
+    return <RequireAuth>{children}</RequireAuth>;
+  }
+  return <>{children}</>;
 }
 
 // Public Pages
@@ -337,6 +349,16 @@ function App() {
                     <Toaster />
                     <Switch>
                       <Route path="/login" component={LoginPage} />
+                      <Route path="/ibc-applications/:id/print">
+                        <AuthGate>
+                          <IbcApplicationPrintPage />
+                        </AuthGate>
+                      </Route>
+                      <Route path="/irb-applications/:id/print">
+                        <AuthGate>
+                          <IrbApplicationPrintPage />
+                        </AuthGate>
+                      </Route>
                       <Route>
                         <AuthenticatedAppRoutes />
                       </Route>

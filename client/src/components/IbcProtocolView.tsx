@@ -269,6 +269,12 @@ interface IbcProtocolViewProps {
    * controls stay with their owning page.
    */
   sidebar?: React.ReactNode;
+  /**
+   * When true, render for the print/PDF pipeline: every collapsible section is
+   * forced open and the on-screen "On this page" jump navigation is hidden so
+   * the printed document contains the full protocol without interactive chrome.
+   */
+  printMode?: boolean;
 }
 
 /**
@@ -279,7 +285,7 @@ interface IbcProtocolViewProps {
  * IBC office detail page and the IBC reviewer page so both audiences see the
  * same full protocol; each page supplies its own `sidebar` for role actions.
  */
-export default function IbcProtocolView({ applicationId, sidebar }: IbcProtocolViewProps) {
+export default function IbcProtocolView({ applicationId, sidebar, printMode = false }: IbcProtocolViewProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const toggleSection = (id: string) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
   const scrollToSection = (id: string) => {
@@ -416,12 +422,12 @@ export default function IbcProtocolView({ applicationId, sidebar }: IbcProtocolV
 
   // Section wrapper with collapse toggle
   const Section = ({ id, title, icon: Icon, badge, children }: any) => {
-    const isOpen = !collapsed[id];
+    const isOpen = printMode || !collapsed[id];
     return (
       <Card id={id} className="scroll-mt-6">
         <CardHeader
-          className="cursor-pointer select-none"
-          onClick={() => toggleSection(id)}
+          className={printMode ? "select-none" : "cursor-pointer select-none"}
+          onClick={printMode ? undefined : () => toggleSection(id)}
           data-testid={`header-section-${id}`}
         >
           <div className="flex items-center justify-between">
@@ -430,11 +436,12 @@ export default function IbcProtocolView({ applicationId, sidebar }: IbcProtocolV
               <span>{title}</span>
               {badge}
             </CardTitle>
-            {isOpen ? (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-gray-400" />
-            )}
+            {!printMode &&
+              (isOpen ? (
+                <ChevronDown className="h-5 w-5 text-gray-400" />
+              ) : (
+                <ChevronRight className="h-5 w-5 text-gray-400" />
+              ))}
           </div>
         </CardHeader>
         {isOpen && <CardContent className="space-y-4">{children}</CardContent>}
@@ -949,25 +956,27 @@ export default function IbcProtocolView({ applicationId, sidebar }: IbcProtocolV
       <div className="lg:col-span-1">
         <div className="lg:sticky lg:top-4 space-y-4">
           {/* Jump navigation */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">On this page</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <nav className="space-y-1">
-                {navItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    className="block w-full text-left text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded px-2 py-1"
-                    data-testid={`nav-${item.id}`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </nav>
-            </CardContent>
-          </Card>
+          {!printMode && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">On this page</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <nav className="space-y-1">
+                  {navItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className="block w-full text-left text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded px-2 py-1"
+                      data-testid={`nav-${item.id}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
+              </CardContent>
+            </Card>
+          )}
 
           {sidebar}
         </div>
