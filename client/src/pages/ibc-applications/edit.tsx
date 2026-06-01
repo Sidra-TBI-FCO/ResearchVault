@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertIbcApplicationSchema, type InsertIbcApplication, type IbcApplication, type ResearchActivity, type Scientist, type Certification, type CertificationModule } from "@shared/schema";
-import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, Building2, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, Users, X, MessageSquare, Send, Eye, Plus, Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Building2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -292,6 +292,7 @@ export default function IbcApplicationEdit() {
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [submissionComment, setSubmissionComment] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [collapsedProcedures, setCollapsedProcedures] = useState<Set<number>>(new Set());
   const [collapsedSyntheticExperiments, setCollapsedSyntheticExperiments] = useState<Set<number>>(new Set());
   
@@ -6285,11 +6286,42 @@ export default function IbcApplicationEdit() {
               </Tabs>
             </div>
 
-            {/* Right Sidebar - Always visible */}
-            <div className="w-80 flex-shrink-0 hidden lg:block">
+            {/* Right Sidebar - Collapsible on desktop to free up editing width */}
+            <div className={`${sidebarCollapsed ? "w-10" : "w-80"} flex-shrink-0 hidden lg:block transition-[width] duration-200`}>
               <div className="sticky top-4 z-50 space-y-4">
+                {/* Collapse / expand toggle */}
+                {sidebarCollapsed ? (
+                  <button
+                    type="button"
+                    onClick={() => setSidebarCollapsed(false)}
+                    className="flex flex-col items-center gap-2 w-10 py-3 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground"
+                    title="Show Communication History & actions"
+                    data-testid="button-expand-sidebar"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="text-[11px] font-medium tracking-wide [writing-mode:vertical-rl] rotate-180">
+                      Comms &amp; History
+                    </span>
+                  </button>
+                ) : (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-muted-foreground"
+                      onClick={() => setSidebarCollapsed(true)}
+                      title="Collapse panel for more editing space"
+                      data-testid="button-collapse-sidebar"
+                    >
+                      <ChevronRight className="h-4 w-4 mr-1" />
+                      Collapse
+                    </Button>
+                  </div>
+                )}
+
                 {/* Communication History */}
-                {comments.length > 0 && (
+                {!sidebarCollapsed && comments.length > 0 && (
                   <div className="max-h-[300px] overflow-y-auto">
                     <TimelineComments 
                       application={ibcApplication} 
@@ -6300,7 +6332,7 @@ export default function IbcApplicationEdit() {
                 )}
 
                 {/* Submission Comment - Required when submitting */}
-                {!isReadOnly && (
+                {!sidebarCollapsed && !isReadOnly && (
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
@@ -6324,7 +6356,7 @@ export default function IbcApplicationEdit() {
                 )}
 
                 {/* Unsaved Changes Indicator */}
-                {isDirty && !isReadOnly && (
+                {!sidebarCollapsed && isDirty && !isReadOnly && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
                     <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
@@ -6332,7 +6364,7 @@ export default function IbcApplicationEdit() {
                 )}
 
                 {/* Action Buttons */}
-                {!isReadOnly && (
+                {!sidebarCollapsed && !isReadOnly && (
                   <div className="flex flex-col gap-2">
                     <Button 
                       type="button" 
@@ -6370,7 +6402,7 @@ export default function IbcApplicationEdit() {
                   </div>
                 )}
                 
-                {isReadOnly && (
+                {!sidebarCollapsed && isReadOnly && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center space-x-2 text-gray-600">
                       <Eye className="h-4 w-4" />

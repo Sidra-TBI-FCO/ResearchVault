@@ -205,6 +205,7 @@ The server logs `[auth] Microsoft Entra ID sign-in ENABLED/DISABLED` on startup 
 Unset (or leave unset) any of the required vars and restart the app. Behaviour returns to the role-emulation flow with no Microsoft redirects.
 
 ## Changelog
+- May 31, 2026. Made the IBC application edit page's right sidebar (Communication History, Submission Comment, Save/Submit) collapsible on desktop to give the main form more editing width
 - January 20, 2026. Redesigned IBC application edit page with two-column layout: main form on left, sticky right sidebar with Communication History, Submission Comment, and Save/Submit buttons for better usability
 - January 20, 2026. Removed redundant Risk Group Classification field from IBC applications as Biosafety Level already provides this information
 - January 15, 2026. Added Team Management functionality to Settings with three tabs (Layout & Theme, Team Members, Feature Requests). Team members can be categorized as Element Leads, Faculty Testers, or Developers with full CRUD operations and photo support.
