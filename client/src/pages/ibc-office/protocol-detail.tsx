@@ -7,6 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   FileText,
@@ -1264,19 +1272,17 @@ export default function IbcProtocolDetailPage() {
                   </div>
                 </div>
 
-                {/* Reviewer selection */}
-                {showReviewerSelection && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <label className="text-sm font-medium">Select Reviewers</label>
-                        <p className="text-xs text-gray-500">Choose IBC board members to review this application</p>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => setShowReviewerSelection(false)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-2 bg-white">
+                {/* Reviewer selection popup */}
+                <Dialog open={showReviewerSelection} onOpenChange={setShowReviewerSelection}>
+                  <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col" data-testid="dialog-reviewer-selection">
+                    <DialogHeader>
+                      <DialogTitle>Select Reviewers</DialogTitle>
+                      <DialogDescription>
+                        Choose IBC board members to review this application
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 min-h-0 overflow-y-auto space-y-2 border rounded-lg p-2 bg-white">
                       {Array.isArray(boardMembersWithScientists) && boardMembersWithScientists.length > 0 ? (
                         boardMembersWithScientists
                           .filter((member: IbcBoardMember) => member.isActive)
@@ -1321,8 +1327,9 @@ export default function IbcProtocolDetailPage() {
                         <p className="text-sm text-gray-500 text-center py-4">No active board members available</p>
                       )}
                     </div>
+
                     {selectedReviewers.length > 0 && (
-                      <div className="mt-2">
+                      <div>
                         <p className="text-sm text-gray-600">Selected reviewers: {selectedReviewers.length}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {selectedReviewers.map((reviewerId) => {
@@ -1346,7 +1353,10 @@ export default function IbcProtocolDetailPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-4">
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowReviewerSelection(false)}>
+                        Cancel
+                      </Button>
                       <Button
                         onClick={() => {
                           handleStatusUpdate("under_review", { requireComment: false });
@@ -1358,12 +1368,9 @@ export default function IbcProtocolDetailPage() {
                       >
                         {updateStatusMutation.isPending ? "Assigning..." : "Assign Selected Reviewers"}
                       </Button>
-                      <Button variant="outline" onClick={() => setShowReviewerSelection(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Review comment */}
                 <div>
