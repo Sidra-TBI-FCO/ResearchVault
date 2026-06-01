@@ -34,6 +34,8 @@ import {
   ClipboardList,
   Beaker,
   ListChecks,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -294,6 +296,7 @@ export default function IbcProtocolDetailPage() {
   const [reviewComments, setReviewComments] = useState("");
   const [selectedReviewers, setSelectedReviewers] = useState<number[]>([]);
   const [showReviewerSelection, setShowReviewerSelection] = useState(false);
+  const [commentExpanded, setCommentExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const toggleSection = (id: string) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -419,19 +422,23 @@ export default function IbcProtocolDetailPage() {
   const biosafetyLevel = BIOSAFETY_LEVELS.find((l) => l.value === application.biosafetyLevel);
   const StatusIcon = currentStatus?.icon || FileText;
 
-  const handleStatusUpdate = () => {
-    if (!newWorkflowStatus) return;
+  const handleStatusUpdate = (targetStatus?: string, options?: { requireComment?: boolean }) => {
+    const status = targetStatus ?? newWorkflowStatus;
+    if (!status) return;
 
-    if (!reviewComments.trim()) {
+    // A comment is only mandatory for "send back" / reversal actions, not for
+    // forward progressions like accepting, assigning reviewers, or approving.
+    const requireComment = options?.requireComment ?? true;
+    if (requireComment && !reviewComments.trim()) {
       toast({
         title: "Comment Required",
-        description: "Please provide a comment explaining this workflow action before proceeding.",
+        description: "Please add a comment explaining why you are sending this protocol back.",
         variant: "destructive",
       });
       return;
     }
 
-    if (newWorkflowStatus === "under_review" && selectedReviewers.length === 0) {
+    if (status === "under_review" && selectedReviewers.length === 0) {
       toast({
         title: "Reviewers Required",
         description: "Please select at least one reviewer when changing status to 'Under Review'.",
@@ -441,11 +448,11 @@ export default function IbcProtocolDetailPage() {
     }
 
     const updateData: any = {
-      status: newWorkflowStatus,
+      status,
       reviewComments: reviewComments || undefined,
     };
 
-    if (newWorkflowStatus === "under_review" && selectedReviewers.length > 0) {
+    if (status === "under_review" && selectedReviewers.length > 0) {
       updateData.reviewerAssignments = selectedReviewers.map((reviewerId) => ({
         reviewerId,
         assignedDate: new Date().toISOString(),
@@ -1148,9 +1155,9 @@ export default function IbcProtocolDetailPage() {
                         <Button
                           onClick={() => {
                             setNewWorkflowStatus("vetted");
-                            handleStatusUpdate();
+                            handleStatusUpdate("vetted", { requireComment: false });
                           }}
-                          disabled={updateStatusMutation.isPending || !reviewComments.trim()}
+                          disabled={updateStatusMutation.isPending}
                           className="bg-purple-600 hover:bg-purple-700"
                           data-testid="button-accept-vetted"
                         >
@@ -1160,7 +1167,7 @@ export default function IbcProtocolDetailPage() {
                         <Button
                           onClick={() => {
                             setNewWorkflowStatus("draft");
-                            handleStatusUpdate();
+                            handleStatusUpdate("draft");
                           }}
                           disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                           variant="outline"
@@ -1179,7 +1186,7 @@ export default function IbcProtocolDetailPage() {
                             setNewWorkflowStatus("under_review");
                             setShowReviewerSelection(true);
                           }}
-                          disabled={updateStatusMutation.isPending || !reviewComments.trim()}
+                          disabled={updateStatusMutation.isPending}
                           className="bg-yellow-600 hover:bg-yellow-700"
                           data-testid="button-assign-reviewers"
                         >
@@ -1189,7 +1196,7 @@ export default function IbcProtocolDetailPage() {
                         <Button
                           onClick={() => {
                             setNewWorkflowStatus("submitted");
-                            handleStatusUpdate();
+                            handleStatusUpdate("submitted");
                           }}
                           disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                           variant="outline"
@@ -1206,9 +1213,9 @@ export default function IbcProtocolDetailPage() {
                         <Button
                           onClick={() => {
                             setNewWorkflowStatus("active");
-                            handleStatusUpdate();
+                            handleStatusUpdate("active", { requireComment: false });
                           }}
-                          disabled={updateStatusMutation.isPending || !reviewComments.trim()}
+                          disabled={updateStatusMutation.isPending}
                           className="bg-green-600 hover:bg-green-700"
                           data-testid="button-approve"
                         >
@@ -1218,7 +1225,7 @@ export default function IbcProtocolDetailPage() {
                         <Button
                           onClick={() => {
                             setNewWorkflowStatus("vetted");
-                            handleStatusUpdate();
+                            handleStatusUpdate("vetted");
                           }}
                           disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                           variant="outline"
@@ -1234,7 +1241,7 @@ export default function IbcProtocolDetailPage() {
                       <Button
                         onClick={() => {
                           setNewWorkflowStatus("expired");
-                          handleStatusUpdate();
+                          handleStatusUpdate("expired");
                         }}
                         disabled={updateStatusMutation.isPending || !reviewComments.trim()}
                         variant="destructive"
@@ -1342,7 +1349,7 @@ export default function IbcProtocolDetailPage() {
                     <div className="flex gap-2 mt-4">
                       <Button
                         onClick={() => {
-                          handleStatusUpdate();
+                          handleStatusUpdate("under_review", { requireComment: false });
                           setShowReviewerSelection(false);
                         }}
                         disabled={updateStatusMutation.isPending || selectedReviewers.length === 0}
@@ -1360,19 +1367,46 @@ export default function IbcProtocolDetailPage() {
 
                 {/* Review comment */}
                 <div>
-                  <label className="text-sm font-medium">Review Comments</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-medium">Review Comments</label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-muted-foreground"
+                      onClick={() => setCommentExpanded((v) => !v)}
+                      title={commentExpanded ? "Shrink comment box" : "Expand comment box"}
+                      data-testid="button-toggle-comment-size"
+                    >
+                      {commentExpanded ? (
+                        <>
+                          <Minimize2 className="h-4 w-4 mr-1" />
+                          Shrink
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="h-4 w-4 mr-1" />
+                          Expand
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Textarea
                     placeholder="Add comments about this status change..."
                     value={reviewComments}
                     onChange={(e) => setReviewComments(e.target.value)}
-                    rows={4}
+                    rows={commentExpanded ? 16 : 4}
+                    className={commentExpanded ? "resize-y min-h-[16rem]" : "resize-y"}
                     data-testid="input-review-comments"
                   />
                 </div>
 
                 {!reviewComments.trim() && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">Please provide a comment to enable workflow actions</p>
+                    <p className="text-sm text-amber-800">
+                      A comment is required for send-back actions (Return to Applicant, Withdraw Vetting,
+                      Return for Re-vetting, Mark as Expired). Accepting, assigning reviewers, and approving do not require one.
+                    </p>
                   </div>
                 )}
               </CardContent>
