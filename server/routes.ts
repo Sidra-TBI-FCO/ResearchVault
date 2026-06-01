@@ -4297,7 +4297,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get PI details for the comment
       const pi = await storage.getScientist(application.principalInvestigatorId);
-      const piName = pi ? pi.name : 'Principal Investigator';
+      const piFullName = pi
+        ? [pi.honorificTitle, pi.firstName, pi.lastName].filter(Boolean).join(' ').trim()
+        : '';
+      const piName = piFullName || 'Principal Investigator';
 
       // Create the PI comment in the comments table
       await storage.createIbcApplicationComment({

@@ -1,0 +1,1 @@
+- [Scientist has no .name field](scientist-display-name.md) — build display name from honorificTitle+firstName+lastName; raw `pi.name` is always undefined and breaks NOT NULL inserts.
