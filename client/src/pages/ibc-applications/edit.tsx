@@ -6288,7 +6288,7 @@ export default function IbcApplicationEdit() {
 
             {/* Right Sidebar - Collapsible on desktop to free up editing width */}
             <div className={`${sidebarCollapsed ? "w-10" : "w-80"} flex-shrink-0 hidden lg:block transition-[width] duration-200`}>
-              <div className="sticky top-4 z-50 space-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
+              <div className="sticky top-4 z-50 space-y-4 h-[calc(100vh-6rem)] overflow-y-auto pr-1">
                 {/* Collapse / expand toggle */}
                 {sidebarCollapsed ? (
                   <button
