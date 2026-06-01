@@ -1,2 +1,3 @@
 - [Scientist has no .name field](scientist-display-name.md) — build display name from honorificTitle+firstName+lastName; raw `pi.name` is always undefined and breaks NOT NULL inserts.
 - [IBC office view data](ibc-office-view-data.md) — office read-only view reads DB column names (not edit-form aliases); stored checkbox/array values are already human-readable; reuse *Tab components with isReadOnly.
+- [IBC protocol read-only view](ibc-protocol-view.md) — office + reviewer share `IbcProtocolView` (sections + jump nav); each page keeps its own header and passes role controls via the `sidebar` slot.
