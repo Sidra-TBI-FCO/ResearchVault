@@ -1,5 +1,44 @@
 # Research Portal System - Architecture Summary
 
+## Product
+
+### One-liner
+Q-BRIDGE is a shared research governance portal that lets Qatar's biomedical institutions run IRB, IBC, grant, and publication workflows in one place.
+
+### What it does
+Q-BRIDGE replaces the scattered spreadsheets, email threads, and PDF forms that research offices use to track compliance and project activity. Investigators submit IRB and IBC applications through structured multi-tab forms, office reviewers move them through a status workflow with timestamped comments, and the same records connect to the underlying scientists, programs, projects, grants, contracts, patents, and publications. Staff can see a unified history of every submission, revision, and approval against the project it belongs to.
+
+### Who it's for
+- Principal investigators and research scientists
+- IRB and IBC office staff and reviewers
+- Research program and project managers (PMO)
+- Grants and contracts administrators
+- Publications office staff tracking journal metrics
+
+### Key features
+- IRB and IBC application workflow with reviewer comments
+- Multi-institution support (Sidra, HBKU, WCM-Q) with theming
+- Scientists, programs, projects, and research activities registry
+- Grants, contracts, patents, and publications tracking
+- Journal impact factor lookup across 28,000+ journals
+- Facilities, rooms, and biosafety PPE management
+- Document uploads attached to applications and contracts
+
+### Tech stack
+- React 18 + TypeScript + Vite frontend
+- shadcn/ui on Radix primitives, Tailwind CSS, Framer Motion
+- TanStack Query, Wouter routing, React Hook Form + Zod
+- Express.js backend on Node.js with TypeScript
+- PostgreSQL (Neon serverless) via Drizzle ORM
+- Session auth (express-session + connect-pg-simple, Passport local)
+- Google Cloud Storage with Uppy for document uploads
+
+### Audience tags
+Sidra scientists, Academic partners, Clinicians
+
+### Status
+Internal pilot
+
 ## Overview
 
 The Research Portal System is a full-stack web application built for managing scientific research activities, including scientists, programs, projects, publications, patents, and regulatory applications (IRB/IBC). The application follows a modern monorepo structure with a React frontend and Express.js backend, utilizing PostgreSQL for data persistence.
@@ -125,7 +164,86 @@ The Research Portal System is a full-stack web application built for managing sc
 - Environment-based configuration
 - Backup and recovery procedures (external to application)
 
+## Authentication (multi-provider, SSO off by default)
+
+The app has one unified auth system with four modes, selected by the
+`AUTH_MODE` environment variable:
+
+| `AUTH_MODE` | What it does |
+|---|---|
+| `local` (default) | Local username/password login. In development a dummy "Iris Administrator" session is injected and the sidebar role selector is active — the original role-emulation experience. |
+| `demo` | Auto-injects a shared guest user on every request, no login wall. |
+| `ldap` | Username/password validated against an LDAP / Active Directory server (uses `ldapts`). |
+| `oidc` | OpenID Connect single sign-on (PKCE + end-session logout). Microsoft Entra ID is just a configured OIDC issuer. |
+
+**SSO (ldap/oidc) is OFF by default.** With `AUTH_MODE` unset or set to
+`local`/`demo`, behaviour is exactly as before: the sidebar role selector and
+local login form remain active and there are no SSO redirects.
+
+### Schema migration (required before enabling SSO)
+
+The provisioning flow depends on two columns on `users`:
+`auth_provider` (default `'local'`, NOT NULL) and `entra_oid` (nullable, unique —
+reused as the generic external subject id). Apply either:
+
+- `npm run db:push` against the target database, or
+- `migrations/20260525_add_entra_auth_columns.sql` directly.
+
+The migration is idempotent (`IF NOT EXISTS`) and safe on existing rows.
+
+### Enabling OIDC (including Microsoft Entra ID)
+
+Set `AUTH_MODE=oidc` and these variables in the deployment:
+
+| Variable | Required | Description |
+|---|---|---|
+| `OIDC_ISSUER_URL` | yes | Issuer URL. For Entra: `https://login.microsoftonline.com/<tenant>/v2.0` |
+| `OIDC_CLIENT_ID` | yes | Application (client) ID |
+| `OIDC_CLIENT_SECRET` | yes | Client secret value |
+| `OIDC_REDIRECT_URI` | yes | Must match a registered redirect, e.g. `https://qbridge.sidra.org/api/auth/callback` |
+| `OIDC_PROVIDER_NAME` | no | Sign-in button label, e.g. `Microsoft` (default `SSO`) |
+| `OIDC_SCOPE` | no | Defaults to `openid profile email` |
+| `OIDC_CLAIM_SUBJECT` / `OIDC_CLAIM_USERNAME` / `OIDC_CLAIM_NAME` / `OIDC_CLAIM_EMAIL` | no | Claim mappings (defaults `sub` / `preferred_username` / `name` / `email`) |
+| `OIDC_POST_LOGOUT_REDIRECT_URI` | no | Where the provider sends the user after sign-out (defaults to `<host>/login`) |
+| `AUTH_DEFAULT_ROLE` | no | Role for new SSO users on first sign-in (default `Investigator`) |
+| `APP_URL` | no | Public app origin, used to build the default redirect URI |
+
+### Enabling LDAP
+
+Set `AUTH_MODE=ldap` and: `LDAP_URL`, `LDAP_BIND_DN`, `LDAP_BIND_PASSWORD`,
+`LDAP_SEARCH_BASE`, `LDAP_SEARCH_FILTER` (use the `{{username}}` placeholder,
+e.g. `(sAMAccountName={{username}})`). Optional field mappings:
+`LDAP_USER_FIELD_USERNAME` / `_NAME` / `_EMAIL`, and TLS controls
+`LDAP_TLS` / `LDAP_TLS_REJECT_UNAUTHORIZED`.
+
+### Behaviour when SSO is on
+
+- The local username/password form and the sidebar role selector are hidden.
+- OIDC shows a single "Sign in with `<provider name>`" button.
+- New users are auto-provisioned (OIDC matched on subject id → email → username;
+  LDAP matched on email → username) and assigned `AUTH_DEFAULT_ROLE`.
+- OIDC sign-out clears the local session and redirects through the provider's
+  end-session endpoint.
+
+The server logs the active mode on startup, e.g.
+`[auth] SSO ENABLED — mode=oidc` or `[auth] SSO DISABLED — mode=local`.
+
+### Disabling
+
+Set `AUTH_MODE=local` (or leave it unset) and restart. Behaviour returns to the
+role-emulation flow with no SSO redirects.
+
 ## Changelog
+- June 7, 2026. Unified authentication into one multi-provider system selected by `AUTH_MODE` (local default / demo / ldap / oidc), SSO off by default. Replaced the Entra-specific module with a generic OIDC provider (PKCE + end-session logout; Entra is just a configured issuer) and added an LDAP provider (`ldapts`). Updated `/api/auth/config` to expose mode + provider name, refreshed the client useAuth/login/Sidebar and the Settings auth panel (SSO toggle off by default).
+- May 31, 2026. Made the IBC application edit page's right sidebar (Communication History, Submission Comment, Save/Submit) collapsible on desktop to give the main form more editing width
+- January 20, 2026. Redesigned IBC application edit page with two-column layout: main form on left, sticky right sidebar with Communication History, Submission Comment, and Save/Submit buttons for better usability
+- January 20, 2026. Removed redundant Risk Group Classification field from IBC applications as Biosafety Level already provides this information
+- January 15, 2026. Added Team Management functionality to Settings with three tabs (Layout & Theme, Team Members, Feature Requests). Team members can be categorized as Element Leads, Faculty Testers, or Developers with full CRUD operations and photo support.
+- January 6, 2026. Added configurable abbreviations (PRM/PRJ/SDR etc.) per institution with sidebar integration
+- January 6, 2026. Added WCM-Q (Weill Cornell Medicine-Qatar) as third institution with Cornell red color theme
+- January 6, 2026. Added configurable project management labels (Tier 1/2/3) per institution in Settings with localStorage persistence
+- January 6, 2026. Renamed QBRI to HBKU (Hamad Bin Khalifa University) in theme system
+- December 29, 2025. Added external profile links to Staff information page: ORCID, LinkedIn, Google Scholar, and Web of Science Author Profile with clickable buttons and branded icons
 - September 1, 2025. Added pagination (100 records per page) and column sorting to Publication Office for faster loading of 3,000+ journal records
 - September 1, 2025. Enhanced publication detail pages to show three-year impact factor comparison: year before publication, publication year (bold/larger), and most current year
 - September 1, 2025. Implemented clickable column headers with sort indicators for all JCR fields with default rank ascending sort

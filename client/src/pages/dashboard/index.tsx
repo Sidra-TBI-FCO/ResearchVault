@@ -19,22 +19,22 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
         <div className="flex space-x-3">
           <Select defaultValue="30days">
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px]" data-testid="select-time-period">
               <SelectValue placeholder="Time period" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="quarter">This Quarter</SelectItem>
-              <SelectItem value="year">This Year</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="30days" data-testid="select-30days">Last 30 Days</SelectItem>
+              <SelectItem value="quarter" data-testid="select-quarter">This Quarter</SelectItem>
+              <SelectItem value="year" data-testid="select-year">This Year</SelectItem>
+              <SelectItem value="all" data-testid="select-all">All Time</SelectItem>
             </SelectContent>
           </Select>
           
           <Link href="/research-activities/create">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-new-research-activity">
               <Plus className="h-4 w-4 mr-1" /> New Research Activity
             </Button>
           </Link>

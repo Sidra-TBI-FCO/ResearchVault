@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Scientist } from "@shared/schema";
 import { ChevronUp, ChevronDown, Users } from "lucide-react";
-import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { formatFullName } from "@/utils/nameUtils";
+import { ScientistAvatar } from "@/components/ScientistAvatar";
 
 interface OrgChartProps {
   scientistId: number;
@@ -77,7 +77,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
         {/* Line Manager */}
         {scientist.supervisorId && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronUp className="h-4 w-4" />
               Reports to
             </div>
@@ -90,14 +90,10 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                 onClick={() => onNavigate(lineManager.id)}
               >
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                      {lineManager.profileImageInitials || getInitials(lineManager)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ScientistAvatar scientist={lineManager} className="h-8 w-8" fallbackClassName="text-xs" />
                   <div className="text-left">
                     <div className="font-medium text-sm">{formatFullName(lineManager)}</div>
-                    <div className="text-xs text-neutral-500">{lineManager.jobTitle || 'No title'}</div>
+                    <div className="text-xs text-muted-foreground">{lineManager.jobTitle || 'No title'}</div>
                   </div>
                 </div>
               </Button>
@@ -107,20 +103,16 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
 
         {/* Current Scientist (highlighted) */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <div className="w-4 h-4" /> {/* Spacer */}
             Current
           </div>
           <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                  {scientist.profileImageInitials || getInitials(scientist)}
-                </AvatarFallback>
-              </Avatar>
+              <ScientistAvatar scientist={scientist} className="h-8 w-8" fallbackClassName="text-xs" />
               <div>
                 <div className="font-medium text-sm">{formatFullName(scientist)}</div>
-                <div className="text-xs text-neutral-600">{scientist.jobTitle || 'No title'}</div>
+                <div className="text-xs text-muted-foreground">{scientist.jobTitle || 'No title'}</div>
               </div>
             </div>
           </div>
@@ -129,7 +121,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
         {/* Direct Reports */}
         {reportsLoading ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronDown className="h-4 w-4" />
               Direct Reports
             </div>
@@ -137,7 +129,7 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
           </div>
         ) : directReports && directReports.length > 0 ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronDown className="h-4 w-4" />
               Direct Reports ({directReports.length})
             </div>
@@ -150,14 +142,10 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
                   onClick={() => onNavigate(report.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-neutral-100 text-neutral-700 text-xs">
-                        {report.profileImageInitials || getInitials(report)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ScientistAvatar scientist={report} className="h-8 w-8" fallbackClassName="bg-neutral-100 text-neutral-700 text-xs" />
                     <div className="text-left">
                       <div className="font-medium text-sm">{formatFullName(report)}</div>
-                      <div className="text-xs text-neutral-500">{report.jobTitle || 'No title'}</div>
+                      <div className="text-xs text-muted-foreground">{report.jobTitle || 'No title'}</div>
                     </div>
                   </div>
                 </Button>
@@ -166,11 +154,11 @@ export function OrgChart({ scientistId, onNavigate }: OrgChartProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ChevronDown className="h-4 w-4" />
               Direct Reports
             </div>
-            <div className="text-sm text-neutral-400 text-center py-4">
+            <div className="text-sm text-foreground text-center py-4">
               No direct reports
             </div>
           </div>

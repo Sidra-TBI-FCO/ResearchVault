@@ -4,6 +4,24 @@ import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
 import { type Request, type Response, type NextFunction } from "express";
 import session from "express-session";
+import {
+  getOidcConfig,
+  isOidcConfigured,
+  startOidcFlow,
+  handleOidcCallback,
+  buildOidcLogoutUrl,
+} from "./authProviders/oidc";
+import { authenticateLdap } from "./authProviders/ldap";
+
+// ── Session types ────────────────────────────────────────────────────────────
+
+export interface SessionUser {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 // ── Session types ──────────────────────────────────────────────────────────────
 

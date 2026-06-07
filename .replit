@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "python-3.11", "postgresql-16"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
@@ -14,22 +14,6 @@ run = ["npm", "run", "start"]
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 39325
-externalPort = 3001
-
-[[ports]]
-localPort = 43259
-externalPort = 3002
-
-[[ports]]
-localPort = 45593
-externalPort = 3003
-
-[[ports]]
-localPort = 46637
-externalPort = 3000
 
 [workflows]
 runButton = "Project"
@@ -53,3 +37,8 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000

@@ -1,0 +1,37 @@
+-- Backfill note for manuscript_history.changed_by
+--
+-- Background
+-- ----------
+-- Older publication status changes were attributed to a hardcoded "default
+-- user" (changed_by = 1) instead of the real signed-in user. The publication
+-- create handler used the same default, and the status PATCH handler used to
+-- pick up an arbitrary scientist id. As of 2026-05-25, both write paths now
+-- read req.session.user.id and store the real users.id.
+--
+-- The detail page enriches each history row by left-joining users (the new
+-- shape) and scientists (the legacy shape) on changed_by, preferring the
+-- users.name when both match. Rows whose changed_by no longer points at a
+-- live record render as "Unknown user".
+--
+-- What to do with old rows
+-- ------------------------
+-- We intentionally do NOT rewrite changed_by automatically: there is no
+-- reliable signal for who actually performed those changes, and overwriting
+-- them with the legacy default would erase even the small audit trail that
+-- exists ("this entry predates real attribution").
+--
+-- Two manual remediation options, in order of preference:
+--
+-- 1. Leave the stale rows alone. They will render as "Unknown user" in the
+--    timeline, which truthfully reflects what we know.
+--
+-- 2. If a deployment wants to relabel pre-cutover rows, run a targeted
+--    UPDATE such as the example below (uncomment, adjust the cutover
+--    timestamp, and pick a real attribution user/role):
+--
+-- UPDATE manuscript_history
+--    SET changed_by = (SELECT id FROM users WHERE username = 'legacy.import')
+--  WHERE created_at < TIMESTAMP '2026-05-25'
+--    AND changed_by = 1;
+--
+-- This file is documentation only and runs no statements.

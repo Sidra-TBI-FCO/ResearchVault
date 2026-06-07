@@ -76,12 +76,12 @@ export default function DataManagementPlanDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Data Management Plan Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Data Management Plan Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The data management plan you're looking for could not be found.</p>
+              <p className="text-lg text-foreground">The data management plan you're looking for could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/data-management-plans")}>
                 Return to Data Management Plans List
               </Button>
@@ -100,7 +100,7 @@ export default function DataManagementPlanDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">{dataManagementPlan.title}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{dataManagementPlan.title}</h1>
         </div>
         <Button 
           onClick={() => navigate(`/data-management-plans/${id}/edit`)}
@@ -134,7 +134,7 @@ export default function DataManagementPlanDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Related Research Activity</h3>
+                  <h3 className="text-sm font-medium text-foreground">Related Research Activity</h3>
                   <div className="flex items-center gap-1">
                     <Layers className="h-3 w-3" />
                     <span>
@@ -156,7 +156,7 @@ export default function DataManagementPlanDetail() {
 
               {dataManagementPlan.description && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">Description</h3>
+                  <h3 className="text-sm font-medium text-foreground">Description</h3>
                   <p className="mt-1">{dataManagementPlan.description}</p>
                 </div>
               )}
@@ -228,7 +228,7 @@ export default function DataManagementPlanDetail() {
               <CardTitle>Data Files</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-neutral-400">No data files available.</p>
+              <p className="text-foreground">No data files available.</p>
               <Button variant="outline" className="w-full mt-4" disabled>
                 <Database className="h-4 w-4 mr-2" /> Add Data File
               </Button>

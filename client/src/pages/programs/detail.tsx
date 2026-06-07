@@ -126,12 +126,12 @@ export default function ProgramDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Program Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Program Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The program you're looking for could not be found.</p>
+              <p className="text-lg text-foreground">The program you're looking for could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/programs")}>
                 Return to Programs List
               </Button>
@@ -150,7 +150,7 @@ export default function ProgramDetail() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">{program.name}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{program.name}</h1>
         </div>
         <Button 
           className="bg-sidra-teal hover:bg-sidra-teal-dark text-white font-medium px-4 py-2 shadow-sm"
@@ -170,14 +170,14 @@ export default function ProgramDetail() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-semibold">{program.name}</h2>
-                <div className="text-neutral-400 flex items-center gap-1 mt-1">
+                <div className="text-foreground flex items-center gap-1 mt-1">
                   <Badge variant="outline" className="rounded-sm bg-blue-50 text-blue-700 border-blue-200">{program.programId}</Badge>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Program Director</h3>
+                  <h3 className="text-sm font-medium text-foreground">Program Director</h3>
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>
@@ -197,7 +197,7 @@ export default function ProgramDetail() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Research Co-Lead</h3>
+                  <h3 className="text-sm font-medium text-foreground">Research Co-Lead</h3>
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>
@@ -217,7 +217,7 @@ export default function ProgramDetail() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Clinical Co-Lead 1</h3>
+                  <h3 className="text-sm font-medium text-foreground">Clinical Co-Lead 1</h3>
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>
@@ -237,7 +237,7 @@ export default function ProgramDetail() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Clinical Co-Lead 2</h3>
+                  <h3 className="text-sm font-medium text-foreground">Clinical Co-Lead 2</h3>
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>
@@ -257,7 +257,7 @@ export default function ProgramDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Added Date</h3>
+                  <h3 className="text-sm font-medium text-foreground">Added Date</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>{program.createdAt ? format(new Date(program.createdAt), 'MMM d, yyyy') : 'Not specified'}</span>
@@ -265,7 +265,7 @@ export default function ProgramDetail() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-neutral-400">Last Updated</h3>
+                  <h3 className="text-sm font-medium text-foreground">Last Updated</h3>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>{program.updatedAt ? format(new Date(program.updatedAt), 'MMM d, yyyy') : 'Not specified'}</span>
@@ -275,7 +275,7 @@ export default function ProgramDetail() {
 
               {program.description && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-neutral-400">Description</h3>
+                  <h3 className="text-sm font-medium text-foreground">Description</h3>
                   <p className="mt-1">{program.description}</p>
                 </div>
               )}
@@ -326,7 +326,7 @@ export default function ProgramDetail() {
                 </Table>
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-neutral-400 mb-4">No projects have been added to this program yet.</p>
+                  <p className="text-foreground mb-4">No projects have been added to this program yet.</p>
                   <Button variant="outline" size="sm" onClick={() => navigate("/projects/create")}>
                     <Plus className="h-4 w-4 mr-2" /> Add Project
                   </Button>
@@ -340,7 +340,7 @@ export default function ProgramDetail() {
               <CardTitle>Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-neutral-400">No documents available.</p>
+              <p className="text-foreground">No documents available.</p>
               <Button variant="outline" className="w-full mt-4" disabled>
                 <FileText className="h-4 w-4 mr-2" /> Add Document
               </Button>

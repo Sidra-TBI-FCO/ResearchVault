@@ -11,7 +11,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useTheme, themes } from "@/contexts/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useTheme, themes, type ThemeName } from "@/contexts/ThemeContext";
+import qbridgeLogo from "@assets/image_1767775219373.png";
 
 interface DummyUser {
   id: number;
@@ -31,7 +33,20 @@ interface SidebarProps {
 export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { isHidden, isReadOnly } = usePermissions();
-  const { themeName } = useTheme();
+  const { themeName, currentLabels } = useTheme();
+  const { authConfig, logout } = useAuth();
+  const ssoEnabled = authConfig.ssoEnabled;
+
+  // Simple pluralization helper
+  const pluralize = (word: string): string => {
+    if (word.endsWith('y') && !['a','e','i','o','u'].includes(word[word.length - 2]?.toLowerCase())) {
+      return word.slice(0, -1) + 'ies';
+    }
+    if (word.endsWith('s') || word.endsWith('x') || word.endsWith('ch') || word.endsWith('sh')) {
+      return word + 'es';
+    }
+    return word + 's';
+  };
 
   const handleUserSwitch = (userId: string) => {
     onUserSwitch(parseInt(userId));
@@ -114,17 +129,17 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       items: [
         { 
           href: "/pmo/programs",
-          label: "Programs (PRM)",
+          label: `${pluralize(currentLabels.tier1)} (${currentLabels.abbr1 || 'PRM'})`,
           icon: <Beaker className="w-4 h-4 mr-3" />
         },
         { 
           href: "/pmo/projects",
-          label: "Projects (PRJ)",
+          label: `${pluralize(currentLabels.tier2)} (${currentLabels.abbr2 || 'PRJ'})`,
           icon: <FlaskConical className="w-4 h-4 mr-3" />
         },
         { 
           href: "/pmo/research-activities",
-          label: "Research Activities (SDR)",
+          label: `${pluralize(currentLabels.tier3)} (${currentLabels.abbr3 || 'SDR'})`,
           icon: <Database className="w-4 h-4 mr-3" />
         },
         { 
@@ -233,19 +248,19 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
         mobile ? "h-full" : ""
       )}>
         {/* Logo/Brand */}
-        <div className="h-20 flex items-center justify-between px-4 border-b border-primary/30 bg-primary">
-          <div className="flex items-center space-x-3 w-full">
+        <div className="h-20 flex items-center justify-between px-2 border-b border-primary/30 bg-primary">
+          <div className="flex items-center space-x-2 w-full">
             <img 
-              src="/iris-logo-new.png" 
-              alt="IRIS Logo" 
-              className="h-10 w-10 flex-shrink-0"
+              src={qbridgeLogo} 
+              alt="Q-BRIDGE Logo" 
+              className="h-16 w-16 flex-shrink-0"
             />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="font-semibold text-sm text-white leading-tight">
-                IRIS
+                Q-BRIDGE
               </div>
               <div className="text-xs text-white/90 leading-tight">
-                Intelligent Research Information System
+                Qatar Biomedical Research Inter-Institutional Data & Governance Ecosystem
               </div>
               <div className="text-xs text-white/70 leading-tight mt-0.5">
                 {themes[themeName].name}
@@ -270,28 +285,34 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
             </div>
             <div className="flex-1">
               <div className="font-medium text-card-foreground">{currentUser.role}</div>
-              <div className="text-xs text-muted-foreground">Role-based Testing</div>
+              <div className="text-xs text-muted-foreground">
+                {ssoEnabled
+                  ? `Signed in${authConfig.providerName ? ' with ' + authConfig.providerName : ' via SSO'}`
+                  : 'Role-based Testing'}
+              </div>
             </div>
           </div>
-          
-          {/* Role Selector */}
-          <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
-            <SelectTrigger className="w-full h-8 text-xs">
-              <SelectValue placeholder="Switch role..." />
-            </SelectTrigger>
-            <SelectContent>
-              {availableUsers.map((user) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
-                      {getInitials(user.role)}
+
+          {/* Role Selector (hidden when Microsoft sign-in is enabled) */}
+          {!ssoEnabled && (
+            <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
+              <SelectTrigger className="w-full h-8 text-xs">
+                <SelectValue placeholder="Switch role..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    <div className="flex items-center space-x-2">
+                      <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
+                        {getInitials(user.role)}
+                      </div>
+                      <span>{user.role}</span>
                     </div>
-                    <span>{user.role}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Navigation */}
@@ -371,7 +392,12 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
               Settings
             </Link>
             <div className="border-l border-primary/30 h-5 mx-3"></div>
-            <button className="flex items-center text-sm text-muted-foreground hover:text-primary">
+            <button
+              type="button"
+              onClick={() => { void logout(); }}
+              className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer bg-transparent border-0 p-0"
+              data-testid="button-logout"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </button>

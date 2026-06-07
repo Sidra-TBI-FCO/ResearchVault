@@ -18,8 +18,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { formatFullName } from "@/utils/nameUtils";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertScientistSchema } from "@shared/schema";
 import { Scientist } from "@shared/schema";
@@ -73,7 +75,7 @@ export default function CreateScientist() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
+      invalidateScientistLists();
       toast({
         title: "Scientist created",
         description: "The scientist has been successfully added to the system.",
@@ -107,7 +109,7 @@ export default function CreateScientist() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Add Staff Member</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Add Staff Member</h1>
       </div>
 
       <Card>
@@ -216,47 +218,37 @@ export default function CreateScientist() {
                 <FormField
                   control={form.control}
                   name="jobTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Title</FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          // Automatically set staff type based on job title
-                          const administrativeRoles = ['Management', 'PMO Officer', 'IRB Officer', 'IBC Officer', 'Lab Manager', 'Outcome Officer', 'Grant Officer'];
-                          form.setValue('staffType', administrativeRoles.includes(value) ? 'administrative' : 'scientific');
-                        }}
-                        value={field.value || ""}
-                      >
+                  render={({ field }) => {
+                    const jobTitles = [
+                      'Management', 'Investigator', 'Physician', 'Staff Scientist',
+                      'Research Specialist', 'Research Associate', 'Research Assistant',
+                      'PhD Student', 'Post-doctoral Fellow', 'Lab Manager',
+                      'PMO Officer', 'IRB Officer', 'IBC Officer', 'Outcome Officer', 'Grant Officer',
+                    ];
+                    const administrativeRoles = ['Management', 'PMO Officer', 'IRB Officer', 'IBC Officer', 'Lab Manager', 'Outcome Officer', 'Grant Officer'];
+                    return (
+                      <FormItem>
+                        <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select job title" />
-                          </SelectTrigger>
+                          <SearchableSelect
+                            options={jobTitles.map((t) => ({ value: t, label: t }))}
+                            value={field.value || ""}
+                            onChange={(value) => {
+                              field.onChange(value);
+                              form.setValue('staffType', administrativeRoles.includes(value) ? 'administrative' : 'scientific');
+                            }}
+                            placeholder="Select job title"
+                            searchPlaceholder="Search job titles..."
+                            data-testid="select-job-title"
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Management">Management</SelectItem>
-                          <SelectItem value="Investigator">Investigator</SelectItem>
-                          <SelectItem value="Physician">Physician</SelectItem>
-                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
-                          <SelectItem value="Research Specialist">Research Specialist</SelectItem>
-                          <SelectItem value="Research Associate">Research Associate</SelectItem>
-                          <SelectItem value="Research Assistant">Research Assistant</SelectItem>
-                          <SelectItem value="PhD Student">PhD Student</SelectItem>
-                          <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
-                          <SelectItem value="Lab Manager">Lab Manager</SelectItem>
-                          <SelectItem value="PMO Officer">PMO Officer</SelectItem>
-                          <SelectItem value="IRB Officer">IRB Officer</SelectItem>
-                          <SelectItem value="IBC Officer">IBC Officer</SelectItem>
-                          <SelectItem value="Outcome Officer">Outcome Officer</SelectItem>
-                          <SelectItem value="Grant Officer">Grant Officer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select the job title for this staff member
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        <FormDescription>
+                          Select the job title for this staff member
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 
                 <FormField
@@ -325,23 +317,25 @@ export default function CreateScientist() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Line Manager</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
-                        value={field.value?.toString() || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select line manager (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {allScientists.map((scientist) => (
-                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.firstName} {scientist.lastName} - {scientist.jobTitle || 'No title'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSelect
+                          options={allScientists.map((s) => {
+                            const name = formatFullName(s);
+                            const title = s.jobTitle || 'No title';
+                            return {
+                              value: s.id.toString(),
+                              label: `${name} — ${title}`,
+                              searchText: `${name} ${title} ${s.email ?? ''} ${s.department ?? ''}`,
+                            };
+                          })}
+                          value={field.value?.toString() || ""}
+                          onChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                          placeholder="Select line manager (optional)"
+                          searchPlaceholder="Search by name, title, or department..."
+                          emptyMessage="No staff members found."
+                          data-testid="select-line-manager"
+                        />
+                      </FormControl>
                       <FormDescription>
                         Select the line manager this person reports to (optional)
                       </FormDescription>

@@ -88,7 +88,7 @@ export default function ProjectGroupsList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Projects (PRJ)</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Projects (PRJ)</h1>
         <Link href="/projects/create">
           <Button className="bg-primary-500 text-white">
             <FilePlus className="h-4 w-4 mr-1" /> New Project
@@ -172,7 +172,7 @@ export default function ProjectGroupsList() {
                         <a className="hover:text-primary-500 transition-colors">{group.name}</a>
                       </Link>
                       {group.description && (
-                        <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-1">
                           {group.description}
                         </div>
                       )}
@@ -185,7 +185,7 @@ export default function ProjectGroupsList() {
                           </a>
                         </Link>
                       ) : (
-                        <span className="text-sm text-neutral-200">Not assigned</span>
+                        <span className="text-sm text-muted-foreground">Not assigned</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -197,7 +197,7 @@ export default function ProjectGroupsList() {
                           <span>{group.leadScientist.name}</span>
                         </div>
                       ) : (
-                        <span className="text-neutral-200">Unassigned</span>
+                        <span className="text-muted-foreground">Unassigned</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -209,7 +209,7 @@ export default function ProjectGroupsList() {
                 ))}
                 {!isLoadingProjectGroups && (!filteredProjectGroups || filteredProjectGroups.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       {projectGroups && projectGroups.length > 0 
                         ? "No projects matching your search criteria."
                         : "No projects yet. Create your first project!"}

@@ -17,12 +17,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { formatFullName } from "@/utils/nameUtils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { queryClient, apiRequest, invalidateScientistLists } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertScientistSchema, type Scientist } from "@shared/schema";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 // Extend the insert schema with additional validations
 const editScientistSchema = insertScientistSchema.extend({
@@ -68,6 +81,10 @@ export default function EditScientist() {
       profileImageInitials: "",
       supervisorId: null,
       staffType: "scientific",
+      orcidId: "",
+      linkedInUrl: "",
+      googleScholarUrl: "",
+      webOfScienceId: "",
     },
   });
 
@@ -85,10 +102,61 @@ export default function EditScientist() {
         bio: scientist.bio || "",
         profileImageInitials: scientist.profileImageInitials || "",
         supervisorId: scientist.supervisorId || null,
-        staffType: scientist.staffType || "scientific",
+        staffType: (scientist.staffType as "scientific" | "administrative") || "scientific",
+        orcidId: scientist.orcidId || "",
+        linkedInUrl: scientist.linkedInUrl || "",
+        googleScholarUrl: scientist.googleScholarUrl || "",
+        webOfScienceId: scientist.webOfScienceId || "",
       });
     }
   }, [scientist, form]);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const deleteScientistMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/scientists/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.status === 204) return { ok: true } as const;
+      // Parse 409 (referenced elsewhere) / 404 / 500 etc. — the server
+      // returns { message, blockedBy: { table: count, ... }, details? }
+      // on 409 and { message } otherwise.
+      let body: any = {};
+      try { body = await response.json(); } catch {}
+      const err: any = new Error(body.message || "Failed to delete staff member");
+      err.status = response.status;
+      err.blockedBy = body.blockedBy;
+      throw err;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
+      toast({
+        title: "Staff member deleted",
+        description: "The staff record has been removed.",
+      });
+      navigate("/scientists");
+    },
+    onError: (error: any) => {
+      if (error?.status === 409 && error.blockedBy) {
+        const lines = Object.entries(error.blockedBy as Record<string, number>)
+          .map(([table, count]) => `• ${table}: ${count}`)
+          .join("\n");
+        toast({
+          title: "Cannot delete this staff member",
+          description: `Still referenced by:\n${lines}\n\nReassign or remove these references first.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error?.message || "There was an error deleting the staff member.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
 
   const updateScientistMutation = useMutation({
     mutationFn: async (data: EditScientistFormValues) => {
@@ -96,7 +164,11 @@ export default function EditScientist() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/scientists'] });
+      // Invalidate every scientist/staff list view in one place — keeps the
+      // sidebar staff dropdown, investigators, and scientific-staff pickers
+      // in sync after an edit. Individual scientist detail is invalidated
+      // separately.
+      invalidateScientistLists();
       queryClient.invalidateQueries({ queryKey: ['/api/scientists', id] });
       toast({
         title: "Staff member updated",
@@ -155,7 +227,7 @@ export default function EditScientist() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Staff Member Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Staff Member Not Found</h1>
         </div>
         <Card>
           <CardContent className="pt-6">
@@ -173,7 +245,7 @@ export default function EditScientist() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit Staff Member</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Edit Staff Member</h1>
       </div>
 
       <Card>
@@ -282,42 +354,33 @@ export default function EditScientist() {
                 <FormField
                   control={form.control}
                   name="jobTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Title</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || ""}
-                      >
+                  render={({ field }) => {
+                    const jobTitles = [
+                      'Management', 'Investigator', 'Physician', 'Staff Scientist',
+                      'Research Specialist', 'Research Associate', 'Research Assistant',
+                      'PhD Student', 'Post-doctoral Fellow', 'Lab Manager',
+                      'PMO Officer', 'IRB Officer', 'IBC Officer', 'Outcome Officer', 'Grant Officer',
+                    ];
+                    return (
+                      <FormItem>
+                        <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select job title" />
-                          </SelectTrigger>
+                          <SearchableSelect
+                            options={jobTitles.map((t) => ({ value: t, label: t }))}
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder="Select job title"
+                            searchPlaceholder="Search job titles..."
+                            data-testid="select-job-title"
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Management">Management</SelectItem>
-                          <SelectItem value="Investigator">Investigator</SelectItem>
-                          <SelectItem value="Physician">Physician</SelectItem>
-                          <SelectItem value="Staff Scientist">Staff Scientist</SelectItem>
-                          <SelectItem value="Research Specialist">Research Specialist</SelectItem>
-                          <SelectItem value="Research Associate">Research Associate</SelectItem>
-                          <SelectItem value="Research Assistant">Research Assistant</SelectItem>
-                          <SelectItem value="PhD Student">PhD Student</SelectItem>
-                          <SelectItem value="Post-doctoral Fellow">Post-doctoral Fellow</SelectItem>
-                          <SelectItem value="Lab Manager">Lab Manager</SelectItem>
-                          <SelectItem value="PMO Officer">PMO Officer</SelectItem>
-                          <SelectItem value="IRB Officer">IRB Officer</SelectItem>
-                          <SelectItem value="IBC Officer">IBC Officer</SelectItem>
-                          <SelectItem value="Outcome Officer">Outcome Officer</SelectItem>
-                          <SelectItem value="Grant Officer">Grant Officer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select the job title for this staff member
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        <FormDescription>
+                          Select the job title for this staff member
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 
                 <FormField
@@ -385,25 +448,27 @@ export default function EditScientist() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Line Manager</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
-                        value={field.value?.toString() || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select line manager (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {allScientists
-                            .filter(scientist => scientist.id !== parseInt(id || "0"))
-                            .map((scientist) => (
-                            <SelectItem key={scientist.id} value={scientist.id.toString()}>
-                              {scientist.firstName} {scientist.lastName} - {scientist.jobTitle || 'No title'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSelect
+                          options={allScientists
+                            .filter((s) => s.id !== parseInt(id || "0"))
+                            .map((s) => {
+                              const name = formatFullName(s);
+                              const title = s.jobTitle || 'No title';
+                              return {
+                                value: s.id.toString(),
+                                label: `${name} — ${title}`,
+                                searchText: `${name} ${title} ${s.email ?? ''} ${s.department ?? ''}`,
+                              };
+                            })}
+                          value={field.value?.toString() || ""}
+                          onChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                          placeholder="Select line manager (optional)"
+                          searchPlaceholder="Search by name, title, or department..."
+                          emptyMessage="No staff members found."
+                          data-testid="select-line-manager"
+                        />
+                      </FormControl>
                       <FormDescription>
                         Select the line manager this person reports to (optional)
                       </FormDescription>
@@ -433,27 +498,173 @@ export default function EditScientist() {
                 />
               </div>
 
-              <CardFooter className="flex justify-end space-x-2 px-0">
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate("/scientists")}
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={updateScientistMutation.isPending}
-                >
-                  {updateScientistMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    'Update Scientist'
-                  )}
-                </Button>
+              {/* External Profile Links Section */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-medium mb-4">External Profile Links</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="orcidId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ORCID ID</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="0000-0002-1234-5678" 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Your ORCID identifier (e.g., 0000-0002-1234-5678)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="linkedInUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>LinkedIn Profile URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://linkedin.com/in/username" 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Full URL to your LinkedIn profile
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="googleScholarUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Google Scholar Profile URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://scholar.google.com/citations?user=..." 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Full URL to your Google Scholar profile
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="webOfScienceId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Web of Science Researcher ID</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="AAA-0000-0000" 
+                            autoComplete="off" 
+                            data-1p-ignore="true" 
+                            data-lpignore="true" 
+                            {...field} 
+                            value={field.value || ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Your Web of Science Researcher ID
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <CardFooter className="flex justify-between items-center px-0">
+                <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={deleteScientistMutation.isPending}
+                      data-testid="button-delete-scientist"
+                    >
+                      {deleteScientistMutation.isPending ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Deleting...</>
+                      ) : (
+                        <><Trash2 className="mr-2 h-4 w-4" />Delete</>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this staff member?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This permanently removes the record. If the person is
+                        still referenced anywhere (as a PI, line manager,
+                        project member, author, etc.) the delete will be
+                        blocked and we'll show you what to reassign first.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel data-testid="button-delete-cancel">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        data-testid="button-delete-confirm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          deleteScientistMutation.mutate(undefined, {
+                            onSettled: () => setDeleteOpen(false),
+                          });
+                        }}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/scientists")}
+                    type="button"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateScientistMutation.isPending}
+                  >
+                    {updateScientistMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Scientist'
+                    )}
+                  </Button>
+                </div>
               </CardFooter>
             </form>
           </Form>

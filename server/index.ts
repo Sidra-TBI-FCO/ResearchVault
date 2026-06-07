@@ -1,6 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { registerAuthRoutes, getAuthMode, demoBannerMiddleware } from "./auth";
+import {
+  registerAuthRoutes,
+  logAuthStatus,
+  isSsoEnabled,
+  getAuthMode,
+  demoBannerMiddleware,
+} from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { createHash } from "crypto";
@@ -78,9 +84,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Register authentication routes
+  // Log auth/SSO status on startup
+  logAuthStatus();
+
+  // Register authentication routes (local/ldap/oidc per AUTH_MODE)
   registerAuthRoutes(app);
-  
+
   // Register API routes
   const server = await registerRoutes(app);
 

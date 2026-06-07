@@ -118,7 +118,7 @@ export default function CreateResearchActivity() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Create New Research Activity</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Create New Research Activity</h1>
       </div>
 
       <Card>

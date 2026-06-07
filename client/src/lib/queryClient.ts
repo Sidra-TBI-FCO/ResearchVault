@@ -41,6 +41,19 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+export const SCIENTIST_LIST_QUERY_KEYS: ReadonlyArray<readonly unknown[]> = [
+  ['/api/scientists'],
+  ['/api/scientists/investigators'],
+  ['/api/scientists/scientific-staff'],
+  ['/api/staff'],
+];
+
+export function invalidateScientistLists() {
+  for (const key of SCIENTIST_LIST_QUERY_KEYS) {
+    queryClient.invalidateQueries({ queryKey: key as unknown[] });
+  }
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

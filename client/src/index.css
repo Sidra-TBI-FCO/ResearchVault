@@ -29,11 +29,16 @@
 --sidra-navy: 210 100% 15%;
 --sidra-coral: 15 85% 65%;
 --sidra-gray: 200 10% 50%;
-/* QBRI Theme Colors */
---qbri-cyan: 199 95% 74%;
---qbri-blue: 199 89% 48%;
---qbri-indigo: 238 75% 65%;
---qbri-navy: 250 75% 25%;
+/* HBKU Theme Colors */
+--hbku-cyan: 199 95% 74%;
+--hbku-blue: 199 89% 48%;
+--hbku-indigo: 238 75% 65%;
+--hbku-navy: 250 75% 25%;
+/* WCM-Q Cornell Theme Colors */
+--wcmq-red: 0 72% 51%;
+--wcmq-red-light: 0 72% 70%;
+--wcmq-red-dark: 0 72% 40%;
+--wcmq-gray: 0 0% 45%;
   }
   .dark {
 --background: 210 100% 8%;
@@ -62,108 +67,209 @@
 --sidra-navy: 210 100% 12%;
 --sidra-coral: 15 85% 65%;
 --sidra-gray: 200 10% 60%;
-/* QBRI Theme Colors - Dark */
---qbri-cyan: 199 95% 60%;
---qbri-blue: 199 89% 58%;
---qbri-indigo: 238 75% 75%;
---qbri-navy: 250 75% 15%;
+/* HBKU Theme Colors - Dark */
+--hbku-cyan: 199 95% 60%;
+--hbku-blue: 199 89% 58%;
+--hbku-indigo: 238 75% 75%;
+--hbku-navy: 250 75% 15%;
+/* WCM-Q Cornell Theme Colors - Dark */
+--wcmq-red: 0 72% 60%;
+--wcmq-red-light: 0 72% 75%;
+--wcmq-red-dark: 0 72% 45%;
+--wcmq-gray: 0 0% 55%;
   }
 
 /* Theme-specific overrides */
-[data-theme="qbri"] {
-  --primary: var(--qbri-blue);
-  --secondary: var(--qbri-indigo);
-  --ring: var(--qbri-blue);
-  --accent: var(--qbri-cyan);
+[data-theme="hbku"] {
+  --primary: var(--hbku-blue);
+  --secondary: var(--hbku-indigo);
+  --ring: var(--hbku-blue);
+  --accent: var(--hbku-cyan);
 }
 
-[data-theme="qbri"].dark {
-  --primary: var(--qbri-cyan);
-  --secondary: var(--qbri-indigo);
-  --ring: var(--qbri-cyan);
-  --accent: var(--qbri-navy);
+[data-theme="hbku"].dark {
+  --primary: var(--hbku-cyan);
+  --secondary: var(--hbku-indigo);
+  --ring: var(--hbku-cyan);
+  --accent: var(--hbku-navy);
 }
 
 /* Comprehensive theme overrides for all button colors */
-[data-theme="qbri"] .bg-primary {
-  background-color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .bg-primary {
+  background-color: hsl(var(--hbku-blue));
 }
 
-[data-theme="qbri"] .text-primary {
-  color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .text-primary {
+  color: hsl(var(--hbku-blue));
 }
 
-[data-theme="qbri"] .border-primary {
-  border-color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .border-primary {
+  border-color: hsl(var(--hbku-blue));
 }
 
-[data-theme="qbri"] .hover\:bg-primary:hover {
-  background-color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .hover\:bg-primary:hover {
+  background-color: hsl(var(--hbku-blue));
 }
 
-[data-theme="qbri"] .bg-teal-500,
-[data-theme="qbri"] .bg-teal-600,
-[data-theme="qbri"] .bg-emerald-500,
-[data-theme="qbri"] .bg-green-500,
-[data-theme="qbri"] .bg-green-600 {
-  background-color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .bg-teal-500,
+[data-theme="hbku"] .bg-teal-600,
+[data-theme="hbku"] .bg-emerald-500,
+[data-theme="hbku"] .bg-green-500,
+[data-theme="hbku"] .bg-green-600 {
+  background-color: hsl(var(--hbku-blue));
 }
 
-[data-theme="qbri"] .text-teal-500,
-[data-theme="qbri"] .text-teal-600,
-[data-theme="qbri"] .text-emerald-500,
-[data-theme="qbri"] .text-green-500,
-[data-theme="qbri"] .text-green-600 {
-  color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .text-teal-500,
+[data-theme="hbku"] .text-teal-600,
+[data-theme="hbku"] .text-emerald-500,
+[data-theme="hbku"] .text-green-500,
+[data-theme="hbku"] .text-green-600 {
+  color: hsl(var(--hbku-blue));
 }
 
-[data-theme="qbri"] .border-teal-500,
-[data-theme="qbri"] .border-teal-600,
-[data-theme="qbri"] .border-emerald-500,
-[data-theme="qbri"] .border-green-500,
-[data-theme="qbri"] .border-green-600 {
-  border-color: hsl(var(--qbri-blue));
+[data-theme="hbku"] .border-teal-500,
+[data-theme="hbku"] .border-teal-600,
+[data-theme="hbku"] .border-emerald-500,
+[data-theme="hbku"] .border-green-500,
+[data-theme="hbku"] .border-green-600 {
+  border-color: hsl(var(--hbku-blue));
 }
 
 /* Dark mode overrides for QBRI */
-[data-theme="qbri"].dark .bg-primary {
-  background-color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .bg-primary {
+  background-color: hsl(var(--hbku-cyan));
 }
 
-[data-theme="qbri"].dark .text-primary {
-  color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .text-primary {
+  color: hsl(var(--hbku-cyan));
 }
 
-[data-theme="qbri"].dark .border-primary {
-  border-color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .border-primary {
+  border-color: hsl(var(--hbku-cyan));
 }
 
-[data-theme="qbri"].dark .hover\:bg-primary:hover {
-  background-color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .hover\:bg-primary:hover {
+  background-color: hsl(var(--hbku-cyan));
 }
 
-[data-theme="qbri"].dark .bg-teal-500,
-[data-theme="qbri"].dark .bg-teal-600,
-[data-theme="qbri"].dark .bg-emerald-500,
-[data-theme="qbri"].dark .bg-green-500,
-[data-theme="qbri"].dark .bg-green-600 {
-  background-color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .bg-teal-500,
+[data-theme="hbku"].dark .bg-teal-600,
+[data-theme="hbku"].dark .bg-emerald-500,
+[data-theme="hbku"].dark .bg-green-500,
+[data-theme="hbku"].dark .bg-green-600 {
+  background-color: hsl(var(--hbku-cyan));
 }
 
-[data-theme="qbri"].dark .text-teal-500,
-[data-theme="qbri"].dark .text-teal-600,
-[data-theme="qbri"].dark .text-emerald-500,
-[data-theme="qbri"].dark .text-green-500,
-[data-theme="qbri"].dark .text-green-600 {
-  color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .text-teal-500,
+[data-theme="hbku"].dark .text-teal-600,
+[data-theme="hbku"].dark .text-emerald-500,
+[data-theme="hbku"].dark .text-green-500,
+[data-theme="hbku"].dark .text-green-600 {
+  color: hsl(var(--hbku-cyan));
 }
 
-[data-theme="qbri"].dark .border-teal-500,
-[data-theme="qbri"].dark .border-teal-600,
-[data-theme="qbri"].dark .border-emerald-500,
-[data-theme="qbri"].dark .border-green-500,
-[data-theme="qbri"].dark .border-green-600 {
-  border-color: hsl(var(--qbri-cyan));
+[data-theme="hbku"].dark .border-teal-500,
+[data-theme="hbku"].dark .border-teal-600,
+[data-theme="hbku"].dark .border-emerald-500,
+[data-theme="hbku"].dark .border-green-500,
+[data-theme="hbku"].dark .border-green-600 {
+  border-color: hsl(var(--hbku-cyan));
+}
+
+/* WCM-Q Cornell Theme Overrides */
+[data-theme="wcmq"] {
+  --primary: var(--wcmq-red);
+  --secondary: var(--wcmq-gray);
+  --ring: var(--wcmq-red);
+  --accent: var(--wcmq-red-light);
+}
+
+[data-theme="wcmq"].dark {
+  --primary: var(--wcmq-red-light);
+  --secondary: var(--wcmq-gray);
+  --ring: var(--wcmq-red-light);
+  --accent: var(--wcmq-red-dark);
+}
+
+[data-theme="wcmq"] .bg-primary {
+  background-color: hsl(var(--wcmq-red));
+}
+
+[data-theme="wcmq"] .text-primary {
+  color: hsl(var(--wcmq-red));
+}
+
+[data-theme="wcmq"] .border-primary {
+  border-color: hsl(var(--wcmq-red));
+}
+
+[data-theme="wcmq"] .hover\:bg-primary:hover {
+  background-color: hsl(var(--wcmq-red));
+}
+
+[data-theme="wcmq"] .bg-teal-500,
+[data-theme="wcmq"] .bg-teal-600,
+[data-theme="wcmq"] .bg-emerald-500,
+[data-theme="wcmq"] .bg-green-500,
+[data-theme="wcmq"] .bg-green-600 {
+  background-color: hsl(var(--wcmq-red));
+}
+
+[data-theme="wcmq"] .text-teal-500,
+[data-theme="wcmq"] .text-teal-600,
+[data-theme="wcmq"] .text-emerald-500,
+[data-theme="wcmq"] .text-green-500,
+[data-theme="wcmq"] .text-green-600 {
+  color: hsl(var(--wcmq-red));
+}
+
+[data-theme="wcmq"] .border-teal-500,
+[data-theme="wcmq"] .border-teal-600,
+[data-theme="wcmq"] .border-emerald-500,
+[data-theme="wcmq"] .border-green-500,
+[data-theme="wcmq"] .border-green-600 {
+  border-color: hsl(var(--wcmq-red));
+}
+
+/* Dark mode overrides for WCM-Q */
+[data-theme="wcmq"].dark .bg-primary {
+  background-color: hsl(var(--wcmq-red-light));
+}
+
+[data-theme="wcmq"].dark .text-primary {
+  color: hsl(var(--wcmq-red-light));
+}
+
+[data-theme="wcmq"].dark .border-primary {
+  border-color: hsl(var(--wcmq-red-light));
+}
+
+[data-theme="wcmq"].dark .hover\:bg-primary:hover {
+  background-color: hsl(var(--wcmq-red-light));
+}
+
+[data-theme="wcmq"].dark .bg-teal-500,
+[data-theme="wcmq"].dark .bg-teal-600,
+[data-theme="wcmq"].dark .bg-emerald-500,
+[data-theme="wcmq"].dark .bg-green-500,
+[data-theme="wcmq"].dark .bg-green-600 {
+  background-color: hsl(var(--wcmq-red-light));
+}
+
+[data-theme="wcmq"].dark .text-teal-500,
+[data-theme="wcmq"].dark .text-teal-600,
+[data-theme="wcmq"].dark .text-emerald-500,
+[data-theme="wcmq"].dark .text-green-500,
+[data-theme="wcmq"].dark .text-green-600 {
+  color: hsl(var(--wcmq-red-light));
+}
+
+[data-theme="wcmq"].dark .border-teal-500,
+[data-theme="wcmq"].dark .border-teal-600,
+[data-theme="wcmq"].dark .border-emerald-500,
+[data-theme="wcmq"].dark .border-green-500,
+[data-theme="wcmq"].dark .border-green-600 {
+  border-color: hsl(var(--wcmq-red-light));
 }
 
 @layer base {
@@ -173,12 +279,11 @@
 
   html, body {
     @apply font-sans antialiased bg-background text-foreground;
-    height: 100%;
-    overflow: hidden;
+    min-height: 100%;
   }
 
   #root {
-    height: 100%;
+    min-height: 100%;
   }
 }
 
@@ -269,5 +374,55 @@
   .read-only-content .delete-button,
   .read-only-content .create-button {
     display: none;
+  }
+}
+/* ---- Print / Save as PDF (IBC & IRB full application export) ---- */
+@media screen {
+  .print-footer {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+    /* Native page numbering in the bottom margin box (browsers that support
+       CSS Paged Media margin boxes). The browser's own "Headers and footers"
+       option provides the same Page X / Y stamp as a fallback. */
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10px;
+      color: #6b7280;
+    }
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  /* Hide anything explicitly marked as screen-only chrome */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Preserve status colors, badges, and themed backgrounds when printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Repeating footer with the application identifier on every printed page */
+  .print-footer {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 10px;
+    color: #6b7280;
+    padding: 4px 0;
+    border-top: 1px solid #e5e7eb;
+    text-align: left;
   }
 }

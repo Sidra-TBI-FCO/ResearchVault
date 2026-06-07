@@ -52,7 +52,7 @@ export default function UpcomingDeadlines() {
     const today = new Date();
     const deadline = new Date(dueDate);
     if (isNaN(deadline.getTime())) {
-      return "bg-neutral-50 text-neutral-500";
+      return "bg-neutral-50 text-muted-foreground";
     }
     const diffTime = deadline.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -107,12 +107,12 @@ export default function UpcomingDeadlines() {
               <div key={deadline.id} className="py-4 flex justify-between items-center">
                 <div className="flex items-start">
                   <div className={`mr-4 px-3 py-2 rounded ${statusColor.replace('text', 'bg').replace('500', '100')} text-center min-w-[60px]`}>
-                    <div className="text-xs text-neutral-200 uppercase">{month}</div>
+                    <div className="text-xs text-muted-foreground uppercase">{month}</div>
                     <div className={`text-xl font-semibold ${statusColor.replace('bg', 'text')}`}>{day}</div>
                   </div>
                   <div>
                     <p className="font-medium">{deadline.title}</p>
-                    <p className="text-sm text-neutral-200">{deadline.description}</p>
+                    <p className="text-sm text-muted-foreground">{deadline.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center">

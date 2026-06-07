@@ -2,8 +2,9 @@
 
 export interface PersonName {
   honorificTitle?: string | null;
-  firstName: string;
-  lastName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  name?: string | null;
 }
 
 /**
@@ -13,16 +14,26 @@ export interface PersonName {
  * @returns Formatted full name string
  */
 export function formatFullName(person: PersonName, includeHonorific: boolean = true): string {
-  const parts: string[] = [];
-  
-  if (includeHonorific && person.honorificTitle && person.honorificTitle !== "none") {
-    parts.push(person.honorificTitle);
+  // If we have firstName and lastName, construct the full name
+  if (person.firstName || person.lastName) {
+    const parts: string[] = [];
+    
+    if (includeHonorific && person.honorificTitle && person.honorificTitle !== "none") {
+      parts.push(person.honorificTitle);
+    }
+    
+    if (person.firstName) parts.push(person.firstName);
+    if (person.lastName) parts.push(person.lastName);
+    
+    return parts.join(' ').trim();
   }
   
-  parts.push(person.firstName);
-  parts.push(person.lastName);
+  // Fall back to the name field if firstName/lastName not available
+  if (person.name) {
+    return person.name;
+  }
   
-  return parts.join(' ').trim();
+  return '';
 }
 
 /**

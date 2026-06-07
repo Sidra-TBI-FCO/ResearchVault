@@ -3,8 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar } from "lucide-react";
-import { useTheme, themes } from "@/contexts/ThemeContext";
+import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users, ShieldCheck, KeyRound } from "lucide-react";
+import { useTheme, themes, defaultInstitutionLabels, type InstitutionConfig } from "@/contexts/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import TeamManagement from "@/components/settings/TeamManagement";
 
 // Types for feature requests
 interface FeatureRequest {
@@ -66,7 +68,8 @@ const statusOptions = [
 ];
 
 export default function Settings() {
-  const { mode, themeName, setMode, setTheme, toggleMode } = useTheme();
+  const { mode, themeName, setMode, setTheme, toggleMode, institutionLabels, setInstitutionLabels } = useTheme();
+  const { authConfig } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -255,29 +258,58 @@ IRIS (Intelligent Research Information Management System) is a research manageme
     {
       id: "sidra",
       name: themes.sidra.name,
-      description: "Current teal and green palette",
+      description: "Teal and green palette",
       preview: "bg-gradient-to-r from-teal-500 to-emerald-500"
     },
     {
-      id: "qbri",
-      name: themes.qbri.name,
-      description: "Qatar Biomedical Research Institute blue palette",
+      id: "hbku",
+      name: themes.hbku.name,
+      description: "Blue and indigo palette",
       preview: "bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-800"
+    },
+    {
+      id: "wcmq",
+      name: themes.wcmq.name,
+      description: "Cornell red palette",
+      preview: "bg-gradient-to-r from-red-400 via-red-500 to-red-700"
     }
   ];
+
+  const handleLabelChange = (institution: string, tier: 'tier1' | 'tier2' | 'tier3' | 'abbr1' | 'abbr2' | 'abbr3', value: string) => {
+    setInstitutionLabels({
+      ...institutionLabels,
+      [institution]: {
+        ...institutionLabels[institution],
+        [tier]: value
+      }
+    });
+  };
+
+  const resetLabelsToDefault = () => {
+    setInstitutionLabels(defaultInstitutionLabels);
+    toast({ title: "Labels reset to defaults" });
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <SettingsIcon className="h-6 w-6 text-neutral-400" />
-        <h1 className="text-2xl font-semibold text-neutral-400">Settings</h1>
+        <SettingsIcon className="h-6 w-6 text-foreground" />
+        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
       </div>
 
       <Tabs defaultValue="layout-theme" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1 lg:grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1 lg:grid-cols-4">
           <TabsTrigger value="layout-theme" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             Layout & Theme
+          </TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Team Members
+          </TabsTrigger>
+          <TabsTrigger value="authentication" className="flex items-center gap-2" data-testid="tab-authentication">
+            <ShieldCheck className="h-4 w-4" />
+            Authentication
           </TabsTrigger>
           <TabsTrigger value="feature-requests" className="flex items-center gap-2">
             <MessageSquarePlus className="h-4 w-4" />
@@ -330,11 +362,6 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                             <div className={`w-6 h-6 rounded ${theme.preview}`}></div>
                           </div>
                           <div className="text-sm text-muted-foreground">{theme.description}</div>
-                          {theme.id === "qbri" && (
-                            <div className="text-xs text-blue-600">
-                              Features geometric patterns inspired by QBRI's visual identity
-                            </div>
-                          )}
                         </div>
                       )
                     ))}
@@ -378,6 +405,114 @@ IRIS (Intelligent Research Information Management System) is a research manageme
             </Card>
           </div>
 
+          {/* Institution Labels Configuration - Only show active institution */}
+          {(() => {
+            const activeTheme = themeOptions.find(t => t.id === themeName);
+            if (!activeTheme) return null;
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded ${activeTheme.preview}`}></div>
+                      <span>{activeTheme.name} Labels</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={resetLabelsToDefault}>
+                      Reset to Defaults
+                    </Button>
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Customize the terminology for your institution's project hierarchy
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-tier1`} className="text-xs text-muted-foreground">
+                        Tier 1 Label
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-tier1`}
+                        value={institutionLabels[activeTheme.id]?.tier1 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'tier1', e.target.value)}
+                        placeholder="e.g., Program, Department"
+                        data-testid={`input-label-${activeTheme.id}-tier1`}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-tier2`} className="text-xs text-muted-foreground">
+                        Tier 2 Label
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-tier2`}
+                        value={institutionLabels[activeTheme.id]?.tier2 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'tier2', e.target.value)}
+                        placeholder="e.g., Project, Laboratory"
+                        data-testid={`input-label-${activeTheme.id}-tier2`}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-tier3`} className="text-xs text-muted-foreground">
+                        Tier 3 Label
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-tier3`}
+                        value={institutionLabels[activeTheme.id]?.tier3 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'tier3', e.target.value)}
+                        placeholder="e.g., Research Activity, Study"
+                        data-testid={`input-label-${activeTheme.id}-tier3`}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-abbr1`} className="text-xs text-muted-foreground">
+                        Tier 1 Abbreviation
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-abbr1`}
+                        value={institutionLabels[activeTheme.id]?.abbr1 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'abbr1', e.target.value)}
+                        placeholder="e.g., PRM, DPT"
+                        data-testid={`input-abbr-${activeTheme.id}-abbr1`}
+                        className="uppercase"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-abbr2`} className="text-xs text-muted-foreground">
+                        Tier 2 Abbreviation
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-abbr2`}
+                        value={institutionLabels[activeTheme.id]?.abbr2 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'abbr2', e.target.value)}
+                        placeholder="e.g., PRJ, LAB"
+                        data-testid={`input-abbr-${activeTheme.id}-abbr2`}
+                        className="uppercase"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`${activeTheme.id}-abbr3`} className="text-xs text-muted-foreground">
+                        Tier 3 Abbreviation
+                      </Label>
+                      <Input
+                        id={`${activeTheme.id}-abbr3`}
+                        value={institutionLabels[activeTheme.id]?.abbr3 || ''}
+                        onChange={(e) => handleLabelChange(activeTheme.id, 'abbr3', e.target.value)}
+                        placeholder="e.g., SDR, STD"
+                        data-testid={`input-abbr-${activeTheme.id}-abbr3`}
+                        className="uppercase"
+                        maxLength={5}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           {/* Application Info */}
           <Card>
             <CardHeader>
@@ -396,6 +531,196 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                 <div>
                   <div className="font-medium text-muted-foreground">Display Mode</div>
                   <div>{mode === 'dark' ? 'Dark Mode' : 'Light Mode'}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="team" className="space-y-6">
+          <TeamManagement />
+        </TabsContent>
+
+        <TabsContent value="authentication" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5" />
+                Sign-in Mode
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* SSO enable toggle — defaults to off. The toggle reflects the
+                  server-controlled AUTH_MODE setting; flipping SSO on/off is done
+                  on the server (see the env vars below), so the control is shown
+                  read-only here. */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-1">
+                  <Label className="font-medium" htmlFor="switch-sso-enabled">
+                    Single Sign-On (SSO)
+                  </Label>
+                  <div className="text-sm text-muted-foreground">
+                    Off by default. When off, users pick a role from the sidebar
+                    (development) or sign in with a local username and password.
+                    Turn on by setting <code className="px-1 rounded bg-muted">AUTH_MODE</code> to
+                    {" "}<code className="px-1 rounded bg-muted">ldap</code> or
+                    {" "}<code className="px-1 rounded bg-muted">oidc</code> on the server.
+                  </div>
+                </div>
+                <Switch
+                  id="switch-sso-enabled"
+                  checked={authConfig.ssoEnabled}
+                  disabled
+                  data-testid="switch-sso-enabled"
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-1">
+                  <div className="font-medium" data-testid="text-auth-mode">
+                    {authConfig.mode === "oidc"
+                      ? `Single Sign-On — ${authConfig.providerName || "OIDC"}`
+                      : authConfig.mode === "ldap"
+                      ? "Single Sign-On — LDAP / Active Directory"
+                      : authConfig.mode === "demo"
+                      ? "Demo mode (open access guest)"
+                      : "Local login / role emulation"}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {authConfig.ssoEnabled
+                      ? "Users sign in through your identity provider. The role selector and local login form are hidden."
+                      : authConfig.mode === "demo"
+                      ? "Everyone is signed in as a shared guest. No login is required."
+                      : "Anyone can pick a role from the sidebar to emulate that user. No real authentication is enforced."}
+                  </div>
+                </div>
+                <Badge
+                  variant={authConfig.ssoEnabled ? "default" : "secondary"}
+                  data-testid="badge-auth-status"
+                >
+                  {authConfig.ssoEnabled ? "SSO ON" : "SSO OFF"}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="rounded-md border p-3">
+                  <div className="text-xs uppercase text-muted-foreground">Mode</div>
+                  <div className="font-medium" data-testid="text-auth-provider">{authConfig.mode}</div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs uppercase text-muted-foreground">Logout endpoint</div>
+                  <div className="font-medium">
+                    {authConfig.mode === "oidc"
+                      ? "Provider end-session"
+                      : "Local /api/auth/logout"}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Switching on SSO
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Sign-in is controlled by the <code className="px-1 rounded bg-muted">AUTH_MODE</code> environment
+                variable on the server: <code className="px-1 rounded bg-muted">local</code> (default),
+                {" "}<code className="px-1 rounded bg-muted">demo</code>,
+                {" "}<code className="px-1 rounded bg-muted">ldap</code>, or
+                {" "}<code className="px-1 rounded bg-muted">oidc</code>. Set it in the institution's
+                deployment and restart the app — no code changes required.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ol className="list-decimal list-inside space-y-2 text-sm">
+                <li>
+                  Choose a mode by setting <code className="px-1 rounded bg-muted">AUTH_MODE</code>.
+                  Leave it unset (or <code className="px-1 rounded bg-muted">local</code>) to keep
+                  today's behaviour.
+                </li>
+                <li>For OIDC (e.g. Microsoft Entra ID), set the OIDC variables below; for LDAP set the LDAP variables.</li>
+                <li>Restart the app. The server log shows the active mode, e.g.
+                  <code className="px-1 mx-1 rounded bg-muted">[auth] SSO ENABLED — mode=oidc</code>.</li>
+                <li>To turn SSO back off, set <code className="px-1 rounded bg-muted">AUTH_MODE=local</code> and restart.</li>
+              </ol>
+
+              <div className="rounded-md border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-2 font-medium">Variable</th>
+                      <th className="text-left p-2 font-medium">Mode</th>
+                      <th className="text-left p-2 font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AUTH_MODE</td>
+                      <td className="p-2">all</td>
+                      <td className="p-2 text-muted-foreground">local (default) | demo | ldap | oidc</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">AUTH_DEFAULT_ROLE</td>
+                      <td className="p-2">ldap / oidc</td>
+                      <td className="p-2 text-muted-foreground">Role for new SSO users on first sign-in (default Investigator)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_ISSUER_URL</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Issuer URL, e.g. https://login.microsoftonline.com/&lt;tenant&gt;/v2.0</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_CLIENT_ID</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Application (client) ID</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_CLIENT_SECRET</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Client secret value</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_REDIRECT_URI</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Must match the registered redirect, e.g. https://&lt;host&gt;/api/auth/callback</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_PROVIDER_NAME</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Button label, e.g. "Microsoft"</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_POST_LOGOUT_REDIRECT_URI</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Optional — where the provider sends users after sign-out</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">LDAP_URL</td>
+                      <td className="p-2">ldap</td>
+                      <td className="p-2 text-muted-foreground">Directory URL, e.g. ldaps://ad.example.org:636</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">LDAP_BIND_DN / LDAP_BIND_PASSWORD</td>
+                      <td className="p-2">ldap</td>
+                      <td className="p-2 text-muted-foreground">Service account used to search for users</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">LDAP_SEARCH_BASE / LDAP_SEARCH_FILTER</td>
+                      <td className="p-2">ldap</td>
+                      <td className="p-2 text-muted-foreground">Where/how to find a user (use {"{{username}}"} placeholder)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+                <AlertCircle className="h-4 w-4 mt-0.5 text-amber-600" />
+                <div>
+                  When SSO is enabled, the sidebar role selector and the local username /
+                  password form are hidden. New users are auto-provisioned from their
+                  provider profile and assigned the default role above.
                 </div>
               </div>
             </CardContent>

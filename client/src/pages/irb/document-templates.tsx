@@ -70,8 +70,8 @@ export default function IrbDocumentTemplates() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-400 mb-2">IRB Document Templates</h1>
-        <p className="text-neutral-300">
+        <h1 className="text-2xl font-semibold text-foreground mb-2">IRB Document Templates</h1>
+        <p className="text-muted-foreground">
           Download and complete the required forms for your IRB submission. All templates are provided by Sidra Medicine IRB Office.
         </p>
       </div>

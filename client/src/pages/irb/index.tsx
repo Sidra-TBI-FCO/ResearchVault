@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { EnhancedIrbApplication } from "@/lib/types";
 import { Plus, Search, MoreHorizontal, CalendarRange, FileText, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatFullName } from "@/utils/nameUtils";
+import { formatNameWithJobTitle } from "@/utils/nameUtils";
 
 export default function IrbList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,7 +50,7 @@ export default function IrbList() {
     return (
       app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (app.protocolNumber && app.protocolNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.irbNumber && app.irbNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.principalInvestigator && app.principalInvestigator.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.researchActivity && app.researchActivity.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (app.researchActivity && app.researchActivity.sdrNumber.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -60,16 +60,16 @@ export default function IrbList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">IRB Applications</h1>
+        <h1 className="text-2xl font-semibold text-foreground">IRB Applications</h1>
         <div className="flex gap-2">
           <Link href="/irb/templates">
-            <Button variant="outline">
+            <Button variant="outline" data-testid="button-document-templates">
               <FileText className="h-4 w-4 mr-2" />
               Document Templates
             </Button>
           </Link>
           <Link href="/irb/create">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-new-irb-application">
               New Application
             </Button>
           </Link>
@@ -88,6 +88,7 @@ export default function IrbList() {
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="input-search-irb"
               />
             </div>
           </div>
@@ -126,33 +127,36 @@ export default function IrbList() {
                   <TableRow key={application.id}>
                     <TableCell>
                       <div className="font-medium">
-                        <Link href={`/irb/${application.id}`}>
-                          <a className="hover:text-primary-500 transition-colors">{application.title}</a>
-                        </Link>
+                        <Link href={`/irb/${application.id}`} className="hover:text-primary-500 transition-colors">{application.title}</Link>
                       </div>
                       {application.researchActivity && (
-                        <div className="text-sm text-neutral-200 mt-1">
-                          Research Activity: <Link href={`/research-activities/${application.researchActivity.id}`}>
-                            <a className="text-primary-500 hover:text-primary-600 transition-colors">
-                              {application.researchActivity.sdrNumber} - {application.researchActivity.title}
-                            </a>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Research Activity: <Link href={`/research-activities/${application.researchActivity.id}`} className="text-primary-500 hover:text-primary-600 transition-colors">
+                            {application.researchActivity.sdrNumber} - {application.researchActivity.title}
                           </Link>
                         </div>
                       )}
                       {application.workflowStatus === 'draft' && (
                         <div className="mt-2">
-                          <Link href={`/irb/${application.id}/assembly`}>
-                            <Button size="sm" variant="outline" className="text-xs">
-                              Assemble Protocol
-                            </Button>
-                          </Link>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `/irb/${application.id}/assembly`;
+                            }}
+                            data-testid={`button-assemble-protocol-${application.id}`}
+                          >
+                            Assemble Protocol
+                          </Button>
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-1 text-neutral-200" />
-                        <span>{application.protocolNumber || "—"}</span>
+                        <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span>{application.irbNumber || "—"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -161,23 +165,23 @@ export default function IrbList() {
                           <div className="h-7 w-7 rounded-full bg-primary-200 flex items-center justify-center text-xs text-primary-700 font-medium mr-2">
                             {application.principalInvestigator.profileImageInitials}
                           </div>
-                          <span>{formatFullName(application.principalInvestigator)}</span>
+                          <span>{formatNameWithJobTitle(application.principalInvestigator)}</span>
                         </div>
                       ) : (
-                        <span className="text-gray-400">Unassigned</span>
+                        <span className="text-muted-foreground">Unassigned</span>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
                         {application.submissionDate && (
                           <div className="flex items-center mb-1">
-                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <CalendarRange className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Submitted: {formatDate(application.submissionDate)}</span>
                           </div>
                         )}
                         {application.expirationDate && (
                           <div className="flex items-center">
-                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <CalendarRange className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Expires: {formatDate(application.expirationDate)}</span>
                           </div>
                         )}
@@ -212,7 +216,7 @@ export default function IrbList() {
                 ))}
                 {filteredApplications?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No IRB applications found matching your search.
                     </TableCell>
                   </TableRow>

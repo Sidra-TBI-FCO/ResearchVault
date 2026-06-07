@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, timestamp, boolean, json, uniqueIndex, date, numeric } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -39,6 +40,8 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   role: text("role").notNull().default("user"),
+  authProvider: text("auth_provider").notNull().default("local"), // 'local' | 'demo' | 'ldap' | 'oidc'
+  entraOid: text("entra_oid").unique(), // stable external subject id (OIDC `sub`); column name kept for migration compatibility
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -66,6 +69,11 @@ export const scientists = pgTable("scientists", {
   profileImageInitials: text("profile_image_initials"), // Storing initials for avatar
   supervisorId: integer("supervisor_id"), // Line manager, references scientists.id (optional)
   staffType: text("staff_type").notNull().default("scientific"), // scientific, administrative
+  // External profile links
+  orcidId: text("orcid_id"), // ORCID identifier (e.g., 0000-0002-1234-5678)
+  linkedInUrl: text("linkedin_url"), // LinkedIn profile URL
+  googleScholarUrl: text("google_scholar_url"), // Google Scholar profile URL
+  webOfScienceId: text("web_of_science_id"), // Web of Science Researcher ID
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -228,6 +236,10 @@ export const insertPublicationSchema = createInsertSchema(publications).omit({
 }).extend({
   publicationDate: z.preprocess(
     (val) => {
+      // Empty string from a cleared <input type="date"> must become null —
+      // `new Date("")` produces an Invalid Date which then fails z.date()
+      // validation, blocking the user from clearing a publication date.
+      if (val === '' || val == null) return null;
       if (typeof val === 'string') {
         return new Date(val);
       }
@@ -453,7 +465,9 @@ export const ibcApplications = pgTable("ibc_applications", {
   humanMaterialsTissuesOther: text("human_materials_tissues_other"), // Text input for "Tissues (List below)"
   humanMaterialsOtherMaterial: text("human_materials_other_material"), // Text input for "Other Material (List below)"
   nonHumanPrimateOrigin: boolean("non_human_primate_origin").default(false),
+  nhpExposureKit: boolean("nhp_exposure_kit"), // Do you have an NHP Exposure Kit?
   stemCells: text("stem_cells").array(), // Array of selected stem cell types
+  stemCellsNihRegistry: boolean("stem_cells_nih_registry"), // Are stem cells listed in the NIH Human Embryonic Stem Cell Registry Line?
   
   // Human/NHP Section - Exposure Control Plan
   exposureControlPlanCompliance: boolean("exposure_control_plan_compliance").default(false), // I have read and agree to comply with the Exposure Control Plan
@@ -1041,40 +1055,96 @@ export type RolePermission = typeof rolePermissions.$inferSelect;
 export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 
 // Journal Impact Factors schema
-export const journalImpactFactors = pgTable("journal_impact_factors", {
+// Journals: one row per journal with stable metadata
+export const journals = pgTable("journals", {
   id: serial("id").primaryKey(),
   journalName: text("journal_name").notNull(),
   abbreviatedJournal: text("abbreviated_journal"),
-  year: integer("year").notNull(),
   publisher: text("publisher"),
   issn: text("issn"),
   eissn: text("eissn"),
+  field: text("field"), // JCR category / subject area
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  journalNameIdx: uniqueIndex("journals_name_lower_idx").on(sql`lower(${table.journalName})`),
+}));
+
+// Per-year impact factor metrics for a journal
+export const journalImpactFactorMetrics = pgTable("journal_impact_factor_metrics", {
+  id: serial("id").primaryKey(),
+  journalId: integer("journal_id").notNull().references(() => journals.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
   totalCites: integer("total_cites"),
   totalArticles: integer("total_articles"),
   citableItems: integer("citable_items"),
   citedHalfLife: numeric("cited_half_life", { precision: 10, scale: 3 }),
   citingHalfLife: numeric("citing_half_life", { precision: 10, scale: 3 }),
-  impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }), // JIF 2024
+  impactFactor: numeric("impact_factor", { precision: 10, scale: 3 }),
   fiveYearJif: numeric("five_year_jif", { precision: 10, scale: 3 }),
   jifWithoutSelfCites: numeric("jif_without_self_cites", { precision: 10, scale: 3 }),
   jci: numeric("jci", { precision: 10, scale: 3 }),
-  quartile: text("quartile"), // Q1, Q2, Q3, Q4
+  quartile: text("quartile"),
   rank: integer("rank"),
-  totalCitations: integer("total_citations"), // Keep for backward compatibility
+  totalCitations: integer("total_citations"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  journalYearIdx: uniqueIndex("journal_metrics_journal_year_idx").on(table.journalId, table.year),
+}));
 
-// Create unique index for journal + year combination
-
-export const insertJournalImpactFactorSchema = createInsertSchema(journalImpactFactors).omit({
+export const insertJournalSchema = createInsertSchema(journals).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
+export const insertJournalImpactFactorMetricSchema = createInsertSchema(journalImpactFactorMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertJournal = z.infer<typeof insertJournalSchema>;
+export type Journal = typeof journals.$inferSelect;
+export type InsertJournalImpactFactorMetric = z.infer<typeof insertJournalImpactFactorMetricSchema>;
+export type JournalImpactFactorMetric = typeof journalImpactFactorMetrics.$inferSelect;
+
+// Backwards-compatible flattened shape used by existing callers/UIs:
+// journal metadata + a single year's metrics merged together.
+export type JournalImpactFactor = JournalImpactFactorMetric & {
+  journalName: string;
+  abbreviatedJournal: string | null;
+  publisher: string | null;
+  issn: string | null;
+  eissn: string | null;
+  field: string | null;
+};
+
+// Backwards-compatible insert shape accepted by CSV import / single-row create:
+// callers send journal metadata + per-year metrics in a single object.
+export const insertJournalImpactFactorSchema = z.object({
+  journalName: z.string(),
+  abbreviatedJournal: z.string().nullable().optional(),
+  publisher: z.string().nullable().optional(),
+  issn: z.string().nullable().optional(),
+  eissn: z.string().nullable().optional(),
+  field: z.string().nullable().optional(),
+  year: z.number(),
+  totalCites: z.number().nullable().optional(),
+  totalArticles: z.number().nullable().optional(),
+  citableItems: z.number().nullable().optional(),
+  citedHalfLife: z.union([z.string(), z.number()]).nullable().optional(),
+  citingHalfLife: z.union([z.string(), z.number()]).nullable().optional(),
+  impactFactor: z.union([z.string(), z.number()]).nullable().optional(),
+  fiveYearJif: z.union([z.string(), z.number()]).nullable().optional(),
+  jifWithoutSelfCites: z.union([z.string(), z.number()]).nullable().optional(),
+  jci: z.union([z.string(), z.number()]).nullable().optional(),
+  quartile: z.string().nullable().optional(),
+  rank: z.number().nullable().optional(),
+  totalCitations: z.number().nullable().optional(),
+});
 export type InsertJournalImpactFactor = z.infer<typeof insertJournalImpactFactorSchema>;
-export type JournalImpactFactor = typeof journalImpactFactors.$inferSelect;
 
 // Grants schema
 export const grants = pgTable("grants", {
@@ -1425,3 +1495,50 @@ export const insertRa205aApplicationSchema = createInsertSchema(ra205aApplicatio
 
 export type InsertRa205aApplication = z.infer<typeof insertRa205aApplicationSchema>;
 export type Ra205aApplication = typeof ra205aApplications.$inferSelect;
+
+// Team Members - for public-facing team showcase
+export const TEAM_CATEGORY_VALUES = [
+  "lead",
+  "tester", 
+  "developer"
+] as const;
+
+export const ELEMENT_TYPE_VALUES = [
+  "project_management",
+  "irb",
+  "ibc",
+  "grants",
+  "publications",
+  "contracts",
+  "facilities",
+  "data_management"
+] as const;
+
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  title: text("title"), // Job title or academic title
+  bio: text("bio"),
+  photoUrl: text("photo_url"),
+  categories: text("categories").array().notNull().default([]), // Multiple: lead, tester, developer
+  elementType: text("element_type"), // For leads: project_management, irb, ibc, etc.
+  institution: text("institution"), // Affiliation
+  email: text("email"),
+  linkedInUrl: text("linkedin_url"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type TeamCategory = typeof TEAM_CATEGORY_VALUES[number];
+export type ElementType = typeof ELEMENT_TYPE_VALUES[number];

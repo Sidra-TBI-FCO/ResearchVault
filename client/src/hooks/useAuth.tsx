@@ -10,16 +10,33 @@ interface User {
   role: string;
 }
 
+export type AuthMode = 'demo' | 'local' | 'ldap' | 'oidc';
+
 export interface AuthConfig {
-  mode: 'demo' | 'local' | 'ldap' | 'oidc';
-  oidcProviderName: string | null;
+  // Active auth mode (server-controlled via the AUTH_MODE env var).
+  mode: AuthMode;
+  // True only for the external identity-provider modes (ldap/oidc).
+  ssoEnabled: boolean;
+  // Provider identifier (mirrors `mode`); kept for existing consumers.
+  provider: string;
+  // Display name for the SSO button (e.g. "Microsoft"), null when not OIDC.
+  providerName: string | null;
 }
+
+const DEFAULT_AUTH_CONFIG: AuthConfig = {
+  mode: 'local',
+  ssoEnabled: false,
+  provider: 'local',
+  providerName: null,
+};
 
 interface AuthContextType {
   user: User | null;
   authConfig: AuthConfig | null;
   loading: boolean;
+  authConfig: AuthConfig;
   login: (username: string, password: string) => Promise<boolean>;
+  loginWithSso: () => void;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -29,7 +46,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
+  const [authConfig, setAuthConfig] = useState<AuthConfig>(DEFAULT_AUTH_CONFIG);
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -37,27 +54,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const init = async () => {
       try {
-        const [cfgRes, meRes] = await Promise.all([
-          fetch('/api/auth/config'),
-          fetch('/api/auth/me'),
-        ]);
-
-        if (cfgRes.ok) {
-          const cfg: AuthConfig = await cfgRes.json();
-          setAuthConfig(cfg);
+        const configResponse = await fetch('/api/auth/config');
+        if (configResponse.ok) {
+          setAuthConfig({ ...DEFAULT_AUTH_CONFIG, ...(await configResponse.json()) });
         }
 
-        if (meRes.ok) {
-          const data = await meRes.json();
-          setUser(data.user);
+        const authResponse = await fetch('/api/auth/me');
+        if (authResponse.ok) {
+          const authData = await authResponse.json();
+          setUser(authData.user);
         }
-      } catch {
-        // fail silently — app will redirect to /login if unauthenticated
+      } catch (error) {
+        // Fail silently — the app will redirect to /login if unauthenticated.
       } finally {
         setLoading(false);
       }
     };
-    init();
+
+    initializeAuth();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -67,12 +81,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        toast({ title: 'Welcome back', description: data.user.name });
+        toast({ title: 'Login successful', description: `Welcome back, ${data.user.name}!` });
         return true;
       } else {
         const err = await response.json();
@@ -87,12 +102,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Redirect the browser to start the OIDC (SSO) login flow.
+  const loginWithSso = () => {
+    window.location.href = '/api/auth/oidc';
+  };
+
   const logout = async (): Promise<void> => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } finally {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
-      if (authConfig?.mode !== 'demo') navigate('/login');
+
+      // OIDC logout may return an end-session URL to fully sign out at the IdP.
+      if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (data?.logoutUrl) {
+          window.location.href = data.logoutUrl;
+          return;
+        }
+      }
+
+      if (authConfig.mode !== 'demo') {
+        navigate('/login');
+      }
+      toast({ title: 'Logout successful', description: 'You have been logged out.' });
+    } catch (error) {
+      toast({
+        title: 'Logout error',
+        description: 'An error occurred during logout.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,7 +142,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         authConfig,
         loading,
+        authConfig,
         login,
+        loginWithSso,
         logout,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
@@ -119,8 +161,6 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Route guard — sends unauthenticated users to /login.
-// In demo mode the server already injects a user, so /api/auth/me always succeeds.
 export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }> = ({
   children,
   adminOnly = false,
@@ -129,11 +169,14 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (loading) return;
-    if (authConfig?.mode === 'demo') return; // demo always passes
-    if (!isAuthenticated) navigate('/login');
-    else if (adminOnly && !isAdmin) navigate('/');
-  }, [isAuthenticated, isAdmin, loading, authConfig, navigate, adminOnly]);
+    if (!loading) {
+      if (!isAuthenticated) {
+        navigate('/login');
+      } else if (adminOnly && !isAdmin) {
+        navigate('/');
+      }
+    }
+  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly]);
 
   if (loading) {
     return (
@@ -143,7 +186,7 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
     );
   }
 
-  if (authConfig?.mode !== 'demo' && (!isAuthenticated || (adminOnly && !isAdmin))) {
+  if (!isAuthenticated || (adminOnly && !isAdmin)) {
     return null;
   }
 

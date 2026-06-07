@@ -135,7 +135,6 @@ export default function IrbBoardManager() {
       isActive: true
     };
 
-    console.log('Adding board member with data:', memberData);
     addBoardMemberMutation.mutate(memberData);
   };
 
@@ -209,8 +208,8 @@ export default function IrbBoardManager() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-400 mb-2">IRB Board Manager</h1>
-          <p className="text-neutral-300">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">IRB Board Manager</h1>
+          <p className="text-muted-foreground">
             Manage IRB board members, reviewers, chair, and deputy chair assignments
           </p>
         </div>

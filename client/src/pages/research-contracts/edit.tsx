@@ -358,12 +358,12 @@ export default function ResearchContractEdit() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Research Contract Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Research Contract Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">The research contract you're trying to edit could not be found.</p>
+              <p className="text-lg text-foreground">The research contract you're trying to edit could not be found.</p>
               <Button className="mt-4" onClick={() => navigate("/research-contracts")}>
                 Return to Research Contracts List
               </Button>
@@ -381,7 +381,7 @@ export default function ResearchContractEdit() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Edit Research Contract</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Edit Research Contract</h1>
       </div>
 
       <Form {...form}>
@@ -1012,8 +1012,8 @@ export default function ResearchContractEdit() {
                   </div>
                 ) : (
                   <div className="text-center py-8 border rounded-md bg-neutral-50">
-                    <p className="text-neutral-400">No extensions added yet.</p>
-                    <p className="text-sm text-neutral-300 mt-1">Click "Add Extension" to create the first extension.</p>
+                    <p className="text-foreground">No extensions added yet.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Click "Add Extension" to create the first extension.</p>
                   </div>
                 )}
 

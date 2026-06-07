@@ -19,8 +19,8 @@ function QuickLink({ icon, title, description, href }: QuickLinkProps) {
       <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-500 mb-2">
         {icon}
       </div>
-      <p className="font-medium text-neutral-400 text-sm">{title}</p>
-      <p className="text-xs text-neutral-200 mt-1">{description}</p>
+      <p className="font-medium text-foreground text-sm">{title}</p>
+      <p className="text-xs text-muted-foreground mt-1">{description}</p>
     </Link>
   );
 }

@@ -24,13 +24,14 @@ import {
   Shield, Wrench
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { PermissionWrapper, useElementPermissions } from "@/components/PermissionWrapper";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function FacilitiesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedBuildings, setExpandedBuildings] = useState<Set<number>>(new Set());
   const { currentUser } = useCurrentUser();
-  const { canEdit } = useElementPermissions(currentUser.role, "facilities");
+  const { canEdit } = usePermissions();
 
   const { data: buildings, isLoading: buildingsLoading } = useQuery<Building[]>({
     queryKey: ['/api/buildings'],
@@ -92,7 +93,7 @@ export default function FacilitiesList() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-neutral-400">Facilities</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Facilities</h1>
           <Skeleton className="h-10 w-32" />
         </div>
         <div className="space-y-4">
@@ -115,23 +116,33 @@ export default function FacilitiesList() {
     <PermissionWrapper currentUserRole={currentUser.role} navigationItem="facilities">
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-2xl font-semibold text-neutral-400">Facilities</h1>
-          {canEdit && (
-            <div className="flex gap-2">
+          <h1 className="text-2xl font-semibold text-foreground">Facilities</h1>
+          <div className="flex gap-2">
+            <PermissionWrapper 
+              currentUserRole={currentUser.role} 
+              navigationItem="facilities"
+              requiredPermissions={['canAdd']}
+            >
               <Link href="/facilities/buildings/create">
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2" data-testid="button-add-building">
                   <Building2 className="h-4 w-4" />
                   Add Building
                 </Button>
               </Link>
+            </PermissionWrapper>
+            <PermissionWrapper 
+              currentUserRole={currentUser.role} 
+              navigationItem="facilities"
+              requiredPermissions={['canAdd']}
+            >
               <Link href="/facilities/rooms/create">
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2" data-testid="button-add-room">
                   <Plus className="h-4 w-4" />
                   Add Room
                 </Button>
               </Link>
-            </div>
-          )}
+            </PermissionWrapper>
+          </div>
         </div>
 
       <Card>
@@ -194,21 +205,33 @@ export default function FacilitiesList() {
                         </Badge>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" data-testid="button-building-menu">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/facilities/buildings/edit/${building.id}`}>
-                                Edit Building
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/facilities/rooms/create?buildingId=${building.id}`}>
-                                Add Room
-                              </Link>
-                            </DropdownMenuItem>
+                            <PermissionWrapper 
+                              currentUserRole={currentUser.role} 
+                              navigationItem="facilities"
+                              requiredPermissions={['canEdit']}
+                            >
+                              <DropdownMenuItem asChild>
+                                <Link href={`/facilities/buildings/edit/${building.id}`} data-testid={`button-edit-building-${building.id}`}>
+                                  Edit Building
+                                </Link>
+                              </DropdownMenuItem>
+                            </PermissionWrapper>
+                            <PermissionWrapper 
+                              currentUserRole={currentUser.role} 
+                              navigationItem="facilities"
+                              requiredPermissions={['canAdd']}
+                            >
+                              <DropdownMenuItem asChild>
+                                <Link href={`/facilities/rooms/create?buildingId=${building.id}`} data-testid={`button-add-room-for-building-${building.id}`}>
+                                  Add Room
+                                </Link>
+                              </DropdownMenuItem>
+                            </PermissionWrapper>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -295,13 +318,17 @@ export default function FacilitiesList() {
                                   )}
                                 </TableCell>
                                 <TableCell>
-                                  {canEdit && (
+                                  <PermissionWrapper 
+                                    currentUserRole={currentUser.role} 
+                                    navigationItem="facilities"
+                                    requiredPermissions={['canEdit']}
+                                  >
                                     <Link href={`/facilities/rooms/edit/${room.id}`}>
-                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 edit-button">
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`button-edit-room-${room.id}`}>
                                         <Edit className="h-4 w-4" />
                                       </Button>
                                     </Link>
-                                  )}
+                                  </PermissionWrapper>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -321,13 +348,19 @@ export default function FacilitiesList() {
                 <p className="text-gray-600 mb-4">
                   {searchQuery ? 'Try adjusting your search criteria.' : 'Get started by adding your first building.'}
                 </p>
-                {!searchQuery && canEdit && (
-                  <Link href="/facilities/buildings/create">
-                    <Button className="create-button">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Building
-                    </Button>
-                  </Link>
+                {!searchQuery && (
+                  <PermissionWrapper 
+                    currentUserRole={currentUser.role} 
+                    navigationItem="facilities"
+                    requiredPermissions={['canAdd']}
+                  >
+                    <Link href="/facilities/buildings/create">
+                      <Button className="create-button" data-testid="button-add-building-empty-state">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Building
+                      </Button>
+                    </Link>
+                  </PermissionWrapper>
                 )}
               </div>
             )}

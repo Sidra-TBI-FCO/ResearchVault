@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import { PermissionsProvider } from "@/hooks/usePermissions";
 import { CurrentUserProvider } from "@/hooks/useCurrentUser";
+import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // Dashboard
@@ -88,6 +89,8 @@ import IbcList from "@/pages/ibc";
 import CreateIbc from "@/pages/ibc/create";
 import IbcApplicationDetail from "@/pages/ibc-applications/detail";
 import EditIbcApplication from "@/pages/ibc-applications/edit";
+import IbcApplicationPrintPage from "@/pages/ibc-applications/print";
+import IrbApplicationPrintPage from "@/pages/irb-applications/print";
 
 // IBC Office
 import IbcOfficePage from "@/pages/ibc-office";
@@ -124,6 +127,36 @@ import CertificationsPage from "@/pages/certifications";
 
 // Settings
 import SettingsPage from "@/pages/settings";
+import LoginPage from "@/pages/auth/login";
+import { useAuth, RequireAuth } from "@/hooks/useAuth";
+
+function AuthenticatedAppRoutes() {
+  const { authConfig } = useAuth();
+  if (authConfig.ssoEnabled) {
+    return (
+      <RequireAuth>
+        <AppRouter />
+      </RequireAuth>
+    );
+  }
+  return <AppRouter />;
+}
+
+// Applies the same auth gating as AuthenticatedAppRoutes but WITHOUT the app
+// Layout chrome — used for the dedicated print routes.
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { authConfig } = useAuth();
+  if (authConfig.ssoEnabled) {
+    return <RequireAuth>{children}</RequireAuth>;
+  }
+  return <>{children}</>;
+}
+
+// Public Pages
+import LandingPage from "@/pages/public/landing";
+import DemoPage from "@/pages/public/demo";
+import TeamPage from "@/pages/public/team";
+import AboutPage from "@/pages/public/about";
 
 // Auth
 import LoginPage from "@/pages/auth/login";
@@ -141,7 +174,7 @@ import PmoApplicationDetail from "@/pages/pmo/applications/detail";
 import PmoOfficeReview from "@/pages/pmo/office/index";
 import PmoOfficeReviewDetail from "@/pages/pmo/office/review";
 
-function Router() {
+function AppRouter() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
@@ -149,7 +182,7 @@ function Router() {
       <Layout>
       <Switch>
         {/* Dashboard */}
-        <Route path="/" component={Dashboard} />
+        <Route path="/app" component={Dashboard} />
         
         {/* Scientists & Staff */}
         <Route path="/scientists" component={ScientistsList} />
@@ -310,14 +343,40 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <AuthProvider>
-            <CurrentUserProvider>
-              <PermissionsProvider>
-                <Toaster />
-                <Router />
-              </PermissionsProvider>
-            </CurrentUserProvider>
-          </AuthProvider>
+          <Switch>
+            {/* Public Pages - no auth required */}
+            <Route path="/" component={LandingPage} />
+            <Route path="/about" component={AboutPage} />
+            <Route path="/demo" component={DemoPage} />
+            <Route path="/team" component={TeamPage} />
+            
+            {/* Application Routes - wrapped with providers */}
+            <Route>
+              <AuthProvider>
+                <CurrentUserProvider>
+                  <PermissionsProvider>
+                    <Toaster />
+                    <Switch>
+                      <Route path="/login" component={LoginPage} />
+                      <Route path="/ibc-applications/:id/print">
+                        <AuthGate>
+                          <IbcApplicationPrintPage />
+                        </AuthGate>
+                      </Route>
+                      <Route path="/irb-applications/:id/print">
+                        <AuthGate>
+                          <IrbApplicationPrintPage />
+                        </AuthGate>
+                      </Route>
+                      <Route>
+                        <AuthenticatedAppRoutes />
+                      </Route>
+                    </Switch>
+                  </PermissionsProvider>
+                </CurrentUserProvider>
+              </AuthProvider>
+            </Route>
+          </Switch>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

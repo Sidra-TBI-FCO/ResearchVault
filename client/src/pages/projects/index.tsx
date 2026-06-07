@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users } from "lucide-react";
 import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
 
 interface Program {
   id: number;
@@ -58,6 +60,7 @@ export default function ProjectsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [, setLocation] = useLocation();
+  const { currentUser } = useCurrentUser();
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
@@ -101,14 +104,22 @@ export default function ProjectsList() {
   });
 
   return (
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="projects">
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-semibold text-neutral-400">Projects (PRJ)</h1>
-        <Link href="/projects/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            New Project
-          </Button>
-        </Link>
+        <h1 className="text-2xl font-semibold text-foreground">Projects (PRJ)</h1>
+        <PermissionWrapper
+          currentUserRole={currentUser.role}
+          navigationItem="projects"
+          requiredPermissions={['canAdd']}
+          fallback={null}
+        >
+          <Link href="/projects/create">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-new-project">
+              New Project
+            </Button>
+          </Link>
+        </PermissionWrapper>
       </div>
 
       <Card>
@@ -123,6 +134,7 @@ export default function ProjectsList() {
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="input-search-projects"
               />
             </div>
           </div>
@@ -228,11 +240,18 @@ export default function ProjectsList() {
                               View Details
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/projects/${project.id}/edit`}>
-                              Edit Project
-                            </Link>
-                          </DropdownMenuItem>
+                          <PermissionWrapper
+                            currentUserRole={currentUser.role}
+                            navigationItem="projects"
+                            requiredPermissions={['canEdit']}
+                            fallback={null}
+                          >
+                            <DropdownMenuItem asChild>
+                              <Link href={`/projects/${project.id}/edit`}>
+                                Edit Project
+                              </Link>
+                            </DropdownMenuItem>
+                          </PermissionWrapper>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -255,5 +274,6 @@ export default function ProjectsList() {
         </CardContent>
       </Card>
     </div>
+    </PermissionWrapper>
   );
 }

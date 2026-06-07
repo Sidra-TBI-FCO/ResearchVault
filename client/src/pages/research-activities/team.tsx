@@ -52,13 +52,13 @@ export default function ResearchActivityTeam() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Research Activity Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Research Activity Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8 flex flex-col items-center justify-center">
             <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
             <h2 className="text-xl font-medium mb-2">Research Activity Not Found</h2>
-            <p className="text-neutral-500 text-center mb-4">
+            <p className="text-muted-foreground text-center mb-4">
               The research activity you're looking for doesn't exist or you don't have permission to view it.
             </p>
             <Button onClick={() => navigate("/research-activities")}>

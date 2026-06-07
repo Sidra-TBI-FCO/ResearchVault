@@ -273,12 +273,12 @@ export default function TeamDetail(props: TeamDetailProps) {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Team Not Found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Team Not Found</h1>
         </div>
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-lg text-neutral-400">
+              <p className="text-lg text-foreground">
                 The research team you're looking for could not be found.
               </p>
               <Button
@@ -306,7 +306,7 @@ export default function TeamDetail(props: TeamDetailProps) {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Research Activity
           </Button>
-          <h1 className="text-2xl font-semibold text-neutral-400">Research Team</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Research Team</h1>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -459,9 +459,9 @@ export default function TeamDetail(props: TeamDetailProps) {
             </div>
           ) : !teamMembers || teamMembers.length === 0 ? (
             <div className="text-center py-6">
-              <ClipboardList className="mx-auto h-12 w-12 text-neutral-300" />
+              <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No Team Members</h3>
-              <p className="text-sm text-neutral-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Add team members to this research activity to get started.
               </p>
               <Button

@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table as TableIcon, FilePlus, Search, MoreHorizontal, Users, Link as LinkIcon } from "lucide-react";
 import { formatFullName, getInitials } from "@/utils/nameUtils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
 
 interface Program {
   id: number;
@@ -90,6 +92,7 @@ export default function ResearchActivitiesList() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedProjectTab, setSelectedProjectTab] = useState<string>("all");
   const [, navigate] = useLocation();
+  const { currentUser } = useCurrentUser();
 
   const { data: researchActivities, isLoading: isLoadingActivities } = useQuery<ResearchActivity[]>({
     queryKey: ['/api/research-activities'],
@@ -188,21 +191,29 @@ export default function ResearchActivitiesList() {
     // Then filter by specific project if a project tab is selected
     let matchesProject = true;
     if (selectedProjectTab !== "all") {
-      matchesProject = activity.projectId && activity.projectId === parseInt(selectedProjectTab);
+      matchesProject = !!(activity.projectId && activity.projectId === parseInt(selectedProjectTab));
     }
     
     return matchesSearch && matchesProgram && matchesProject;
   });
 
   return (
+    <PermissionWrapper currentUserRole={currentUser.role} navigationItem="research-activities">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Research Activities (SDR)</h1>
-        <Link href="/research-activities/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            New Research Activity
-          </Button>
-        </Link>
+        <h1 className="text-2xl font-semibold text-foreground">Research Activities (SDR)</h1>
+        <PermissionWrapper
+          currentUserRole={currentUser.role}
+          navigationItem="research-activities"
+          requiredPermissions={['canAdd']}
+          fallback={null}
+        >
+          <Link href="/research-activities/create">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              New Research Activity
+            </Button>
+          </Link>
+        </PermissionWrapper>
       </div>
 
       <Card>
@@ -392,11 +403,18 @@ export default function ResearchActivitiesList() {
                               View Details
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/research-activities/${activity.id}/edit`}>
-                              Edit Activity
-                            </Link>
-                          </DropdownMenuItem>
+                          <PermissionWrapper
+                            currentUserRole={currentUser.role}
+                            navigationItem="research-activities"
+                            requiredPermissions={['canEdit']}
+                            fallback={null}
+                          >
+                            <DropdownMenuItem asChild>
+                              <Link href={`/research-activities/${activity.id}/edit`}>
+                                Edit Activity
+                              </Link>
+                            </DropdownMenuItem>
+                          </PermissionWrapper>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -419,5 +437,6 @@ export default function ResearchActivitiesList() {
         </CardContent>
       </Card>
     </div>
+    </PermissionWrapper>
   );
 }

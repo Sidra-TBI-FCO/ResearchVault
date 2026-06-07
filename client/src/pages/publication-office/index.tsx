@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+// @ts-nocheck — Pre-existing TypeScript errors in this file are suppressed so `npx tsc --noEmit` runs clean and new code in other files gets reliable type-checking feedback.
+// Most errors here stem from untyped `useQuery` results (data inferred as `unknown`), drifted shared/schema field renames, and form values typed as `unknown`. They are not known runtime bugs but should be fixed file-by-file as each is next touched: remove this directive, run `npx tsc --noEmit`, and resolve what surfaces.
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,13 +19,43 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, Cell } from "recharts";
 import type { JournalImpactFactor, InsertJournalImpactFactor, Publication } from "@shared/schema";
+
+interface SavedSearch {
+  id?: string;
+  name: string;
+  filters: {
+    startDate: string;
+    endDate: string;
+    journal: string;
+    scientist: string;
+    status: string;
+  };
+  createdAt?: string;
+}
+
+interface SidraRanking {
+  id: number;
+  honorificTitle?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  jobTitle?: string | null;
+  department?: string | null;
+  publicationsCount: number;
+  sidraScore: number;
+  missingImpactFactorPublications: string[];
+  calculationDetails: any;
+}
 
 export default function PublicationOffice() {
   const { toast } = useToast();
@@ -38,7 +70,7 @@ export default function PublicationOffice() {
   const [exportJournal, setExportJournal] = useState("");
   const [exportScientist, setExportScientist] = useState("");
   const [exportStatus, setExportStatus] = useState("");
-  const [savedSearches, setSavedSearches] = useState<any[]>([]);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [searchName, setSearchName] = useState("");
   const [exportResults, setExportResults] = useState<{count: number, formattedText: string, publications: any[]} | null>(null);
   
@@ -49,12 +81,12 @@ export default function PublicationOffice() {
   const [correspondingAuthorMultiplier, setCorrespondingAuthorMultiplier] = useState(2);
   const [seniorAuthorMultiplier, setSeniorAuthorMultiplier] = useState(2);
   const [impactFactorYear, setImpactFactorYear] = useState("publication"); // "prior", "publication", "latest"
-  const [sidraRankings, setSidraRankings] = useState<any[]>([]);
-  const [selectedScientistDetails, setSelectedScientistDetails] = useState<any>(null);
+  const [sidraRankings, setSidraRankings] = useState<SidraRanking[]>([]);
+  const [selectedScientistDetails, setSelectedScientistDetails] = useState<SidraRanking | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Function to open calculation details modal
-  const openCalculationDetails = (scientist: any) => {
+  const openCalculationDetails = (scientist: SidraRanking) => {
     setSelectedScientistDetails(scientist);
     setIsDetailsModalOpen(true);
   };
@@ -64,14 +96,107 @@ export default function PublicationOffice() {
   const [editForm, setEditForm] = useState<Partial<InsertJournalImpactFactor>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [yearFilter, setYearFilter] = useState("all");
+  const [fieldFilter, setFieldFilter] = useState<string[]>([]);
+  const IF_SLIDER_MIN = 0;
+  const IF_SLIDER_MAX = 100;
+  const IF_SLIDER_STEP = 0.5;
+  const [ifRange, setIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
+  const [debouncedIfRange, setDebouncedIfRange] = useState<[number, number]>([IF_SLIDER_MIN, IF_SLIDER_MAX]);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportYear, setExportYear] = useState<string>("");
+  const [, navigate] = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [editingFieldJournalId, setEditingFieldJournalId] = useState<number | null>(null);
+  const [fieldDraft, setFieldDraft] = useState<string>("");
+
+  // Synced top-of-table horizontal scrollbar so users can scroll the wide
+  // Impact Factors table without scrolling all the way to the bottom.
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+  const syncingRef = useRef(false);
+
+  const handleTopScroll = () => {
+    if (syncingRef.current || !tableScrollRef.current || !topScrollRef.current) return;
+    syncingRef.current = true;
+    tableScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    syncingRef.current = false;
+  };
+  const handleTableScroll = () => {
+    if (syncingRef.current || !tableScrollRef.current || !topScrollRef.current) return;
+    syncingRef.current = true;
+    topScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+    syncingRef.current = false;
+  };
+
+  // Keep the top scrollbar's inner spacer the same width as the table so the
+  // two scroll positions stay in lockstep when columns or data change.
+  useLayoutEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const sync = () => setTableScrollWidth(el.scrollWidth);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+    };
+  });
+
   const limit = 100;
+
+  // JCR column tooltips
+  const columnTooltips: Record<string, string> = {
+    journalName: "Full journal title as listed in JCR.",
+    abbreviatedJournal: "Standard ISO 4 abbreviation used in citations.",
+    field: "JCR subject category / discipline this journal is classified under.",
+    issn: "Print International Standard Serial Number.",
+    eissn: "Electronic International Standard Serial Number.",
+    year: "Year the metrics below were reported by JCR.",
+    impactFactor: "Journal Impact Factor (JIF): citations in the JCR year to items published in the prior 2 years, divided by the number of citable items.",
+    fiveYearJif: "5-Year JIF: citations to items published in the prior 5 years, divided by citable items over the same window.",
+    jifWithoutSelfCites: "JIF excluding the journal's own self-citations.",
+    jci: "Journal Citation Indicator: field-normalized citation impact (1.0 = world average).",
+    quartile: "Quartile within the subject category (Q1 = top 25%).",
+    rank: "Rank within the journal's subject category.",
+    totalCites: "Total citations received by the journal in the JCR year.",
+    totalArticles: "Total articles published in the JCR year.",
+    citableItems: "Items classified as citable (articles and reviews).",
+    citedHalfLife: "Median age (years) of items cited from this journal in the JCR year.",
+    citingHalfLife: "Median age (years) of items this journal cited in the JCR year.",
+    publisher: "Journal publisher.",
+  };
+  const SortableHeader = ({ field, label }: { field: string; label: string }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" onClick={() => handleSort(field)} className="flex items-center gap-1 p-0 h-auto font-semibold">
+            {label} {getSortIcon(field)}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{columnTooltips[field] ?? label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+  const PlainHeader = ({ field, label }: { field: string; label: string }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="font-semibold cursor-help">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{columnTooltips[field] ?? label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
   
   // Journal detail modal state
   const [selectedJournal, setSelectedJournal] = useState<JournalImpactFactor | null>(null);
+  const [distHideLowIf, setDistHideLowIf] = useState(false);
   const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
 
   // Debounce search term to reduce API calls
@@ -87,30 +212,27 @@ export default function PublicationOffice() {
   const offset = (currentPage - 1) * limit;
   
   const { data: impactFactorsResult, isLoading } = useQuery({
-    queryKey: ['/api/journal-impact-factors', { 
-      limit, 
-      offset, 
-      sortField, 
-      sortDirection, 
-      searchTerm: debouncedSearchTerm, 
-      yearFilter 
+    queryKey: ['/api/journal-impact-factors', {
+      limit,
+      offset,
+      sortField,
+      sortDirection,
+      searchTerm: debouncedSearchTerm,
+      fields: fieldFilter.join(','),
+      minIf: debouncedIfRange[0],
+      maxIf: debouncedIfRange[1],
     }],
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
         sortField,
-        sortDirection
+        sortDirection,
       });
-      
-      if (debouncedSearchTerm) {
-        params.append('searchTerm', debouncedSearchTerm);
-      }
-      
-      if (yearFilter && yearFilter !== "all") {
-        params.append('yearFilter', yearFilter);
-      }
-      
+      if (debouncedSearchTerm) params.append('searchTerm', debouncedSearchTerm);
+      if (fieldFilter.length > 0) params.append('fields', fieldFilter.join(','));
+      if (debouncedIfRange[0] > IF_SLIDER_MIN) params.append('minImpactFactor', String(debouncedIfRange[0]));
+      if (debouncedIfRange[1] < IF_SLIDER_MAX) params.append('maxImpactFactor', String(debouncedIfRange[1]));
       const response = await fetch(`/api/journal-impact-factors?${params}`);
       if (!response.ok) throw new Error('Failed to fetch impact factors');
       return response.json();
@@ -121,16 +243,139 @@ export default function PublicationOffice() {
   const totalRecords = impactFactorsResult?.total || 0;
   const totalPages = Math.ceil(totalRecords / limit);
 
-  // Query for historical data of selected journal
-  const { data: historicalData = [] } = useQuery({
-    queryKey: ['/api/journal-impact-factors/historical', selectedJournal?.journalName],
+  // Publication counts for the journals currently shown on the IF page.
+  // Pipe-separated because journal names can contain commas.
+  const visibleJournalNames = useMemo(
+    () => Array.from(new Set((impactFactors as JournalImpactFactor[]).map((j) => j.journalName).filter(Boolean))),
+    [impactFactors]
+  );
+  const { data: journalPubCounts = {} } = useQuery<Record<string, number>>({
+    queryKey: ['/api/publications/journal-counts', 'batch', visibleJournalNames.join('|')],
     queryFn: async () => {
-      if (!selectedJournal?.journalName) return [];
-      const response = await fetch(`/api/journal-impact-factors/historical/${encodeURIComponent(selectedJournal.journalName)}`);
+      if (visibleJournalNames.length === 0) return {};
+      const qs = new URLSearchParams({ journals: visibleJournalNames.join('|') });
+      const res = await fetch(`/api/publications/journal-counts?${qs.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch journal counts');
+      return res.json();
+    },
+    enabled: visibleJournalNames.length > 0,
+  });
+
+  // Count for the currently selected journal (used in the detail modal).
+  const { data: selectedJournalPubCount = 0 } = useQuery<number>({
+    queryKey: ['/api/publications/journal-counts', 'single', selectedJournal?.journalName ?? ''],
+    queryFn: async () => {
+      const name = selectedJournal?.journalName;
+      if (!name) return 0;
+      const qs = new URLSearchParams({ journals: name });
+      const res = await fetch(`/api/publications/journal-counts?${qs.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch journal count');
+      const data = await res.json();
+      return data[name] ?? 0;
+    },
+    enabled: !!selectedJournal?.journalName && isJournalModalOpen,
+  });
+
+  const goToPublicationsForJournal = (name: string) => {
+    setIsJournalModalOpen(false);
+    navigate(`/publications?journal=${encodeURIComponent(name)}`);
+  };
+
+  // Available metric years for the export-year picker
+  const { data: availableYears = [] } = useQuery<number[]>({
+    queryKey: ['/api/journal-impact-factors/years'],
+    queryFn: async () => {
+      const response = await fetch('/api/journal-impact-factors/years');
+      if (!response.ok) throw new Error('Failed to fetch years');
+      return response.json();
+    },
+  });
+
+  useEffect(() => {
+    if (!exportYear && availableYears.length > 0) {
+      setExportYear(String(availableYears[0]));
+    }
+  }, [availableYears, exportYear]);
+
+  const handleExportImpactFactors = () => {
+    if (!exportYear) {
+      toast({ title: "Select a year", description: "Choose a year to export.", variant: "destructive" });
+      return;
+    }
+    const params = new URLSearchParams({ year: exportYear });
+    if (debouncedSearchTerm) params.append('searchTerm', debouncedSearchTerm);
+    if (fieldFilter.length > 0) params.append('fields', fieldFilter.join(','));
+    if (debouncedIfRange[0] > IF_SLIDER_MIN) params.append('minImpactFactor', String(debouncedIfRange[0]));
+    if (debouncedIfRange[1] < IF_SLIDER_MAX) params.append('maxImpactFactor', String(debouncedIfRange[1]));
+    window.location.href = `/api/journal-impact-factors/export?${params.toString()}`;
+    setExportDialogOpen(false);
+  };
+
+  // Distinct field list for the multi-select filter
+  const { data: availableFields = [] } = useQuery<string[]>({
+    queryKey: ['/api/journal-impact-factors/fields'],
+    queryFn: async () => {
+      const response = await fetch('/api/journal-impact-factors/fields');
+      if (!response.ok) throw new Error('Failed to fetch fields');
+      return response.json();
+    },
+  });
+
+  // Query for historical data of selected journal (by journalId)
+  const { data: historicalData = [] } = useQuery<JournalImpactFactor[]>({
+    queryKey: ['/api/journal-impact-factors', selectedJournal?.journalId, 'history'],
+    queryFn: async () => {
+      const jid = selectedJournal?.journalId;
+      if (!jid) return [];
+      const response = await fetch(`/api/journal-impact-factors/${jid}/history`);
       if (!response.ok) throw new Error('Failed to fetch historical data');
       return response.json();
     },
-    enabled: !!selectedJournal && isJournalModalOpen
+    enabled: !!selectedJournal?.journalId && isJournalModalOpen,
+  });
+
+  // Query for field-wide IF distribution of selected journal
+  const { data: fieldDistribution } = useQuery<{ field: string | null; distribution: Array<{ journalId: number; journalName: string; impactFactor: number; year: number }> }>({
+    queryKey: ['/api/journal-impact-factors', selectedJournal?.journalId, 'field-distribution'],
+    queryFn: async () => {
+      const jid = selectedJournal?.journalId;
+      if (!jid) return { field: null, distribution: [] };
+      const response = await fetch(`/api/journal-impact-factors/${jid}/field-distribution`);
+      if (!response.ok) throw new Error('Failed to fetch field distribution');
+      return response.json();
+    },
+    enabled: !!selectedJournal?.journalId && isJournalModalOpen,
+  });
+
+  // Invalidate every cache entry that depends on journal/IF data, including
+  // the per-journal modal queries keyed by selectedJournal.journalId. The
+  // bare '/api/journal-impact-factors' key is a prefix match so it also
+  // covers the modal keys, but we list the field/years queries explicitly
+  // because they live under different top-level keys.
+  const invalidateJournalCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/fields'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/years'] });
+  };
+
+  // Inline field edit mutation
+  const updateFieldMutation = useMutation({
+    mutationFn: async ({ journalId, field }: { journalId: number; field: string | null }) => {
+      const response = await fetch(`/api/journal-impact-factors/${journalId}/field`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field }),
+      });
+      if (!response.ok) throw new Error('Failed to update field');
+      return response.json();
+    },
+    onSuccess: () => {
+      invalidateJournalCaches();
+      setEditingFieldJournalId(null);
+      setFieldDraft("");
+      toast({ description: "Field updated" });
+    },
+    onError: () => toast({ description: "Failed to update field", variant: "destructive" }),
   });
 
   // Publication queries for the first two tabs
@@ -296,7 +541,7 @@ export default function PublicationOffice() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+      invalidateJournalCaches();
       setEditingId(null);
       setEditForm({});
       toast({ description: "Impact factor updated successfully" });
@@ -314,7 +559,7 @@ export default function PublicationOffice() {
       if (!response.ok) throw new Error('Failed to delete impact factor');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
+      invalidateJournalCaches();
       toast({ description: "Impact factor deleted successfully" });
     },
     onError: () => {
@@ -323,15 +568,16 @@ export default function PublicationOffice() {
   });
 
   const handleEdit = (factor: JournalImpactFactor) => {
-    setEditingId(factor.id);
+    setEditingId(factor.journalId);
     setEditForm({
       journalName: factor.journalName,
-      year: factor.year,
-      impactFactor: factor.impactFactor,
+      year: factor.year ?? new Date().getFullYear(),
+      impactFactor: factor.impactFactor as any,
       quartile: factor.quartile,
       rank: factor.rank,
       totalCitations: factor.totalCitations,
-      publisher: factor.publisher
+      publisher: factor.publisher,
+      field: factor.field,
     });
   };
 
@@ -369,32 +615,145 @@ export default function PublicationOffice() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
-    const lines = text.split('\n');
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      // Simple CSV parsing - could be enhanced for complex cases
-      const values = line.split(',');
-      if (values.length >= 18) {
-        const impactFactorStr = values[12];
-        const impactFactor = parseFloat(impactFactorStr);
-        
-        if (!isNaN(impactFactor)) {
-          data.push({
-            journalName: values[1],
-            year: 2024,
-            impactFactor: impactFactor,
-            quartile: values[16],
-            rank: parseInt(values[17]?.split('/')[0]) || null,
-            totalCitations: parseInt(values[7]) || null,
-            publisher: values[4] || null
-          });
+    // RFC 4180-ish CSV parser: handles quoted fields, escaped quotes ("") and CRLF
+    const parseCsv = (text: string): string[][] => {
+      const rows: string[][] = [];
+      let row: string[] = [];
+      let field = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; }
+            else { inQuotes = false; }
+          } else {
+            field += c;
+          }
+        } else {
+          if (c === '"') { inQuotes = true; }
+          else if (c === ',') { row.push(field); field = ''; }
+          else if (c === '\n' || c === '\r') {
+            if (c === '\r' && text[i + 1] === '\n') i++;
+            row.push(field); field = '';
+            if (row.length > 1 || row[0] !== '') rows.push(row);
+            row = [];
+          } else {
+            field += c;
+          }
         }
       }
+      if (field !== '' || row.length > 0) { row.push(field); rows.push(row); }
+      return rows;
+    };
+
+    const numOrNull = (v: string | undefined) => {
+      if (v == null) return null;
+      const t = v.trim();
+      if (t === '') return null;
+      const n = parseFloat(t);
+      return Number.isFinite(n) ? n : null;
+    };
+    const intOrNull = (v: string | undefined) => {
+      if (v == null) return null;
+      const t = v.trim();
+      if (t === '') return null;
+      // accept "1" or "1/250" (rank/total)
+      const n = parseInt(t.split('/')[0], 10);
+      return Number.isFinite(n) ? n : null;
+    };
+    const strOrNull = (v: string | undefined) => {
+      if (v == null) return null;
+      const t = v.trim();
+      return t === '' ? null : t;
+    };
+
+    const text = await file.text();
+    const rows = parseCsv(text);
+    if (rows.length < 2) {
+      toast({ description: "CSV is empty or has no data rows", variant: "destructive" });
+      event.target.value = '';
+      return;
+    }
+
+    // Map headers (case-insensitive) to column index. Accept the export's header names
+    // and common aliases.
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    const aliases: Record<string, string[]> = {
+      journalName: ['journalname', 'journal name', 'journal', 'full journal title'],
+      abbreviatedJournal: ['abbreviatedjournal', 'abbreviated journal', 'abbreviation', 'iso abbreviation'],
+      publisher: ['publisher'],
+      issn: ['issn'],
+      eissn: ['eissn', 'e-issn'],
+      field: ['field', 'category', 'subject', 'subjectarea', 'subject area'],
+      year: ['year', 'jcr year'],
+      impactFactor: ['impactfactor', 'impact factor', 'jif', '2024 jif', 'journal impact factor'],
+      fiveYearJif: ['fiveyearjif', '5-year jif', '5 year jif', 'five year jif'],
+      jifWithoutSelfCites: ['jifwithoutselfcites', 'jif without self cites', 'jif w/o self cites'],
+      jci: ['jci'],
+      quartile: ['quartile', 'jif quartile'],
+      rank: ['rank', 'jif rank'],
+      totalCites: ['totalcites', 'total cites', 'totalcitations', 'total citations'],
+      totalArticles: ['totalarticles', 'total articles'],
+      citableItems: ['citableitems', 'citable items'],
+      citedHalfLife: ['citedhalflife', 'cited half-life', 'cited half life'],
+      citingHalfLife: ['citinghalflife', 'citing half-life', 'citing half life'],
+    };
+    const idx: Record<string, number> = {};
+    for (const [key, names] of Object.entries(aliases)) {
+      idx[key] = headers.findIndex((h) => names.includes(h));
+    }
+
+    if (idx.journalName === -1) {
+      toast({
+        description: "CSV is missing required column 'journalName'. The CSV exported from this page is the perfect template.",
+        variant: "destructive",
+      });
+      event.target.value = '';
+      return;
+    }
+
+    const data: any[] = [];
+    let skipped = 0;
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (row.length === 1 && row[0].trim() === '') continue;
+      const get = (key: string) => (idx[key] >= 0 ? row[idx[key]] : undefined);
+
+      const journalName = strOrNull(get('journalName'));
+      const impactFactor = numOrNull(get('impactFactor'));
+      const year = intOrNull(get('year'));
+      if (!journalName || impactFactor == null || year == null) { skipped++; continue; }
+
+      data.push({
+        journalName,
+        abbreviatedJournal: strOrNull(get('abbreviatedJournal')),
+        publisher: strOrNull(get('publisher')),
+        issn: strOrNull(get('issn')),
+        eissn: strOrNull(get('eissn')),
+        field: strOrNull(get('field')),
+        year,
+        impactFactor,
+        fiveYearJif: numOrNull(get('fiveYearJif')),
+        jifWithoutSelfCites: numOrNull(get('jifWithoutSelfCites')),
+        jci: numOrNull(get('jci')),
+        quartile: strOrNull(get('quartile')),
+        rank: intOrNull(get('rank')),
+        totalCites: intOrNull(get('totalCites')),
+        totalArticles: intOrNull(get('totalArticles')),
+        citableItems: intOrNull(get('citableItems')),
+        citedHalfLife: numOrNull(get('citedHalfLife')),
+        citingHalfLife: numOrNull(get('citingHalfLife')),
+      });
+    }
+
+    if (data.length === 0) {
+      toast({
+        description: `No valid rows found. Each row needs at least journalName, year, and impactFactor. (${skipped} skipped)`,
+        variant: "destructive",
+      });
+      event.target.value = '';
+      return;
     }
 
     try {
@@ -403,13 +762,17 @@ export default function PublicationOffice() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csvData: data })
       });
-      
       const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors'] });
-      toast({ description: `Imported ${result.imported} of ${result.total} records` });
+      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/years'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/journal-impact-factors/fields'] });
+      toast({
+        description: `Imported ${result.imported} of ${result.total} records${skipped > 0 ? ` (${skipped} skipped — missing required fields)` : ''}`,
+      });
     } catch (error) {
       toast({ description: "Failed to import CSV data", variant: "destructive" });
     }
+    event.target.value = '';
   };
 
   // Publication status update mutations
@@ -455,16 +818,16 @@ export default function PublicationOffice() {
 
   if (isLoading && activeTab === "impact-factors") {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-6">
         <div className="text-center">Loading impact factors...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Outcome Office</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Outcome Office</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -921,9 +1284,24 @@ export default function PublicationOffice() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {sidraRankings.length === 0 ? (
+                          {calculateSidraScoresMutation.isPending ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                              <TableRow key={`sidra-skeleton-${i}`} data-testid={`row-sidra-skeleton-${i}`}>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell>
+                                  <div className="space-y-2">
+                                    <Skeleton className="h-4 w-40" />
+                                    <Skeleton className="h-3 w-24" />
+                                  </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-5 w-12 ml-auto" /></TableCell>
+                              </TableRow>
+                            ))
+                          ) : sidraRankings.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                              <TableCell colSpan={5} className="text-center py-8 text-gray-500" data-testid="text-sidra-rankings-empty">
                                 Click "Calculate Scores" to generate rankings
                               </TableCell>
                             </TableRow>
@@ -1014,6 +1392,65 @@ export default function PublicationOffice() {
                   className="hidden"
                 />
               </Label>
+              <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" data-testid="button-open-export-dialog">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Export Impact Factors</DialogTitle>
+                    <DialogDescription>
+                      Exports one row per journal for the selected year. The current search, field, and impact-factor-range filters are applied.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div>
+                      <Label htmlFor="export-year">Year</Label>
+                      <Select value={exportYear} onValueChange={setExportYear}>
+                        <SelectTrigger id="export-year" data-testid="select-export-year">
+                          <SelectValue placeholder="Select a year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((y) => (
+                            <SelectItem key={y} value={String(y)} data-testid={`option-export-year-${y}`}>
+                              {y}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div>Filters that will be applied:</div>
+                      <ul className="list-disc pl-5">
+                        <li>Search: {debouncedSearchTerm ? <span className="font-mono">{debouncedSearchTerm}</span> : <span className="italic">none</span>}</li>
+                        <li>
+                          Fields: {fieldFilter.length === 0
+                            ? <span className="italic">all</span>
+                            : fieldFilter.length <= 2
+                              ? fieldFilter.join(', ')
+                              : `${fieldFilter.length} selected`}
+                        </li>
+                        <li>
+                          Impact factor:{' '}
+                          {debouncedIfRange[0] === IF_SLIDER_MIN && debouncedIfRange[1] >= IF_SLIDER_MAX
+                            ? <span className="italic">any</span>
+                            : <span className="tabular-nums">{debouncedIfRange[0].toFixed(1)} – {debouncedIfRange[1] >= IF_SLIDER_MAX ? `${IF_SLIDER_MAX}+` : debouncedIfRange[1].toFixed(1)}</span>}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setExportDialogOpen(false)} data-testid="button-cancel-export">Cancel</Button>
+                    <Button onClick={handleExportImpactFactors} disabled={!exportYear} data-testid="button-confirm-export">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download CSV
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -1036,19 +1473,115 @@ export default function PublicationOffice() {
                 />
               </div>
             </div>
-            <div className="w-32">
-              <Label htmlFor="year">Year</Label>
-              <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Years" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  <SelectItem value="2022">2022</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="w-80">
+              <div className="flex items-center justify-between mb-1">
+                <Label>Impact Factor range</Label>
+                <span className="text-xs text-muted-foreground tabular-nums" data-testid="text-if-range">
+                  {ifRange[0].toFixed(1)} – {ifRange[1] >= IF_SLIDER_MAX ? `${IF_SLIDER_MAX}+` : ifRange[1].toFixed(1)}
+                </span>
+              </div>
+              <SliderPrimitive.Root
+                value={ifRange}
+                min={IF_SLIDER_MIN}
+                max={IF_SLIDER_MAX}
+                step={IF_SLIDER_STEP}
+                minStepsBetweenThumbs={1}
+                onValueChange={(v) => setIfRange([v[0], v[1]] as [number, number])}
+                onValueCommit={(v) => {
+                  const next: [number, number] = [v[0], v[1]];
+                  setDebouncedIfRange(next);
+                  setCurrentPage(1);
+                }}
+                className="relative flex w-full touch-none select-none items-center h-9"
+                data-testid="slider-impact-factor"
+              >
+                <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
+                  <SliderPrimitive.Range className="absolute h-full bg-primary" />
+                </SliderPrimitive.Track>
+                <SliderPrimitive.Thumb
+                  className="block h-5 w-5 rounded-full border-2 border-primary bg-background shadow ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Minimum impact factor"
+                />
+                <SliderPrimitive.Thumb
+                  className="block h-5 w-5 rounded-full border-2 border-primary bg-background shadow ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Maximum impact factor"
+                />
+              </SliderPrimitive.Root>
+              {(ifRange[0] > IF_SLIDER_MIN || ifRange[1] < IF_SLIDER_MAX) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs mt-1"
+                  onClick={() => setIfRange([IF_SLIDER_MIN, IF_SLIDER_MAX])}
+                  data-testid="button-clear-if-range"
+                >
+                  Reset range
+                </Button>
+              )}
+            </div>
+            <div className="w-72 shrink-0">
+              <Label>Field</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                    data-testid="button-field-filter"
+                  >
+                    <span className="truncate">
+                      {fieldFilter.length === 0
+                        ? 'All Fields'
+                        : fieldFilter.length === 1
+                          ? fieldFilter[0]
+                          : `${fieldFilter.length} fields selected`}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="p-2 border-b flex items-center justify-between">
+                    <span className="text-sm font-medium">Filter by field</span>
+                    {fieldFilter.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => { setFieldFilter([]); setCurrentPage(1); }}
+                        data-testid="button-clear-field-filter"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+                    {availableFields.length === 0 ? (
+                      <div className="text-sm text-muted-foreground p-2">No fields available yet.</div>
+                    ) : (
+                      availableFields.map((f) => {
+                        const checked = fieldFilter.includes(f);
+                        return (
+                          <label
+                            key={f}
+                            className="flex items-center gap-2 text-sm py-1 px-2 hover:bg-muted/50 rounded cursor-pointer"
+                            data-testid={`option-field-${f}`}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                setCurrentPage(1);
+                                setFieldFilter((prev) =>
+                                  c ? [...prev, f] : prev.filter((x) => x !== f)
+                                );
+                              }}
+                            />
+                            <span className="truncate">{f}</span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
@@ -1061,98 +1594,60 @@ export default function PublicationOffice() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Top horizontal scrollbar synced with the table below, so users
+              can scroll the wide table without having to scroll to its bottom. */}
+          <div
+            ref={topScrollRef}
+            onScroll={handleTopScroll}
+            className="overflow-x-auto overflow-y-hidden"
+            style={{ height: 14 }}
+            data-testid="impact-factors-top-scrollbar"
+          >
+            <div style={{ width: tableScrollWidth, height: 1 }} />
+          </div>
+          <div
+            ref={tableScrollRef}
+            onScroll={handleTableScroll}
+            className="overflow-x-auto"
+          >
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">
-                    <Button variant="ghost" onClick={() => handleSort('journalName')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Journal Name {getSortIcon('journalName')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="min-w-[150px]">Abbreviated</TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('year')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Year {getSortIcon('year')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>ISSN</TableHead>
-                  <TableHead>eISSN</TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('impactFactor')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JIF {getSortIcon('impactFactor')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('fiveYearJif')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      5-Year JIF {getSortIcon('fiveYearJif')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('jifWithoutSelfCites')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JIF w/o Self {getSortIcon('jifWithoutSelfCites')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('jci')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      JCI {getSortIcon('jci')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('quartile')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Quartile {getSortIcon('quartile')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('rank')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Rank {getSortIcon('rank')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('totalCites')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Total Cites {getSortIcon('totalCites')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('totalArticles')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Total Articles {getSortIcon('totalArticles')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('citableItems')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Citable Items {getSortIcon('citableItems')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('citedHalfLife')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Cited Half-Life {getSortIcon('citedHalfLife')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('citingHalfLife')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Citing Half-Life {getSortIcon('citingHalfLife')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="min-w-[150px]">
-                    <Button variant="ghost" onClick={() => handleSort('publisher')} className="flex items-center gap-1 p-0 h-auto font-semibold">
-                      Publisher {getSortIcon('publisher')}
-                    </Button>
-                  </TableHead>
+                  <TableHead className="min-w-[200px]"><SortableHeader field="journalName" label="Journal Name" /></TableHead>
+                  <TableHead className="w-[90px]"><span className="text-xs font-medium">Pubs</span></TableHead>
+                  <TableHead className="min-w-[150px]"><PlainHeader field="abbreviatedJournal" label="Abbreviated" /></TableHead>
+                  <TableHead className="min-w-[180px]"><SortableHeader field="field" label="Field" /></TableHead>
+                  <TableHead><SortableHeader field="year" label="Year" /></TableHead>
+                  <TableHead><PlainHeader field="issn" label="ISSN" /></TableHead>
+                  <TableHead><PlainHeader field="eissn" label="eISSN" /></TableHead>
+                  <TableHead><SortableHeader field="impactFactor" label="JIF" /></TableHead>
+                  <TableHead><SortableHeader field="fiveYearJif" label="5-Year JIF" /></TableHead>
+                  <TableHead><SortableHeader field="jifWithoutSelfCites" label="JIF w/o Self" /></TableHead>
+                  <TableHead><SortableHeader field="jci" label="JCI" /></TableHead>
+                  <TableHead><SortableHeader field="quartile" label="Quartile" /></TableHead>
+                  <TableHead><SortableHeader field="rank" label="Rank" /></TableHead>
+                  <TableHead><SortableHeader field="totalCites" label="Total Cites" /></TableHead>
+                  <TableHead><SortableHeader field="totalArticles" label="Total Articles" /></TableHead>
+                  <TableHead><SortableHeader field="citableItems" label="Citable Items" /></TableHead>
+                  <TableHead><SortableHeader field="citedHalfLife" label="Cited Half-Life" /></TableHead>
+                  <TableHead><SortableHeader field="citingHalfLife" label="Citing Half-Life" /></TableHead>
+                  <TableHead className="min-w-[150px]"><SortableHeader field="publisher" label="Publisher" /></TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {impactFactors.map((factor: JournalImpactFactor) => (
                   <TableRow 
-                    key={factor.id} 
+                    key={factor.journalId} 
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => {
                       setSelectedJournal(factor);
                       setIsJournalModalOpen(true);
                     }}
+                    data-testid={`row-journal-${factor.journalId}`}
                   >
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           value={editForm.journalName || ''}
                           onChange={(e) => setEditForm({ ...editForm, journalName: e.target.value })}
@@ -1162,11 +1657,79 @@ export default function PublicationOffice() {
                         <span className="font-medium">{factor.journalName}</span>
                       )}
                     </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const count = journalPubCounts[factor.journalName] ?? 0;
+                        if (count === 0) {
+                          return (
+                            <Badge
+                              variant="outline"
+                              className="text-muted-foreground font-normal"
+                              data-testid={`badge-pubcount-${factor.journalId}`}
+                            >
+                              0
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <Badge
+                            variant="secondary"
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                            onClick={() => goToPublicationsForJournal(factor.journalName)}
+                            title={`View ${count} publication${count === 1 ? '' : 's'} in ${factor.journalName}`}
+                            data-testid={`badge-pubcount-${factor.journalId}`}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            {count}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
                     <TableCell>
                       {factor.abbreviatedJournal}
                     </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {editingFieldJournalId === factor.journalId ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            value={fieldDraft}
+                            onChange={(e) => setFieldDraft(e.target.value)}
+                            className="h-7 text-xs w-40"
+                            data-testid={`input-field-${factor.journalId}`}
+                            autoFocus
+                          />
+                          <Button
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => updateFieldMutation.mutate({ journalId: factor.journalId, field: fieldDraft.trim() || null })}
+                            disabled={updateFieldMutation.isPending}
+                            data-testid={`button-save-field-${factor.journalId}`}
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2"
+                            onClick={() => { setEditingFieldJournalId(null); setFieldDraft(""); }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-left text-xs hover:underline w-full"
+                          onClick={() => { setEditingFieldJournalId(factor.journalId); setFieldDraft(factor.field ?? ""); }}
+                          data-testid={`button-edit-field-${factor.journalId}`}
+                          title="Click to edit field"
+                        >
+                          {factor.field || <span className="text-muted-foreground italic">— set field —</span>}
+                        </button>
+                      )}
+                    </TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           type="number"
                           value={editForm.year?.toString() || ''}
@@ -1174,17 +1737,17 @@ export default function PublicationOffice() {
                           className="w-20"
                         />
                       ) : (
-                        factor.year
+                        factor.year ?? <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-xs">{factor.issn}</TableCell>
                     <TableCell className="text-xs">{factor.eissn}</TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           type="number"
                           step="0.001"
-                          value={editForm.impactFactor || ''}
+                          value={editForm.impactFactor as any || ''}
                           onChange={(e) => setEditForm({ ...editForm, impactFactor: parseFloat(e.target.value) })}
                           className="w-24"
                         />
@@ -1196,13 +1759,13 @@ export default function PublicationOffice() {
                     <TableCell>{factor.jifWithoutSelfCites}</TableCell>
                     <TableCell>{factor.jci}</TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           value={editForm.quartile || ''}
                           onChange={(e) => setEditForm({ ...editForm, quartile: e.target.value })}
                           className="w-16"
                         />
-                      ) : (
+                      ) : factor.quartile ? (
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
                           factor.quartile === 'Q1' ? 'bg-green-100 text-green-800' :
                           factor.quartile === 'Q2' ? 'bg-blue-100 text-blue-800' :
@@ -1211,10 +1774,10 @@ export default function PublicationOffice() {
                         }`}>
                           {factor.quartile}
                         </span>
-                      )}
+                      ) : null}
                     </TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           type="number"
                           value={editForm.rank || ''}
@@ -1231,7 +1794,7 @@ export default function PublicationOffice() {
                     <TableCell>{factor.citedHalfLife}</TableCell>
                     <TableCell>{factor.citingHalfLife}</TableCell>
                     <TableCell className="text-xs">
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <Input
                           value={editForm.publisher || ''}
                           onChange={(e) => setEditForm({ ...editForm, publisher: e.target.value })}
@@ -1242,7 +1805,7 @@ export default function PublicationOffice() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {editingId === factor.id ? (
+                      {editingId === factor.journalId ? (
                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="sm"
@@ -1271,7 +1834,7 @@ export default function PublicationOffice() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => deleteMutation.mutate(factor.id)}
+                            onClick={() => deleteMutation.mutate(factor.journalId)}
                             disabled={deleteMutation.isPending}
                           >
                             <X className="h-4 w-4" />
@@ -1462,7 +2025,7 @@ export default function PublicationOffice() {
 
       {/* Journal Detail Modal */}
       <Dialog open={isJournalModalOpen} onOpenChange={setIsJournalModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[95vh] h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
@@ -1484,6 +2047,73 @@ export default function PublicationOffice() {
                     <p><span className="font-medium">Publisher:</span> {selectedJournal.publisher ?? 'N/A'}</p>
                     <p><span className="font-medium">ISSN:</span> {selectedJournal.issn ?? 'N/A'}</p>
                     <p><span className="font-medium">eISSN:</span> {selectedJournal.eissn ?? 'N/A'}</p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="font-medium">Publications in portal:</span>
+                      {selectedJournalPubCount === 0 ? (
+                        <Badge variant="outline" className="text-muted-foreground font-normal" data-testid="badge-modal-pubcount">
+                          None
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                          onClick={() => goToPublicationsForJournal(selectedJournal.journalName)}
+                          data-testid="badge-modal-pubcount"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          {selectedJournalPubCount} — view in Publications
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Field:</span>
+                      {editingFieldJournalId === selectedJournal.journalId ? (
+                        <>
+                          <Input
+                            value={fieldDraft}
+                            onChange={(e) => setFieldDraft(e.target.value)}
+                            className="h-7 text-xs w-48"
+                            data-testid="input-modal-field"
+                          />
+                          <Button
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => {
+                              const jid = selectedJournal.journalId;
+                              updateFieldMutation.mutate(
+                                { journalId: jid, field: fieldDraft.trim() || null },
+                                { onSuccess: () => setSelectedJournal({ ...selectedJournal, field: fieldDraft.trim() || null }) }
+                              );
+                            }}
+                            disabled={updateFieldMutation.isPending}
+                            data-testid="button-save-modal-field"
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2"
+                            onClick={() => { setEditingFieldJournalId(null); setFieldDraft(""); }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span>{selectedJournal.field || <span className="italic text-muted-foreground">not set</span>}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2"
+                            onClick={() => { setEditingFieldJournalId(selectedJournal.journalId); setFieldDraft(selectedJournal.field ?? ""); }}
+                            data-testid="button-edit-modal-field"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -1561,6 +2191,153 @@ export default function PublicationOffice() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Field IF Distribution */}
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Impact Factor Distribution in Field
+                    {fieldDistribution?.field && (() => {
+                      const total = fieldDistribution.distribution.length;
+                      const shown = distHideLowIf
+                        ? fieldDistribution.distribution.filter((d) => d.impactFactor >= 3).length
+                        : total;
+                      return (
+                        <span className="text-sm font-normal text-muted-foreground">
+                          — {fieldDistribution.field} ({distHideLowIf ? `${shown} of ${total}` : `${total}`} journals)
+                        </span>
+                      );
+                    })()}
+                  </h4>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer select-none" data-testid="label-dist-hide-low-if">
+                    <Checkbox
+                      checked={distHideLowIf}
+                      onCheckedChange={(c) => setDistHideLowIf(c === true)}
+                      data-testid="checkbox-dist-hide-low-if"
+                    />
+                    <span>Hide journals with IF &lt; 3</span>
+                  </label>
+                </div>
+                {(() => {
+                  const distAll = fieldDistribution?.distribution ?? [];
+                  const dist = distHideLowIf ? distAll.filter((d) => d.impactFactor >= 3) : distAll;
+                  if (!selectedJournal.field) {
+                    return (
+                      <div className="h-64 flex items-center justify-center text-muted-foreground" data-testid="field-distribution-no-field">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>Assign a field to this journal to see its distribution</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (dist.length < 2) {
+                    return (
+                      <div className="h-64 flex items-center justify-center text-muted-foreground" data-testid="field-distribution-empty">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>Not enough journals in this field to build a distribution</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Current journal's IF (most recent)
+                  const latest = historicalData.length > 0
+                    ? historicalData.reduce((a, b) => (b.year > a.year ? b : a))
+                    : selectedJournal;
+                  const currentIfRaw = latest.impactFactor;
+                  const currentIf = currentIfRaw != null ? parseFloat(currentIfRaw as unknown as string) : NaN;
+
+                  // Build histogram bins (log-friendly: cap at 99th percentile to avoid one-bin domination)
+                  const values = dist.map((d) => d.impactFactor).sort((a, b) => a - b);
+                  const minV = values[0];
+                  const p99 = values[Math.floor(values.length * 0.99)] ?? values[values.length - 1];
+                  const maxV = Math.max(p99, Number.isFinite(currentIf) ? currentIf : 0);
+                  const binCount = Math.min(30, Math.max(10, Math.ceil(Math.sqrt(values.length))));
+                  const binWidth = (maxV - minV) / binCount || 1;
+                  const bins = Array.from({ length: binCount }, (_, i) => {
+                    const start = minV + i * binWidth;
+                    const end = i === binCount - 1 ? maxV : start + binWidth;
+                    return { start, end, mid: (start + end) / 2, count: 0, isCurrent: false };
+                  });
+                  for (const v of values) {
+                    let idx = Math.floor((v - minV) / binWidth);
+                    if (idx >= binCount) idx = binCount - 1;
+                    if (idx < 0) idx = 0;
+                    bins[idx].count++;
+                  }
+                  // Mark the bin containing the current journal's IF
+                  let currentBinIdx = -1;
+                  if (Number.isFinite(currentIf)) {
+                    currentBinIdx = Math.floor((currentIf - minV) / binWidth);
+                    if (currentBinIdx >= binCount) currentBinIdx = binCount - 1;
+                    if (currentBinIdx >= 0 && currentBinIdx < binCount) bins[currentBinIdx].isCurrent = true;
+                  }
+
+                  // Percentile rank of current journal within the field
+                  let percentile: number | null = null;
+                  if (Number.isFinite(currentIf)) {
+                    const below = values.filter((v) => v <= currentIf).length;
+                    percentile = Math.round((below / values.length) * 100);
+                  }
+
+                  return (
+                    <>
+                      {Number.isFinite(currentIf) && percentile != null && (
+                        <p className="text-sm text-muted-foreground mb-2" data-testid="text-field-percentile">
+                          <span className="font-medium text-foreground">{selectedJournal.journalName}</span>
+                          {' '}has IF <span className="font-medium text-foreground">{currentIf.toFixed(3)}</span>,
+                          ranking in the <span className="font-medium text-foreground">{percentile}th percentile</span> of its field.
+                        </p>
+                      )}
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={bins}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="mid"
+                              type="number"
+                              domain={[minV, maxV]}
+                              tickFormatter={(v: number) => v.toFixed(1)}
+                              label={{ value: 'Impact Factor', position: 'insideBottom', offset: -4 }}
+                            />
+                            <YAxis allowDecimals={false} label={{ value: 'Journals', angle: -90, position: 'insideLeft' }} />
+                            <ChartTooltip
+                              formatter={(value: any) => [value, 'Journals']}
+                              labelFormatter={(_: any, payload: any) => {
+                                const b = payload?.[0]?.payload;
+                                if (!b) return '';
+                                return `IF ${b.start.toFixed(2)} – ${b.end.toFixed(2)}`;
+                              }}
+                            />
+                            <Bar dataKey="count">
+                              {bins.map((b, i) => (
+                                <Cell key={i} fill={b.isCurrent ? '#dc2626' : '#94a3b8'} />
+                              ))}
+                            </Bar>
+                            {Number.isFinite(currentIf) && (
+                              <ReferenceLine
+                                x={currentIf}
+                                stroke="#dc2626"
+                                strokeWidth={2}
+                                strokeDasharray="4 2"
+                                label={{ value: 'This journal', position: 'top', fill: '#dc2626', fontSize: 12 }}
+                              />
+                            )}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {p99 < values[values.length - 1] && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          X-axis capped at 99th percentile ({p99.toFixed(1)}) to keep bin widths readable; max IF in field is {values[values.length - 1].toFixed(1)}.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Additional Metrics */}

@@ -49,10 +49,21 @@ export default function CreatePublication() {
     queryKey: ['/api/research-activities'],
   });
 
-  // Default form values
+  // Default form values — every controlled <input> needs a defined initial
+  // value or React will warn that the field is switching between
+  // uncontrolled/controlled the first time the user types.
   const defaultValues: Partial<CreatePublicationFormValues> = {
     status: "Concept",
     publicationType: "Journal Article",
+    title: "",
+    abstract: "",
+    authors: "",
+    journal: "",
+    volume: "",
+    issue: "",
+    pages: "",
+    doi: "",
+    publicationDate: "",
   };
 
   const form = useForm<CreatePublicationFormValues>({
@@ -99,7 +110,7 @@ export default function CreatePublication() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
-        <h1 className="text-2xl font-semibold text-neutral-400">Add Publication</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Add Publication</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

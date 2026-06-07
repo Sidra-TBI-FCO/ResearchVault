@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useMemo } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DummyUser {
   id: number;
@@ -39,10 +40,35 @@ interface CurrentUserProviderProps {
 }
 
 export function CurrentUserProvider({ children }: CurrentUserProviderProps) {
+  const { authConfig, user: authUser } = useAuth();
   const [currentUser, setCurrentUser] = useState<DummyUser>(DUMMY_USERS[7]); // Default to Management role
 
+  // When Microsoft Entra ID sign-in is enabled, the real session user is the
+  // single source of identity and the role-emulation dummy users are ignored.
+  const effectiveUser = useMemo<DummyUser>(() => {
+    if (authConfig.ssoEnabled) {
+      if (authUser) {
+        return {
+          id: authUser.id,
+          name: authUser.name,
+          email: authUser.email,
+          role: authUser.role,
+        };
+      }
+      // No real session yet — return a neutral placeholder so consumers don't
+      // accidentally render with elevated dummy permissions.
+      return { id: 0, name: 'Loading…', email: '', role: 'user' };
+    }
+    return currentUser;
+  }, [authConfig.ssoEnabled, authUser, currentUser]);
+
+  const updateCurrentUser = (user: DummyUser) => {
+    if (authConfig.ssoEnabled) return; // ignore role-switching under SSO
+    setCurrentUser(user);
+  };
+
   return (
-    <CurrentUserContext.Provider value={{ currentUser, setCurrentUser }}>
+    <CurrentUserContext.Provider value={{ currentUser: effectiveUser, setCurrentUser: updateCurrentUser }}>
       {children}
     </CurrentUserContext.Provider>
   );

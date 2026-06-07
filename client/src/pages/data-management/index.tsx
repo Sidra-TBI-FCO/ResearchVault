@@ -14,15 +14,19 @@ import {
   Share2, CalendarClock 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PermissionWrapper } from "@/components/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function DataManagementList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { currentUser } = useCurrentUser();
 
   const { data: plans, isLoading } = useQuery<EnhancedDataManagementPlan[]>({
     queryKey: ['/api/data-management-plans'],
   });
 
-  const formatDate = (date: string | Date | undefined) => {
+  const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -45,12 +49,18 @@ export default function DataManagementList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">Data Management Plans</h1>
-        <Link href="/data-management/create">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            New Plan
-          </Button>
-        </Link>
+        <h1 className="text-2xl font-semibold text-foreground">Data Management Plans</h1>
+        <PermissionWrapper 
+          currentUserRole={currentUser.role} 
+          navigationItem="data-management" 
+          requiredPermissions={['canAdd']}
+        >
+          <Link href="/data-management/create">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              New Plan
+            </Button>
+          </Link>
+        </PermissionWrapper>
       </div>
 
       <Card>
@@ -108,7 +118,7 @@ export default function DataManagementList() {
                         </Link>
                       </div>
                       {plan.description && (
-                        <div className="text-sm text-neutral-200 mt-1 line-clamp-1">
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-1">
                           {plan.description}
                         </div>
                       )}
@@ -121,11 +131,11 @@ export default function DataManagementList() {
                           </a>
                         </Link>
                       ) : (
-                        <span className="text-neutral-200 text-sm">—</span>
+                        <span className="text-muted-foreground text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-neutral-200">
+                      <div className="text-sm text-muted-foreground">
                         {plan.dataCollectionMethods ? (
                           <div className="line-clamp-2">{plan.dataCollectionMethods}</div>
                         ) : (
@@ -153,21 +163,27 @@ export default function DataManagementList() {
                       <span className="text-sm">{plan.retentionPeriod || "—"}</span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-neutral-200">
+                      <div className="flex items-center text-sm text-muted-foreground">
                         <CalendarClock className="h-3 w-3 mr-1" />
                         <span>{formatDate(plan.updatedAt)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <PermissionWrapper 
+                        currentUserRole={currentUser.role} 
+                        navigationItem="data-management" 
+                        requiredPermissions={['canEdit']}
+                      >
+                        <Button variant="ghost" size="sm" data-testid="button-more-actions">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </PermissionWrapper>
                     </TableCell>
                   </TableRow>
                 ))}
                 {filteredPlans?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No data management plans found matching your search.
                     </TableCell>
                   </TableRow>

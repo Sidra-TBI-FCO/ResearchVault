@@ -61,7 +61,7 @@ export default function IbcList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-400">IBC Applications</h1>
+        <h1 className="text-2xl font-semibold text-foreground">IBC Applications</h1>
         <Link href="/ibc/create">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             New Application
@@ -126,14 +126,14 @@ export default function IbcList() {
                         {application.title}
                       </div>
                       {application.description && (
-                        <div className="text-sm text-neutral-600 mt-1">
+                        <div className="text-sm text-muted-foreground mt-1">
                           {application.description}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-1 text-neutral-200" />
+                        <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
                         <span>{application.ibcNumber || "—"}</span>
                       </div>
                     </TableCell>
@@ -153,13 +153,13 @@ export default function IbcList() {
                       <div className="text-sm">
                         {application.submissionDate && (
                           <div className="flex items-center mb-1">
-                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <CalendarRange className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Submitted: {formatDate(application.submissionDate)}</span>
                           </div>
                         )}
                         {application.expirationDate && (
                           <div className="flex items-center">
-                            <CalendarRange className="h-3 w-3 mr-1 text-neutral-200" />
+                            <CalendarRange className="h-3 w-3 mr-1 text-muted-foreground" />
                             <span>Expires: {formatDate(application.expirationDate)}</span>
                           </div>
                         )}
@@ -220,7 +220,7 @@ export default function IbcList() {
                 ))}
                 {filteredApplications?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-neutral-200">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No IBC applications found matching your search.
                     </TableCell>
                   </TableRow>
