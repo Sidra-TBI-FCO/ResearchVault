@@ -35,11 +35,23 @@ fi
 
 info ".env found."
 
-# Load env vars for directory creation
-set -a
-# shellcheck disable=SC1091
-. ./.env
-set +a
+# Load env vars for directory creation (handles values with spaces)
+while IFS= read -r line || [ -n "$line" ]; do
+  # Strip inline comments and skip blank lines / comment lines
+  line="${line%%#*}"
+  case "$line" in
+    *=*) ;;
+    *) continue ;;
+  esac
+  key="${line%%=*}"
+  value="${line#*=}"
+  # Strip surrounding quotes (single or double)
+  case "$value" in
+    \"*\") value="${value#\"}"; value="${value%\"}" ;;
+    \'*\') value="${value#\'}"; value="${value%\'}" ;;
+  esac
+  export "$key=$value"
+done < .env
 
 # ── 3. Data directories ───────────────────────────────────────────────────────
 section "Creating data directories"
