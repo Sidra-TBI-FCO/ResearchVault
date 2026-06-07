@@ -10,20 +10,33 @@ interface User {
   role: string;
 }
 
-interface AuthConfig {
+export type AuthMode = 'demo' | 'local' | 'ldap' | 'oidc';
+
+export interface AuthConfig {
+  // Active auth mode (server-controlled via the AUTH_MODE env var).
+  mode: AuthMode;
+  // True only for the external identity-provider modes (ldap/oidc).
   ssoEnabled: boolean;
-  provider: 'local' | 'entra';
+  // Provider identifier (mirrors `mode`); kept for existing consumers.
+  provider: string;
+  // Display name for the SSO button (e.g. "Microsoft"), null when not OIDC.
+  providerName: string | null;
 }
+
+const DEFAULT_AUTH_CONFIG: AuthConfig = {
+  mode: 'local',
+  ssoEnabled: false,
+  provider: 'local',
+  providerName: null,
+};
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  availableUsers: User[];
   authConfig: AuthConfig;
   login: (username: string, password: string) => Promise<boolean>;
-  loginWithMicrosoft: () => void;
+  loginWithSso: () => void;
   logout: () => Promise<void>;
-  switchUser: (userId: number) => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -32,8 +45,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
-  const [authConfig, setAuthConfig] = useState<AuthConfig>({ ssoEnabled: false, provider: 'local' });
+  const [authConfig, setAuthConfig] = useState<AuthConfig>(DEFAULT_AUTH_CONFIG);
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -43,7 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const configResponse = await fetch('/api/auth/config');
         if (configResponse.ok) {
-          setAuthConfig(await configResponse.json());
+          setAuthConfig({ ...DEFAULT_AUTH_CONFIG, ...(await configResponse.json()) });
         }
 
         const authResponse = await fetch('/api/auth/me');
@@ -51,14 +63,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const authData = await authResponse.json();
           setUser(authData.user);
         }
-
-        const usersResponse = await fetch('/api/auth/users');
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json();
-          setAvailableUsers(usersData.users);
-        }
       } catch (error) {
-        // Fail silently
+        // Fail silently — the app will redirect to /login if unauthenticated.
       } finally {
         setLoading(false);
       }
@@ -102,30 +108,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginWithMicrosoft = () => {
-    window.location.href = '/api/auth/microsoft/login';
+  // Redirect the browser to start the OIDC (SSO) login flow.
+  const loginWithSso = () => {
+    window.location.href = '/api/auth/oidc';
   };
 
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
-      if (authConfig.ssoEnabled) {
-        const response = await fetch('/api/auth/microsoft/logout', { method: 'POST' });
-        setUser(null);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.logoutUrl) {
-            window.location.href = data.logoutUrl;
-            return;
-          }
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+
+      // OIDC logout may return an end-session URL to fully sign out at the IdP.
+      if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (data?.logoutUrl) {
+          window.location.href = data.logoutUrl;
+          return;
         }
-        navigate('/login');
-      } else {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        setUser(null);
-        navigate('/login');
-        toast({ title: 'Logout successful', description: 'You have been logged out.' });
       }
+
+      if (authConfig.mode !== 'demo') {
+        navigate('/login');
+      }
+      toast({ title: 'Logout successful', description: 'You have been logged out.' });
     } catch (error) {
       toast({
         title: 'Logout error',
@@ -137,60 +143,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const switchUser = async (userId: number): Promise<boolean> => {
-    if (authConfig.ssoEnabled) {
-      toast({
-        title: 'Not available',
-        description: 'Role switching is disabled when Microsoft sign-in is enabled.',
-        variant: 'destructive',
-      });
-      return false;
-    }
-    setLoading(true);
-    try {
-      const response = await fetch('/api/auth/switch-user', {
-        method: 'POST',
-        body: JSON.stringify({ userId }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        toast({ title: 'User switched', description: `Now viewing as ${data.user.name}` });
-        return true;
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: 'Switch user failed',
-          description: errorData.message || 'Failed to switch user',
-          variant: 'destructive',
-        });
-        return false;
-      }
-    } catch (error) {
-      toast({
-        title: 'Switch user error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
-        availableUsers,
         authConfig,
         login,
-        loginWithMicrosoft,
+        loginWithSso,
         logout,
-        switchUser,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
       }}

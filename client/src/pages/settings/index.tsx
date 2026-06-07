@@ -550,16 +550,47 @@ IRIS (Intelligent Research Information Management System) is a research manageme
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* SSO enable toggle — defaults to off. The toggle reflects the
+                  server-controlled AUTH_MODE setting; flipping SSO on/off is done
+                  on the server (see the env vars below), so the control is shown
+                  read-only here. */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-1">
+                  <Label className="font-medium" htmlFor="switch-sso-enabled">
+                    Single Sign-On (SSO)
+                  </Label>
+                  <div className="text-sm text-muted-foreground">
+                    Off by default. When off, users pick a role from the sidebar
+                    (development) or sign in with a local username and password.
+                    Turn on by setting <code className="px-1 rounded bg-muted">AUTH_MODE</code> to
+                    {" "}<code className="px-1 rounded bg-muted">ldap</code> or
+                    {" "}<code className="px-1 rounded bg-muted">oidc</code> on the server.
+                  </div>
+                </div>
+                <Switch
+                  id="switch-sso-enabled"
+                  checked={authConfig.ssoEnabled}
+                  disabled
+                  data-testid="switch-sso-enabled"
+                />
+              </div>
+
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-1">
                   <div className="font-medium" data-testid="text-auth-mode">
-                    {authConfig.ssoEnabled
-                      ? "Microsoft Entra ID (SSO)"
-                      : "Role emulation (development mode)"}
+                    {authConfig.mode === "oidc"
+                      ? `Single Sign-On — ${authConfig.providerName || "OIDC"}`
+                      : authConfig.mode === "ldap"
+                      ? "Single Sign-On — LDAP / Active Directory"
+                      : authConfig.mode === "demo"
+                      ? "Demo mode (open access guest)"
+                      : "Local login / role emulation"}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {authConfig.ssoEnabled
-                      ? "Users sign in with their Microsoft work account. The role selector and local login form are hidden."
+                      ? "Users sign in through your identity provider. The role selector and local login form are hidden."
+                      : authConfig.mode === "demo"
+                      ? "Everyone is signed in as a shared guest. No login is required."
                       : "Anyone can pick a role from the sidebar to emulate that user. No real authentication is enforced."}
                   </div>
                 </div>
@@ -572,14 +603,14 @@ IRIS (Intelligent Research Information Management System) is a research manageme
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div className="rounded-md border p-3">
-                  <div className="text-xs uppercase text-muted-foreground">Provider</div>
-                  <div className="font-medium">{authConfig.provider}</div>
+                  <div className="text-xs uppercase text-muted-foreground">Mode</div>
+                  <div className="font-medium" data-testid="text-auth-provider">{authConfig.mode}</div>
                 </div>
                 <div className="rounded-md border p-3">
                   <div className="text-xs uppercase text-muted-foreground">Logout endpoint</div>
                   <div className="font-medium">
-                    {authConfig.ssoEnabled
-                      ? "Microsoft end-session"
+                    {authConfig.mode === "oidc"
+                      ? "Provider end-session"
                       : "Local /api/auth/logout"}
                   </div>
                 </div>
@@ -591,26 +622,28 @@ IRIS (Intelligent Research Information Management System) is a research manageme
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <KeyRound className="h-5 w-5" />
-                Switching on Microsoft Entra ID SSO
+                Switching on SSO
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                SSO is enabled automatically when the environment variables below are
-                present on the server. Set them in the institution's production
+                Sign-in is controlled by the <code className="px-1 rounded bg-muted">AUTH_MODE</code> environment
+                variable on the server: <code className="px-1 rounded bg-muted">local</code> (default),
+                {" "}<code className="px-1 rounded bg-muted">demo</code>,
+                {" "}<code className="px-1 rounded bg-muted">ldap</code>, or
+                {" "}<code className="px-1 rounded bg-muted">oidc</code>. Set it in the institution's
                 deployment and restart the app — no code changes required.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <ol className="list-decimal list-inside space-y-2 text-sm">
                 <li>
-                  In the institution's Azure portal, register an app and add a redirect
-                  URI of <code className="px-1 rounded bg-muted">https://&lt;your-host&gt;/api/auth/microsoft/callback</code>.
+                  Choose a mode by setting <code className="px-1 rounded bg-muted">AUTH_MODE</code>.
+                  Leave it unset (or <code className="px-1 rounded bg-muted">local</code>) to keep
+                  today's behaviour.
                 </li>
-                <li>Create a client secret and copy its value.</li>
-                <li>Set the environment variables below in the deployment.</li>
-                <li>Restart the app. The server log will show
-                  <code className="px-1 mx-1 rounded bg-muted">[auth] Microsoft Entra ID sign-in ENABLED</code>
-                  and the login page will show a single "Sign in with Microsoft" button.</li>
-                <li>To turn SSO back off, unset any of the four required variables and restart.</li>
+                <li>For OIDC (e.g. Microsoft Entra ID), set the OIDC variables below; for LDAP set the LDAP variables.</li>
+                <li>Restart the app. The server log shows the active mode, e.g.
+                  <code className="px-1 mx-1 rounded bg-muted">[auth] SSO ENABLED — mode=oidc</code>.</li>
+                <li>To turn SSO back off, set <code className="px-1 rounded bg-muted">AUTH_MODE=local</code> and restart.</li>
               </ol>
 
               <div className="rounded-md border overflow-hidden">
@@ -618,40 +651,65 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="text-left p-2 font-medium">Variable</th>
-                      <th className="text-left p-2 font-medium">Required</th>
+                      <th className="text-left p-2 font-medium">Mode</th>
                       <th className="text-left p-2 font-medium">Description</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     <tr>
-                      <td className="p-2 font-mono text-xs">AZURE_TENANT_ID</td>
-                      <td className="p-2">Yes</td>
-                      <td className="p-2 text-muted-foreground">Entra ID tenant (directory) ID</td>
+                      <td className="p-2 font-mono text-xs">AUTH_MODE</td>
+                      <td className="p-2">all</td>
+                      <td className="p-2 text-muted-foreground">local (default) | demo | ldap | oidc</td>
                     </tr>
                     <tr>
-                      <td className="p-2 font-mono text-xs">AZURE_CLIENT_ID</td>
-                      <td className="p-2">Yes</td>
-                      <td className="p-2 text-muted-foreground">Application (client) ID of the Entra app registration</td>
+                      <td className="p-2 font-mono text-xs">AUTH_DEFAULT_ROLE</td>
+                      <td className="p-2">ldap / oidc</td>
+                      <td className="p-2 text-muted-foreground">Role for new SSO users on first sign-in (default Investigator)</td>
                     </tr>
                     <tr>
-                      <td className="p-2 font-mono text-xs">AZURE_CLIENT_SECRET</td>
-                      <td className="p-2">Yes</td>
-                      <td className="p-2 text-muted-foreground">Client secret value from the Entra app registration</td>
+                      <td className="p-2 font-mono text-xs">OIDC_ISSUER_URL</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Issuer URL, e.g. https://login.microsoftonline.com/&lt;tenant&gt;/v2.0</td>
                     </tr>
                     <tr>
-                      <td className="p-2 font-mono text-xs">AZURE_REDIRECT_URI</td>
-                      <td className="p-2">Yes</td>
-                      <td className="p-2 text-muted-foreground">Must exactly match a redirect URI on the app registration</td>
+                      <td className="p-2 font-mono text-xs">OIDC_CLIENT_ID</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Application (client) ID</td>
                     </tr>
                     <tr>
-                      <td className="p-2 font-mono text-xs">AZURE_DEFAULT_ROLE</td>
-                      <td className="p-2">No</td>
-                      <td className="p-2 text-muted-foreground">Role assigned to new users on first sign-in (default Investigator)</td>
+                      <td className="p-2 font-mono text-xs">OIDC_CLIENT_SECRET</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Client secret value</td>
                     </tr>
                     <tr>
-                      <td className="p-2 font-mono text-xs">AZURE_POST_LOGOUT_REDIRECT_URI</td>
-                      <td className="p-2">No</td>
-                      <td className="p-2 text-muted-foreground">Where Microsoft sends users after sign-out (defaults to /login)</td>
+                      <td className="p-2 font-mono text-xs">OIDC_REDIRECT_URI</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Must match the registered redirect, e.g. https://&lt;host&gt;/api/auth/callback</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_PROVIDER_NAME</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Button label, e.g. "Microsoft"</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">OIDC_POST_LOGOUT_REDIRECT_URI</td>
+                      <td className="p-2">oidc</td>
+                      <td className="p-2 text-muted-foreground">Optional — where the provider sends users after sign-out</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">LDAP_URL</td>
+                      <td className="p-2">ldap</td>
+                      <td className="p-2 text-muted-foreground">Directory URL, e.g. ldaps://ad.example.org:636</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">LDAP_BIND_DN / LDAP_BIND_PASSWORD</td>
+                      <td className="p-2">ldap</td>
+                      <td className="p-2 text-muted-foreground">Service account used to search for users</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 font-mono text-xs">LDAP_SEARCH_BASE / LDAP_SEARCH_FILTER</td>
+                      <td className="p-2">ldap</td>
+                      <td className="p-2 text-muted-foreground">Where/how to find a user (use {"{{username}}"} placeholder)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -662,7 +720,7 @@ IRIS (Intelligent Research Information Management System) is a research manageme
                 <div>
                   When SSO is enabled, the sidebar role selector and the local username /
                   password form are hidden. New users are auto-provisioned from their
-                  Microsoft profile and assigned the default role above.
+                  provider profile and assigned the default role above.
                 </div>
               </div>
             </CardContent>

@@ -164,47 +164,77 @@ The Research Portal System is a full-stack web application built for managing sc
 - Environment-based configuration
 - Backup and recovery procedures (external to application)
 
-## Microsoft Entra ID sign-in
+## Authentication (multi-provider, SSO off by default)
 
-The app supports authenticating users against Microsoft Entra ID (Azure AD). It is **off by default** — when none of the env vars below are set, the app runs in the original role-emulation mode (the role selector in the sidebar and the local login form remain active).
+The app has one unified auth system with four modes, selected by the
+`AUTH_MODE` environment variable:
 
-### Enabling per-institution
+| `AUTH_MODE` | What it does |
+|---|---|
+| `local` (default) | Local username/password login. In development a dummy "Iris Administrator" session is injected and the sidebar role selector is active — the original role-emulation experience. |
+| `demo` | Auto-injects a shared guest user on every request, no login wall. |
+| `ldap` | Username/password validated against an LDAP / Active Directory server (uses `ldapts`). |
+| `oidc` | OpenID Connect single sign-on (PKCE + end-session logout). Microsoft Entra ID is just a configured OIDC issuer. |
 
-**Before flipping the env vars**, apply the schema migration that adds the
-`users.auth_provider` (default `'local'`, NOT NULL) and `users.entra_oid`
-(nullable, unique) columns the provisioning flow depends on. Either:
+**SSO (ldap/oidc) is OFF by default.** With `AUTH_MODE` unset or set to
+`local`/`demo`, behaviour is exactly as before: the sidebar role selector and
+local login form remain active and there are no SSO redirects.
 
-- Run `npm run db:push` against the target database, or
-- Apply `migrations/20260525_add_entra_auth_columns.sql` directly.
+### Schema migration (required before enabling SSO)
 
-The migration is idempotent (uses `IF NOT EXISTS`) and safe on existing rows.
-Without it, the first Microsoft sign-in will fail when looking up / inserting
-the user record.
+The provisioning flow depends on two columns on `users`:
+`auth_provider` (default `'local'`, NOT NULL) and `entra_oid` (nullable, unique —
+reused as the generic external subject id). Apply either:
 
-Then set these environment variables in the institution's production deployment (each institution registers its own app in its own tenant):
+- `npm run db:push` against the target database, or
+- `migrations/20260525_add_entra_auth_columns.sql` directly.
+
+The migration is idempotent (`IF NOT EXISTS`) and safe on existing rows.
+
+### Enabling OIDC (including Microsoft Entra ID)
+
+Set `AUTH_MODE=oidc` and these variables in the deployment:
 
 | Variable | Required | Description |
 |---|---|---|
-| `AZURE_TENANT_ID` | yes | Entra ID tenant (directory) ID, e.g. `00000000-0000-0000-0000-000000000000` |
-| `AZURE_CLIENT_ID` | yes | Application (client) ID of the Entra app registration |
-| `AZURE_CLIENT_SECRET` | yes | Client secret value from the Entra app registration |
-| `AZURE_REDIRECT_URI` | yes | Must exactly match a redirect URI on the Entra app registration, e.g. `https://qbridge.sidra.org/api/auth/microsoft/callback` |
-| `AZURE_DEFAULT_ROLE` | no | App role assigned to new users on first sign-in (default `Investigator`) |
-| `AZURE_POST_LOGOUT_REDIRECT_URI` | no | Where Microsoft sends the user after sign-out (defaults to `<host>/login`) |
+| `OIDC_ISSUER_URL` | yes | Issuer URL. For Entra: `https://login.microsoftonline.com/<tenant>/v2.0` |
+| `OIDC_CLIENT_ID` | yes | Application (client) ID |
+| `OIDC_CLIENT_SECRET` | yes | Client secret value |
+| `OIDC_REDIRECT_URI` | yes | Must match a registered redirect, e.g. `https://qbridge.sidra.org/api/auth/callback` |
+| `OIDC_PROVIDER_NAME` | no | Sign-in button label, e.g. `Microsoft` (default `SSO`) |
+| `OIDC_SCOPE` | no | Defaults to `openid profile email` |
+| `OIDC_CLAIM_SUBJECT` / `OIDC_CLAIM_USERNAME` / `OIDC_CLAIM_NAME` / `OIDC_CLAIM_EMAIL` | no | Claim mappings (defaults `sub` / `preferred_username` / `name` / `email`) |
+| `OIDC_POST_LOGOUT_REDIRECT_URI` | no | Where the provider sends the user after sign-out (defaults to `<host>/login`) |
+| `AUTH_DEFAULT_ROLE` | no | Role for new SSO users on first sign-in (default `Investigator`) |
+| `APP_URL` | no | Public app origin, used to build the default redirect URI |
 
-When all four required vars are present:
+### Enabling LDAP
+
+Set `AUTH_MODE=ldap` and: `LDAP_URL`, `LDAP_BIND_DN`, `LDAP_BIND_PASSWORD`,
+`LDAP_SEARCH_BASE`, `LDAP_SEARCH_FILTER` (use the `{{username}}` placeholder,
+e.g. `(sAMAccountName={{username}})`). Optional field mappings:
+`LDAP_USER_FIELD_USERNAME` / `_NAME` / `_EMAIL`, and TLS controls
+`LDAP_TLS` / `LDAP_TLS_REJECT_UNAUTHORIZED`.
+
+### Behaviour when SSO is on
+
 - The local username/password form and the sidebar role selector are hidden.
-- The login page shows a single "Sign in with Microsoft" button.
-- New users are auto-provisioned from their Microsoft profile (matched on `oid`, falling back to email) and assigned `AZURE_DEFAULT_ROLE`.
-- Sign-out clears the local session and redirects through Microsoft's end-session endpoint.
+- OIDC shows a single "Sign in with `<provider name>`" button.
+- New users are auto-provisioned (OIDC matched on subject id → email → username;
+  LDAP matched on email → username) and assigned `AUTH_DEFAULT_ROLE`.
+- OIDC sign-out clears the local session and redirects through the provider's
+  end-session endpoint.
 
-The server logs `[auth] Microsoft Entra ID sign-in ENABLED/DISABLED` on startup so the active state is easy to confirm.
+The server logs the active mode on startup, e.g.
+`[auth] SSO ENABLED — mode=oidc` or `[auth] SSO DISABLED — mode=local`.
 
 ### Disabling
 
-Unset (or leave unset) any of the required vars and restart the app. Behaviour returns to the role-emulation flow with no Microsoft redirects.
+Set `AUTH_MODE=local` (or leave it unset) and restart. Behaviour returns to the
+role-emulation flow with no SSO redirects.
 
 ## Changelog
+- June 7, 2026. Unified authentication into one multi-provider system selected by `AUTH_MODE` (local default / demo / ldap / oidc), SSO off by default. Replaced the Entra-specific module with a generic OIDC provider (PKCE + end-session logout; Entra is just a configured issuer) and added an LDAP provider (`ldapts`). Updated `/api/auth/config` to expose mode + provider name, refreshed the client useAuth/login/Sidebar and the Settings auth panel (SSO toggle off by default).
 - May 31, 2026. Made the IBC application edit page's right sidebar (Communication History, Submission Comment, Save/Submit) collapsible on desktop to give the main form more editing width
 - January 20, 2026. Redesigned IBC application edit page with two-column layout: main form on left, sticky right sidebar with Communication History, Submission Comment, and Save/Submit buttons for better usability
 - January 20, 2026. Removed redundant Risk Group Classification field from IBC applications as Biosafety Level already provides this information

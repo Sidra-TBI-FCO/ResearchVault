@@ -286,7 +286,9 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
             <div className="flex-1">
               <div className="font-medium text-card-foreground">{currentUser.role}</div>
               <div className="text-xs text-muted-foreground">
-                {ssoEnabled ? 'Signed in with Microsoft' : 'Role-based Testing'}
+                {ssoEnabled
+                  ? `Signed in${authConfig.providerName ? ' with ' + authConfig.providerName : ' via SSO'}`
+                  : 'Role-based Testing'}
               </div>
             </div>
           </div>

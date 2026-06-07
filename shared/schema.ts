@@ -40,8 +40,8 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   role: text("role").notNull().default("user"),
-  authProvider: text("auth_provider").notNull().default("local"), // 'local' or 'entra'
-  entraOid: text("entra_oid").unique(), // Microsoft Entra ID subject identifier (oid)
+  authProvider: text("auth_provider").notNull().default("local"), // 'local' | 'demo' | 'ldap' | 'oidc'
+  entraOid: text("entra_oid").unique(), // stable external subject id (OIDC `sub`); column name kept for migration compatibility
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

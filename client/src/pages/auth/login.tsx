@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,7 +16,22 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const [, navigate] = useLocation();
-  const { login, loading, authConfig, loginWithMicrosoft } = useAuth();
+  const { login, loading, authConfig, loginWithSso, isAuthenticated } = useAuth();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Surface any error passed back from the OIDC callback redirect.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err) setErrorMsg(decodeURIComponent(err));
+  }, []);
+
+  // Demo mode never shows a login wall — redirect straight into the app.
+  useEffect(() => {
+    if (authConfig.mode === 'demo' || isAuthenticated) {
+      navigate('/');
+    }
+  }, [authConfig.mode, isAuthenticated, navigate]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -24,11 +39,15 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+    setErrorMsg(null);
     const success = await login(values.username, values.password);
     if (success) {
       navigate('/');
     }
   };
+
+  const isFormMode = authConfig.mode === 'local' || authConfig.mode === 'ldap';
+  const providerName = authConfig.providerName ?? 'SSO';
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -38,23 +57,34 @@ export default function LoginPage() {
             Research Portal Login
           </CardTitle>
           <CardDescription className="text-center">
-            {authConfig.ssoEnabled
-              ? 'Sign in with your institutional Microsoft account'
-              : 'Enter your credentials to access the research management system'}
+            {isFormMode
+              ? `Enter your ${authConfig.mode === 'ldap' ? 'institutional ' : ''}credentials to access the research management system`
+              : `Sign in via ${providerName}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {authConfig.ssoEnabled ? (
+          {errorMsg && (
+            <div
+              className="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive"
+              data-testid="text-login-error"
+            >
+              {errorMsg}
+            </div>
+          )}
+
+          {authConfig.mode === 'oidc' && (
             <Button
               type="button"
               className="w-full"
-              onClick={loginWithMicrosoft}
+              onClick={loginWithSso}
               disabled={loading}
-              data-testid="button-login-microsoft"
+              data-testid="button-login-sso"
             >
-              Sign in with Microsoft
+              Sign in with {providerName}
             </Button>
-          ) : (
+          )}
+
+          {isFormMode && (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField

@@ -1,7 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { registerAuthRoutes } from "./auth";
-import { isEntraEnabled, logEntraStatus, registerEntraRoutes } from "./entraAuth";
+import {
+  registerAuthRoutes,
+  logAuthStatus,
+  isSsoEnabled,
+  getAuthMode,
+  demoBannerMiddleware,
+} from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { createHash } from "crypto";
@@ -42,10 +47,14 @@ app.use(session({
   }
 }));
 
-// Development middleware to bridge dummy users with session-based auth.
-// Skipped entirely when Microsoft Entra ID sign-in is enabled, so the real
-// session user is the only source of identity.
-if (process.env.NODE_ENV !== 'production' && !isEntraEnabled) {
+// Identity middleware.
+// - demo mode: auto-inject a guest user on every request (all environments).
+// - SSO off (local mode) in development: bridge a dummy user with the session so
+//   the role-emulation experience works without a login. Skipped when SSO
+//   (ldap/oidc) is enabled, so the real session user is the only identity.
+if (getAuthMode() === 'demo') {
+  app.use('/api', demoBannerMiddleware);
+} else if (process.env.NODE_ENV !== 'production' && !isSsoEnabled()) {
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     // If no session user is set, use a default development user
     if (!req.session.user) {
@@ -93,12 +102,11 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Log Microsoft Entra ID sign-in status on startup
-  logEntraStatus();
+  // Log auth/SSO status on startup
+  logAuthStatus();
 
-  // Register authentication routes
+  // Register authentication routes (local/ldap/oidc per AUTH_MODE)
   registerAuthRoutes(app);
-  registerEntraRoutes(app);
 
   // Register API routes
   const server = await registerRoutes(app);
