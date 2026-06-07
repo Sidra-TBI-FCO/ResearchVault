@@ -50,7 +50,7 @@ while IFS= read -r line || [ -n "$line" ]; do
     \"*\") value="${value#\"}"; value="${value%\"}" ;;
     \'*\') value="${value#\'}"; value="${value%\'}" ;;
   esac
-  export "$key=$value"
+  eval "$key=\$value"; export "$key"
 done < .env
 
 # ── 3. Data directories ───────────────────────────────────────────────────────
