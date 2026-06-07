@@ -35,22 +35,27 @@ fi
 
 info ".env found."
 
-# Load env vars for directory creation (handles values with spaces)
+# Load env vars for directory creation (handles spaces, quotes, CRLF)
 while IFS= read -r line || [ -n "$line" ]; do
-  # Strip inline comments and skip blank lines / comment lines
+  # Strip carriage returns (Windows CRLF line endings)
+  line="${line%$'\r'}"
+  # Strip inline comments
   line="${line%%#*}"
-  case "$line" in
-    *=*) ;;
-    *) continue ;;
-  esac
-  key="${line%%=*}"
+  # Skip lines without =
+  case "$line" in *=*) ;; *) continue ;; esac
+  # Extract key and strip all whitespace from it
+  key=$(printf '%s' "${line%%=*}" | tr -d ' \t\r')
   value="${line#*=}"
-  # Strip surrounding quotes (single or double)
-  case "$value" in
-    \"*\") value="${value#\"}"; value="${value%\"}" ;;
-    \'*\') value="${value#\'}"; value="${value%\'}" ;;
+  # Skip empty or syntactically invalid keys
+  case "$key" in
+    ''|*[!A-Za-z0-9_]*) continue ;;
   esac
-  eval "$key=\$value"; export "$key"
+  # Strip surrounding quotes from value
+  case "$value" in
+    '"'*'"') value="${value#\"}"; value="${value%\"}" ;;
+    "'"*"'") value="${value#\'}"; value="${value%\'}" ;;
+  esac
+  eval "$key=\$value" && export "$key"
 done < .env
 
 # ── 3. Data directories ───────────────────────────────────────────────────────
