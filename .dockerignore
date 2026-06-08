@@ -4,7 +4,6 @@ dist
 .git
 .gitignore
 *.tar.gz
-attached_assets
 .env
 .env.*
 docker-compose.override.yml
