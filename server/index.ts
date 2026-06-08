@@ -33,16 +33,28 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
+
+// Trust the nginx reverse proxy so Express sees the correct protocol,
+// IP, and host from X-Forwarded-* headers. Required for secure cookies
+// to work correctly when the app is behind nginx.
+app.set('trust proxy', 1);
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
+// Secure cookies require HTTPS. In production behind nginx without TLS
+// (plain HTTP) we must keep secure: false or the browser will never
+// send the cookie back and every request appears unauthenticated.
+const isHttps = process.env.APP_URL?.startsWith('https://') ?? false;
+
 // Session configuration
 app.use(session({
-  secret: createHash('sha256').update('research-portal-session-secret').digest('hex'),
+  secret: process.env.SESSION_SECRET || createHash('sha256').update('research-portal-session-secret').digest('hex'),
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+  cookie: {
+    secure: isHttps,           // true only when actually serving over HTTPS
+    sameSite: isHttps ? 'lax' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
