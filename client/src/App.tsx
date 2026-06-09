@@ -29,6 +29,7 @@ import EditRoom from "@/pages/facilities/rooms/edit";
 
 // Programs (PRM)
 import ProgramsList from "@/pages/programs";
+import CreateProgram from "@/pages/programs/create";
 import ProgramDetail from "@/pages/programs/detail";
 import EditProgram from "@/pages/programs/edit";
 
@@ -220,6 +221,7 @@ function AppRouter() {
         
         {/* Legacy routes - redirect to PMO paths */}
         <Route path="/programs" component={ProgramsList} />
+        <Route path="/programs/create" component={CreateProgram} />
         <Route path="/programs/:id/edit" component={EditProgram} />
         <Route path="/programs/:id" component={ProgramDetail} />
         <Route path="/projects" component={ProjectList} />
