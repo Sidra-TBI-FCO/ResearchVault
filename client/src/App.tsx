@@ -127,40 +127,13 @@ import CertificationsPage from "@/pages/certifications";
 
 // Settings
 import SettingsPage from "@/pages/settings";
-import LoginPage from "@/pages/auth/login";
 import { useAuth, RequireAuth } from "@/hooks/useAuth";
-
-function AuthenticatedAppRoutes() {
-  const { authConfig } = useAuth();
-  if (authConfig.ssoEnabled) {
-    return (
-      <RequireAuth>
-        <AppRouter />
-      </RequireAuth>
-    );
-  }
-  return <AppRouter />;
-}
-
-// Applies the same auth gating as AuthenticatedAppRoutes but WITHOUT the app
-// Layout chrome — used for the dedicated print routes.
-function AuthGate({ children }: { children: React.ReactNode }) {
-  const { authConfig } = useAuth();
-  if (authConfig.ssoEnabled) {
-    return <RequireAuth>{children}</RequireAuth>;
-  }
-  return <>{children}</>;
-}
 
 // Public Pages
 import LandingPage from "@/pages/public/landing";
 import DemoPage from "@/pages/public/demo";
 import TeamPage from "@/pages/public/team";
 import AboutPage from "@/pages/public/about";
-
-// Auth
-import LoginPage from "@/pages/auth/login";
-import { AuthProvider, RequireAuth } from "@/hooks/useAuth";
 
 // PMO Applications
 import PmoApplicationsList from "@/pages/pmo/applications/index";
@@ -174,10 +147,32 @@ import PmoApplicationDetail from "@/pages/pmo/applications/detail";
 import PmoOfficeReview from "@/pages/pmo/office/index";
 import PmoOfficeReviewDetail from "@/pages/pmo/office/review";
 
+function AuthenticatedAppRoutes() {
+  const { authConfig } = useAuth();
+  if (authConfig.ssoEnabled) {
+    return (
+      <RequireAuth>
+        <AppRouter />
+      </RequireAuth>
+    );
+  }
+  return <AppRouter />;
+}
+
+// Applies the same auth gating without the Layout chrome — used for print routes.
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { authConfig } = useAuth();
+  if (authConfig.ssoEnabled) {
+    return <RequireAuth>{children}</RequireAuth>;
+  }
+  return <>{children}</>;
+}
+
 function AppRouter() {
   return (
     <Switch>
-      <Route path="/login" component={LoginPage} />
+      {/* /login redirects to landing — login is a modal on the landing page now */}
+      <Route path="/login">{() => { window.location.replace('/'); return null; }}</Route>
       <RequireAuth>
       <Layout>
       <Switch>
@@ -343,40 +338,34 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <Switch>
-            {/* Public Pages - no auth required */}
-            <Route path="/" component={LandingPage} />
-            <Route path="/about" component={AboutPage} />
-            <Route path="/demo" component={DemoPage} />
-            <Route path="/team" component={TeamPage} />
-            
-            {/* Application Routes - wrapped with providers */}
-            <Route>
-              <AuthProvider>
-                <CurrentUserProvider>
-                  <PermissionsProvider>
-                    <Toaster />
-                    <Switch>
-                      <Route path="/login" component={LoginPage} />
-                      <Route path="/ibc-applications/:id/print">
-                        <AuthGate>
-                          <IbcApplicationPrintPage />
-                        </AuthGate>
-                      </Route>
-                      <Route path="/irb-applications/:id/print">
-                        <AuthGate>
-                          <IrbApplicationPrintPage />
-                        </AuthGate>
-                      </Route>
-                      <Route>
-                        <AuthenticatedAppRoutes />
-                      </Route>
-                    </Switch>
-                  </PermissionsProvider>
-                </CurrentUserProvider>
-              </AuthProvider>
-            </Route>
-          </Switch>
+          {/* AuthProvider wraps everything so any page can call useAuth() */}
+          <AuthProvider>
+            <CurrentUserProvider>
+              <PermissionsProvider>
+                <Toaster />
+                <Switch>
+                  {/* Public pages — accessible without logging in */}
+                  <Route path="/" component={LandingPage} />
+                  <Route path="/about" component={AboutPage} />
+                  <Route path="/demo" component={DemoPage} />
+                  <Route path="/team" component={TeamPage} />
+
+                  {/* Print routes — auth-gated but no Layout chrome */}
+                  <Route path="/ibc-applications/:id/print">
+                    <AuthGate><IbcApplicationPrintPage /></AuthGate>
+                  </Route>
+                  <Route path="/irb-applications/:id/print">
+                    <AuthGate><IrbApplicationPrintPage /></AuthGate>
+                  </Route>
+
+                  {/* All other routes — auth-gated with Layout */}
+                  <Route>
+                    <AuthenticatedAppRoutes />
+                  </Route>
+                </Switch>
+              </PermissionsProvider>
+            </CurrentUserProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

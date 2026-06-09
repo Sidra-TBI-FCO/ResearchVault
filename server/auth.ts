@@ -23,22 +23,12 @@ export interface SessionUser {
   role: string;
 }
 
-// ── Session types ──────────────────────────────────────────────────────────────
-
 declare module "express-session" {
   interface SessionData {
     user?: SessionUser;
     oidcState?: string;
     oidcNonce?: string;
   }
-}
-
-export interface SessionUser {
-  id: number;
-  username: string;
-  name: string;
-  email: string;
-  role: string;
 }
 
 // ── Auth mode ──────────────────────────────────────────────────────────────────
@@ -49,6 +39,16 @@ export function getAuthMode(): AuthMode {
   const mode = (process.env.AUTH_MODE || "local").toLowerCase();
   if (mode === "demo" || mode === "ldap" || mode === "oidc") return mode;
   return "local";
+}
+
+export function isSsoEnabled(): boolean {
+  return getAuthMode() === "oidc";
+}
+
+export function logAuthStatus(): void {
+  const mode = getAuthMode();
+  const sso = isSsoEnabled();
+  console.log(`[auth] mode=${mode} sso=${sso}`);
 }
 
 // ── Password hashing ───────────────────────────────────────────────────────────

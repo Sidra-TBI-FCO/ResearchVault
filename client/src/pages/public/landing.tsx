@@ -1,13 +1,16 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Shield, Database, Users, FileCheck, Microscope, 
+import {
+  Shield, Database, Users, FileCheck, Microscope,
   Building2, Globe, ArrowRight, ChevronRight,
-  Lock, Zap, BarChart3, Network
+  Lock, Zap, BarChart3, Network, LogOut
 } from "lucide-react";
 import qbridgeLogo from "@assets/image_1767775219373.png";
+import { useAuth } from "@/hooks/useAuth";
+import { LoginModal } from "@/components/LoginModal";
+import { useState, useEffect } from "react";
 
 const features = [
   {
@@ -62,8 +65,41 @@ const itemVariants = {
 };
 
 export default function LandingPage() {
+  const { isAuthenticated, user, logout, authConfig } = useAuth();
+  const [, navigate] = useLocation();
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  // Open modal if redirected here with ?signin=true (e.g. from /login route)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('signin') === 'true' && !isAuthenticated) {
+      setLoginOpen(true);
+    }
+  }, [isAuthenticated]);
+
+  // If already authenticated and modal opens, redirect straight to dashboard
+  const handleLaunchClick = () => {
+    if (isAuthenticated) {
+      navigate('/app');
+    } else {
+      setLoginOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setLoginOpen(false);
+    navigate('/app');
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    // logout() in useAuth navigates to '/' already; modal stays closed
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} onSuccess={handleLoginSuccess} />
+
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-slate-900/80 border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -75,27 +111,37 @@ export default function LandingPage() {
               </div>
             </div>
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/about" className="text-slate-300 hover:text-white transition-colors">
-                About
-              </Link>
-              <Link href="/demo" className="text-slate-300 hover:text-white transition-colors">
-                Demo
-              </Link>
-              <Link href="/team" className="text-slate-300 hover:text-white transition-colors">
-                Team
-              </Link>
-              <Link href="/app">
-                <Button variant="default" className="bg-teal-600 hover:bg-teal-500">
+              <Link href="/about" className="text-slate-300 hover:text-white transition-colors">About</Link>
+              <Link href="/demo" className="text-slate-300 hover:text-white transition-colors">Demo</Link>
+              <Link href="/team" className="text-slate-300 hover:text-white transition-colors">Team</Link>
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-300 text-sm">
+                    Welcome, <span className="text-white font-medium">{user?.name}</span>
+                  </span>
+                  <Button variant="default" className="bg-teal-600 hover:bg-teal-500" onClick={() => navigate('/app')}>
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Sign out
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="default" className="bg-teal-600 hover:bg-teal-500" onClick={handleLaunchClick}>
                   Launch Platform
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-              </Link>
+              )}
             </nav>
-            <Link href="/app" className="md:hidden">
-              <Button size="sm" variant="default" className="bg-teal-600">
-                Launch
-              </Button>
-            </Link>
+            <div className="md:hidden">
+              {isAuthenticated ? (
+                <Button size="sm" className="bg-teal-600" onClick={() => navigate('/app')}>Dashboard</Button>
+              ) : (
+                <Button size="sm" className="bg-teal-600" onClick={handleLaunchClick}>Sign in</Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -148,15 +194,13 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button size="lg" className="bg-teal-600 hover:bg-teal-500 text-lg px-8 py-6" onClick={handleLaunchClick}>
+                  {isAuthenticated ? 'Go to Dashboard' : 'Launch Platform'}
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </Button>
                 <Link href="/demo">
-                  <Button size="lg" className="bg-teal-600 hover:bg-teal-500 text-lg px-8 py-6">
-                    Explore Demo
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/team">
                   <Button size="lg" className="bg-transparent border-2 border-slate-400 text-white hover:bg-slate-700 text-lg px-8 py-6">
-                    Meet the Team
+                    Explore Demo
                   </Button>
                 </Link>
               </div>
@@ -282,12 +326,10 @@ export default function LandingPage() {
               <p className="text-lg text-slate-300 mb-8">
                 Experience Q-BRIDGE and see how it can streamline your institution's research governance.
               </p>
-              <Link href="/demo">
-                <Button size="lg" className="bg-teal-600 hover:bg-teal-500 text-lg px-10 py-6">
-                  Try the Demo
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+              <Button size="lg" className="bg-teal-600 hover:bg-teal-500 text-lg px-10 py-6" onClick={handleLaunchClick}>
+                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
             </motion.div>
           </div>
         </section>

@@ -32,9 +32,8 @@ const DEFAULT_AUTH_CONFIG: AuthConfig = {
 
 interface AuthContextType {
   user: User | null;
-  authConfig: AuthConfig | null;
-  loading: boolean;
   authConfig: AuthConfig;
+  loading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   loginWithSso: () => void;
   logout: () => Promise<void>;
@@ -71,7 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    initializeAuth();
+    init();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -81,7 +80,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
-        headers: { 'Content-Type': 'application/json' },
       });
 
       if (response.ok) {
@@ -121,10 +119,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      if (authConfig.mode !== 'demo') {
-        navigate('/login');
-      }
-      toast({ title: 'Logout successful', description: 'You have been logged out.' });
+      // Always return to the landing page — login is a modal there now
+      navigate('/');
+      toast({ title: 'Signed out', description: 'You have been signed out successfully.' });
     } catch (error) {
       toast({
         title: 'Logout error',
@@ -142,7 +139,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         authConfig,
         loading,
-        authConfig,
         login,
         loginWithSso,
         logout,
@@ -171,7 +167,7 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
-        navigate('/login');
+        navigate('/');
       } else if (adminOnly && !isAdmin) {
         navigate('/');
       }

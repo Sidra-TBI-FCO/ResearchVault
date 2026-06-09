@@ -5,9 +5,9 @@ RUN apk add --no-cache postgresql-client
 
 WORKDIR /app
 
-# Install all dependencies (including devDependencies for drizzle-kit migrations)
+# Install dependencies
 COPY package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN npm install
 
 # Copy full source
 COPY . .

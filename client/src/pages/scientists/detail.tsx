@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Scientist, ResearchActivity, Project, Program } from "@shared/schema";
 import { ArrowLeft, Mail, Building, User, Pencil, ChevronRight, ChevronDown, Folder, FileText, Users, ExternalLink } from "lucide-react";
-import { SiOrcid, SiLinkedin, SiGooglescholar } from "react-icons/si";
+import { SiOrcid, SiGooglescholar } from "react-icons/si";
+import { FaLinkedin } from "react-icons/fa";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ScientistAvatar } from "@/components/ScientistAvatar";
@@ -352,7 +353,7 @@ export default function ScientistDetail() {
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm"
                               data-testid="link-linkedin"
                             >
-                              <SiLinkedin className="h-4 w-4" />
+                              <FaLinkedin className="h-4 w-4" />
                               LinkedIn
                               <ExternalLink className="h-3 w-3" />
                             </a>
