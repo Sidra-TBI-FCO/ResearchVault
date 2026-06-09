@@ -95,7 +95,7 @@ function getCertificationStatus(endDate: string | null): {
   text: string;
 } {
   if (!endDate) {
-    return { status: 'never', color: 'bg-gray-100 text-gray-600', text: 'Never' };
+    return { status: 'never', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300', text: 'Never' };
   }
 
   const end = parseISO(endDate);
@@ -103,11 +103,11 @@ function getCertificationStatus(endDate: string | null): {
   const daysUntilExpiry = differenceInDays(end, today);
 
   if (daysUntilExpiry < 0) {
-    return { status: 'expired', color: 'bg-red-100 text-red-800', text: 'Expired' };
+    return { status: 'expired', color: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300', text: 'Expired' };
   } else if (daysUntilExpiry <= 30) {
-    return { status: 'expiring', color: 'bg-orange-100 text-orange-800', text: 'Expiring' };
+    return { status: 'expiring', color: 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300', text: 'Expiring' };
   } else {
-    return { status: 'valid', color: 'bg-green-100 text-green-800', text: 'Valid' };
+    return { status: 'valid', color: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300', text: 'Valid' };
   }
 }
 
@@ -392,8 +392,8 @@ export default function CertificationsPage() {
   if (matrixLoading || modulesLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
       </div>
     );
   }
@@ -470,19 +470,19 @@ export default function CertificationsPage() {
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                  <div className="w-3 h-3 bg-green-100 border border-green-300 dark:bg-green-900 dark:border-green-700 rounded"></div>
                   <span>Valid</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div>
+                  <div className="w-3 h-3 bg-orange-100 border border-orange-300 dark:bg-orange-900 dark:border-orange-700 rounded"></div>
                   <span>Expiring (≤30 days)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                  <div className="w-3 h-3 bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded"></div>
                   <span>Expired</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
+                  <div className="w-3 h-3 bg-gray-100 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded"></div>
                   <span>Never Completed</span>
                 </div>
               </div>
@@ -492,7 +492,7 @@ export default function CertificationsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="sticky left-0 bg-white min-w-48">Scientist</TableHead>
+                      <TableHead className="sticky left-0 bg-white dark:bg-card min-w-48">Scientist</TableHead>
                       {moduleHeaders.map((module: any) => (
                         <TableHead key={module.id} className="text-center min-w-32">
                           {module.name}
@@ -503,11 +503,11 @@ export default function CertificationsPage() {
                   <TableBody>
                     {filteredScientists.map((scientist: any) => (
                       <TableRow key={scientist.id}>
-                        <TableCell className="sticky left-0 bg-white font-medium">
+                        <TableCell className="sticky left-0 bg-white dark:bg-card font-medium">
                           <div>
                             <div>{scientist.name}</div>
                             {scientist.jobTitle && (
-                              <div className="text-xs text-gray-500 mt-1">{scientist.jobTitle}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{scientist.jobTitle}</div>
                             )}
                           </div>
                         </TableCell>
@@ -566,19 +566,19 @@ export default function CertificationsPage() {
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                  <div className="w-3 h-3 bg-green-100 border border-green-300 dark:bg-green-900 dark:border-green-700 rounded"></div>
                   <span>Valid</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div>
+                  <div className="w-3 h-3 bg-orange-100 border border-orange-300 dark:bg-orange-900 dark:border-orange-700 rounded"></div>
                   <span>Expiring (≤30 days)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                  <div className="w-3 h-3 bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded"></div>
                   <span>Expired</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
+                  <div className="w-3 h-3 bg-gray-100 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded"></div>
                   <span>Never Completed</span>
                 </div>
               </div>
@@ -588,7 +588,7 @@ export default function CertificationsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="sticky left-0 bg-white min-w-48">Staff Member</TableHead>
+                      <TableHead className="sticky left-0 bg-white dark:bg-card min-w-48">Staff Member</TableHead>
                       <TableHead className="text-center min-w-40">Last Training Date</TableHead>
                       <TableHead className="text-center min-w-40">Expiration Date</TableHead>
                       <TableHead className="text-center min-w-32">Status</TableHead>
@@ -615,11 +615,11 @@ export default function CertificationsPage() {
                       
                       return (
                         <TableRow key={scientist.id}>
-                          <TableCell className="sticky left-0 bg-white font-medium">
+                          <TableCell className="sticky left-0 bg-white dark:bg-card font-medium">
                             <div>
                               <div>{scientist.name}</div>
                               {scientist.jobTitle && (
-                                <div className="text-xs text-gray-500 mt-1">{scientist.jobTitle}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{scientist.jobTitle}</div>
                               )}
                             </div>
                           </TableCell>
@@ -703,9 +703,9 @@ export default function CertificationsPage() {
                 showDropzone={true}
               />
               
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">Free OCR-Powered Upload</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
+                <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Free OCR-Powered Upload</h4>
+                <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
                   <li>• Upload CITI certificates or completion reports (PDF format)</li>
                   <li>• Open-source OCR automatically extracts names, dates, courses, and record IDs</li>
                   <li>• Completely free - no API limits or external service dependencies</li>
@@ -764,7 +764,7 @@ export default function CertificationsPage() {
               <CardContent className="p-2 sm:p-6">
                 <div className="overflow-auto h-96 md:h-auto md:max-h-none border rounded-md">
                   <Table className="min-w-full">
-                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
+                    <TableHeader className="sticky top-0 bg-white dark:bg-card z-10 shadow-sm border-b">
                       <TableRow>
                         <TableHead className="min-w-24">Status</TableHead>
                         <TableHead className="min-w-32">File Name</TableHead>
@@ -783,14 +783,14 @@ export default function CertificationsPage() {
                         <TableRow key={index}>
                           <TableCell>
                             {file.status === 'detected' ? (
-                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300">
                                 <Check className="h-3 w-3 mr-1" />
                                 OCR Success
                               </Badge>
                             ) : file.status === 'ocr_failed' ? (
                               <Badge 
                                 variant="secondary" 
-                                className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors"
+                                className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 transition-colors"
                                 onClick={() => {
                                   const errorMessage = file.error || file.errorDetails || 'OCR processing failed - no details available';
                                   const fullErrorText = `OCR Processing Error\n\nFile: ${file.fileName}\n\nError Details:\n${errorMessage}`;
@@ -822,11 +822,11 @@ export default function CertificationsPage() {
                                 OCR Failed
                               </Badge>
                             ) : file.status === 'processing' ? (
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
                                 Processing...
                               </Badge>
                             ) : (
-                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Unknown
                               </Badge>
@@ -869,7 +869,7 @@ export default function CertificationsPage() {
                               </SelectContent>
                             </Select>
                             {file.courseName && !file.module && (
-                              <div className="text-xs text-amber-600 mt-1" title={file.courseName}>
+                              <div className="text-xs text-amber-600 dark:text-amber-400 mt-1" title={file.courseName}>
                                 Detected: {file.courseName.length > 20 ? `${file.courseName.substring(0, 20)}...` : file.courseName}
                               </div>
                             )}
@@ -1002,7 +1002,7 @@ export default function CertificationsPage() {
               </p>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Search Staff/Course</label>
                   <div className="relative">
@@ -1058,7 +1058,7 @@ export default function CertificationsPage() {
               ) : (
                 <div className="overflow-auto h-96 md:h-auto md:max-h-none border rounded-md">
                   <Table className="min-w-full">
-                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
+                    <TableHeader className="sticky top-0 bg-white dark:bg-card z-10 shadow-sm border-b">
                       <TableRow>
                         <TableHead>File Name</TableHead>
                         <TableHead>Status</TableHead>
@@ -1106,12 +1106,12 @@ export default function CertificationsPage() {
                                   variant="secondary"
                                   className={
                                     actualStatus === 'detected'
-                                      ? 'bg-green-100 text-green-800'
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
                                       : actualStatus === 'ocr_failed'
-                                      ? 'bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors'
+                                      ? 'bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 transition-colors'
                                       : actualStatus === 'unrecognized'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-blue-100 text-blue-800'
+                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300'
+                                      : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                                   }
                                   onClick={actualStatus === 'ocr_failed' ? () => {
                                     const errorMessage = entry.errorMessage || 'OCR processing failed - no details available';
@@ -1155,10 +1155,10 @@ export default function CertificationsPage() {
                                   variant="outline" 
                                   className={
                                     entry.documentType === 'certificate'
-                                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                      ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
                                       : entry.documentType === 'report'
-                                      ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                                      ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
+                                      : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
                                   }
                                 >
                                   {entry.documentType === 'certificate' ? '📜 Certificate' : 
@@ -1171,12 +1171,12 @@ export default function CertificationsPage() {
                                   variant="outline" 
                                   className={
                                     entry.saveStatus === 'saved'
-                                      ? 'bg-green-50 text-green-700 border-green-200'
+                                      ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800'
                                       : entry.saveStatus === 'duplicate'
-                                      ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                      ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800'
                                       : entry.saveStatus === 'not_saved'
-                                      ? 'bg-red-50 text-red-700 border-red-200'
-                                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                                      ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800'
+                                      : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
                                   }
                                 >
                                   {entry.saveStatus === 'saved' ? '✅ Saved' : 
@@ -1189,17 +1189,17 @@ export default function CertificationsPage() {
                                 {hasDetectedData ? (
                                   <div className="text-sm space-y-1">
                                     {parsedData.name && (
-                                      <div className="font-medium text-green-700 truncate" title={parsedData.name}>
+                                      <div className="font-medium text-green-700 dark:text-green-400 truncate" title={parsedData.name}>
                                         👤 {parsedData.name}
                                       </div>
                                     )}
                                     {parsedData.courseName && (
-                                      <div className="text-blue-600 truncate" title={parsedData.courseName}>
+                                      <div className="text-blue-600 dark:text-blue-400 truncate" title={parsedData.courseName}>
                                         📚 {parsedData.courseName}
                                       </div>
                                     )}
                                     {(parsedData.completionDate || parsedData.expirationDate) && (
-                                      <div className="text-gray-600 truncate">
+                                      <div className="text-gray-600 dark:text-gray-400 truncate">
                                         📅 {parsedData.completionDate && format(new Date(parsedData.completionDate), 'MMM dd, yyyy')} 
                                         {parsedData.completionDate && parsedData.expirationDate && ' - '}
                                         {parsedData.expirationDate && format(new Date(parsedData.expirationDate), 'MMM dd, yyyy')}
@@ -1207,7 +1207,7 @@ export default function CertificationsPage() {
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-gray-400 text-sm">No data detected</span>
+                                  <span className="text-gray-400 dark:text-gray-500 text-sm">No data detected</span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -1255,9 +1255,9 @@ export default function CertificationsPage() {
                 </div>
               )}
 
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">PDF Import History</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
+                <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">PDF Import History</h4>
+                <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
                   <li>• Track all PDF uploads and OCR processing results</li>
                   <li>• Search by staff names, course names, or date ranges</li>
                   <li>• View processing status and performance metrics</li>
@@ -1380,13 +1380,13 @@ export default function CertificationsPage() {
                       }}
                       className={`w-full p-3 text-left rounded-lg border transition-colors ${
                         (ocrConfig?.value?.provider || 'ocr_space') === 'ocr_space'
-                          ? 'border-blue-500 bg-blue-50 text-blue-900'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200 dark:border-blue-500'
+                          : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                       }`}
                     >
                       <div className="font-medium">OCR.space (Recommended for PDFs)</div>
-                      <div className="text-sm text-gray-600">External API service with high PDF accuracy</div>
-                      <div className="text-xs text-blue-700 mt-1">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">External API service with high PDF accuracy</div>
+                      <div className="text-xs text-blue-700 dark:text-blue-400 mt-1">
                         ✓ Best for CITI certificates • ✓ High accuracy • ⚠ Usage limits (180/hour) • PDF only
                       </div>
                     </button>
@@ -1415,21 +1415,21 @@ export default function CertificationsPage() {
                       }}
                       className={`w-full p-3 text-left rounded-lg border transition-colors ${
                         (ocrConfig?.value?.provider || 'ocr_space') === 'tesseract'
-                          ? 'border-blue-500 bg-blue-50 text-blue-900'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200 dark:border-blue-500'
+                          : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                       }`}
                     >
                       <div className="font-medium">Tesseract.js (Local Processing)</div>
-                      <div className="text-sm text-gray-600">Free local OCR, no API limits</div>
-                      <div className="text-xs text-gray-600 mt-1">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Free local OCR, no API limits</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         ✓ Completely free • ✓ No limits • ✓ Supports images (PNG, JPG) • ⚠ Lower accuracy
                       </div>
                     </button>
                   </div>
                   
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="text-sm font-medium text-blue-900 mb-1">How This Affects Certificate Processing:</div>
-                    <ul className="text-xs text-blue-800 space-y-1">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
+                    <div className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">How This Affects Certificate Processing:</div>
+                    <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
                       <li>• <strong>Upload Impact:</strong> Selected service processes every file you upload</li>
                       <li>• <strong>Data Extraction:</strong> Determines accuracy of name, date, and course detection</li>
                       <li>• <strong>Default:</strong> OCR.space is pre-configured and ready to use</li>
@@ -1446,7 +1446,7 @@ export default function CertificationsPage() {
                     defaultValue="••••••••••••••••"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Get your free API key from <a href="https://ocr.space/ocrapi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">ocr.space/ocrapi</a> (25,000 requests/month free)
+                    Get your free API key from <a href="https://ocr.space/ocrapi" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">ocr.space/ocrapi</a> (25,000 requests/month free)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1455,10 +1455,10 @@ export default function CertificationsPage() {
                     Automatic PDF processing enabled
                   </label>
                 </div>
-                <div className="p-3 bg-green-50 rounded-md border border-green-200">
+                <div className="p-3 bg-green-50 dark:bg-green-950/40 rounded-md border border-green-200 dark:border-green-900">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-green-800">
+                    <span className="text-sm text-green-800 dark:text-green-300">
                       API key configured via environment variable
                     </span>
                   </div>

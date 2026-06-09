@@ -243,7 +243,7 @@ export function ObjectUploader({
       case 'uploading':
         return <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />;
       default:
-        return <FileText className="h-4 w-4 text-gray-400" />;
+        return <FileText className="h-4 w-4 text-gray-400 dark:text-gray-500" />;
     }
   };
 
@@ -271,16 +271,16 @@ export function ObjectUploader({
     <div className="space-y-4">
       <Card
         className={`p-8 border-2 border-dashed transition-colors ${
-          isDragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+          isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-gray-300 dark:border-gray-700'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <div className="text-center">
-          <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <Upload className="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
           <h3 className="text-lg font-medium mb-2">Upload Certificate Files</h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             Drag and drop PDF files here, or click to browse
           </p>
           
@@ -299,7 +299,7 @@ export function ObjectUploader({
             </Button>
           </label>
           
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
             <p>Maximum {maxNumberOfFiles} files, {(maxFileSize / 1024 / 1024).toFixed(1)}MB each</p>
             <p>Supported formats: {acceptedFileTypes.map(type => type.split('/')[1]).join(', ')}</p>
           </div>
@@ -315,7 +315,7 @@ export function ObjectUploader({
                 {getStatusIcon(uploadFile.status)}
                 <div>
                   <div className="font-medium text-sm">{uploadFile.file.name}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {formatFileSize(uploadFile.file.size)}
                   </div>
                 </div>
@@ -327,7 +327,7 @@ export function ObjectUploader({
                 )}
                 
                 {uploadFile.status === 'uploading' && uploadFile.progress !== undefined && (
-                  <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
                       className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${uploadFile.progress}%` }}

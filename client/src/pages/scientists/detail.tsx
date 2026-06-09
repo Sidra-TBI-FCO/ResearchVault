@@ -24,17 +24,17 @@ import { parseISO, differenceInDays } from "date-fns";
 // Derive a badge color from a certification's expiry date (valid/expiring/expired)
 function getCertificationColor(expiryDate: string | null): string {
   if (!expiryDate) {
-    return "bg-gray-100 text-gray-600 border-gray-200";
+    return "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700";
   }
 
   const daysUntilExpiry = differenceInDays(parseISO(expiryDate), new Date());
 
   if (daysUntilExpiry < 0) {
-    return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
+    return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-900";
   } else if (daysUntilExpiry <= 30) {
-    return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200";
+    return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800 dark:hover:bg-orange-900";
   } else {
-    return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
+    return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800 dark:hover:bg-green-900";
   }
 }
 
