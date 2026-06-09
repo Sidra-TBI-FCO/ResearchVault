@@ -171,7 +171,7 @@ The app has one unified auth system with four modes, selected by the
 
 | `AUTH_MODE` | What it does |
 |---|---|
-| `local` (default) | Local username/password login. In development a dummy "Iris Administrator" session is injected and the sidebar role selector is active — the original role-emulation experience. |
+| `local` (default) | Real local username/password login backed by the `users` table, with first-time registration and optional super-admin promotion (`SUPER_ADMIN_EMAIL`). No session is auto-injected — users must sign in. For open, no-login testing on Replit we run `demo` mode instead (see below). |
 | `demo` | Auto-injects a shared guest user on every request, no login wall. |
 | `ldap` | Username/password validated against an LDAP / Active Directory server (uses `ldapts`). |
 | `oidc` | OpenID Connect single sign-on (PKCE + end-session logout). Microsoft Entra ID is just a configured OIDC issuer. |
@@ -234,6 +234,7 @@ Set `AUTH_MODE=local` (or leave it unset) and restart. Behaviour returns to the
 role-emulation flow with no SSO redirects.
 
 ## Changelog
+- June 9, 2026. Reconciled the codebase after syncing the colleague's on-prem fork (first-time registration, super-admin, PostgreSQL session store, Docker neon/pg DB branching). Fixes: removed dead/non-existent OIDC imports in `server/auth.ts`; replaced a CommonJS `require()` in `/api/auth/config` with `await import()` (this is an ESM `"type":"module"` project — `require` is not defined at runtime); added `"target":"ES2022"` to `tsconfig.json` so `npm run check` passes with the new top-level `await` in `server/db.ts`; standardized `/api/auth/config` to return `{ mode, ssoEnabled, provider, providerName }` and unified the client (`login.tsx`) onto `providerName`. Deployment split: Replit (dev workspace + published link) runs `AUTH_MODE=demo` via env vars (open, no login, "Demo User"/Management) since the merge removed the old dev auto-injection; the colleague's on-prem stays on `AUTH_MODE=ldap` via its own env. No app code controls which environment is open — it's purely env config.
 - June 7, 2026. Unified authentication into one multi-provider system selected by `AUTH_MODE` (local default / demo / ldap / oidc), SSO off by default. Replaced the Entra-specific module with a generic OIDC provider (PKCE + end-session logout; Entra is just a configured issuer) and added an LDAP provider (`ldapts`). Updated `/api/auth/config` to expose mode + provider name, refreshed the client useAuth/login/Sidebar and the Settings auth panel (SSO toggle off by default).
 - May 31, 2026. Made the IBC application edit page's right sidebar (Communication History, Submission Comment, Save/Submit) collapsible on desktop to give the main form more editing width
 - January 20, 2026. Redesigned IBC application edit page with two-column layout: main form on left, sticky right sidebar with Communication History, Submission Comment, and Save/Submit buttons for better usability

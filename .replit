@@ -49,3 +49,8 @@ timeoutMs = 20000
 AUTH_MODE = "demo"
 DEMO_NAME = "Demo User"
 DEMO_ROLE = "Management"
+
+[userenv.development]
+AUTH_MODE = "demo"
+DEMO_NAME = "Demo User"
+DEMO_ROLE = "Management"

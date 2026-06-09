@@ -4,14 +4,9 @@ import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
 import { type Request, type Response, type NextFunction } from "express";
 import session from "express-session";
-import {
-  getOidcConfig,
-  isOidcConfigured,
-  startOidcFlow,
-  handleOidcCallback,
-  buildOidcLogoutUrl,
-} from "./authProviders/oidc";
-import { authenticateLdap } from "./authProviders/ldap";
+// OIDC and LDAP providers are loaded lazily (dynamic import / require) inside the
+// route handlers below, so they are only initialised when the matching AUTH_MODE
+// is active. No static imports are needed here.
 
 // ── Session types ────────────────────────────────────────────────────────────
 
@@ -164,13 +159,14 @@ export function registerAuthRoutes(app: any) {
   const mode = getAuthMode();
 
   // Public: returns auth configuration so the client can adapt the UI
-  app.get("/api/auth/config", (_req: Request, res: Response) => {
-    const { getOidcConfig } = require("./authProviders/oidc");
-    const oidcCfg = mode === "oidc" ? getOidcConfig() : null;
-    res.json({
-      mode,
-      oidcProviderName: oidcCfg?.providerName ?? null,
-    });
+  app.get("/api/auth/config", async (_req: Request, res: Response) => {
+    let providerName: string | null = null;
+    if (mode === "oidc") {
+      const { getOidcConfig } = await import("./authProviders/oidc");
+      providerName = getOidcConfig().providerName ?? null;
+    }
+    const ssoEnabled = mode === "ldap" || mode === "oidc";
+    res.json({ mode, ssoEnabled, provider: mode, providerName });
   });
 
   // Current user
