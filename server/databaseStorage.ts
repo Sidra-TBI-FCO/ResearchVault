@@ -2405,41 +2405,19 @@ export class DatabaseStorage implements IStorage {
         const certification = certificationsList.find(
           c => c.scientistId === scientist.id && c.moduleId === module.id
         );
-        
-        // Use real certification data if it exists, otherwise generate dummy data
-        let displayData: { startDate: string | null; endDate: string | null; certificationId: number | null };
-        
-        if (certification) {
-          // Use real certification from database
-          displayData = {
-            startDate: certification.startDate,
-            endDate: certification.endDate,
-            certificationId: certification.id
-          };
-        } else {
-          // Generate dummy data for missing certifications (primarily for CITI modules)
-          const combo = scientist.id + module.id;
-          const dummyStatuses = [
-            { startDate: '2024-03-15', endDate: '2026-03-15', certificationId: 999000 + scientist.id * 100 + module.id }, // Valid
-            { startDate: '2024-09-25', endDate: '2025-09-25', certificationId: 999000 + scientist.id * 100 + module.id }, // Expiring
-            { startDate: '2023-10-05', endDate: '2024-10-05', certificationId: 999000 + scientist.id * 100 + module.id }, // Expired
-            { startDate: null, endDate: null, certificationId: null } // No certification
-          ];
-          
-          const statusIndex = combo % 4;
-          displayData = dummyStatuses[statusIndex];
-        }
-        
+
+        // Only surface real certifications from the database. Missing records
+        // produce a null/empty entry rather than fabricated dates and IDs.
         matrixData.push({
           scientistId: scientist.id,
           scientistName: scientist.name,
           moduleId: module.id,
           moduleName: module.name,
-          certificationId: displayData.certificationId,
-          startDate: displayData.startDate,
-          endDate: displayData.endDate,
-          certificateFilePath: certification?.certificateFilePath || null,
-          reportFilePath: certification?.reportFilePath || null,
+          certificationId: certification?.id ?? null,
+          startDate: certification?.startDate ?? null,
+          endDate: certification?.endDate ?? null,
+          certificateFilePath: certification?.certificateFilePath ?? null,
+          reportFilePath: certification?.reportFilePath ?? null,
         });
       }
     }

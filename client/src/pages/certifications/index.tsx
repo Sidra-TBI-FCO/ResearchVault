@@ -326,9 +326,11 @@ export default function CertificationsPage() {
       scientistMap.get(item.scientistId).certifications.set(item.moduleId, item);
     });
 
-    // Get unique modules
+    // Get unique modules for the CITI matrix. Lab Safety is not a CITI program
+    // certification — it has its own dedicated matrix tab — so exclude it here.
     const moduleMap = new Map();
     matrixData.forEach((item: CertificationMatrixItem) => {
+      if (item.moduleName === 'Lab Safety') return;
       if (!moduleMap.has(item.moduleId)) {
         moduleMap.set(item.moduleId, {
           id: item.moduleId,
@@ -545,7 +547,7 @@ export default function CertificationsPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Lab Safety Training Matrix</CardTitle>
+                <CardTitle>Lab Safety Training</CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
