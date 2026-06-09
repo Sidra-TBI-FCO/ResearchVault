@@ -9,34 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClipboardList, Plus, Search, FileText, Eye, Edit, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
-// Mock data for now - will connect to API later
-const mockApplications = [
-  {
-    id: 1,
-    applicationId: "PMO-2025-001",
-    title: "In Vitro Characterization of R. bromii–Tumor–Immune Interactions in Colorectal Cancer",
-    formType: "RA-200",
-    status: "draft",
-    leadScientist: "Christophe Raynaud",
-    projectId: "PRJ12002",
-    budgetHolder: "Wouter Hendrickx",
-    createdAt: "2025-07-17",
-    durationMonths: 10
-  },
-  {
-    id: 2,
-    applicationId: "PMO-2025-002",
-    title: "Sidra Pediatric Precision Oncology Initiative - Title Change Request",
-    formType: "RA-205A",
-    status: "submitted",
-    leadScientist: "Sonia Davila",
-    projectId: "PRJ12003",
-    budgetHolder: "Wouter Hendrickx",
-    createdAt: "2025-07-18",
-    durationMonths: null
-  }
-];
+import type { Scientist } from "@shared/schema";
 
 const statusColors = {
   draft: "bg-gray-100 text-gray-800",
@@ -55,10 +28,22 @@ export default function PmoApplicationsList() {
     queryKey: ['/api/pmo-applications']
   });
 
+  const { data: scientists = [] } = useQuery<Scientist[]>({
+    queryKey: ['/api/scientists']
+  });
+
+  const scientistName = (id: number | null | undefined) => {
+    if (!id) return null;
+    const s = scientists.find((sci) => sci.id === id);
+    if (!s) return null;
+    return [s.honorificTitle, s.firstName, s.lastName].filter(Boolean).join(' ');
+  };
+
   const filteredApplications = applications.filter(app => {
+    const lead = scientistName(app.leadScientistId) || '';
     const matchesSearch = app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (app.leadScientist || '').toLowerCase().includes(searchTerm.toLowerCase());
+                         app.applicationId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lead.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -134,7 +119,7 @@ export default function PmoApplicationsList() {
               <Edit className="h-5 w-5 text-green-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Approved</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{applications.filter(app => app.status === 'approved').length}</p>
               </div>
             </div>
           </CardContent>
@@ -234,25 +219,25 @@ export default function PmoApplicationsList() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
                         <div>
                           <span className="font-medium">Application ID:</span>
-                          <div>{application.application_id}</div>
+                          <div>{application.applicationId || '—'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Lead Scientist:</span>
-                          <div>TBD</div>
+                          <div>{scientistName(application.leadScientistId) || '—'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Project ID:</span>
-                          <div>{application.project_id || 'TBD'}</div>
+                          <div>{application.projectId || '—'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Duration:</span>
-                          <div>{application.duration_months || 'TBD'} months</div>
+                          <div>{application.durationMonths ? `${application.durationMonths} months` : '—'}</div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="flex gap-2 ml-4">
-                      <Link href={`/pmo/applications/${application.id}`}>
+                      <Link href={`/pmo/applications/${application.id}?type=RA-200`}>
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4 mr-1" />
                           View
@@ -312,15 +297,15 @@ export default function PmoApplicationsList() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
                         <div>
                           <span className="font-medium">Application ID:</span>
-                          <div>{application.application_id}</div>
+                          <div>{application.applicationId || '—'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Lead Scientist:</span>
-                          <div>TBD</div>
+                          <div>{scientistName(application.leadScientistId) || '—'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Project ID:</span>
-                          <div>{application.project_id || 'TBD'}</div>
+                          <div>{application.projectId || '—'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Status:</span>
@@ -330,7 +315,7 @@ export default function PmoApplicationsList() {
                     </div>
                     
                     <div className="flex gap-2 ml-4">
-                      <Link href={`/pmo/applications/${application.id}`}>
+                      <Link href={`/pmo/applications/${application.id}?type=RA-205A`}>
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4 mr-1" />
                           View

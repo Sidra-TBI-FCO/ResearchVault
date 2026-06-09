@@ -2699,6 +2699,37 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  // Recent activity feed — aggregated from real records across the app
+  async getRecentActivity(limit: number = 8): Promise<Array<{ id: string; type: string; title: string; description: string; date: Date | null }>> {
+    const perTable = Math.max(limit, 5);
+    const [proj, pubs, irbs, ibcs, sdrs, sci, ra200, ra205a] = await Promise.all([
+      db.select({ id: projects.id, title: projects.name, date: projects.createdAt }).from(projects).orderBy(desc(projects.createdAt)).limit(perTable),
+      db.select({ id: publications.id, title: publications.title, date: publications.createdAt }).from(publications).orderBy(desc(publications.createdAt)).limit(perTable),
+      db.select({ id: irbApplications.id, title: irbApplications.title, date: irbApplications.createdAt }).from(irbApplications).orderBy(desc(irbApplications.createdAt)).limit(perTable),
+      db.select({ id: ibcApplications.id, title: ibcApplications.title, date: ibcApplications.createdAt }).from(ibcApplications).orderBy(desc(ibcApplications.createdAt)).limit(perTable),
+      db.select({ id: researchActivities.id, title: researchActivities.title, date: researchActivities.createdAt }).from(researchActivities).orderBy(desc(researchActivities.createdAt)).limit(perTable),
+      db.select({ id: scientists.id, first: scientists.firstName, last: scientists.lastName, date: scientists.createdAt }).from(scientists).orderBy(desc(scientists.createdAt)).limit(perTable),
+      db.select({ id: ra200Applications.id, title: ra200Applications.title, date: ra200Applications.createdAt }).from(ra200Applications).orderBy(desc(ra200Applications.createdAt)).limit(perTable),
+      db.select({ id: ra205aApplications.id, title: ra205aApplications.title, date: ra205aApplications.createdAt }).from(ra205aApplications).orderBy(desc(ra205aApplications.createdAt)).limit(perTable),
+    ]);
+
+    const items = [
+      ...proj.map(r => ({ id: `project-${r.id}`, type: 'project_added', title: r.title, description: 'New project added', date: r.date })),
+      ...pubs.map(r => ({ id: `publication-${r.id}`, type: 'publication_added', title: r.title, description: 'New publication added', date: r.date })),
+      ...irbs.map(r => ({ id: `irb-${r.id}`, type: 'irb_submission', title: r.title, description: 'IRB application created', date: r.date })),
+      ...ibcs.map(r => ({ id: `ibc-${r.id}`, type: 'ibc_submission', title: r.title, description: 'IBC application created', date: r.date })),
+      ...sdrs.map(r => ({ id: `sdr-${r.id}`, type: 'activity_added', title: r.title, description: 'New research activity', date: r.date })),
+      ...sci.map(r => ({ id: `scientist-${r.id}`, type: 'staff_added', title: `${r.first} ${r.last}`, description: 'New staff member added', date: r.date })),
+      ...ra200.map(r => ({ id: `ra200-${r.id}`, type: 'pmo_submission', title: r.title, description: 'RA-200 application created', date: r.date })),
+      ...ra205a.map(r => ({ id: `ra205a-${r.id}`, type: 'pmo_submission', title: r.title, description: 'RA-205A application created', date: r.date })),
+    ];
+
+    return items
+      .filter(i => i.date)
+      .sort((a, b) => new Date(b.date as Date).getTime() - new Date(a.date as Date).getTime())
+      .slice(0, limit);
+  }
+
   // Team Member operations
   async getTeamMembers(): Promise<TeamMember[]> {
     return await db.select().from(teamMembers).orderBy(asc(teamMembers.displayOrder), asc(teamMembers.lastName));

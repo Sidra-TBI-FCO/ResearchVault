@@ -3,3 +3,4 @@
 - [IBC protocol read-only view](ibc-protocol-view.md) — office + reviewer share `IbcProtocolView` (sections + jump nav); each page keeps its own header and passes role controls via the `sidebar` slot.
 - [Unified multi-provider auth](unified-auth.md) — AUTH_MODE (local/demo/ldap/oidc) drives everything; SSO off by default; Replit=demo via env, on-prem=ldap; ESM repo so use `await import()` not `require()`; tsconfig target ES2022 for db.ts top-level await.
 - [Post-merge drizzle push quirk](post-merge-drizzle-push.md) — `drizzle-kit push --force` exits 0 even when it crashes on rename conflicts (TTY); post-merge "succeeds" but silently skips schema; repo has pre-existing add+drop drift needing manual resolution.
+- [PMO applications data shape](pmo-applications-data-shape.md) — /api/pmo-applications is camelCase + snake `form_type`; ids collide across RA-200/RA-205A so address by id+type; `/api/pmo-applications/:id` is unimplemented (500).

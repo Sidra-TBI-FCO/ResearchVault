@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, ExternalLink } from "lucide-react";
+import { Download, FileText, ExternalLink, AlertTriangle } from "lucide-react";
 
 export default function IrbDocumentTemplates() {
   const documentTemplates = [
@@ -72,20 +72,19 @@ export default function IrbDocumentTemplates() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground mb-2">IRB Document Templates</h1>
         <p className="text-muted-foreground">
-          Download and complete the required forms for your IRB submission. All templates are provided by Sidra Medicine IRB Office.
+          A preview of the IRB forms that will be available for download once the IRB Office uploads the official files.
         </p>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4" data-testid="banner-templates-unavailable">
         <div className="flex items-start gap-3">
-          <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
           <div>
-            <h3 className="font-medium text-blue-900">Important Instructions</h3>
-            <ul className="text-sm text-blue-800 mt-1 space-y-1">
-              <li>• Download the latest version of each required form</li>
-              <li>• Complete all fillable fields before uploading to your submission</li>
-              <li>• Save completed forms in PDF format for submission</li>
-              <li>• Contact IRB office at irb@sidra.org for questions about form completion</li>
+            <h3 className="font-medium text-amber-900">Sample list — templates not yet available</h3>
+            <ul className="text-sm text-amber-800 mt-1 space-y-1">
+              <li>• The forms below are <strong>placeholders</strong> showing which templates are planned.</li>
+              <li>• The actual files have not been uploaded yet, so downloads are disabled.</li>
+              <li>• Contact the IRB office at irb@sidra.org to request the current forms.</li>
             </ul>
           </div>
         </div>
@@ -114,37 +113,23 @@ export default function IrbDocumentTemplates() {
               </p>
               
               <div className="flex items-center gap-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="flex-1"
-                  onClick={() => {
-                    const link = window.document.createElement('a');
-                    link.href = template.downloadUrl;
-                    link.download = template.downloadUrl.split('/').pop() || template.title;
-                    window.document.body.appendChild(link);
-                    link.click();
-                    window.document.body.removeChild(link);
-                  }}
+                  disabled
+                  title="The template file has not been uploaded yet"
+                  data-testid={`button-download-${template.id}`}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download Template
+                  Not yet available
                 </Button>
-                
-                {template.fillable && (
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Guide
-                  </Button>
-                )}
               </div>
-              
+
               <div className="mt-3 text-xs text-gray-500">
-                {template.fillable && (
-                  <span className="inline-flex items-center gap-1">
-                    <FileText className="h-3 w-3" />
-                    Fillable Word Document
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Sample entry — file not uploaded yet
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -162,9 +147,9 @@ export default function IrbDocumentTemplates() {
                 <h4 className="font-medium">IRB Submission Checklist</h4>
                 <p className="text-sm text-gray-600">Complete checklist for IRB submissions</p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled title="Not yet available">
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                Not yet available
               </Button>
             </div>
             
@@ -173,9 +158,9 @@ export default function IrbDocumentTemplates() {
                 <h4 className="font-medium">IRB Policies & Procedures</h4>
                 <p className="text-sm text-gray-600">Complete policy document (POL-O-IRB)</p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled title="Not yet available">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                View Online
+                Not yet available
               </Button>
             </div>
             
@@ -184,9 +169,9 @@ export default function IrbDocumentTemplates() {
                 <h4 className="font-medium">Training Requirements</h4>
                 <p className="text-sm text-gray-600">CITI Training modules for research personnel</p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled title="Not yet available">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Access Training
+                Not yet available
               </Button>
             </div>
           </div>

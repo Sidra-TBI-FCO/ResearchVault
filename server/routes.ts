@@ -1272,6 +1272,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/dashboard/recent-activity', async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 8;
+      const activity = await storage.getRecentActivity(limit);
+      res.json(activity);
+    } catch (error) {
+      console.error("Error fetching recent activity:", error);
+      res.status(500).json({ message: "Failed to fetch recent activity" });
+    }
+  });
+
   app.get('/api/dashboard/recent-projects', async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
@@ -6930,32 +6941,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting system configuration:', error);
       res.status(500).json({ error: 'Failed to delete configuration' });
-    }
-  });
-
-  // OCR endpoint for PDF processing (stub for now)
-  app.post('/api/certifications/process-pdf', async (req: Request, res: Response) => {
-    try {
-      const { fileUrl, fileName } = req.body;
-      
-      // TODO: Implement OCR processing here
-      // For now, return a mock response
-      const extractedData = {
-        staffName: "Extracted Name",
-        moduleName: "Extracted Module",
-        startDate: "2024-01-01",
-        endDate: "2027-01-01",
-        confidence: 0.85
-      };
-
-      res.json({ 
-        success: true, 
-        extractedData,
-        message: "PDF processed successfully (mock implementation)" 
-      });
-    } catch (error) {
-      console.error('Error processing PDF:', error);
-      res.status(500).json({ message: "Failed to process PDF" });
     }
   });
 
