@@ -2,6 +2,9 @@ networks:
   rv-net:
     driver: bridge
 
+volumes:
+  pg-data:
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -11,7 +14,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
-      - ${POSTGRES_DATA_DIR:-./data/postgres}:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

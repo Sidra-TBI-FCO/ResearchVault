@@ -65,7 +65,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
   // Map href to navigation item identifier
   const getNavigationItemId = (href: string): string => {
     const pathMap: Record<string, string> = {
-      "/": "dashboard",
+      "/app": "dashboard",
       "/scientists": "scientists",
       "/facilities": "facilities", 
       "/pmo": "pmo",
@@ -98,7 +98,7 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       title: "Dashboard",
       items: [
         { 
-          href: "/",
+          href: "/app",
           label: "Dashboard",
           icon: <LayoutDashboard className="w-4 h-4 mr-3" />
         }

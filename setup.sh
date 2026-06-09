@@ -61,17 +61,12 @@ done < .env
 # ── 3. Data directories ───────────────────────────────────────────────────────
 section "Creating data directories"
 
-POSTGRES_DATA_DIR="${POSTGRES_DATA_DIR:-./data/postgres}"
+# PostgreSQL data is stored in a Docker named volume (pg-data) — managed by
+# Docker, not the host filesystem. Use `docker compose down -v` to wipe it.
 UPLOADS_DATA_DIR="${UPLOADS_DATA_DIR:-./data/uploads}"
-
-mkdir -p "$POSTGRES_DATA_DIR" "$UPLOADS_DATA_DIR"
-info "PostgreSQL data → $POSTGRES_DATA_DIR"
+mkdir -p "$UPLOADS_DATA_DIR"
 info "Uploads data    → $UPLOADS_DATA_DIR"
-
-# Fix permissions so the postgres container (uid 999) can write
-if command -v chown >/dev/null 2>&1; then
-  chown -R "$(id -u):$(id -g)" "$POSTGRES_DATA_DIR" "$UPLOADS_DATA_DIR" 2>/dev/null || true
-fi
+info "PostgreSQL data → Docker named volume (pg-data)"
 
 # ── 4. Build & start ──────────────────────────────────────────────────────────
 section "Building and starting ResearchVault"
