@@ -37,16 +37,33 @@ const STAFF_TYPES = [
 
 const HONORIFICS = ["Dr.", "Prof.", "Mr.", "Ms.", "Mrs.", "Mx.", ""];
 
+/** Split a display name into first / last parts as best we can. */
+function splitName(fullName: string | undefined): { firstName: string; lastName: string } {
+  if (!fullName?.trim()) return { firstName: "", lastName: "" };
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
+/** If the user's role exactly matches a known job title, pre-select it. */
+function deriveJobTitle(role: string | undefined): string {
+  if (!role) return "";
+  return JOB_TITLES.includes(role) ? role : "";
+}
+
 export default function RegisterPage() {
   const { user, refreshUser } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
+  // Derive sensible defaults from the auth session so the user has to type as little as possible.
+  const { firstName: derivedFirst, lastName: derivedLast } = splitName(user?.name);
+
   const [form, setForm] = useState({
     honorificTitle: "",
-    firstName: "",
-    lastName: "",
-    jobTitle: "",
+    firstName: derivedFirst,
+    lastName: derivedLast,
+    jobTitle: deriveJobTitle(user?.role),
     staffType: "scientific",
     department: "",
   });
@@ -54,10 +71,14 @@ export default function RegisterPage() {
   const mutation = useMutation({
     mutationFn: async (data: typeof form) => {
       const res = await apiRequest("POST", "/api/register", data);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any).message || "Registration failed");
+      }
       return res.json();
     },
     onSuccess: async () => {
-      toast({ title: "Profile created", description: "Welcome to ResearchVault!" });
+      toast({ title: "Profile created", description: "Welcome to the platform!" });
       await refreshUser();
       navigate("/app");
     },
@@ -68,7 +89,8 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(form);
+    // Normalise the "__none__" sentinel back to an empty string before submitting
+    mutation.mutate({ ...form, honorificTitle: form.honorificTitle === "__none__" ? "" : form.honorificTitle });
   };
 
   return (
@@ -77,22 +99,31 @@ export default function RegisterPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
           <CardDescription>
-            Welcome, {user?.name || user?.email}. Before you can access the platform, please fill in
-            your researcher profile.
+            Welcome{user?.name ? `, ${user.name}` : ""}. Please confirm your details before accessing the platform.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Email — read-only, pulled from session */}
+            <div>
+              <Label>Email</Label>
+              <Input value={user?.email ?? ""} readOnly className="bg-muted text-muted-foreground cursor-not-allowed" />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Honorific</Label>
-                <Select value={form.honorificTitle} onValueChange={(v) => setForm((f) => ({ ...f, honorificTitle: v }))}>
+                <Select
+                  value={form.honorificTitle || "__none__"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, honorificTitle: v }))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent>
                     {HONORIFICS.map((h) => (
-                      <SelectItem key={h} value={h || "__none__"}>
+                      <SelectItem key={h || "__none__"} value={h || "__none__"}>
                         {h || "— None —"}
                       </SelectItem>
                     ))}
@@ -126,9 +157,9 @@ export default function RegisterPage() {
             <div>
               <Label>Job Title *</Label>
               <Select
-                required
                 value={form.jobTitle}
                 onValueChange={(v) => setForm((f) => ({ ...f, jobTitle: v }))}
+                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your role…" />
@@ -171,7 +202,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={mutation.isPending}>
+            <Button type="submit" className="w-full" disabled={mutation.isPending || !form.jobTitle}>
               {mutation.isPending ? "Saving…" : "Complete Registration"}
             </Button>
           </form>
