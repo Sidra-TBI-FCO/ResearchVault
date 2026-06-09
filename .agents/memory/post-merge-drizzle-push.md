@@ -28,14 +28,46 @@ hand-written SQL migrations for some changes). Re-run the per-table diff
 (schema column SQL-names vs `information_schema.columns`) to find the conflicting
 table(s).
 
-# Pre-existing schema/DB drift (as of June 2026)
+# Pre-existing schema/DB drift (RESOLVED June 9, 2026 — dummy DB, full align)
 
-This repo has real drift between `shared/schema.ts` and the live DB. The
-add+drop table (the one that triggers the rename prompt) was
-`certification_configurations`. Other tables had one-sided drift (DB columns the
-schema no longer declares, e.g. `scientists.role`,
-`research_activities.lead_scientist_id`, several `ibc_applications.*`,
-`team_members.category`, and `users.scientist_id` schema-only). Pushing these
-would DROP columns and lose data, so resolution needs a human decision — do not
-let an automated `push --force` silently apply them. Treat as out-of-scope for
-unrelated tasks; flag to the user.
+This repo had real drift between `shared/schema.ts` and the live DB. With user
+sign-off (all data was dummy, freshly deployed) the DB was fully aligned TO the
+code schema via `npx drizzle-kit push --force < /dev/null`. After alignment, the
+per-table column diff reports **NO COLUMN DRIFT**.
+
+**True root cause of the "TTY prompt" crashes:** it was NOT really rename
+ambiguity. The DB was created with Postgres-default unique constraint names
+(`<table>_<col>_key`), but drizzle-kit expects its own convention
+(`<table>_<col>_unique`). So every `.unique()` column looked "missing" to
+drizzle, which tried to ADD a `_unique` constraint for each — and those prompts
+are what crashed `push` without a TTY.
+
+**The fix sequence (do this if drift ever recurs on a dummy/expendable DB):**
+1. Rename all `*_key` unique constraints to `*_unique`
+   (`ALTER TABLE x RENAME CONSTRAINT x_col_key TO x_col_unique`). Promote any
+   unique *index* drizzle expects as a *constraint* via
+   `ALTER TABLE x ADD CONSTRAINT x_col_unique UNIQUE USING INDEX <idx>`.
+2. Manually convert non-auto-castable column type changes BEFORE push (Postgres
+   can't auto-cast these): text→json/jsonb and text→`text[]`. Use
+   `ALTER COLUMN c TYPE json USING (CASE WHEN c IS NULL OR c='' THEN NULL ELSE c::json END)`
+   and for arrays `... TYPE text[] USING (CASE WHEN c IS NULL OR c='' THEN NULL ELSE ARRAY[c] END)`.
+   To find them: parse schema for `.array()` / `json()`/`jsonb()` cols and diff
+   against `information_schema.columns.data_type`.
+3. Then `npx drizzle-kit push --force < /dev/null` runs with ZERO prompts.
+
+**Known harmless non-idempotency — DO NOT chase it.** Even after a clean align,
+every subsequent `push` re-emits a few statements and prints `[✓] Changes
+applied` (never "No changes"):
+- DROP+CREATE of the `ibc_application_research_activities_..._index` unique index
+  — its drizzle-generated name exceeds Postgres's 63-char identifier limit, gets
+  truncated on disk, so it never matches and is recreated each run.
+- `ALTER COLUMN ... SET DEFAULT '{}'`/`'[]'` on array/json columns — drizzle
+  can't detect the existing default and re-sets it each run.
+These are cosmetic drizzle-kit limitations, not real drift, and don't break the
+app or post-merge.
+
+**Unrelated benign log noise:** `relation "session" does not exist` comes from
+connect-pg-simple's periodic prune, NOT from push (push does not manage/drop the
+`session` table — it's not in the drizzle schema). With `createTableIfMissing:
+true` (server/index.ts) the table self-creates on the first session write; in
+demo mode sessions are rarely written so the prune query errors harmlessly.
