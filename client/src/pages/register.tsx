@@ -49,7 +49,6 @@ export default function RegisterPage() {
     jobTitle: "",
     staffType: "scientific",
     department: "",
-    phone: "",
   });
 
   const mutation = useMutation({
@@ -169,16 +168,6 @@ export default function RegisterPage() {
                 id="department"
                 value={form.department}
                 onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               />
             </div>
 

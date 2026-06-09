@@ -7478,9 +7478,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: 'Already registered' });
     }
 
-    const { firstName, lastName, jobTitle, staffType, honorificTitle, phone, department } = req.body as {
+    const { firstName, lastName, jobTitle, staffType, honorificTitle, department } = req.body as {
       firstName: string; lastName: string; jobTitle: string; staffType: string;
-      honorificTitle?: string; phone?: string; department?: string;
+      honorificTitle?: string; department?: string;
     };
     if (!firstName || !lastName || !jobTitle || !staffType) {
       return res.status(400).json({ message: 'firstName, lastName, jobTitle and staffType are required' });
@@ -7495,10 +7495,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: sessionUser.email,
           jobTitle,
           staffType,
-          honorificTitle: honorificTitle || null,
-          phone: phone || null,
+          honorificTitle: honorificTitle || '',
           department: department || null,
-          isActive: true,
         } as any)
         .returning();
 

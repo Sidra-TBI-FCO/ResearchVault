@@ -9,7 +9,10 @@ import {
 } from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { createHash } from "crypto";
+
+const PgSession = connectPgSimple(session);
 
 // Global error handlers to prevent crashes from worker processes
 process.on('uncaughtException', (error) => {
@@ -47,14 +50,24 @@ app.use(express.urlencoded({ limit: '50mb', extended: false }));
 // send the cookie back and every request appears unauthenticated.
 const isHttps = process.env.APP_URL?.startsWith('https://') ?? false;
 
-// Session configuration
+// Session configuration — use PostgreSQL store in production to avoid
+// MemoryStore leak warnings and to survive container restarts.
+const sessionStore = process.env.DATABASE_URL
+  ? new PgSession({
+      conString: process.env.DATABASE_URL,
+      tableName: 'session',
+      createTableIfMissing: true,
+    })
+  : undefined; // falls back to default MemoryStore in dev without a DB
+
 app.use(session({
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || createHash('sha256').update('research-portal-session-secret').digest('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: isHttps,           // true only when actually serving over HTTPS
-    sameSite: isHttps ? 'lax' : 'lax',
+    secure: isHttps,
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
