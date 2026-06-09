@@ -7,35 +7,22 @@ import {
   FolderTree, FileCheck, ShieldCheck, TestTube, TrendingUp, ChevronDown, Eye,
   ClipboardList, Briefcase
 } from "lucide-react";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme, themes, type ThemeName } from "@/contexts/ThemeContext";
+import { useTheme, themes } from "@/contexts/ThemeContext";
 import qbridgeLogo from "@assets/image_1767775219373.png";
 
-interface DummyUser {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
 interface SidebarProps {
-  currentUser: DummyUser;
-  availableUsers: DummyUser[];
-  onUserSwitch: (userId: number) => void;
   mobile?: boolean;
   onClose?: () => void;
 }
 
-export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mobile = false, onClose }: SidebarProps) {
+export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { isHidden, isReadOnly } = usePermissions();
   const { themeName, currentLabels } = useTheme();
-  const { authConfig, logout } = useAuth();
-  const ssoEnabled = authConfig.ssoEnabled;
+  const { authConfig, logout, user } = useAuth();
+  const currentUser = user ?? { id: 0, name: "Unknown", email: "", role: "user", username: "" };
 
   // Simple pluralization helper
   const pluralize = (word: string): string => {
@@ -46,10 +33,6 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
       return word + 'es';
     }
     return word + 's';
-  };
-
-  const handleUserSwitch = (userId: string) => {
-    onUserSwitch(parseInt(userId));
   };
 
   // Generate initials from user name
@@ -279,40 +262,16 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
 
         {/* User Info */}
         <div className="p-4 border-b border-primary/30">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-              {getInitials(currentUser.role)}
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium flex-shrink-0">
+              {getInitials(currentUser.name || currentUser.role)}
             </div>
-            <div className="flex-1">
-              <div className="font-medium text-card-foreground">{currentUser.role}</div>
-              <div className="text-xs text-muted-foreground">
-                {ssoEnabled
-                  ? `Signed in${authConfig.providerName ? ' with ' + authConfig.providerName : ' via SSO'}`
-                  : 'Role-based Testing'}
-              </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-card-foreground truncate">{currentUser.name}</div>
+              <div className="text-xs text-muted-foreground truncate">{currentUser.role}</div>
+              <div className="text-xs text-muted-foreground/70 truncate">{currentUser.email}</div>
             </div>
           </div>
-
-          {/* Role Selector (hidden when Microsoft sign-in is enabled) */}
-          {!ssoEnabled && (
-            <Select value={currentUser.id.toString()} onValueChange={handleUserSwitch}>
-              <SelectTrigger className="w-full h-8 text-xs">
-                <SelectValue placeholder="Switch role..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
-                        {getInitials(user.role)}
-                      </div>
-                      <span>{user.role}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
 
         {/* Navigation */}
@@ -378,11 +337,23 @@ export default function Sidebar({ currentUser, availableUsers, onUserSwitch, mob
           mobile ? "flex-shrink-0" : ""
         )}>
           <div className="flex items-center">
-            <Link 
+            {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
+              <>
+                <Link
+                  href="/settings/users"
+                  className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer"
+                  onClick={() => { if (mobile && onClose) onClose(); }}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Users
+                </Link>
+                <div className="border-l border-primary/30 h-5 mx-3"></div>
+              </>
+            )}
+            <Link
               href="/settings"
               className="flex items-center text-sm text-muted-foreground hover:text-primary cursor-pointer"
               onClick={() => {
-                // Close mobile menu when navigation item is clicked
                 if (mobile && onClose) {
                   onClose();
                 }

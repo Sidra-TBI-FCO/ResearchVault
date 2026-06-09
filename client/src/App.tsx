@@ -134,6 +134,8 @@ import LandingPage from "@/pages/public/landing";
 import DemoPage from "@/pages/public/demo";
 import TeamPage from "@/pages/public/team";
 import AboutPage from "@/pages/public/about";
+import RegisterPage from "@/pages/register";
+import AdminUsersPage from "@/pages/settings/users";
 
 // PMO Applications
 import PmoApplicationsList from "@/pages/pmo/applications/index";
@@ -148,24 +150,17 @@ import PmoOfficeReview from "@/pages/pmo/office/index";
 import PmoOfficeReviewDetail from "@/pages/pmo/office/review";
 
 function AuthenticatedAppRoutes() {
-  const { authConfig } = useAuth();
-  if (authConfig.ssoEnabled) {
-    return (
-      <RequireAuth>
-        <AppRouter />
-      </RequireAuth>
-    );
-  }
-  return <AppRouter />;
+  // Always wrap in RequireAuth so the needsRegistration redirect fires for all auth modes
+  return (
+    <RequireAuth>
+      <AppRouter />
+    </RequireAuth>
+  );
 }
 
 // Applies the same auth gating without the Layout chrome — used for print routes.
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { authConfig } = useAuth();
-  if (authConfig.ssoEnabled) {
-    return <RequireAuth>{children}</RequireAuth>;
-  }
-  return <>{children}</>;
+  return <RequireAuth>{children}</RequireAuth>;
 }
 
 function AppRouter() {
@@ -323,6 +318,7 @@ function AppRouter() {
         
         {/* Settings */}
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/settings/users" component={AdminUsersPage} />
         
         {/* Fallback to 404 */}
         <Route component={NotFound} />
@@ -349,6 +345,7 @@ function App() {
                   <Route path="/about" component={AboutPage} />
                   <Route path="/demo" component={DemoPage} />
                   <Route path="/team" component={TeamPage} />
+                  <Route path="/register" component={RegisterPage} />
 
                   {/* Print routes — auth-gated but no Layout chrome */}
                   <Route path="/ibc-applications/:id/print">

@@ -8,6 +8,8 @@ interface User {
   name: string;
   email: string;
   role: string;
+  scientistId: number | null;
+  needsRegistration: boolean;
 }
 
 export type AuthMode = 'demo' | 'local' | 'ldap' | 'oidc';
@@ -39,6 +41,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -100,6 +103,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const refreshUser = async (): Promise<void> => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   // Redirect the browser to start the OIDC (SSO) login flow.
   const loginWithSso = () => {
     window.location.href = '/api/auth/oidc';
@@ -142,8 +157,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         loginWithSso,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
       }}
     >
       {children}
@@ -161,18 +177,20 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
   children,
   adminOnly = false,
 }) => {
-  const { isAuthenticated, isAdmin, loading, authConfig } = useAuth();
+  const { isAuthenticated, isAdmin, loading, user } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
         navigate('/');
+      } else if ((user as any)?.needsRegistration) {
+        navigate('/register');
       } else if (adminOnly && !isAdmin) {
         navigate('/');
       }
     }
-  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly]);
+  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly, user]);
 
   if (loading) {
     return (

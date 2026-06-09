@@ -21,6 +21,8 @@ export interface SessionUser {
   name: string;
   email: string;
   role: string;
+  scientistId: number | null;
+  needsRegistration: boolean; // true if user has no linked scientist profile yet
 }
 
 declare module "express-session" {
@@ -68,6 +70,8 @@ export function demoBannerMiddleware(req: Request, _res: Response, next: NextFun
       name: process.env.DEMO_NAME || "Demo User",
       email: process.env.DEMO_EMAIL || "demo@researchvault.local",
       role: process.env.DEMO_ROLE || "Management",
+      scientistId: null,
+      needsRegistration: false,
     };
   }
   next();
@@ -100,6 +104,16 @@ export function requireContractsRead(req: Request, res: Response, next: NextFunc
 
 // ── Local auth helpers ─────────────────────────────────────────────────────────
 
+function getSuperAdminEmail(): string | null {
+  return process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase() || null;
+}
+
+function resolveRole(existingRole: string, email: string): string {
+  const superAdmin = getSuperAdminEmail();
+  if (superAdmin && email.toLowerCase() === superAdmin) return "superadmin";
+  return existingRole;
+}
+
 async function findOrCreateExternalUser(
   username: string,
   name: string,
@@ -107,17 +121,41 @@ async function findOrCreateExternalUser(
 ): Promise<SessionUser | null> {
   let [user] = await db.select().from(users).where(eq(users.username, username));
 
+  const role = resolveRole("user", email);
+
   if (!user) {
-    // Create a new user record for external-auth users (no password)
     const [created] = await db
       .insert(users)
-      .values({ username, name, email, password: "", role: "Investigator" })
+      .values({ username, name, email, password: "", role })
       .returning();
     user = created;
+  } else {
+    // Enforce super admin role if email matches env var
+    const expectedRole = resolveRole(user.role, email);
+    if (expectedRole !== user.role) {
+      const [updated] = await db
+        .update(users)
+        .set({ role: expectedRole, updatedAt: new Date() })
+        .where(eq(users.id, user.id))
+        .returning();
+      user = updated;
+    }
   }
 
   if (!user) return null;
-  return { id: user.id, username: user.username, name: user.name ?? username, email: user.email ?? email, role: user.role ?? "Investigator" };
+  return toSessionUser(user);
+}
+
+function toSessionUser(user: typeof users.$inferSelect): SessionUser {
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    scientistId: (user as any).scientistId ?? null,
+    needsRegistration: !(user as any).scientistId,
+  };
 }
 
 // ── Route registration ─────────────────────────────────────────────────────────
@@ -160,7 +198,13 @@ export function registerAuthRoutes(app: any) {
         if (!user || user.password !== hashPassword(password)) {
           return res.status(401).json({ message: "Invalid username or password" });
         }
-        sessionUser = { id: user.id, username: user.username, name: user.name ?? username, email: user.email ?? "", role: user.role ?? "Investigator" };
+        const resolvedRole = resolveRole(user.role ?? "user", user.email ?? "");
+        if (resolvedRole !== user.role) {
+          const [updated] = await db.update(users).set({ role: resolvedRole, updatedAt: new Date() }).where(eq(users.id, user.id)).returning();
+          sessionUser = toSessionUser(updated);
+        } else {
+          sessionUser = toSessionUser(user);
+        }
 
       } else {
         // LDAP

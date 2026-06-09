@@ -39,9 +39,13 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   email: text("email").notNull(),
+  // Roles: 'superadmin' | 'admin' | 'user' — coarse access tier.
+  // Fine-grained UI permissions are in role_permissions (keyed by scientist jobTitle).
   role: text("role").notNull().default("user"),
   authProvider: text("auth_provider").notNull().default("local"), // 'local' | 'demo' | 'ldap' | 'oidc'
-  entraOid: text("entra_oid").unique(), // stable external subject id (OIDC `sub`); column name kept for migration compatibility
+  entraOid: text("entra_oid").unique(), // stable external subject id (OIDC `sub`)
+  // Link to the scientist/staff profile — null until the user completes registration.
+  scientistId: integer("scientist_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

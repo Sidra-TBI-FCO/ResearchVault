@@ -7424,6 +7424,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ── Admin: user management ─────────────────────────────────────────────────
+
+  // GET /api/admin/users — list all users (admin/superadmin only)
+  app.get('/api/admin/users', requireAuth, async (req: Request, res: Response) => {
+    const role = (req.session as any)?.user?.role;
+    if (role !== 'admin' && role !== 'superadmin') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    try {
+      const allUsers = await storage.getUsers();
+      res.json(allUsers);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // PATCH /api/admin/users/:id/role — change a user's role
+  app.patch('/api/admin/users/:id/role', requireAuth, async (req: Request, res: Response) => {
+    const sessionUser = (req.session as any)?.user;
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'superadmin')) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid user id' });
+
+    const { role } = req.body as { role: string };
+    const allowedRoles = ['user', 'admin', 'Management', 'Investigator', 'Staff Scientist',
+      'Lab Manager', 'Postdoctoral Researcher', 'PhD Student', 'IRB Board Member',
+      'IBC Board Member', 'Outcome Officer', 'PMO Officer', 'IRB Officer',
+      'IBC Officer', 'Grant Officer', 'Contracts Officer', 'Physician'];
+    // superadmin role can only be set via SUPER_ADMIN_EMAIL env var — never by UI
+    if (!role || !allowedRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    try {
+      const updated = await storage.updateUser(id, { role } as any);
+      if (!updated) return res.status(404).json({ message: 'User not found' });
+      res.json(updated);
+    } catch (err) {
+      console.error('Error updating user role:', err);
+      res.status(500).json({ message: 'Failed to update role' });
+    }
+  });
+
+  // POST /api/register — first-time user links their account to a scientist/staff profile
+  app.post('/api/register', requireAuth, async (req: Request, res: Response) => {
+    const sessionUser = (req.session as any)?.user;
+    if (!sessionUser) return res.status(401).json({ message: 'Not authenticated' });
+    if (sessionUser.scientistId) {
+      return res.status(400).json({ message: 'Already registered' });
+    }
+
+    const { firstName, lastName, jobTitle, staffType, honorificTitle, phone, department } = req.body as {
+      firstName: string; lastName: string; jobTitle: string; staffType: string;
+      honorificTitle?: string; phone?: string; department?: string;
+    };
+    if (!firstName || !lastName || !jobTitle || !staffType) {
+      return res.status(400).json({ message: 'firstName, lastName, jobTitle and staffType are required' });
+    }
+
+    try {
+      const [scientist] = await db
+        .insert(scientists)
+        .values({
+          firstName,
+          lastName,
+          email: sessionUser.email,
+          jobTitle,
+          staffType,
+          honorificTitle: honorificTitle || null,
+          phone: phone || null,
+          department: department || null,
+          isActive: true,
+        } as any)
+        .returning();
+
+      const updated = await storage.updateUser(sessionUser.id, { scientistId: scientist.id } as any);
+      if (!updated) return res.status(500).json({ message: 'Failed to link profile' });
+
+      (req.session as any).user = {
+        ...sessionUser,
+        scientistId: scientist.id,
+        needsRegistration: false,
+      };
+      res.json({ user: (req.session as any).user });
+    } catch (err) {
+      console.error('Error during registration:', err);
+      res.status(500).json({ message: 'Failed to create profile' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
