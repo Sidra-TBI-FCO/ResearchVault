@@ -3,8 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users, ShieldCheck, KeyRound } from "lucide-react";
-import { useTheme, themes, defaultInstitutionLabels, type InstitutionConfig } from "@/contexts/ThemeContext";
+import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users, ShieldCheck, KeyRound, Layers } from "lucide-react";
+import { useTheme, themes, defaultInstitutionLabels, TOGGLEABLE_SECTIONS, type InstitutionConfig } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ const statusOptions = [
 ];
 
 export default function Settings() {
-  const { mode, themeName, setMode, setTheme, toggleMode, institutionLabels, setInstitutionLabels } = useTheme();
+  const { mode, themeName, setMode, setTheme, toggleMode, institutionLabels, setInstitutionLabels, isSectionVisible, setSectionVisible } = useTheme();
   const { authConfig } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -512,6 +512,41 @@ IRIS (Intelligent Research Information Management System) is a research manageme
               </Card>
             );
           })()}
+
+          {/* Section Rollout */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5" />
+                Section Rollout
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Turn sections on or off to roll out the portal one area at a time. When a
+                section is off, its title still appears in the sidebar but the links below it are hidden.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {TOGGLEABLE_SECTIONS.map((sectionTitle) => (
+                  <div
+                    key={sectionTitle}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                    data-testid={`row-section-${sectionTitle}`}
+                  >
+                    <Label htmlFor={`switch-section-${sectionTitle}`} className="cursor-pointer">
+                      {sectionTitle}
+                    </Label>
+                    <Switch
+                      id={`switch-section-${sectionTitle}`}
+                      checked={isSectionVisible(sectionTitle)}
+                      onCheckedChange={(checked) => setSectionVisible(sectionTitle, checked)}
+                      data-testid={`switch-section-${sectionTitle}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Application Info */}
           <Card>

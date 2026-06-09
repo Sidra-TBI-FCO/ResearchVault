@@ -24,7 +24,7 @@ interface SidebarProps {
 export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { isHidden, isReadOnly } = usePermissions();
-  const { themeName, currentLabels } = useTheme();
+  const { themeName, currentLabels, isSectionVisible } = useTheme();
   const { authConfig, logout } = useAuth();
   const { currentUser, setCurrentUser } = useCurrentUser();
   const ssoEnabled = authConfig.ssoEnabled;
@@ -325,6 +325,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                     </h3>
                   </div>
                 )}
+                {isSectionVisible(section.title) && (
                 <div className={sectionIndex === 0 ? "space-y-1" : "space-y-1 mt-1"}>
                   {section.items
                     .filter((item) => {
@@ -362,6 +363,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                       );
                     })}
                 </div>
+                )}
               </div>
             ))}
           </div>

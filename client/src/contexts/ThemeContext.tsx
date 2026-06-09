@@ -16,6 +16,19 @@ export interface InstitutionConfig {
   [key: string]: InstitutionLabels;
 }
 
+// Sidebar sections that can be rolled out one at a time. When a section is
+// turned off, the sidebar still shows its title but hides the items below it.
+export const TOGGLEABLE_SECTIONS = [
+  'Research Management',
+  'PMO Office',
+  'IRB Compliance',
+  'IBC Compliance',
+  'Research Data Management',
+  'Outcomes & Reports',
+] as const;
+
+export type SectionVisibility = Record<string, boolean>;
+
 export const defaultInstitutionLabels: InstitutionConfig = {
   sidra: { tier1: 'Program', tier2: 'Project', tier3: 'Research Activity', abbr1: 'PRM', abbr2: 'PRJ', abbr3: 'SDR' },
   hbku: { tier1: 'Scientific Center', tier2: 'Laboratory', tier3: 'Project', abbr1: 'SC', abbr2: 'LAB', abbr3: 'PRJ' },
@@ -27,6 +40,9 @@ interface ThemeContextType {
   themeName: ThemeName;
   institutionLabels: InstitutionConfig;
   currentLabels: InstitutionLabels;
+  sectionVisibility: SectionVisibility;
+  isSectionVisible: (sectionTitle: string) => boolean;
+  setSectionVisible: (sectionTitle: string, visible: boolean) => void;
   setMode: (mode: ThemeMode) => void;
   setTheme: (theme: ThemeName) => void;
   setInstitutionLabels: (labels: InstitutionConfig) => void;
@@ -166,9 +182,32 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return defaultInstitutionLabels;
   });
 
+  const [sectionVisibility, setSectionVisibility] = useState<SectionVisibility>(() => {
+    const stored = localStorage.getItem('section-visibility');
+    if (stored) {
+      try {
+        return JSON.parse(stored) as SectionVisibility;
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  });
+
   const toggleMode = () => {
     setMode(prev => prev === 'light' ? 'dark' : 'light');
   };
+
+  // A section is visible unless it has been explicitly switched off.
+  const isSectionVisible = (sectionTitle: string) => sectionVisibility[sectionTitle] !== false;
+
+  const setSectionVisible = (sectionTitle: string, visible: boolean) => {
+    setSectionVisibility(prev => ({ ...prev, [sectionTitle]: visible }));
+  };
+
+  useEffect(() => {
+    localStorage.setItem('section-visibility', JSON.stringify(sectionVisibility));
+  }, [sectionVisibility]);
 
   useEffect(() => {
     localStorage.setItem('institution-labels', JSON.stringify(institutionLabels));
@@ -227,6 +266,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     themeName,
     institutionLabels,
     currentLabels,
+    sectionVisibility,
+    isSectionVisible,
+    setSectionVisible,
     setMode,
     setTheme,
     setInstitutionLabels,
