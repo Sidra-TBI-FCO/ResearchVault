@@ -35,6 +35,21 @@ silently **removed the old dev auto-injection** in `server/index.ts`, so `demo` 
 open mechanism (local mode is a real login wall). `demoBannerMiddleware` injects the guest only when
 `AUTH_MODE=demo`; `requireAuth` bypasses in demo.
 
+## Role-selector test mode (Replit) vs real auth (on-prem)
+Two parallel identity systems coexist, picked by `authConfig.ssoEnabled`:
+- **SSO OFF** (AUTH_MODE=demo/local): `client/src/hooks/useCurrentUser.tsx` serves a fixed
+  `DUMMY_USERS` list + working `setCurrentUser`; the sidebar renders a "Switch role..." dropdown.
+  Roles are **client-side only, not linked to the server session** — testers switch roles freely
+  with no login/registration. `usePermissions` takes the role as a param, so the emulated role
+  drives nav visibility everywhere. This is the intended Replit experience (dev AND deployed).
+- **SSO ON** (AUTH_MODE=ldap/oidc): `useCurrentUser` returns the real auth user, `setCurrentUser`
+  is a no-op, and the dropdown is hidden. On-prem (ldap) gets here.
+**Why:** the colleague's fork-sync ("real-user auth" commit) DELETED role emulation (gutted
+useCurrentUser to a passthrough, emptied DUMMY_USERS, dropped the sidebar selector). The user wants
+the role selector back on Replit. Gating on `ssoEnabled` keeps both forks code-identical.
+**How to apply:** if pages stop respecting the selector, check they read `useCurrentUser().currentUser.role`
+(not `useAuth().user.role`); the sidebar must also read `useCurrentUser`, not `useAuth`, or it desyncs.
+
 ## ESM gotchas (the merge broke these)
 - This is an ESM project (`package.json` `"type":"module"`). **Never use `require()`** in server code —
   it throws `require is not defined` at runtime (and in the esbuild prod bundle). Use `await import()`.
