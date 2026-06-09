@@ -8,6 +8,8 @@ interface User {
   name: string;
   email: string;
   role: string;
+  scientistId: number | null;
+  needsRegistration: boolean;
 }
 
 export type AuthMode = 'demo' | 'local' | 'ldap' | 'oidc';
@@ -32,13 +34,14 @@ const DEFAULT_AUTH_CONFIG: AuthConfig = {
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
   authConfig: AuthConfig;
+  loading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   loginWithSso: () => void;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -51,7 +54,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const init = async () => {
       try {
         const configResponse = await fetch('/api/auth/config');
         if (configResponse.ok) {
@@ -70,7 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    initializeAuth();
+    init();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -78,8 +81,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ username, password }),
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
 
       if (response.ok) {
@@ -88,23 +91,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         toast({ title: 'Login successful', description: `Welcome back, ${data.user.name}!` });
         return true;
       } else {
-        const errorData = await response.json();
-        toast({
-          title: 'Login failed',
-          description: errorData.message || 'Invalid username or password',
-          variant: 'destructive',
-        });
+        const err = await response.json();
+        toast({ title: 'Sign in failed', description: err.message || 'Invalid credentials', variant: 'destructive' });
         return false;
       }
-    } catch (error) {
-      toast({
-        title: 'Login error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Sign in error', description: 'An unexpected error occurred.', variant: 'destructive' });
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshUser = async (): Promise<void> => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      }
+    } catch {
+      // ignore
     }
   };
 
@@ -114,7 +121,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async (): Promise<void> => {
-    setLoading(true);
     try {
       const response = await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
@@ -128,10 +134,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      if (authConfig.mode !== 'demo') {
-        navigate('/login');
-      }
-      toast({ title: 'Logout successful', description: 'You have been logged out.' });
+      // Always return to the landing page — login is a modal there now
+      navigate('/');
+      toast({ title: 'Signed out', description: 'You have been signed out successfully.' });
     } catch (error) {
       toast({
         title: 'Logout error',
@@ -147,13 +152,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider
       value={{
         user,
-        loading,
         authConfig,
+        loading,
         login,
         loginWithSso,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
       }}
     >
       {children}
@@ -163,9 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -173,21 +177,27 @@ export const RequireAuth: React.FC<{ children: ReactNode; adminOnly?: boolean }>
   children,
   adminOnly = false,
 }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, isAdmin, loading, user } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
-        navigate('/login');
+        navigate('/');
+      } else if ((user as any)?.needsRegistration) {
+        navigate('/register');
       } else if (adminOnly && !isAdmin) {
         navigate('/');
       }
     }
-  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly]);
+  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly, user]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading…</p>
+      </div>
+    );
   }
 
   if (!isAuthenticated || (adminOnly && !isAdmin)) {

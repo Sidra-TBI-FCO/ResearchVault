@@ -3,7 +3,6 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { DatabaseStatus } from "../DatabaseStatus";
 import { cn } from "@/lib/utils";
-import { useCurrentUser, DUMMY_USERS } from "@/hooks/useCurrentUser";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,14 +10,6 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { currentUser, setCurrentUser } = useCurrentUser();
-
-  const handleUserSwitch = (userId: number) => {
-    const user = DUMMY_USERS.find(u => u.id === userId);
-    if (user) {
-      setCurrentUser(user);
-    }
-  };
 
   const toggleMobileSidebar = () => {
     setMobileSidebarOpen(prev => !prev);
@@ -33,27 +24,17 @@ export default function Layout({ children }: LayoutProps) {
       )}>
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={toggleMobileSidebar}></div>
         <div className="relative flex-1 flex flex-col max-w-xs w-full bg-card h-full">
-          <Sidebar 
-            currentUser={currentUser} 
-            availableUsers={DUMMY_USERS}
-            onUserSwitch={handleUserSwitch}
-            mobile={true} 
-            onClose={toggleMobileSidebar} 
-          />
+          <Sidebar mobile={true} onClose={toggleMobileSidebar} />
         </div>
       </div>
 
       {/* Desktop sidebar */}
-      <Sidebar 
-        currentUser={currentUser} 
-        availableUsers={DUMMY_USERS}
-        onUserSwitch={handleUserSwitch}
-      />
+      <Sidebar />
 
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header onMenuClick={toggleMobileSidebar} />
-        
+
         <main className="flex-1 overflow-y-auto p-6 bg-background">
           <DatabaseStatus />
           {children}

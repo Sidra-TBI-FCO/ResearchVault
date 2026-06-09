@@ -9,7 +9,10 @@ import {
 } from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { createHash } from "crypto";
+
+const PgSession = connectPgSimple(session);
 
 // Global error handlers to prevent crashes from worker processes
 process.on('uncaughtException', (error) => {
@@ -33,42 +36,46 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
+
+// Trust the nginx reverse proxy so Express sees the correct protocol,
+// IP, and host from X-Forwarded-* headers. Required for secure cookies
+// to work correctly when the app is behind nginx.
+app.set('trust proxy', 1);
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
-// Session configuration
+// Secure cookies require HTTPS. In production behind nginx without TLS
+// (plain HTTP) we must keep secure: false or the browser will never
+// send the cookie back and every request appears unauthenticated.
+const isHttps = process.env.APP_URL?.startsWith('https://') ?? false;
+
+// Session configuration — use PostgreSQL store in production to avoid
+// MemoryStore leak warnings and to survive container restarts.
+const sessionStore = process.env.DATABASE_URL
+  ? new PgSession({
+      conString: process.env.DATABASE_URL,
+      tableName: 'session',
+      createTableIfMissing: true,
+    })
+  : undefined; // falls back to default MemoryStore in dev without a DB
+
 app.use(session({
-  secret: createHash('sha256').update('research-portal-session-secret').digest('hex'),
+  store: sessionStore,
+  secret: process.env.SESSION_SECRET || createHash('sha256').update('research-portal-session-secret').digest('hex'),
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+  cookie: {
+    secure: isHttps,
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
-// Identity middleware.
-// - demo mode: auto-inject a guest user on every request (all environments).
-// - SSO off (local mode) in development: bridge a dummy user with the session so
-//   the role-emulation experience works without a login. Skipped when SSO
-//   (ldap/oidc) is enabled, so the real session user is the only identity.
-if (getAuthMode() === 'demo') {
-  app.use('/api', demoBannerMiddleware);
-} else if (process.env.NODE_ENV !== 'production' && !isSsoEnabled()) {
-  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
-    // If no session user is set, use a default development user
-    if (!req.session.user) {
-      // Default to Management user for development access
-      req.session.user = {
-        id: 8,
-        username: 'iris.admin',
-        name: 'Iris Administrator', 
-        email: 'iris.admin@research.org',
-        role: 'Management'
-      };
-    }
-    next();
-  });
+// Demo mode: auto-inject a guest user so the app runs without login.
+// Also applies in development when AUTH_MODE is unset or "demo".
+if (getAuthMode() === "demo") {
+  app.use("/api", demoBannerMiddleware);
 }
 
 app.use((req, res, next) => {

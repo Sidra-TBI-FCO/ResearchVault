@@ -1,0 +1,83 @@
+networks:
+  rv-net:
+    driver: bridge
+
+volumes:
+  pg-data:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: researchvault
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rv-net
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - rv-net
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/researchvault
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production-use-a-long-random-string}
+      STORAGE_TYPE: local
+      UPLOADS_DIR: /data/uploads
+      APP_URL: ${APP_URL:-http://localhost:5000}
+      # Super admin (user whose email matches is always promoted to superadmin)
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-}
+      # Authentication
+      AUTH_MODE: ${AUTH_MODE:-local}
+      DEMO_USERNAME: ${DEMO_USERNAME:-}
+      DEMO_NAME: ${DEMO_NAME:-}
+      DEMO_EMAIL: ${DEMO_EMAIL:-}
+      DEMO_ROLE: ${DEMO_ROLE:-}
+      # LDAP (only used when AUTH_MODE=ldap)
+      LDAP_URL: ${LDAP_URL:-}
+      LDAP_BIND_DN: ${LDAP_BIND_DN:-}
+      LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD:-}
+      LDAP_SEARCH_BASE: ${LDAP_SEARCH_BASE:-}
+      LDAP_SEARCH_FILTER: ${LDAP_SEARCH_FILTER:-}
+      LDAP_USER_FIELD_USERNAME: ${LDAP_USER_FIELD_USERNAME:-}
+      LDAP_USER_FIELD_NAME: ${LDAP_USER_FIELD_NAME:-}
+      LDAP_USER_FIELD_EMAIL: ${LDAP_USER_FIELD_EMAIL:-}
+      LDAP_TLS: ${LDAP_TLS:-}
+      LDAP_TLS_REJECT_UNAUTHORIZED: ${LDAP_TLS_REJECT_UNAUTHORIZED:-}
+      # OIDC (only used when AUTH_MODE=oidc)
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
+      OIDC_SCOPE: ${OIDC_SCOPE:-}
+      OIDC_PROVIDER_NAME: ${OIDC_PROVIDER_NAME:-}
+      OIDC_CLAIM_USERNAME: ${OIDC_CLAIM_USERNAME:-}
+      OIDC_CLAIM_NAME: ${OIDC_CLAIM_NAME:-}
+      OIDC_CLAIM_EMAIL: ${OIDC_CLAIM_EMAIL:-}
+    volumes:
+      - ${UPLOADS_DATA_DIR:-./data/uploads}:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - rv-net

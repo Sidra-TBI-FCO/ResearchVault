@@ -9,6 +9,7 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
 } from "./objectStorage";
+import { LocalObjectStorageService } from "./localObjectStorage";
 import { db } from "./db";
 import { scientists, publicationAuthors, journals, journalImpactFactorMetrics, manuscriptHistory, users } from "@shared/schema";
 import { eq, inArray, desc } from "drizzle-orm";
@@ -58,6 +59,12 @@ import {
 } from "@shared/schema";
 import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead } from "./auth";
 
+const isLocalStorage = process.env.STORAGE_TYPE === "local";
+
+function getObjectStorageService(): ObjectStorageService | LocalObjectStorageService {
+  return isLocalStorage ? new LocalObjectStorageService() : new ObjectStorageService();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
   const apiRouter = app.route('/api');
@@ -76,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Object Storage Routes
   app.post("/api/objects/upload", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+    const objectStorageService = getObjectStorageService();
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       res.json({ uploadURL });
@@ -121,6 +128,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Object not found" });
       }
       return res.status(500).json({ error: "Failed to serve object" });
+    }
+  });
+
+  // Local filesystem upload handler (used when STORAGE_TYPE=local)
+  app.put("/api/objects/local-upload/:id", async (req, res) => {
+    if (!isLocalStorage) return res.status(404).end();
+    try {
+      const { id } = req.params;
+      const chunks: Buffer[] = [];
+      req.on("data", (chunk: Buffer) => chunks.push(chunk));
+      req.on("end", async () => {
+        const localService = new LocalObjectStorageService();
+        await localService.saveFile(id, Buffer.concat(chunks), req.headers["content-type"] || "application/octet-stream");
+        res.status(200).end();
+      });
+      req.on("error", () => res.status(500).json({ error: "Upload failed" }));
+    } catch (error) {
+      console.error("Local upload error:", error);
+      res.status(500).json({ error: "Upload failed" });
     }
   });
 
@@ -1221,7 +1247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/objects/:objectPath(*)", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+    const objectStorageService = getObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
         req.path,
@@ -7395,6 +7421,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting team member:", error);
       res.status(500).json({ message: "Failed to delete team member" });
+    }
+  });
+
+  // ── Admin: user management ─────────────────────────────────────────────────
+
+  // GET /api/admin/users — list all users (admin/superadmin only)
+  app.get('/api/admin/users', requireAuth, async (req: Request, res: Response) => {
+    const role = (req.session as any)?.user?.role;
+    if (role !== 'admin' && role !== 'superadmin') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    try {
+      const allUsers = await storage.getUsers();
+      res.json(allUsers);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // PATCH /api/admin/users/:id/role — change a user's role
+  app.patch('/api/admin/users/:id/role', requireAuth, async (req: Request, res: Response) => {
+    const sessionUser = (req.session as any)?.user;
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'superadmin')) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid user id' });
+
+    const { role } = req.body as { role: string };
+    const allowedRoles = ['user', 'admin', 'Management', 'Investigator', 'Staff Scientist',
+      'Lab Manager', 'Postdoctoral Researcher', 'PhD Student', 'IRB Board Member',
+      'IBC Board Member', 'Outcome Officer', 'PMO Officer', 'IRB Officer',
+      'IBC Officer', 'Grant Officer', 'Contracts Officer', 'Physician'];
+    // superadmin role can only be set via SUPER_ADMIN_EMAIL env var — never by UI
+    if (!role || !allowedRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    try {
+      const updated = await storage.updateUser(id, { role } as any);
+      if (!updated) return res.status(404).json({ message: 'User not found' });
+      res.json(updated);
+    } catch (err) {
+      console.error('Error updating user role:', err);
+      res.status(500).json({ message: 'Failed to update role' });
+    }
+  });
+
+  // POST /api/register — first-time user links their account to a scientist/staff profile
+  app.post('/api/register', requireAuth, async (req: Request, res: Response) => {
+    const sessionUser = (req.session as any)?.user;
+    if (!sessionUser) return res.status(401).json({ message: 'Not authenticated' });
+    if (sessionUser.scientistId) {
+      return res.status(400).json({ message: 'Already registered' });
+    }
+
+    const { firstName, lastName, jobTitle, staffType, honorificTitle, department } = req.body as {
+      firstName: string; lastName: string; jobTitle: string; staffType: string;
+      honorificTitle?: string; department?: string;
+    };
+    if (!firstName || !lastName || !jobTitle || !staffType) {
+      return res.status(400).json({ message: 'firstName, lastName, jobTitle and staffType are required' });
+    }
+
+    try {
+      const [scientist] = await db
+        .insert(scientists)
+        .values({
+          firstName,
+          lastName,
+          email: sessionUser.email,
+          jobTitle,
+          staffType,
+          honorificTitle: honorificTitle || '',
+          department: department || null,
+        } as any)
+        .returning();
+
+      const updated = await storage.updateUser(sessionUser.id, { scientistId: scientist.id } as any);
+      if (!updated) return res.status(500).json({ message: 'Failed to link profile' });
+
+      (req.session as any).user = {
+        ...sessionUser,
+        scientistId: scientist.id,
+        needsRegistration: false,
+      };
+      res.json({ user: (req.session as any).user });
+    } catch (err) {
+      console.error('Error during registration:', err);
+      res.status(500).json({ message: 'Failed to create profile' });
     }
   });
 

@@ -8,22 +8,18 @@ export interface LdapAuthResult {
 
 function getLdapConfig() {
   return {
-    url: process.env.LDAP_URL || "ldap://localhost:389",
-    bindDN: process.env.LDAP_BIND_DN || "",
-    bindPassword: process.env.LDAP_BIND_PASSWORD || "",
-    searchBase: process.env.LDAP_SEARCH_BASE || "",
+    url:           process.env.LDAP_URL           || "ldap://localhost:389",
+    bindDN:        process.env.LDAP_BIND_DN        || "",
+    bindPassword:  process.env.LDAP_BIND_PASSWORD  || "",
+    searchBase:    process.env.LDAP_SEARCH_BASE    || "",
     // Use {{username}} as placeholder, e.g. (sAMAccountName={{username}})
-    searchFilter: process.env.LDAP_SEARCH_FILTER || "(uid={{username}})",
+    searchFilter:  process.env.LDAP_SEARCH_FILTER  || "(uid={{username}})",
     usernameField: process.env.LDAP_USER_FIELD_USERNAME || "uid",
-    nameField: process.env.LDAP_USER_FIELD_NAME || "cn",
-    emailField: process.env.LDAP_USER_FIELD_EMAIL || "mail",
-    tlsEnabled: process.env.LDAP_TLS === "true",
+    nameField:     process.env.LDAP_USER_FIELD_NAME     || "cn",
+    emailField:    process.env.LDAP_USER_FIELD_EMAIL    || "mail",
+    tlsEnabled:    process.env.LDAP_TLS === "true",
     tlsRejectUnauthorized: process.env.LDAP_TLS_REJECT_UNAUTHORIZED !== "false",
   };
-}
-
-export function isLdapConfigured(): boolean {
-  return Boolean(process.env.LDAP_URL && process.env.LDAP_BIND_DN && process.env.LDAP_SEARCH_BASE);
 }
 
 export async function authenticateLdap(
@@ -63,32 +59,23 @@ export async function authenticateLdap(
     // Unbind service account, then re-bind as the user to verify password
     await client.unbind();
 
-    const userClient = new Client({
-      url: cfg.url,
-      tlsOptions: cfg.tlsEnabled
-        ? { rejectUnauthorized: cfg.tlsRejectUnauthorized }
-        : undefined,
-    });
+    const userClient = new Client({ url: cfg.url });
     try {
       await userClient.bind(userDN, password);
     } catch {
       return { success: false, message: "Invalid credentials" };
     } finally {
-      try {
-        await userClient.unbind();
-      } catch {}
+      try { await userClient.unbind(); } catch {}
     }
 
-    const name = String(entry[cfg.nameField] ?? username);
+    const name  = String(entry[cfg.nameField]  ?? username);
     const email = String(entry[cfg.emailField] ?? "");
 
     return { success: true, user: { username, name, email } };
   } catch (err) {
-    console.error("[auth] LDAP error:", err);
+    console.error("LDAP error:", err);
     return { success: false, message: "LDAP authentication error" };
   } finally {
-    try {
-      await client.unbind();
-    } catch {}
+    try { await client.unbind(); } catch {}
   }
 }

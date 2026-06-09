@@ -9,6 +9,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 
+interface AuthConfig {
+  mode: 'demo' | 'local' | 'ldap' | 'oidc';
+  oidcProviderName: string | null;
+}
+
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
@@ -16,22 +21,34 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const [, navigate] = useLocation();
-  const { login, loading, authConfig, loginWithSso, isAuthenticated } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();
+  const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Surface any error passed back from the OIDC callback redirect.
+  // Fetch auth configuration from the server
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then(r => r.json())
+      .then(setAuthConfig)
+      .catch(() => setAuthConfig({ mode: 'local', oidcProviderName: null }));
+  }, []);
+
+  // Parse any error from the OIDC callback redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const err = params.get('error');
     if (err) setErrorMsg(decodeURIComponent(err));
   }, []);
 
-  // Demo mode never shows a login wall — redirect straight into the app.
+  // Redirect if already authenticated
   useEffect(() => {
-    if (authConfig.mode === 'demo' || isAuthenticated) {
-      navigate('/');
-    }
-  }, [authConfig.mode, isAuthenticated, navigate]);
+    if (isAuthenticated) navigate('/');
+  }, [isAuthenticated, navigate]);
+
+  // Demo mode: redirect immediately — no login needed
+  useEffect(() => {
+    if (authConfig?.mode === 'demo') navigate('/');
+  }, [authConfig, navigate]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -41,47 +58,43 @@ export default function LoginPage() {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setErrorMsg(null);
     const success = await login(values.username, values.password);
-    if (success) {
-      navigate('/');
-    }
+    if (success) navigate('/');
   };
 
+  const handleOidcLogin = () => {
+    window.location.href = '/api/auth/oidc';
+  };
+
+  if (!authConfig || authConfig.mode === 'demo') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <p className="text-muted-foreground">Redirecting…</p>
+      </div>
+    );
+  }
+
   const isFormMode = authConfig.mode === 'local' || authConfig.mode === 'ldap';
-  const providerName = authConfig.providerName ?? 'SSO';
+  const providerName = authConfig.oidcProviderName ?? 'SSO';
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Research Portal Login
+            ResearchVault
           </CardTitle>
           <CardDescription className="text-center">
             {isFormMode
-              ? `Enter your ${authConfig.mode === 'ldap' ? 'institutional ' : ''}credentials to access the research management system`
+              ? 'Sign in with your ' + (authConfig.mode === 'ldap' ? 'institutional ' : '') + 'credentials'
               : `Sign in via ${providerName}`}
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           {errorMsg && (
-            <div
-              className="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive"
-              data-testid="text-login-error"
-            >
+            <div className="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
               {errorMsg}
             </div>
-          )}
-
-          {authConfig.mode === 'oidc' && (
-            <Button
-              type="button"
-              className="w-full"
-              onClick={loginWithSso}
-              disabled={loading}
-              data-testid="button-login-sso"
-            >
-              Sign in with {providerName}
-            </Button>
           )}
 
           {isFormMode && (
@@ -94,7 +107,13 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your username" autoComplete="off" data-1p-ignore="true" data-lpignore="true" data-testid="input-username" {...field} />
+                        <Input
+                          placeholder="Enter your username"
+                          autoComplete="username"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -111,8 +130,9 @@ export default function LoginPage() {
                         <Input
                           type="password"
                           placeholder="Enter your password"
-                          autoComplete="off" data-1p-ignore="true" data-lpignore="true"
-                          data-testid="input-password"
+                          autoComplete="current-password"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
                           {...field}
                         />
                       </FormControl>
@@ -121,13 +141,20 @@ export default function LoginPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={loading} data-testid="button-login">
-                  {loading ? 'Logging in...' : 'Log in'}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in…' : 'Sign in'}
                 </Button>
               </form>
             </Form>
           )}
+
+          {authConfig.mode === 'oidc' && (
+            <Button className="w-full" onClick={handleOidcLogin} disabled={loading}>
+              Sign in with {providerName}
+            </Button>
+          )}
         </CardContent>
+
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Contact your administrator if you need access
