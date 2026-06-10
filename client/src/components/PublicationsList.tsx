@@ -6,8 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, FileText, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
+import { ExternalLink, FileText, ChevronRight, ArrowRight, AlertTriangle, ChevronsDownUp, ChevronsUpDown, Copy, Check } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface JournalImpactFactor {
   id: number;
@@ -233,6 +234,101 @@ export function PublicationsList({ scientistId, yearsSince = 5, embedded = false
     queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
 
+  const { toast } = useToast();
+  const [copied, setCopied] = React.useState(false);
+
+  const allExpanded = publications.length > 0 && publications.every((p: Publication) => expandedIds.has(p.id));
+  const toggleExpandAll = () => {
+    setExpandedIds(allExpanded ? new Set() : new Set(publications.map((p: Publication) => p.id)));
+  };
+
+  const buildClipboardText = () =>
+    publications
+      .map((pub: Publication, idx: number) => {
+        let year = "n.d.";
+        if (pub.publicationDate) {
+          const parsed = new Date(pub.publicationDate);
+          if (!isNaN(parsed.getTime())) year = format(parsed, "yyyy");
+        }
+        let citation = "";
+        if (pub.authors) citation += `${pub.authors} `;
+        citation += `(${year}). ${pub.title}.`;
+        if (pub.journal) {
+          citation += ` ${pub.journal}`;
+          if (pub.volume) citation += `, ${pub.volume}`;
+          if (pub.issue) citation += `(${pub.issue})`;
+          if (pub.pages) citation += `, ${pub.pages}`;
+          citation += ".";
+        }
+        if (pub.doi) citation += ` https://doi.org/${pub.doi}`;
+        return `${idx + 1}. ${citation}`;
+      })
+      .join("\n");
+
+  const handleCopy = async () => {
+    const text = buildClipboardText();
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try {
+          ok = document.execCommand("copy");
+        } finally {
+          document.body.removeChild(ta);
+        }
+        if (!ok) throw new Error("Clipboard copy command failed");
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Copied to clipboard",
+        description: `${publications.length} publication${publications.length === 1 ? "" : "s"} ready to paste.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Could not copy",
+        description: "Your browser blocked clipboard access. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const headerActions = publications.length > 0 ? (
+    <div className="flex items-center gap-2 shrink-0">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={toggleExpandAll}
+        data-testid="button-toggle-expand-all-publications"
+      >
+        {allExpanded ? (
+          <ChevronsDownUp className="h-4 w-4 mr-1" />
+        ) : (
+          <ChevronsUpDown className="h-4 w-4 mr-1" />
+        )}
+        {allExpanded ? "Collapse all" : "Expand all"}
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleCopy}
+        data-testid="button-copy-publications"
+      >
+        {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+        {copied ? "Copied" : "Copy list"}
+      </Button>
+    </div>
+  ) : null;
+
   const loadingBody = (
     <div className="animate-pulse space-y-4">
       {[1, 2, 3].map((i) => (
@@ -261,16 +357,19 @@ export function PublicationsList({ scientistId, yearsSince = 5, embedded = false
   if (embedded) {
     return (
       <div data-testid="section-publications-recent">
-        <div className="mb-3">
-          <h3 className="font-semibold flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Publications (Last {yearsSince} Years)
-          </h3>
-          {!isLoading && (
-            <p className="text-sm text-muted-foreground">
-              {publications.length} publications (Published or In Press only) with external collaborator tracking
-            </p>
-          )}
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Publications (Last {yearsSince} Years)
+            </h3>
+            {!isLoading && (
+              <p className="text-sm text-muted-foreground">
+                {publications.length} publications (Published or In Press only) with external collaborator tracking
+              </p>
+            )}
+          </div>
+          {!isLoading && headerActions}
         </div>
         {isLoading ? loadingBody : listBody}
       </div>
@@ -294,13 +393,18 @@ export function PublicationsList({ scientistId, yearsSince = 5, embedded = false
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Publications (Last {yearsSince} Years)
-        </CardTitle>
-        <CardDescription>
-          {publications.length} publications (Published or In Press only) with external collaborator tracking
-        </CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Publications (Last {yearsSince} Years)
+            </CardTitle>
+            <CardDescription>
+              {publications.length} publications (Published or In Press only) with external collaborator tracking
+            </CardDescription>
+          </div>
+          {headerActions}
+        </div>
       </CardHeader>
       <CardContent>{listBody}</CardContent>
     </Card>
