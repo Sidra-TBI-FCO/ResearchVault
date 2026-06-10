@@ -473,99 +473,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (provider === 'ocr_space') {
               // Use OCR.space API
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 30000);
-
               try {
                 console.log('Attempting OCR.space API call...');
                 console.log('API Key available:', !!(process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey));
-                console.log('File URL length:', fileUrl.length);
-                
-                // OCR.space API uses GET with query parameters
+
                 const apiKey = process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld';
-                
-                // Use the already-downloaded fileBuffer (resolved server-side from the
-                // validated object path). No URL-based GCS download needed here.
-                console.log('Preparing file buffer for OCR.space upload...', fileBuffer.byteLength, 'bytes');
-                const fileBlob = new Blob([fileBuffer], { type: isPDF ? 'application/pdf' : (contentType || 'application/octet-stream') });
-                
-                console.log('Uploading file to OCR.space...', fileBlob.size, 'bytes');
-                
-                // Use file upload instead of URL method (more reliable)
-                const formData = new FormData();
-                formData.append('file', fileBlob, 'certificate.pdf');
-                formData.append('apikey', apiKey);
-                formData.append('language', 'eng');
-                formData.append('isOverlayRequired', 'false');
-                formData.append('filetype', 'PDF');
-                formData.append('detectOrientation', 'false');
-                formData.append('isCreateSearchablePdf', 'false');
-                formData.append('isSearchablePdfHideTextLayer', 'false');
-                formData.append('scale', 'true');
-                formData.append('isTable', 'false');
-                formData.append('OCREngine', '2');
 
-                const ocrResponse = await fetch('https://api.ocr.space/parse/image', {
-                  method: 'POST',
-                  body: formData,
-                  signal: controller.signal
-                });
-                
-                console.log('OCR.space response status:', ocrResponse.status);
-                console.log('OCR.space response headers:', Object.fromEntries(ocrResponse.headers.entries()));
-
-                clearTimeout(timeoutId);
-
-                if (ocrResponse.ok) {
-                  const ocrResult = await ocrResponse.json();
-                  console.log('OCR.space API Response:', JSON.stringify(ocrResult, null, 2));
-                  
-                  // Check for page limit error (E301) - reject files with >2 pages
-                  if (ocrResult.IsErroredOnProcessing === true) {
-                    const errorMessages = Array.isArray(ocrResult.ErrorMessage) ? ocrResult.ErrorMessage : [ocrResult.ErrorMessage];
-                    const hasPageLimitError = errorMessages.some((msg: string) => 
-                      msg && msg.includes('maximum page limit') && msg.includes('3')
-                    );
-                    
-                    if (hasPageLimitError) {
-                      console.error('Document exceeds 2-page limit, rejecting');
-                      throw new Error('Document rejected: CITI certificates should be 2 pages maximum. Multi-page merged reports are not supported. Please upload individual certificate reports only.');
+                // OCR.space free tier rejects PDFs with more than 3 pages. Split
+                // multi-page PDFs (e.g. CITI completion reports) into ≤3-page chunks,
+                // OCR each, then stitch the text back together. Non-PDFs and short
+                // PDFs go through as a single buffer.
+                let buffersToOcr: Buffer[] = [Buffer.from(fileBuffer)];
+                if (isPDF) {
+                  try {
+                    buffersToOcr = await splitPdfIntoChunks(Buffer.from(fileBuffer), 3);
+                    if (buffersToOcr.length > 1) {
+                      console.log(`PDF split into ${buffersToOcr.length} chunk(s) to stay within OCR page limit`);
                     }
-                    
-                    console.error('OCR processing error:', errorMessages);
-                    throw new Error(errorMessages.join(', ') || 'OCR processing failed');
+                  } catch (splitErr: any) {
+                    console.error('PDF split failed, sending whole file:', splitErr?.message);
+                    buffersToOcr = [Buffer.from(fileBuffer)];
                   }
-                  
-                  if (ocrResult.IsErroredOnProcessing === false && ocrResult.ParsedResults?.length > 0) {
-                    extractedText = ocrResult.ParsedResults[0].ParsedText;
-                    console.log(`OCR Extracted Text Length: ${extractedText.length} characters`);
-                    console.log('First 500 characters of extracted text:', extractedText.substring(0, 500));
-                  } else {
-                    console.error('OCR processing error:', ocrResult.ErrorMessage || ocrResult);
-                    throw new Error(ocrResult.ErrorMessage || 'OCR processing failed');
-                  }
-                } else {
-                  const errorText = await ocrResponse.text();
-                  console.error('OCR.space HTTP error:', ocrResponse.status, errorText);
-                  
-                  // Handle rate limiting specifically
-                  if (ocrResponse.status === 403) {
-                    if (errorText.includes('180 number of times')) {
-                      throw new Error('RATE_LIMIT: OCR service rate limit exceeded. Please wait about an hour before processing more certificates.');
-                    }
-                  }
-                  
-                  throw new Error(`Failed to connect to OCR.space service: ${ocrResponse.status}`);
                 }
+
+                const chunkTexts: string[] = [];
+                for (let chunkIndex = 0; chunkIndex < buffersToOcr.length; chunkIndex++) {
+                  console.log(`Uploading chunk ${chunkIndex + 1}/${buffersToOcr.length} to OCR.space (${buffersToOcr[chunkIndex].byteLength} bytes)...`);
+                  const chunkText = await ocrSpaceExtractText(buffersToOcr[chunkIndex], apiKey, isPDF, contentType);
+                  if (chunkText && chunkText.trim().length > 0) {
+                    chunkTexts.push(chunkText);
+                  }
+                }
+
+                extractedText = chunkTexts.join('\n');
+                console.log(`OCR Extracted Text Length: ${extractedText.length} characters across ${buffersToOcr.length} chunk(s)`);
+                console.log('First 500 characters of extracted text:', extractedText.substring(0, 500));
               } catch (apiError: any) {
                 console.error('OCR.space failed:', apiError.message);
-                clearTimeout(timeoutId);
-                
+
                 // Don't fallback to Tesseract for rate limit errors or 403 errors
                 if (apiError.message && (apiError.message.includes('RATE_LIMIT') || apiError.message.includes('403'))) {
                   throw new Error('OCR service temporarily unavailable (rate limit). Please wait about an hour and try again.');
                 }
-                
+
                 console.log('Falling back to Tesseract.js...');
                 // Don't throw error yet, let it fall back to Tesseract
                 extractedText = null; // Signal to use fallback
@@ -734,23 +684,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Split a PDF into chunks of at most `pagesPerChunk` pages so each chunk stays
+  // within OCR.space's free-tier 3-page limit. CITI completion reports are often
+  // 4+ pages (Requirements + Transcript) and would otherwise be rejected outright.
+  // Returns the original buffer unchanged when the PDF is already within the limit
+  // or when it can't be parsed.
+  async function splitPdfIntoChunks(buffer: Buffer, pagesPerChunk = 3): Promise<Buffer[]> {
+    const { PDFDocument } = await import('pdf-lib');
+    const src = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    const total = src.getPageCount();
+    if (total <= pagesPerChunk) {
+      return [buffer];
+    }
+    const chunks: Buffer[] = [];
+    for (let start = 0; start < total; start += pagesPerChunk) {
+      const chunkDoc = await PDFDocument.create();
+      const indices: number[] = [];
+      for (let i = start; i < Math.min(start + pagesPerChunk, total); i++) {
+        indices.push(i);
+      }
+      const copied = await chunkDoc.copyPages(src, indices);
+      copied.forEach((p) => chunkDoc.addPage(p));
+      const bytes = await chunkDoc.save();
+      chunks.push(Buffer.from(bytes));
+    }
+    return chunks;
+  }
+
+  // Send a single buffer to OCR.space and return the concatenated text across all
+  // pages in the response. Throws on rate limit, HTTP, or processing errors.
+  async function ocrSpaceExtractText(
+    buffer: Buffer,
+    apiKey: string,
+    isPDF: boolean,
+    contentType: string,
+  ): Promise<string> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const fileBlob = new Blob([buffer], {
+        type: isPDF ? 'application/pdf' : (contentType || 'application/octet-stream'),
+      });
+      const formData = new FormData();
+      formData.append('file', fileBlob, isPDF ? 'certificate.pdf' : 'certificate.img');
+      formData.append('apikey', apiKey);
+      formData.append('language', 'eng');
+      formData.append('isOverlayRequired', 'false');
+      if (isPDF) {
+        formData.append('filetype', 'PDF');
+      }
+      formData.append('detectOrientation', 'false');
+      formData.append('isCreateSearchablePdf', 'false');
+      formData.append('isSearchablePdfHideTextLayer', 'false');
+      formData.append('scale', 'true');
+      formData.append('isTable', 'false');
+      formData.append('OCREngine', '2');
+
+      const ocrResponse = await fetch('https://api.ocr.space/parse/image', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+
+      if (!ocrResponse.ok) {
+        const errorText = await ocrResponse.text();
+        if (ocrResponse.status === 403 && errorText.includes('180 number of times')) {
+          throw new Error('RATE_LIMIT: OCR service rate limit exceeded. Please wait about an hour before processing more certificates.');
+        }
+        throw new Error(`Failed to connect to OCR.space service: ${ocrResponse.status}`);
+      }
+
+      const ocrResult = await ocrResponse.json();
+      if (ocrResult.IsErroredOnProcessing === true) {
+        const errorMessages = Array.isArray(ocrResult.ErrorMessage) ? ocrResult.ErrorMessage : [ocrResult.ErrorMessage];
+        throw new Error(errorMessages.join(', ') || 'OCR processing failed');
+      }
+      if (ocrResult.ParsedResults?.length > 0) {
+        return ocrResult.ParsedResults.map((r: any) => r.ParsedText || '').join('\n');
+      }
+      throw new Error(ocrResult.ErrorMessage || 'OCR processing failed');
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   // Helper function to detect CITI document type
   function detectCITIDocumentType(text: string): 'certificate' | 'report' | 'unknown' {
-    // Certificate format indicators
-    if (text.includes('This is to certify that:') || 
-        text.includes('Has completed the following CITI Program course:') ||
-        text.includes('Collaborative Institutional Training Initiative')) {
-      return 'certificate';
-    }
-    
-    // Report format indicators  
-    if (text.includes('COMPLETION REPORT') || 
-        text.includes('COURSEWORK REQUIREMENTS') ||
-        text.includes('Part 1 of 2') || 
-        text.includes('Part 2 of 2')) {
+    // Report format indicators are checked FIRST. Completion reports also contain
+    // the generic "Collaborative Institutional Training Initiative" line (in their
+    // footer), so checking certificate markers first would misclassify reports.
+    if (/completion report/i.test(text) ||
+        /coursework requirements/i.test(text) ||
+        /coursework transcript/i.test(text) ||
+        /part 1 of 2/i.test(text) ||
+        /part 2 of 2/i.test(text)) {
       return 'report';
     }
-    
+
+    // Certificate format indicators
+    if (/this is to certify that/i.test(text) ||
+        /has completed the following citi program course/i.test(text) ||
+        /collaborative institutional training initiative/i.test(text)) {
+      return 'certificate';
+    }
+
     return 'unknown';
   }
 
@@ -1147,9 +1184,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cleanText = text.replace(/\s+/g, ' ').trim();
 
       // Report format specific patterns
-      // Name extraction - usually appears after bullet points and contact info
+      // Name extraction. CITI reports list the learner as "• Name: First Last (ID: 12345)".
+      // Prefer that labeled form; fall back to the older heuristic patterns.
       console.log('Searching for person name in report format...');
-      const nameMatch = text.match(/Phone:\s*([A-Za-z\s]+?)(?:\s+\([^)]*\))?$/m) ||
+      const nameMatch = text.match(/Name:\s*([A-Za-z][A-Za-z.'\-\s]+?)\s*\(ID:/i) ||
+                       text.match(/Name:\s*([A-Za-z][A-Za-z.'\-\s]+?)(?:\s*\n|$)/i) ||
+                       text.match(/Phone:\s*([A-Za-z\s]+?)(?:\s+\([^)]*\))?$/m) ||
                        text.match(/•\s*Phone:\s*.*?\n\s*([A-Za-z\s]+)/i) ||
                        text.match(/Institution Unit:\s*•\s*Phone:\s*(.+?)(?:\s|$)/i) ||
                        text.match(/([A-Za-z]+\s+[A-Za-z]+)(?:\s+\([^)]*\))?(?:\s*$)/m);
@@ -1157,20 +1197,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (nameMatch) {
         const rawName = nameMatch[1].trim();
         // Clean up the name - remove extra whitespace and validate
-        if (rawName.length > 2 && rawName.length < 50 && /^[A-Za-z\s]+$/.test(rawName)) {
+        if (rawName.length > 2 && rawName.length < 50 && /^[A-Za-z.'\-\s]+$/.test(rawName)) {
           result.name = rawName;
           console.log('Found name in report format:', result.name);
         }
       }
 
-      // Course name extraction - different pattern for reports
+      // Course name extraction. Reports identify the course via "Curriculum Group:".
       console.log('Searching for course name in report format...');
-      const reportCourseMatch = text.match(/COURSEWORK REQUIREMENTS[\s\S]*?([A-Za-z][^•\n]+?)(?:\s*•|\s*$)/i) ||
+      const reportCourseMatch = text.match(/Curriculum Group:\s*([^\n•]+?)(?:\s*•|\n|$)/i) ||
+                               text.match(/Course Learner Group:\s*([^\n•]+?)(?:\s*•|\n|$)/i) ||
+                               text.match(/COURSEWORK REQUIREMENTS[\s\S]*?([A-Za-z][^•\n]+?)(?:\s*•|\s*$)/i) ||
                                text.match(/Course:\s*([^•\n]+)/i) ||
                                text.match(/Training[\s\S]*?-\s*([^•\n]+)/i);
       
       if (reportCourseMatch) {
-        result.courseName = reportCourseMatch[1].trim();
+        let courseName = reportCourseMatch[1].trim();
+        // "Same as Curriculum Group" is a placeholder, not a real course name.
+        if (/^same as/i.test(courseName)) {
+          const curr = text.match(/Curriculum Group:\s*([^\n•]+?)(?:\s*•|\n|$)/i);
+          if (curr) courseName = curr[1].trim();
+        }
+        result.courseName = courseName;
         console.log('Found course name in report format:', result.courseName);
         
         // Strict module matching (conservative — flags unknown courses as NEW).
@@ -1179,26 +1227,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         result.isNewModule = !module;
       }
 
-      // Date extraction for report format - usually no explicit completion/expiration labels
+      // Date extraction. Prefer the explicitly labeled completion/expiration dates;
+      // fall back to positional (first/second date) only if labels are missing.
       console.log('Searching for dates in report format...');
-      const allDates = text.match(/(\d{1,2}-\w{3}-20\d{2})/g);
-      if (allDates && allDates.length > 0) {
-        // First date is usually completion, second (if exists) is expiration
-        result.completionDate = convertDateFormat(allDates[0]);
-        console.log('Found completion date in report format:', result.completionDate);
-        
-        if (allDates.length > 1) {
-          result.expirationDate = convertDateFormat(allDates[1]);
-          console.log('Found expiration date in report format:', result.expirationDate);
+      const completionLabel = text.match(/Completion Date:\s*(\d{1,2}-\w{3}-\d{4})/i);
+      const expirationLabel = text.match(/Expiration Date:\s*(\d{1,2}-\w{3}-\d{4})/i);
+      if (completionLabel) {
+        result.completionDate = convertDateFormat(completionLabel[1]);
+        console.log('Found completion date (labeled) in report format:', result.completionDate);
+      }
+      if (expirationLabel) {
+        result.expirationDate = convertDateFormat(expirationLabel[1]);
+        console.log('Found expiration date (labeled) in report format:', result.expirationDate);
+      }
+      if (!result.completionDate || !result.expirationDate) {
+        const allDates = text.match(/(\d{1,2}-\w{3}-20\d{2})/g);
+        if (allDates && allDates.length > 0) {
+          if (!result.completionDate) {
+            result.completionDate = convertDateFormat(allDates[0]);
+            console.log('Found completion date (positional) in report format:', result.completionDate);
+          }
+          if (!result.expirationDate && allDates.length > 1) {
+            // Use the latest distinct date as expiration (module rows repeat the
+            // completion date, so the largest year is the real expiration).
+            const distinct = Array.from(new Set(allDates));
+            const latest = distinct.sort((a, b) => convertDateFormat(a).localeCompare(convertDateFormat(b))).pop();
+            if (latest && convertDateFormat(latest) !== result.completionDate) {
+              result.expirationDate = convertDateFormat(latest);
+              console.log('Found expiration date (positional) in report format:', result.expirationDate);
+            }
+          }
         }
       }
 
-      // Record ID extraction for reports - similar pattern but may be in different location
+      // Record ID extraction. Prefer the labeled "Record ID:" value.
       console.log('Searching for record ID in report format...');
-      const reportIdMatch = text.match(/(\d{8})/g)?.find(match => {
-        // In reports, ID might be at the end or with different context
-        return match.length === 8; // 8-digit CITI record IDs
-      });
+      const reportIdMatch = text.match(/Record ID:\s*(\d+)/i)?.[1] ||
+                            text.match(/(\d{8})/g)?.find(match => match.length === 8);
       
       if (reportIdMatch) {
         result.recordId = reportIdMatch;
@@ -1206,7 +1271,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Institution extraction
-      const institutionMatch = text.match(/Institution:\s*([^\n\r•]+)/i);
+      const institutionMatch = text.match(/Institution Affiliation:\s*([^\n\r•(]+)/i) ||
+                               text.match(/Institution:\s*([^\n\r•]+)/i);
       if (institutionMatch) {
         result.institution = institutionMatch[1].trim();
       }
