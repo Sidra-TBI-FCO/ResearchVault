@@ -102,6 +102,7 @@ export interface IStorage {
   createPublication(publication: InsertPublication): Promise<Publication>;
   updatePublication(id: number, publication: Partial<InsertPublication>): Promise<Publication | undefined>;
   deletePublication(id: number): Promise<boolean>;
+  mergePublications(survivorId: number, mergeIds: number[], overrides: Partial<InsertPublication>, changedBy: number): Promise<Publication | undefined>;
   
   // Manuscript History
   getManuscriptHistory(publicationId: number): Promise<ManuscriptHistory[]>;

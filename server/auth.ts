@@ -89,6 +89,19 @@ export function requireContractsOfficer(req: Request, res: Response, next: NextF
   res.status(403).json({ message: "Forbidden. Contracts officer access required." });
 }
 
+export function requirePublicationOfficer(req: Request, res: Response, next: NextFunction) {
+  const role = req.session?.user?.role;
+  if (
+    role === "Outcome Officer" ||
+    role === "admin" ||
+    role === "superadmin" ||
+    role === "Management"
+  ) {
+    return next();
+  }
+  res.status(403).json({ message: "Forbidden. Publication office access required." });
+}
+
 export function requireContractsRead(req: Request, res: Response, next: NextFunction) {
   if (req.session?.user) {
     (req as any).currentUser = req.session.user;

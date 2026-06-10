@@ -548,6 +548,130 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // Atomically merge a set of duplicate publications into a surviving record.
+  // Author links, manuscript history, and research-activity association are
+  // moved onto the survivor; the merged-away records are deleted. Field values
+  // come from `overrides` (the officer's per-field choices). The whole operation
+  // runs in a single transaction so a partial failure leaves everything intact.
+  async mergePublications(
+    survivorId: number,
+    mergeIds: number[],
+    overrides: Partial<InsertPublication>,
+    changedBy: number,
+  ): Promise<Publication | undefined> {
+    const ids = Array.from(new Set(mergeIds)).filter((id) => id !== survivorId);
+
+    return await db.transaction(async (tx) => {
+      const [survivor] = await tx
+        .select()
+        .from(publications)
+        .where(eq(publications.id, survivorId));
+      if (!survivor) {
+        throw new Error("Surviving publication not found");
+      }
+
+      // Verify every merge target exists before mutating anything.
+      const targets = ids.length
+        ? await tx.select().from(publications).where(inArray(publications.id, ids))
+        : [];
+      if (targets.length !== ids.length) {
+        throw new Error("One or more publications to merge were not found");
+      }
+
+      // Track which scientists are already linked to the survivor so we never
+      // violate the (publicationId, scientistId) unique index.
+      const survivorAuthors = await tx
+        .select()
+        .from(publicationAuthors)
+        .where(eq(publicationAuthors.publicationId, survivorId));
+      const survivorAuthorByScientist = new Map<number, typeof survivorAuthors[number]>();
+      for (const a of survivorAuthors) survivorAuthorByScientist.set(a.scientistId, a);
+
+      for (const mid of ids) {
+        const mergedAuthors = await tx
+          .select()
+          .from(publicationAuthors)
+          .where(eq(publicationAuthors.publicationId, mid));
+
+        for (const a of mergedAuthors) {
+          const existing = survivorAuthorByScientist.get(a.scientistId);
+          if (existing) {
+            // De-dup: combine authorship types, keep the more specific position,
+            // then drop the duplicate row.
+            const combined = Array.from(
+              new Set(
+                [
+                  ...existing.authorshipType.split(",").map((t) => t.trim()),
+                  ...a.authorshipType.split(",").map((t) => t.trim()),
+                ].filter(Boolean),
+              ),
+            ).join(", ");
+            await tx
+              .update(publicationAuthors)
+              .set({
+                authorshipType: combined,
+                authorPosition: existing.authorPosition ?? a.authorPosition,
+              })
+              .where(eq(publicationAuthors.id, existing.id));
+            existing.authorshipType = combined;
+            await tx
+              .delete(publicationAuthors)
+              .where(eq(publicationAuthors.id, a.id));
+          } else {
+            // Re-point the author link onto the survivor.
+            await tx
+              .update(publicationAuthors)
+              .set({ publicationId: survivorId })
+              .where(eq(publicationAuthors.id, a.id));
+            survivorAuthorByScientist.set(a.scientistId, {
+              ...a,
+              publicationId: survivorId,
+            });
+          }
+        }
+
+        // Re-point manuscript history so the timeline is preserved.
+        await tx
+          .update(manuscriptHistory)
+          .set({ publicationId: survivorId })
+          .where(eq(manuscriptHistory.publicationId, mid));
+      }
+
+      // Apply the officer's chosen field values to the survivor.
+      const updateData: Record<string, any> = { ...overrides, updatedAt: new Date() };
+      if (updateData.publicationDate && typeof updateData.publicationDate === "string") {
+        updateData.publicationDate = new Date(updateData.publicationDate);
+      }
+      if (Object.keys(updateData).length > 0) {
+        await tx
+          .update(publications)
+          .set(updateData)
+          .where(eq(publications.id, survivorId));
+      }
+
+      // Delete the merged-away records (their dependent rows are already moved).
+      if (ids.length) {
+        await tx.delete(publications).where(inArray(publications.id, ids));
+      }
+
+      // Record the merge in the survivor's manuscript history.
+      const finalStatus = (updateData.status ?? survivor.status) || "Concept";
+      await tx.insert(manuscriptHistory).values({
+        publicationId: survivorId,
+        fromStatus: survivor.status || "",
+        toStatus: finalStatus,
+        changedBy,
+        changeReason: `Merged ${ids.length} duplicate publication record(s) (ids: ${ids.join(", ")}) into this record.`,
+      });
+
+      const [updated] = await tx
+        .select()
+        .from(publications)
+        .where(eq(publications.id, survivorId));
+      return updated;
+    });
+  }
+
   // Manuscript History operations
   async getManuscriptHistory(publicationId: number): Promise<ManuscriptHistory[]> {
     return await db

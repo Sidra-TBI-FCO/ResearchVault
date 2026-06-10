@@ -58,8 +58,9 @@ import {
   insertRa205aApplicationSchema,
   insertTeamMemberSchema
 } from "@shared/schema";
-import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead, getAuthMode } from "./auth";
+import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead, requirePublicationOfficer, getAuthMode } from "./auth";
 import { matchesAuthorName, isLinkedAuthorInAuthorsText } from "@shared/authorMatching";
+import { detectDuplicateGroups, pickDefaultSurvivorId } from "@shared/publicationDeduplication";
 import { getObjectAclPolicy, ObjectPermission } from "./objectAcl";
 
 const isLocalStorage = process.env.STORAGE_TYPE === "local";
@@ -3806,6 +3807,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error finding publications needing author fixes:", error);
       res.status(500).json({ message: "Failed to find publications needing author fixes" });
+    }
+  });
+
+  // Duplicate publication detection. Returns groups of likely-duplicate
+  // publications (same DOI / PMID / fuzzy metadata, or preprint<->published
+  // pairs) with the records needed to render a side-by-side merge review.
+  // Registered before "/api/publications/:id" so the literal path isn't
+  // swallowed by the id param route.
+  app.get('/api/publications/duplicates', async (req: Request, res: Response) => {
+    try {
+      const [allPublications, allAuthors] = await Promise.all([
+        storage.getPublications(),
+        storage.getAllPublicationAuthors(),
+      ]);
+
+      const groups = detectDuplicateGroups(allPublications);
+
+      const authorCountByPublication = new Map<number, number>();
+      for (const a of allAuthors) {
+        authorCountByPublication.set(
+          a.publicationId,
+          (authorCountByPublication.get(a.publicationId) || 0) + 1,
+        );
+      }
+      const byId = new Map(allPublications.map((p) => [p.id, p]));
+
+      const result = groups.map((group) => {
+        const groupPubs = group.publicationIds
+          .map((id) => byId.get(id))
+          .filter((p): p is NonNullable<typeof p> => p != null);
+        return {
+          reasons: group.reasons,
+          isPreprintPair: group.isPreprintPair,
+          defaultSurvivorId: pickDefaultSurvivorId(groupPubs),
+          publications: groupPubs.map((p) => ({
+            ...p,
+            authorCount: authorCountByPublication.get(p.id) || 0,
+          })),
+        };
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error detecting duplicate publications:", error);
+      res.status(500).json({ message: "Failed to detect duplicate publications" });
+    }
+  });
+
+  // Lightweight count of duplicate groups for the tab badge.
+  app.get('/api/publications/duplicates/count', async (req: Request, res: Response) => {
+    try {
+      const allPublications = await storage.getPublications();
+      const groups = detectDuplicateGroups(allPublications);
+      res.json({ count: groups.length });
+    } catch (error) {
+      console.error("Error counting duplicate publication groups:", error);
+      res.status(500).json({ message: "Failed to count duplicate publication groups" });
+    }
+  });
+
+  // Merge a set of duplicate publications into a chosen survivor. Office-only;
+  // performs the whole operation atomically (author de-dup, history re-pointing,
+  // research-activity carry-over, deletion) so a failure changes nothing.
+  app.post('/api/publications/merge', requirePublicationOfficer, async (req: Request, res: Response) => {
+    try {
+      const mergeSchema = z.object({
+        survivorId: z.number().int(),
+        mergeIds: z.array(z.number().int()).min(1),
+        fields: z.record(z.any()).optional(),
+      });
+      const { survivorId, mergeIds, fields } = mergeSchema.parse(req.body);
+
+      const targetIds = Array.from(new Set(mergeIds)).filter((id) => id !== survivorId);
+      if (targetIds.length === 0) {
+        return res.status(400).json({ message: "Provide at least one distinct publication to merge into the survivor." });
+      }
+
+      // Only allow known publication columns to be overridden on the survivor.
+      const allowedFields = [
+        "title", "abstract", "authors", "journal", "volume", "issue", "pages",
+        "doi", "pmid", "publicationDate", "publicationType", "status",
+        "prepublicationUrl", "prepublicationSite", "researchActivityId",
+      ] as const;
+      const overrides: Record<string, any> = {};
+      if (fields) {
+        for (const key of allowedFields) {
+          if (key in fields) overrides[key] = (fields as any)[key];
+        }
+      }
+
+      const changedBy = req.session?.user?.id || 1;
+
+      const survivor = await storage.mergePublications(
+        survivorId,
+        targetIds,
+        overrides,
+        changedBy,
+      );
+      if (!survivor) {
+        return res.status(404).json({ message: "Surviving publication not found" });
+      }
+
+      res.json(survivor);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error merging publications:", error);
+      res.status(500).json({ message: error?.message || "Failed to merge publications" });
     }
   });
 

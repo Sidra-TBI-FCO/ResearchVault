@@ -24,7 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp } from "lucide-react";
+import { Pencil, Save, X, Upload, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Star, Shield, FileText, BarChart3, Download, Calendar, User, BookOpen, Award, TrendingUp, CopyCheck } from "lucide-react";
+import { PublicationDuplicates } from "@/components/PublicationDuplicates";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
@@ -392,6 +393,11 @@ export default function PublicationOffice() {
       );
     },
     enabled: activeTab === "ip-vetting"
+  });
+
+  // Count of duplicate publication groups for the Duplicates tab badge.
+  const { data: duplicateCount = { count: 0 } } = useQuery<{ count: number }>({
+    queryKey: ['/api/publications/duplicates/count'],
   });
 
   const { data: newPublications = [], isLoading: newPublicationsLoading } = useQuery<Publication[]>({
@@ -831,7 +837,7 @@ export default function PublicationOffice() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="ip-vetting" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             IP Vetting ({publicationsForIP.length})
@@ -839,6 +845,15 @@ export default function PublicationOffice() {
           <TabsTrigger value="new-publications" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             New Publications ({newPublications.length})
+          </TabsTrigger>
+          <TabsTrigger value="duplicates" className="flex items-center gap-2" data-testid="tab-duplicates">
+            <CopyCheck className="h-4 w-4" />
+            Duplicates
+            {duplicateCount.count > 0 && (
+              <Badge variant="destructive" className="ml-1" data-testid="badge-duplicate-count">
+                {duplicateCount.count}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="export" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
@@ -967,6 +982,21 @@ export default function PublicationOffice() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Duplicates Tab */}
+        <TabsContent value="duplicates" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CopyCheck className="h-5 w-5" />
+                Duplicate Publications
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PublicationDuplicates />
             </CardContent>
           </Card>
         </TabsContent>
