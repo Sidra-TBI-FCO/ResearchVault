@@ -123,6 +123,51 @@ export function isPreprintRecord(pub: DedupPublication): boolean {
   return false;
 }
 
+// Human-readable preprint-server name keyed by DOI prefix, for labelling the
+// prepublication site of a published record after a preprint is merged into it.
+const PREPRINT_SERVER_BY_PREFIX: Record<string, string> = {
+  "10.1101/": "bioRxiv / medRxiv",
+  "10.48550/": "arXiv",
+  "10.21203/": "Research Square",
+  "10.26434/": "ChemRxiv",
+  "10.31234/": "PsyArXiv",
+  "10.31219/": "OSF Preprints",
+};
+
+/**
+ * Best-effort name of the preprint server a record came from. Tries the DOI
+ * prefix first, then any keyword found in the journal / prepublication-site
+ * text. Returns null when the record is not recognizably a preprint.
+ */
+export function preprintServerName(pub: DedupPublication): string | null {
+  const doi = normalizeDoi(pub.doi);
+  if (doi) {
+    for (const [prefix, name] of Object.entries(PREPRINT_SERVER_BY_PREFIX)) {
+      if (doi.startsWith(prefix)) return name;
+    }
+  }
+  const site = (pub.prepublicationSite || "").trim();
+  if (site) return site;
+  const haystack = `${pub.journal || ""}`.toLowerCase();
+  const hit = PREPRINT_KEYWORDS.find((k) => haystack.includes(k));
+  if (hit) return pub.journal || hit;
+  return null;
+}
+
+/**
+ * Build a stable link to a preprint record: prefer an explicit prepublication
+ * URL, else a doi.org link from its (version-stripped) DOI. Returns null when
+ * neither is available.
+ */
+export function preprintLink(pub: DedupPublication): string | null {
+  if (pub.prepublicationUrl && pub.prepublicationUrl.trim()) {
+    return pub.prepublicationUrl.trim();
+  }
+  const doi = normalizeDoi(pub.doi);
+  if (doi) return `https://doi.org/${doi}`;
+  return null;
+}
+
 /** Parse the lead (first) author of a free-text list into first/last name. */
 function parseLeadAuthor(
   authors: string | null | undefined,

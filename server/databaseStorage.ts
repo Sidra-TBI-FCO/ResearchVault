@@ -51,6 +51,7 @@ import {
   ra205aApplications, Ra205aApplication, InsertRa205aApplication,
   teamMembers, TeamMember, InsertTeamMember
 } from "@shared/schema";
+import { isPreprintRecord, preprintServerName, preprintLink } from "@shared/publicationDeduplication";
 
 /**
  * Normalize a journal name for tolerant matching across the slightly different
@@ -641,6 +642,39 @@ export class DatabaseStorage implements IStorage {
       const updateData: Record<string, any> = { ...overrides, updatedAt: new Date() };
       if (updateData.publicationDate && typeof updateData.publicationDate === "string") {
         updateData.publicationDate = new Date(updateData.publicationDate);
+      }
+
+      // Preserve preprint linkage: when a preprint is merged into its published
+      // version, the published DOI correctly wins, but the preprint's own
+      // identity (its 10.1101/... DOI and originating server) would otherwise be
+      // deleted along with its record. If the survivor ends up as the published
+      // article and has no prepublication link yet, carry the preprint's link
+      // and server name onto it so that data is merged, not lost.
+      // Only auto-fill a prepublication field when the officer did NOT make an
+      // explicit choice for it (key absent from overrides). A deliberate clear
+      // (override present but empty/null) must be respected, not overwritten.
+      const urlOverridden = Object.prototype.hasOwnProperty.call(overrides, "prepublicationUrl");
+      const siteOverridden = Object.prototype.hasOwnProperty.call(overrides, "prepublicationSite");
+      const effectiveSurvivor = { ...survivor, ...overrides };
+      if ((!urlOverridden || !siteOverridden) && !isPreprintRecord(effectiveSurvivor as any)) {
+        let prepubUrl = effectiveSurvivor.prepublicationUrl;
+        let prepubSite = effectiveSurvivor.prepublicationSite;
+        for (const t of targets) {
+          if (!isPreprintRecord(t as any)) continue;
+          if (!prepubUrl || !String(prepubUrl).trim()) {
+            prepubUrl = preprintLink(t as any) ?? prepubUrl;
+          }
+          if (!prepubSite || !String(prepubSite).trim()) {
+            prepubSite = preprintServerName(t as any) ?? prepubSite;
+          }
+          if (prepubUrl && prepubSite) break;
+        }
+        if (!urlOverridden && prepubUrl && !updateData.prepublicationUrl) {
+          updateData.prepublicationUrl = prepubUrl;
+        }
+        if (!siteOverridden && prepubSite && !updateData.prepublicationSite) {
+          updateData.prepublicationSite = prepubSite;
+        }
       }
       if (Object.keys(updateData).length > 0) {
         await tx

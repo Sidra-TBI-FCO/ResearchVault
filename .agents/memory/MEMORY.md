@@ -15,3 +15,4 @@
 - [CrossRef preprint fields](crossref-preprint-fields.md) — posted-content has empty container-title (journal=institution[0].name), and genuinely no volume/issue/pages/PMID; not bugs.
 - [Publication status is mixed-case](publication-status-mixed-case.md) — DB has both `published` and `Published`; "counts as published" filters must be case-insensitive.
 - [session table not in schema](session-table-not-in-schema.md) — drizzle-kit push can drop connect-pg-simple's `session` table → 42P01 breaks every request; recreate the standard DDL.
+- [Merge preprint into published](publication-merge-preprint-link.md) — published DOI wins as survivor; preserve preprint DOI/server into prepublicationUrl/Site server-side (UI has no cross-field mapping).
