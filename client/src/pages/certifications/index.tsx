@@ -864,6 +864,22 @@ export default function CertificationsPage() {
             </CardContent>
           </Card>
 
+          {processCertificatesMutation.isPending && (
+            <Card data-testid="status-ocr-processing">
+              <CardContent className="py-6">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-sidra-primary"></div>
+                  <div>
+                    <p className="font-medium text-foreground">Reading your certificates…</p>
+                    <p className="text-sm text-muted-foreground">
+                      Upload complete. OCR is extracting the details — this may take a few moments.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {detectedFiles.length > 0 && (
             <Card>
               <CardHeader>
