@@ -29,9 +29,11 @@ interface MissingPapersProps {
   scientistId: number;
   hasOrcid: boolean;
   hasScholar: boolean;
+  /** Render as a section inside another card (no own Card chrome). */
+  embedded?: boolean;
 }
 
-export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPapersProps) {
+export function MissingPapers({ scientistId, hasOrcid, hasScholar, embedded = false }: MissingPapersProps) {
   const { toast } = useToast();
   const [result, setResult] = useState<MissingPapersResponse | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -113,38 +115,25 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
     }
   };
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-row items-start justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              Missing Publications
-            </CardTitle>
-            <CardDescription>
-              Pull this person's published works from ORCID
-              {hasScholar ? " (and Google Scholar, best-effort)" : ""} and find publications not yet in
-              the system.
-            </CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => checkMutation.mutate()}
-            disabled={checkMutation.isPending || importMutation.isPending}
-            data-testid="button-check-missing-publications"
-          >
-            {checkMutation.isPending ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4 mr-2" />
-            )}
-            Check for missing publications
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+  const button = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => checkMutation.mutate()}
+      disabled={checkMutation.isPending || importMutation.isPending}
+      data-testid="button-check-missing-publications"
+    >
+      {checkMutation.isPending ? (
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      ) : (
+        <Search className="h-4 w-4 mr-2" />
+      )}
+      Check for missing publications
+    </Button>
+  );
+
+  const contentInner = (
+        <>
         {checkMutation.isPending ? (
           <div className="animate-pulse space-y-3" data-testid="loading-missing-publications">
             {[1, 2, 3].map((i) => (
@@ -260,7 +249,50 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
             )}
           </div>
         )}
-      </CardContent>
+        </>
+  );
+
+  if (embedded) {
+    return (
+      <div data-testid="section-missing-publications">
+        <div className="flex flex-row items-start justify-between gap-4 mb-2">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Missing Publications
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Pull this person's published works from ORCID
+              {hasScholar ? " (and Google Scholar, best-effort)" : ""} and find publications not yet in
+              the system.
+            </p>
+          </div>
+          {button}
+        </div>
+        <div className="mt-2">{contentInner}</div>
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Missing Publications
+            </CardTitle>
+            <CardDescription>
+              Pull this person's published works from ORCID
+              {hasScholar ? " (and Google Scholar, best-effort)" : ""} and find publications not yet in
+              the system.
+            </CardDescription>
+          </div>
+          {button}
+        </div>
+      </CardHeader>
+      <CardContent>{contentInner}</CardContent>
     </Card>
   );
 }

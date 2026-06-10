@@ -69,6 +69,8 @@ interface Publication {
 interface PublicationsListProps {
   scientistId: number;
   yearsSince?: number;
+  /** Render as a section inside another card (no own Card chrome). */
+  embedded?: boolean;
 }
 
 const authorshipColors = {
@@ -78,43 +80,20 @@ const authorshipColors = {
   'Corresponding Author': 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
 };
 
-export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsListProps) {
+export function PublicationsList({ scientistId, yearsSince = 5, embedded = false }: PublicationsListProps) {
   const { data: publications = [], isLoading } = useQuery({
     queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Publications (Last {yearsSince} Years)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded dark:bg-gray-700"></div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const loadingBody = (
+    <div className="animate-pulse space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-24 bg-gray-200 rounded dark:bg-gray-700"></div>
+      ))}
+    </div>
+  );
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Publications (Last {yearsSince} Years)
-        </CardTitle>
-        <CardDescription>
-          {publications.length} publications (Published or In Press only) with external collaborator tracking
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+  const listBody = (
         <div className="space-y-4">
           {publications.length === 0 ? (
             <p className="text-gray-600 text-center py-8 dark:text-gray-300">No publications found for the selected time period.</p>
@@ -182,7 +161,53 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
             ))
           )}
         </div>
-      </CardContent>
+  );
+
+  if (embedded) {
+    return (
+      <div data-testid="section-publications-recent">
+        <div className="mb-3">
+          <h3 className="font-semibold flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Publications (Last {yearsSince} Years)
+          </h3>
+          {!isLoading && (
+            <p className="text-sm text-muted-foreground">
+              {publications.length} publications (Published or In Press only) with external collaborator tracking
+            </p>
+          )}
+        </div>
+        {isLoading ? loadingBody : listBody}
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Publications (Last {yearsSince} Years)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>{loadingBody}</CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Publications (Last {yearsSince} Years)
+        </CardTitle>
+        <CardDescription>
+          {publications.length} publications (Published or In Press only) with external collaborator tracking
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{listBody}</CardContent>
     </Card>
   );
 }

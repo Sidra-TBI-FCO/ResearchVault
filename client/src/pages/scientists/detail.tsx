@@ -13,9 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScientistAvatar } from "@/components/ScientistAvatar";
 import React, { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { PublicationsList } from "@/components/PublicationsList";
-import { PublicationsToFix } from "@/components/PublicationsToFix";
-import { MissingPapers } from "@/components/MissingPapers";
+import { PublicationsPanel } from "@/components/PublicationsPanel";
 import { PublicationCharts } from "@/components/PublicationCharts";
 import { OrgChart } from "@/components/OrgChart";
 import { formatFullName } from "@/utils/nameUtils";
@@ -516,19 +514,13 @@ export default function ScientistDetail() {
           </CardContent>
         </Card>
 
-        {/* Publications List - Only show for scientific staff */}
+        {/* Unified Publications panel - Only show for scientific staff.
+            Combines recent publications, internal author links, and (when an
+            external profile is on file) the missing-works importer. */}
         {isScientificStaff && (
-          <>
-            <PublicationsToFix />
-            <PublicationsList scientistId={id} yearsSince={5} />
-          </>
-        )}
-
-        {/* Missing Papers (ORCID / Google Scholar import) - only when an
-            external profile is on file to pull works from */}
-        {isScientificStaff && (scientist.orcidId || scientist.googleScholarUrl) && (
-          <MissingPapers
+          <PublicationsPanel
             scientistId={id}
+            yearsSince={5}
             hasOrcid={!!scientist.orcidId}
             hasScholar={!!scientist.googleScholarUrl}
           />

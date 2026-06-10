@@ -22,9 +22,11 @@ interface FlaggedPublication {
 interface PublicationsToFixProps {
   /** Optional className for the wrapping card */
   className?: string;
+  /** Render as a section inside another card (no own Card chrome). */
+  embedded?: boolean;
 }
 
-export function PublicationsToFix({ className }: PublicationsToFixProps) {
+export function PublicationsToFix({ className, embedded = false }: PublicationsToFixProps) {
   const [enabled, setEnabled] = useState(false);
 
   const { data: flagged = [], isLoading, isFetching, refetch } = useQuery<FlaggedPublication[]>({
@@ -45,34 +47,21 @@ export function PublicationsToFix({ className }: PublicationsToFixProps) {
 
   const loading = enabled && (isLoading || isFetching);
 
-  return (
-    <Card className={className} data-testid="card-internal-author-links">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Internal Author Links
-            </CardTitle>
-            <CardDescription>
-              Review your publications where internal authors are missing or don't match the listed authors.
-            </CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleFind}
-            disabled={loading}
-            data-testid="button-check-internal-author-links"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            {loading ? "Checking…" : "Check internal author links"}
-          </Button>
-        </div>
-      </CardHeader>
+  const button = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleFind}
+      disabled={loading}
+      data-testid="button-check-internal-author-links"
+    >
+      <Users className="h-4 w-4 mr-2" />
+      {loading ? "Checking…" : "Check internal author links"}
+    </Button>
+  );
 
-      {enabled && (
-        <CardContent>
+  const resultsInner = (
+        <>
           {loading ? (
             <div className="space-y-3" data-testid="loading-internal-author-links">
               {[1, 2, 3].map((i) => (
@@ -149,8 +138,47 @@ export function PublicationsToFix({ className }: PublicationsToFixProps) {
               ))}
             </div>
           )}
-        </CardContent>
-      )}
+        </>
+  );
+
+  if (embedded) {
+    return (
+      <div data-testid="section-internal-author-links">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-2">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Internal Author Links
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Review your publications where internal authors are missing or don't match the listed authors.
+            </p>
+          </div>
+          {button}
+        </div>
+        {enabled && <div className="mt-2">{resultsInner}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <Card className={className} data-testid="card-internal-author-links">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Internal Author Links
+            </CardTitle>
+            <CardDescription>
+              Review your publications where internal authors are missing or don't match the listed authors.
+            </CardDescription>
+          </div>
+          {button}
+        </div>
+      </CardHeader>
+
+      {enabled && <CardContent>{resultsInner}</CardContent>}
     </Card>
   );
 }
