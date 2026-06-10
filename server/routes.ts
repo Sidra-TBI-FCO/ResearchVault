@@ -387,7 +387,7 @@ async function fetchCrossrefPublication(doi: string): Promise<{
       issue: work.issue || "",
       pages: work.page || "",
       doi: work.DOI || doi,
-      abstract: work.abstract || "",
+      abstract: work.abstract ? stripXml(work.abstract) : "",
       publicationDate,
     };
   } catch {
@@ -7153,7 +7153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pages: work.page || '',
         doi: work.DOI || doi,
         pmid: '', // CrossRef doesn't provide PMID
-        abstract: work.abstract || '',
+        abstract: work.abstract ? stripXml(work.abstract) : '',
         publicationDate: work.published?.['date-parts']?.[0] ? 
           new Date(work.published['date-parts'][0][0], (work.published['date-parts'][0][1] || 1) - 1, work.published['date-parts'][0][2] || 1).toISOString().split('T')[0] : ''
       };
