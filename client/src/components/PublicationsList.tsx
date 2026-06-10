@@ -1,6 +1,7 @@
 // @ts-nocheck — Pre-existing TypeScript errors in this file are suppressed so `npx tsc --noEmit` runs clean and new code in other files gets reliable type-checking feedback.
 // Most errors here stem from untyped `useQuery` results (data inferred as `unknown`), drifted shared/schema field renames, and form values typed as `unknown`. They are not known runtime bugs but should be fixed file-by-file as each is next touched: remove this directive, run `npx tsc --noEmit`, and resolve what surfaces.
 import React from "react";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,7 @@ const authorshipColors = {
 };
 
 export function PublicationsList({ scientistId, yearsSince = 5, embedded = false }: PublicationsListProps) {
+  const [, navigate] = useLocation();
   const { data: publications = [], isLoading } = useQuery({
     queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
@@ -99,7 +101,20 @@ export function PublicationsList({ scientistId, yearsSince = 5, embedded = false
             <p className="text-gray-600 text-center py-8 dark:text-gray-300">No publications found for the selected time period.</p>
           ) : (
             publications.map((pub: Publication) => (
-              <div key={pub.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors dark:hover:bg-gray-900">
+              <div
+                key={pub.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/publications/${pub.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/publications/${pub.id}`);
+                  }
+                }}
+                data-testid={`card-publication-${pub.id}`}
+                className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium text-gray-900 leading-tight dark:text-gray-100">{pub.title}</h4>
                   <Badge 
@@ -149,6 +164,7 @@ export function PublicationsList({ scientistId, yearsSince = 5, embedded = false
                         href={`https://doi.org/${pub.doi}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         <ExternalLink className="h-3 w-3 mr-1" />
