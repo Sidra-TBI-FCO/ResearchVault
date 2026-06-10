@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wrench, AlertTriangle, UserX, CheckCircle2, ExternalLink } from "lucide-react";
+import { Users, AlertTriangle, UserX, CheckCircle2, ExternalLink } from "lucide-react";
 
 interface FlaggedPublication {
   publication: {
@@ -46,26 +46,27 @@ export function PublicationsToFix({ className }: PublicationsToFixProps) {
   const loading = enabled && (isLoading || isFetching);
 
   return (
-    <Card className={className} data-testid="card-publications-to-fix">
+    <Card className={className} data-testid="card-internal-author-links">
       <CardHeader>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Publications to fix
+              <Users className="h-5 w-5" />
+              Internal Author Links
             </CardTitle>
             <CardDescription>
-              Find your publications that have author-linking problems to clean up.
+              Review your publications where internal authors are missing or don't match the listed authors.
             </CardDescription>
           </div>
           <Button
             variant="outline"
+            size="sm"
             onClick={handleFind}
             disabled={loading}
-            data-testid="button-find-publications-to-fix"
+            data-testid="button-check-internal-author-links"
           >
-            <Wrench className="h-4 w-4 mr-2" />
-            {loading ? "Checking…" : "Find publications to fix"}
+            <Users className="h-4 w-4 mr-2" />
+            {loading ? "Checking…" : "Check internal author links"}
           </Button>
         </div>
       </CardHeader>
@@ -73,7 +74,7 @@ export function PublicationsToFix({ className }: PublicationsToFixProps) {
       {enabled && (
         <CardContent>
           {loading ? (
-            <div className="space-y-3" data-testid="loading-publications-to-fix">
+            <div className="space-y-3" data-testid="loading-internal-author-links">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-20 w-full" />
               ))}
@@ -81,10 +82,10 @@ export function PublicationsToFix({ className }: PublicationsToFixProps) {
           ) : flagged.length === 0 ? (
             <div
               className="flex flex-col items-center justify-center text-center py-8 text-muted-foreground"
-              data-testid="empty-publications-to-fix"
+              data-testid="empty-internal-author-links"
             >
               <CheckCircle2 className="h-8 w-8 mb-2 text-green-600 dark:text-green-400" />
-              <p>No publications need fixing. All your linked authors look good.</p>
+              <p>All your publications have correct internal author links.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -92,7 +93,7 @@ export function PublicationsToFix({ className }: PublicationsToFixProps) {
                 <Link
                   key={publication.id}
                   href={`/publications/${publication.id}`}
-                  data-testid={`link-fix-publication-${publication.id}`}
+                  data-testid={`link-internal-author-publication-${publication.id}`}
                 >
                   <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-gray-900">
                     <div className="flex justify-between items-start gap-3">

@@ -42,7 +42,7 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
         credentials: "include",
       });
       if (!res.ok) {
-        throw new Error("Failed to check for missing papers");
+        throw new Error("Failed to check for missing publications");
       }
       return (await res.json()) as MissingPapersResponse;
     },
@@ -52,7 +52,7 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
     },
     onError: () => {
       toast({
-        title: "Could not check for missing papers",
+        title: "Could not check for missing publications",
         description: "Something went wrong while contacting the external sources. Please try again.",
         variant: "destructive",
       });
@@ -70,12 +70,12 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
     onSuccess: (data) => {
       toast({
         title: "Import complete",
-        description: `Imported ${data.createdCount} paper${data.createdCount === 1 ? "" : "s"}${
+        description: `Imported ${data.createdCount} publication${data.createdCount === 1 ? "" : "s"}${
           data.skippedCount > 0 ? `, skipped ${data.skippedCount}` : ""
         }.`,
       });
-      // Refresh the person's publications and re-run the missing-papers check
-      // so imported papers no longer appear as missing.
+      // Refresh the person's publications and re-run the missing-publications check
+      // so imported publications no longer appear as missing.
       queryClient.invalidateQueries({ queryKey: ["/api/scientists", scientistId, "publications"] });
       queryClient.invalidateQueries({
         predicate: (q) =>
@@ -87,7 +87,7 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
     onError: () => {
       toast({
         title: "Import failed",
-        description: "The selected papers could not be imported. Please try again.",
+        description: "The selected publications could not be imported. Please try again.",
         variant: "destructive",
       });
     },
@@ -120,12 +120,12 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
           <div>
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              Missing Papers
+              Missing Publications
             </CardTitle>
             <CardDescription>
               Pull this person's published works from ORCID
-              {hasScholar ? " (and Google Scholar, best-effort)" : ""} and find papers not yet in the
-              system.
+              {hasScholar ? " (and Google Scholar, best-effort)" : ""} and find publications not yet in
+              the system.
             </CardDescription>
           </div>
           <Button
@@ -133,27 +133,27 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
             size="sm"
             onClick={() => checkMutation.mutate()}
             disabled={checkMutation.isPending || importMutation.isPending}
-            data-testid="button-check-missing-papers"
+            data-testid="button-check-missing-publications"
           >
             {checkMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Search className="h-4 w-4 mr-2" />
             )}
-            Check for missing papers
+            Check for missing publications
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {checkMutation.isPending ? (
-          <div className="animate-pulse space-y-3" data-testid="loading-missing-papers">
+          <div className="animate-pulse space-y-3" data-testid="loading-missing-publications">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-16 bg-gray-200 rounded dark:bg-gray-700"></div>
             ))}
           </div>
         ) : !result ? (
           <p className="text-sm text-muted-foreground text-center py-6">
-            Click "Check for missing papers" to compare ORCID
+            Click "Check for missing publications" to compare ORCID
             {hasScholar ? " / Google Scholar" : ""} works against the publications already in the
             system.
           </p>
@@ -255,7 +255,7 @@ export function MissingPapers({ scientistId, hasOrcid, hasScholar }: MissingPape
                 data-testid="text-no-missing-papers"
               >
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
-                No missing papers — everything is already in the system.
+                No missing publications — everything is already in the system.
               </div>
             )}
           </div>
