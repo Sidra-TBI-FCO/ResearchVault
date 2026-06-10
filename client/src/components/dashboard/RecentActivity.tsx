@@ -27,27 +27,31 @@ export default function RecentActivity() {
           <FileText className="h-5 w-5" />
         </div>;
       case 'pmo_submission':
-        return <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+        return <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-500 dark:bg-green-950">
           <ClipboardList className="h-5 w-5" />
         </div>;
       case 'project_added':
-        return <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500">
+        return <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500 dark:bg-emerald-950">
           <FolderPlus className="h-5 w-5" />
         </div>;
       case 'activity_added':
-        return <div className="h-10 w-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-500">
+        return <div className="h-10 w-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-500 dark:bg-cyan-950">
           <FlaskConical className="h-5 w-5" />
         </div>;
+      case 'project_approval':
+        return <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-500 dark:bg-green-950">
+          <CheckCircle className="h-5 w-5" />
+        </div>;
       case 'publication_added':
-        return <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+        return <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 dark:bg-blue-950">
           <BookOpen className="h-5 w-5" />
         </div>;
       case 'staff_added':
-        return <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-500">
+        return <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-500 dark:bg-amber-950">
           <UserPlus className="h-5 w-5" />
         </div>;
       default:
-        return <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+        return <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 dark:bg-gray-800 dark:text-gray-400">
           <Bell className="h-5 w-5" />
         </div>;
     }
@@ -86,7 +90,7 @@ export default function RecentActivity() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg shadow-sm dark:bg-card">
         <div className="p-6 border-b border-neutral-100">
           <h2 className="font-medium text-lg">Recent Activity</h2>
         </div>
@@ -107,7 +111,7 @@ export default function RecentActivity() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
+    <div className="bg-white rounded-lg shadow-sm dark:bg-card">
       <div className="p-6 border-b border-neutral-100">
         <h2 className="font-medium text-lg">Recent Activity</h2>
       </div>

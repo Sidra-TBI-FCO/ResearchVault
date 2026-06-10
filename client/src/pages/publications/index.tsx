@@ -104,13 +104,13 @@ export default function PublicationsList() {
           <h1 className="text-2xl font-semibold text-foreground">Publications</h1>
           {filterResearchActivityId && researchActivity && (
             <div className="mt-1 flex items-center">
-              <Badge variant="outline" className="mr-2 bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="outline" className="mr-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
                 Filtered by SDR: {researchActivity.sdrNumber}
               </Badge>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-7 px-2 text-sm text-blue-600" 
+                className="h-7 px-2 text-sm text-blue-600 dark:text-blue-400" 
                 onClick={() => {
                   setFilterResearchActivityId(null);
                   window.history.pushState({}, '', '/publications');
@@ -122,13 +122,13 @@ export default function PublicationsList() {
           )}
           {filterJournal && (
             <div className="mt-1 flex items-center" data-testid="banner-journal-filter">
-              <Badge variant="outline" className="mr-2 bg-amber-50 text-amber-800 border-amber-200">
+              <Badge variant="outline" className="mr-2 bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
                 Filtered by Journal: {filterJournal}
               </Badge>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-sm text-amber-700"
+                className="h-7 px-2 text-sm text-amber-700 dark:text-amber-300"
                 onClick={() => {
                   setFilterJournal(null);
                   const params = new URLSearchParams(window.location.search);
@@ -190,7 +190,7 @@ export default function PublicationsList() {
           <div className="flex items-center justify-between">
             <CardTitle>Research Publications</CardTitle>
             <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 type="search"
                 placeholder="Search publications..."
@@ -242,7 +242,7 @@ export default function PublicationsList() {
                 {!isLoading && filteredPublications?.map((publication) => (
                   <TableRow 
                     key={publication.id} 
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="hover:bg-gray-50 cursor-pointer transition-colors dark:hover:bg-gray-900"
                     onClick={() => navigate(`/publications/${publication.id}`)}
                     data-testid={`row-publication-${publication.id}`}
                   >
@@ -250,7 +250,7 @@ export default function PublicationsList() {
                       <div className="font-medium">
                         {publication.title}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">
+                      <div className="text-sm text-gray-600 mt-1 dark:text-gray-300">
                         {publication.authors || '—'}
                       </div>
                     </TableCell>
@@ -260,7 +260,7 @@ export default function PublicationsList() {
                         <span>{publication.journal || "—"}</span>
                       </div>
                       {publication.volume && (
-                        <div className="text-sm text-gray-600 mt-1">
+                        <div className="text-sm text-gray-600 mt-1 dark:text-gray-300">
                           Vol. {publication.volume}{publication.issue ? `, Issue ${publication.issue}` : ''}
                           {publication.pages ? `, pp. ${publication.pages}` : ''}
                         </div>
@@ -268,7 +268,7 @@ export default function PublicationsList() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm">
-                        <CalendarRange className="h-4 w-4 mr-1 text-gray-600" />
+                        <CalendarRange className="h-4 w-4 mr-1 text-gray-600 dark:text-gray-300" />
                         <span>{formatDate(publication.publicationDate)}</span>
                       </div>
                     </TableCell>
@@ -280,7 +280,7 @@ export default function PublicationsList() {
                           </span>
                         </Link>
                       ) : (
-                        <span className="text-gray-600 text-sm">—</span>
+                        <span className="text-gray-600 text-sm dark:text-gray-300">—</span>
                       )}
                     </TableCell>
                     <TableCell>

@@ -55,15 +55,15 @@ export default function IrbDocumentTemplates() {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "Required":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
       case "Study Lifecycle":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
       case "Safety Reporting":
-        return "bg-orange-100 text-orange-700";
+        return "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300";
       case "Multi-site Studies":
-        return "bg-purple-100 text-purple-700";
+        return "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -76,12 +76,12 @@ export default function IrbDocumentTemplates() {
         </p>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4" data-testid="banner-templates-unavailable">
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 dark:bg-amber-950 dark:border-amber-800" data-testid="banner-templates-unavailable">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 dark:text-amber-400" />
           <div>
-            <h3 className="font-medium text-amber-900">Sample list — templates not yet available</h3>
-            <ul className="text-sm text-amber-800 mt-1 space-y-1">
+            <h3 className="font-medium text-amber-900 dark:text-amber-200">Sample list — templates not yet available</h3>
+            <ul className="text-sm text-amber-800 mt-1 space-y-1 dark:text-amber-300">
               <li>• The forms below are <strong>placeholders</strong> showing which templates are planned.</li>
               <li>• The actual files have not been uploaded yet, so downloads are disabled.</li>
               <li>• Contact the IRB office at irb@sidra.org to request the current forms.</li>
@@ -97,7 +97,7 @@ export default function IrbDocumentTemplates() {
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-lg">{template.title}</CardTitle>
-                  <p className="text-sm text-gray-500 mt-1">{template.version}</p>
+                  <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">{template.version}</p>
                 </div>
                 <Badge 
                   variant="outline" 
@@ -108,7 +108,7 @@ export default function IrbDocumentTemplates() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 mb-4 dark:text-gray-300">
                 {template.description}
               </p>
               
@@ -125,7 +125,7 @@ export default function IrbDocumentTemplates() {
                 </Button>
               </div>
 
-              <div className="mt-3 text-xs text-gray-500">
+              <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
                   Sample entry — file not uploaded yet
@@ -145,7 +145,7 @@ export default function IrbDocumentTemplates() {
             <div className="flex items-center justify-between py-2 border-b">
               <div>
                 <h4 className="font-medium">IRB Submission Checklist</h4>
-                <p className="text-sm text-gray-600">Complete checklist for IRB submissions</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Complete checklist for IRB submissions</p>
               </div>
               <Button variant="outline" size="sm" disabled title="Not yet available">
                 <Download className="h-4 w-4 mr-2" />
@@ -156,7 +156,7 @@ export default function IrbDocumentTemplates() {
             <div className="flex items-center justify-between py-2 border-b">
               <div>
                 <h4 className="font-medium">IRB Policies & Procedures</h4>
-                <p className="text-sm text-gray-600">Complete policy document (POL-O-IRB)</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Complete policy document (POL-O-IRB)</p>
               </div>
               <Button variant="outline" size="sm" disabled title="Not yet available">
                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -167,7 +167,7 @@ export default function IrbDocumentTemplates() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <h4 className="font-medium">Training Requirements</h4>
-                <p className="text-sm text-gray-600">CITI Training modules for research personnel</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">CITI Training modules for research personnel</p>
               </div>
               <Button variant="outline" size="sm" disabled title="Not yet available">
                 <ExternalLink className="h-4 w-4 mr-2" />

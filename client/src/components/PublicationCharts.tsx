@@ -99,8 +99,8 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
           </CardHeader>
           <CardContent>
             <div className="animate-pulse space-y-4">
-              <div className="h-24 bg-gray-200 rounded"></div>
-              <div className="h-48 bg-gray-200 rounded"></div>
+              <div className="h-24 bg-gray-200 rounded dark:bg-gray-700"></div>
+              <div className="h-48 bg-gray-200 rounded dark:bg-gray-700"></div>
             </div>
           </CardContent>
         </Card>
@@ -140,8 +140,8 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
               if (count === 0) return null;
               return (
                 <div key={type} className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">{type}</div>
-                  <div className="text-lg font-bold text-gray-900">{count}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">{type}</div>
+                  <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{count}</div>
                 </div>
               );
             })}
@@ -163,19 +163,19 @@ export function PublicationCharts({ scientistId, yearsSince = 5 }: PublicationCh
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{impactFactorStats.totalWithJournal}</div>
-                <div className="text-sm text-blue-600">Publications with Journal</div>
+              <div className="p-4 bg-blue-50 rounded-lg dark:bg-blue-950">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{impactFactorStats.totalWithJournal}</div>
+                <div className="text-sm text-blue-600 dark:text-blue-400">Publications with Journal</div>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="p-4 bg-green-50 rounded-lg dark:bg-green-950">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {impactFactorStats.averageImpactFactor > 0 ? impactFactorStats.averageImpactFactor.toFixed(2) : 'N/A'}
                 </div>
-                <div className="text-sm text-green-600">Average Impact Factor</div>
+                <div className="text-sm text-green-600 dark:text-green-400">Average Impact Factor</div>
               </div>
-              <div className="p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{impactFactorStats.highImpactPubs}</div>
-                <div className="text-sm text-purple-600">High Impact (Q1)</div>
+              <div className="p-4 bg-purple-50 rounded-lg dark:bg-purple-950">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{impactFactorStats.highImpactPubs}</div>
+                <div className="text-sm text-purple-600 dark:text-purple-400">High Impact (Q1)</div>
               </div>
             </div>
           </CardContent>

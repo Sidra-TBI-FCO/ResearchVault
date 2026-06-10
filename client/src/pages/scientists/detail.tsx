@@ -105,7 +105,7 @@ function ResearchActivitiesTree({ activities, navigate }: ResearchActivitiesTree
               ) : (
                 <ChevronRight className="h-4 w-4 text-foreground" />
               )}
-              <Folder className="h-4 w-4 text-blue-600" />
+              <Folder className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               <span className="font-medium text-sm">
                 {program.name}
               </span>
@@ -127,7 +127,7 @@ function ResearchActivitiesTree({ activities, navigate }: ResearchActivitiesTree
                       ) : (
                         <ChevronRight className="h-4 w-4 text-foreground" />
                       )}
-                      <Building className="h-4 w-4 text-green-600" />
+                      <Building className="h-4 w-4 text-green-600 dark:text-green-400" />
                       <span className="text-sm">
                         {project.name}
                       </span>
@@ -144,7 +144,7 @@ function ResearchActivitiesTree({ activities, navigate }: ResearchActivitiesTree
                           className="flex items-center gap-2 w-full justify-start p-2 h-auto text-left"
                           onClick={() => navigate(`/research-activities/${activity.id}`)}
                         >
-                          <FileText className="h-4 w-4 text-purple-600" />
+                          <FileText className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium truncate">
                               {activity.title}
@@ -334,7 +334,7 @@ export default function ScientistDetail() {
                       <h2 className="text-xl font-semibold">
                         {formatFullName(scientist)}
                         {scientist.staffId && (
-                          <Badge variant="outline" className="ml-3 rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge variant="outline" className="ml-3 rounded-sm bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
                             ID: {scientist.staffId}
                           </Badge>
                         )}
@@ -349,7 +349,7 @@ export default function ScientistDetail() {
 
                     <div className="flex flex-wrap gap-2">
                       {scientist.department && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{scientist.department}</Badge>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800">{scientist.department}</Badge>
                       )}
                     </div>
 
@@ -381,7 +381,7 @@ export default function ScientistDetail() {
                               href={`https://orcid.org/${scientist.orcidId}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-sm"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-sm dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-950"
                               data-testid="link-orcid"
                             >
                               <SiOrcid className="h-4 w-4" />
@@ -394,7 +394,7 @@ export default function ScientistDetail() {
                               href={scientist.linkedInUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-950"
                               data-testid="link-linkedin"
                             >
                               <FaLinkedin className="h-4 w-4" />
@@ -407,7 +407,7 @@ export default function ScientistDetail() {
                               href={scientist.googleScholarUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-950"
                               data-testid="link-google-scholar"
                             >
                               <SiGooglescholar className="h-4 w-4" />
@@ -420,7 +420,7 @@ export default function ScientistDetail() {
                               href={`https://www.webofscience.com/wos/author/record/${scientist.webOfScienceId}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors text-sm"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors text-sm dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-950"
                               data-testid="link-web-of-science"
                             >
                               <ExternalLink className="h-4 w-4" />

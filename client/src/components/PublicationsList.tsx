@@ -34,12 +34,12 @@ function ImpactFactorDisplay({ journal, publicationYear }: { journal: string; pu
   });
 
   return (
-    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 dark:text-gray-400">
       <span className="font-medium">JIF:</span>
       <span>
         {publicationYear - 1}: {previousYearIF ? previousYearIF.impactFactor : 'N/A'}
       </span>
-      <span className="font-semibold text-gray-700">
+      <span className="font-semibold text-gray-700 dark:text-gray-300">
         {publicationYear}: {publicationYearIF ? publicationYearIF.impactFactor : 'N/A'}
       </span>
       <span>
@@ -72,10 +72,10 @@ interface PublicationsListProps {
 }
 
 const authorshipColors = {
-  'First Author': 'bg-blue-100 text-blue-800',
-  'Contributing Author': 'bg-green-100 text-green-800',
-  'Senior/Last Author': 'bg-purple-100 text-purple-800',
-  'Corresponding Author': 'bg-red-100 text-red-800',
+  'First Author': 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
+  'Contributing Author': 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300',
+  'Senior/Last Author': 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300',
+  'Corresponding Author': 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
 };
 
 export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsListProps) {
@@ -95,7 +95,7 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
         <CardContent>
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-24 bg-gray-200 rounded dark:bg-gray-700"></div>
             ))}
           </div>
         </CardContent>
@@ -117,12 +117,12 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
       <CardContent>
         <div className="space-y-4">
           {publications.length === 0 ? (
-            <p className="text-gray-600 text-center py-8">No publications found for the selected time period.</p>
+            <p className="text-gray-600 text-center py-8 dark:text-gray-300">No publications found for the selected time period.</p>
           ) : (
             publications.map((pub: Publication) => (
-              <div key={pub.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div key={pub.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors dark:hover:bg-gray-900">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-gray-900 leading-tight">{pub.title}</h4>
+                  <h4 className="font-medium text-gray-900 leading-tight dark:text-gray-100">{pub.title}</h4>
                   <Badge 
                     variant="secondary" 
                     className={`ml-2 text-xs ${(() => {
@@ -144,9 +144,9 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
                   </Badge>
                 </div>
                 
-                <p className="text-sm text-gray-600 mb-2">{pub.authors}</p>
+                <p className="text-sm text-gray-600 mb-2 dark:text-gray-300">{pub.authors}</p>
                 
-                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <span className="font-medium">{pub.journal}</span>
                   {pub.volume && <span>Vol. {pub.volume}</span>}
                   {pub.issue && <span>({pub.issue})</span>}
@@ -170,7 +170,7 @@ export function PublicationsList({ scientistId, yearsSince = 5 }: PublicationsLi
                         href={`https://doi.org/${pub.doi}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         <ExternalLink className="h-3 w-3 mr-1" />
                         DOI: {pub.doi}

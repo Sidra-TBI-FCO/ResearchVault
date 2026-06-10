@@ -224,21 +224,21 @@ export default function RoleAccessConfig() {
                       switch (accessLevel) {
                         case "hide":
                           return (
-                            <Badge variant="destructive" className="bg-red-100 text-red-800 flex items-center gap-1">
+                            <Badge variant="destructive" className="bg-red-100 text-red-800 flex items-center gap-1 dark:bg-red-950 dark:text-red-300">
                               <EyeOff className="h-3 w-3" />
                               Hidden
                             </Badge>
                           );
                         case "view":
                           return (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1 dark:bg-blue-950 dark:text-blue-300">
                               <Eye className="h-3 w-3" />
                               View Only
                             </Badge>
                           );
                         case "edit":
                           return (
-                            <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+                            <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1 dark:bg-green-950 dark:text-green-300">
                               <Edit className="h-3 w-3" />
                               Full Access
                             </Badge>
