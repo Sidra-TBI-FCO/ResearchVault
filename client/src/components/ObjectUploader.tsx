@@ -110,6 +110,15 @@ export function ObjectUploader({
           fileName: f.file.name,
           fileSize: f.file.size
         })));
+
+        // Hand-off complete: drop the files we just processed and reset the
+        // completion guards so a SECOND dropped batch is processed too.
+        // (Previously these guards only reset when the list emptied, so any
+        // follow-up upload silently did nothing.) Errored uploads are kept
+        // visible so the user can retry or remove them.
+        setUploadedFiles(prev => prev.filter(f => f.status !== 'success'));
+        hasCalledCompleteRef.current = false;
+        previousFilesRef.current = '';
       }, 0);
     }
   }, [uploadedFiles]); // Remove onComplete from deps to prevent loops

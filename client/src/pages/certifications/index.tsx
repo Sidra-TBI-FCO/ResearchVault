@@ -319,7 +319,9 @@ export default function CertificationsPage() {
         };
       });
       
-      setDetectedFiles(processedFiles);
+      // Append so a follow-up upload adds to the review list instead of
+      // wiping rows the user is still working through.
+      setDetectedFiles(prev => [...prev, ...processedFiles]);
       
       // Show appropriate message based on results
       const successCount = processedFiles.filter(f => f.status === 'detected').length;
