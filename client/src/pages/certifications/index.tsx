@@ -148,6 +148,7 @@ export default function CertificationsPage() {
   const [activeTab, setActiveTab] = useState("matrix");
   const [detectedFiles, setDetectedFiles] = useState<PendingCertification[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploaderResetSignal, setUploaderResetSignal] = useState(0);
   
   // PDF import history state
   const [historySearchTerm, setHistorySearchTerm] = useState("");
@@ -427,6 +428,9 @@ export default function CertificationsPage() {
           duration: 10000,
         });
       }
+
+      // Save attempt has settled — now clear the uploader's file list.
+      setUploaderResetSignal((n) => n + 1);
     },
     onError: (error: Error) => {
       toast({
@@ -434,6 +438,8 @@ export default function CertificationsPage() {
         description: error.message,
         variant: "destructive",
       });
+      // Save attempt has settled (failed) — clear the uploader's file list.
+      setUploaderResetSignal((n) => n + 1);
     }
   });
 
@@ -797,6 +803,7 @@ export default function CertificationsPage() {
             </CardHeader>
             <CardContent>
               <ObjectUploader
+                resetSignal={uploaderResetSignal}
                 maxNumberOfFiles={10}
                 maxFileSize={10485760} // 10MB
                 acceptedFileTypes={

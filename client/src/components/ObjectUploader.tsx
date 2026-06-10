@@ -13,6 +13,7 @@ interface ObjectUploaderProps {
   buttonClassName?: string;
   children?: ReactNode;
   showDropzone?: boolean;
+  resetSignal?: number;
 }
 
 interface UploadedFile {
@@ -39,6 +40,7 @@ export function ObjectUploader({
   buttonClassName,
   children,
   showDropzone = true,
+  resetSignal,
 }: ObjectUploaderProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -76,52 +78,51 @@ export function ObjectUploader({
     }
   }, [uploadedFiles]);
 
-  // Track if completion has been called for this batch
-  const hasCalledCompleteRef = useRef(false);
-  const previousFilesRef = useRef<string>('');
-  
+  // Files already handed to onComplete. We track them so re-renders and
+  // follow-up batches don't reprocess them, WITHOUT clearing the visible list
+  // (the list stays until the parent resets us via resetSignal). This keeps
+  // the uploaded files on screen through OCR processing and saving so it never
+  // looks like the upload vanished / failed.
+  const handedOffRef = useRef<Set<File>>(new Set());
+
   useEffect(() => {
-    // Only check when we have files
     if (uploadedFiles.length === 0) {
-      hasCalledCompleteRef.current = false;
-      previousFilesRef.current = '';
+      handedOffRef.current = new Set();
       return;
     }
-    
+
+    // Wait until every file has settled (success or error) before handing off.
     const allDone = uploadedFiles.every(f => f.status === 'success' || f.status === 'error');
-    const successfulFiles = uploadedFiles.filter(f => f.status === 'success');
-    
-    // Create a unique key for this batch of files
-    const currentFilesKey = uploadedFiles.map(f => `${f.file.name}-${f.status}`).sort().join(',');
-    
-    // Only call onComplete if:
-    // 1. All files are done
-    // 2. We have successful files
-    // 3. We haven't already called it for this exact batch
-    // 4. The files have changed from the previous render
-    if (allDone && successfulFiles.length > 0 && !hasCalledCompleteRef.current && currentFilesKey !== previousFilesRef.current) {
-      hasCalledCompleteRef.current = true;
-      previousFilesRef.current = currentFilesKey;
-      
-      // Use setTimeout to break out of React's render cycle
+    const newSuccessful = uploadedFiles.filter(
+      f => f.status === 'success' && !handedOffRef.current.has(f.file)
+    );
+
+    if (allDone && newSuccessful.length > 0) {
+      newSuccessful.forEach(f => handedOffRef.current.add(f.file));
+
+      // Break out of React's render cycle.
       setTimeout(() => {
-        onComplete?.(successfulFiles.map(f => ({
+        onComplete?.(newSuccessful.map(f => ({
           url: f.url!,
           fileName: f.file.name,
           fileSize: f.file.size
         })));
-
-        // Hand-off complete: drop the files we just processed and reset the
-        // completion guards so a SECOND dropped batch is processed too.
-        // (Previously these guards only reset when the list emptied, so any
-        // follow-up upload silently did nothing.) Errored uploads are kept
-        // visible so the user can retry or remove them.
-        setUploadedFiles(prev => prev.filter(f => f.status !== 'success'));
-        hasCalledCompleteRef.current = false;
-        previousFilesRef.current = '';
       }, 0);
     }
   }, [uploadedFiles]); // Remove onComplete from deps to prevent loops
+
+  // Parent-driven reset: clears the file list once a save attempt has settled
+  // (succeeded or failed), so the list persists through the whole flow and only
+  // disappears when the parent says the work is done.
+  const isFirstResetRef = useRef(true);
+  useEffect(() => {
+    if (isFirstResetRef.current) {
+      isFirstResetRef.current = false;
+      return;
+    }
+    setUploadedFiles([]);
+    handedOffRef.current = new Set();
+  }, [resetSignal]);
 
   const handleFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
