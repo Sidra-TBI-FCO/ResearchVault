@@ -3,7 +3,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { createHmac, timingSafeEqual } from "crypto";
-import { storage } from "./databaseStorage";
+import { storage, normalizeJournalName } from "./databaseStorage";
 import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import {
@@ -2461,19 +2461,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         m.set(row.publicationId, existing ? `${existing},${row.authorshipType}` : row.authorshipType);
       }
 
-      // lower(journalName) -> year -> impactFactor (numeric)
+      // normalizeJournalName(journalName) -> year -> impactFactor (numeric)
       const ifByJournalYear = new Map<string, Map<number, number>>();
       for (const m of allMetricRows) {
         const ifVal = m.impactFactor != null ? parseFloat(String(m.impactFactor)) : NaN;
         if (!Number.isFinite(ifVal)) continue;
-        const key = m.journalName.toLowerCase();
+        const key = normalizeJournalName(m.journalName);
         let yearMap = ifByJournalYear.get(key);
         if (!yearMap) { yearMap = new Map(); ifByJournalYear.set(key, yearMap); }
         yearMap.set(m.year, ifVal);
       }
 
       const lookupIf = (journalName: string, year: number): number | null => {
-        const yearMap = ifByJournalYear.get(journalName.trim().toLowerCase());
+        const yearMap = ifByJournalYear.get(normalizeJournalName(journalName));
         if (!yearMap) return null;
         const v = yearMap.get(year);
         return v != null ? v : null;

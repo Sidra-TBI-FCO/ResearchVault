@@ -52,6 +52,25 @@ import {
   teamMembers, TeamMember, InsertTeamMember
 } from "@shared/schema";
 
+/**
+ * Normalize a journal name for tolerant matching across the slightly different
+ * spellings used by publication sources vs. the impact-factor dataset.
+ * Lowercases, drops a leading "The ", and collapses all punctuation/whitespace
+ * to single spaces. e.g. "The Lancet. Oncology" -> "lancet oncology" which then
+ * matches the dataset's "LANCET ONCOLOGY".
+ */
+export function normalizeJournalName(name: string | null | undefined): string {
+  return (name ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/^the\s+/, "")
+    .trim();
+}
+
+// SQL expression mirroring normalizeJournalName for a given column.
+const normalizedJournalSql = (col: any) =>
+  sql`btrim(regexp_replace(regexp_replace(lower(${col}), '[^a-z0-9]+', ' ', 'g'), '^the\\s+', ''))`;
+
 export class DatabaseStorage implements IStorage {
   
   // User operations
@@ -1925,9 +1944,36 @@ export class DatabaseStorage implements IStorage {
     return this.mergeJournalAndMetric(journal, metric ?? null);
   }
 
+  /**
+   * Find a journal by name, tolerating spelling differences between sources.
+   * Tries, in order: exact (case-insensitive) journal name, exact abbreviated
+   * name, then a normalized match (see normalizeJournalName) against either the
+   * full or abbreviated name.
+   */
+  private async findJournalByName(journalName: string): Promise<Journal | undefined> {
+    const name = (journalName ?? "").trim();
+    if (!name) return undefined;
+
+    let [journal] = await db.select().from(journals)
+      .where(ilike(journals.journalName, name));
+    if (journal) return journal;
+
+    [journal] = await db.select().from(journals)
+      .where(ilike(journals.abbreviatedJournal, name));
+    if (journal) return journal;
+
+    const normalized = normalizeJournalName(name);
+    if (!normalized) return undefined;
+    [journal] = await db.select().from(journals)
+      .where(or(
+        eq(normalizedJournalSql(journals.journalName), normalized),
+        eq(normalizedJournalSql(journals.abbreviatedJournal), normalized),
+      ));
+    return journal;
+  }
+
   async getImpactFactorByJournalAndYear(journalName: string, year: number): Promise<JournalImpactFactor | undefined> {
-    const [journal] = await db.select().from(journals)
-      .where(ilike(journals.journalName, journalName));
+    const journal = await this.findJournalByName(journalName);
     if (!journal) return undefined;
     const [metric] = await db.select().from(journalImpactFactorMetrics)
       .where(and(
@@ -1939,8 +1985,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHistoricalImpactFactors(journalName: string): Promise<JournalImpactFactor[]> {
-    const [journal] = await db.select().from(journals)
-      .where(ilike(journals.journalName, journalName));
+    const journal = await this.findJournalByName(journalName);
     if (!journal) return [];
     return this.getHistoricalImpactFactorsByJournalId(journal.id);
   }
