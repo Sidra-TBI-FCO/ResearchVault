@@ -131,6 +131,13 @@ function PublicationRow({ pub, isOpen, onToggle }: { pub: Publication; isOpen: b
             <span className="font-medium">{pub.journal || 'No journal'}</span>
             {year && <span> · {year}</span>}
           </div>
+          <Badge
+            variant="secondary"
+            data-testid={`badge-authorship-publication-${pub.id}`}
+            className={`mt-1 text-xs font-normal ${authorshipColors[displayAuthorship as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}`}
+          >
+            {displayAuthorship || 'Unknown authorship'}
+          </Badge>
         </div>
         {issues.length > 0 && (
           <span
@@ -166,13 +173,6 @@ function PublicationRow({ pub, isOpen, onToggle }: { pub: Publication; isOpen: b
               </ul>
             </div>
           )}
-
-          <Badge
-            variant="secondary"
-            className={`text-xs ${authorshipColors[displayAuthorship as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800'}`}
-          >
-            {displayAuthorship || 'Unknown authorship'}
-          </Badge>
 
           <p className="text-sm text-gray-600 dark:text-gray-300">{pub.authors}</p>
 
