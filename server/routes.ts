@@ -747,6 +747,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return 'unknown';
   }
 
+  // --- Certification module matching helpers ---------------------------------
+  // Stopwords that carry no discriminating meaning for course names.
+  const MODULE_STOPWORDS = new Set([
+    'the', 'of', 'and', 'for', 'with', 'a', 'an', 'to', 'in', 'on',
+    'course', 'training', 'series', 'complete', 'program', 'citi', 'stage'
+  ]);
+
+  // Normalize a course/module name: lowercase, strip parentheticals + punctuation.
+  function normalizeModuleName(s: string): string {
+    return (s || '')
+      .toLowerCase()
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Significant (non-stopword) tokens used for fuzzy overlap matching.
+  function significantTokens(s: string): string[] {
+    return normalizeModuleName(s).split(' ').filter(t => t && !MODULE_STOPWORDS.has(t));
+  }
+
+  // Pull an abbreviation out of a parenthetical, e.g. "Animal Biosafety (ABS)" -> "abs".
+  function extractAbbrev(name: string): string | null {
+    const m = (name || '').match(/\(([^)]+)\)/);
+    if (m) {
+      const inner = m[1].trim();
+      if (/^[A-Za-z]{2,8}$/.test(inner)) return inner.toLowerCase();
+    }
+    return null;
+  }
+
+  // Strict module matcher. Returns a module only on a confident match,
+  // otherwise null so the caller can flag the course as a NEW module.
+  // Deliberately conservative: better to create a new module than mis-assign.
+  function matchCertificationModule(courseName: string, modules: any[]): any | null {
+    if (!courseName) return null;
+    const courseNorm = normalizeModuleName(courseName);
+    if (!courseNorm) return null;
+    const courseAbbrev = extractAbbrev(courseName);
+    const courseTokens = significantTokens(courseName);
+
+    // 1) Exact normalized name match (parentheticals/punctuation ignored).
+    let found = modules.find(m => normalizeModuleName(m.name) === courseNorm);
+    if (found) return found;
+
+    // 2) Abbreviation match (e.g. course text contains/equals the module's abbrev).
+    if (courseAbbrev) {
+      found = modules.find(m => extractAbbrev(m.name) === courseAbbrev);
+      if (found) return found;
+    }
+    if (courseTokens.length === 1) {
+      found = modules.find(m => extractAbbrev(m.name) === courseTokens[0]);
+      if (found) return found;
+    }
+
+    // 3) Strong token overlap. Require at least 2 shared significant tokens and
+    //    a high Jaccard similarity so single-word coincidences (e.g. "biosafety"
+    //    matching "Animal Biosafety") do NOT produce a false positive.
+    if (courseTokens.length > 0) {
+      found = modules.find(m => {
+        const mTokens = significantTokens(m.name);
+        if (mTokens.length === 0) return false;
+        const setM = new Set(mTokens);
+        const shared = courseTokens.filter(t => setM.has(t));
+        const union = new Set([...courseTokens, ...mTokens]).size;
+        const jaccard = union > 0 ? shared.length / union : 0;
+        return shared.length >= 2 && jaccard >= 0.6;
+      });
+      if (found) return found;
+    }
+
+    return null;
+  }
+
+  // Build a suggested abbreviation for a brand-new module from its course name.
+  function suggestAbbreviation(courseName: string): string {
+    const existing = extractAbbrev(courseName);
+    if (existing) return existing.toUpperCase();
+    // Initials of meaningful words (drop only articles/prepositions, keep nouns).
+    const minimalStop = new Set(['the', 'of', 'and', 'for', 'with', 'a', 'an', 'to', 'in', 'on']);
+    const words = normalizeModuleName(courseName).split(' ').filter(w => w && !minimalStop.has(w));
+    let abbr = words.map(w => w[0].toUpperCase()).join('').slice(0, 6);
+    if (abbr.length < 2) {
+      abbr = (courseName || '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+    }
+    return abbr;
+  }
+
+  // Whole months between two YYYY-MM-DD strings.
+  function monthsBetween(start: string, end: string): number {
+    const s = new Date(start);
+    const e = new Date(end);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) return 0;
+    let months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+    if (e.getDate() < s.getDate()) months -= 1;
+    return months;
+  }
+
+  // Derive an expiration interval (months) for a new module from the cert dates,
+  // snapping to common CITI renewal periods (1/2/3/4/5 years) when close.
+  function suggestExpirationMonths(completionDate: string | null, expirationDate: string | null): number {
+    if (!completionDate || !expirationDate) return 36;
+    const m = monthsBetween(completionDate, expirationDate);
+    if (m <= 0) return 36;
+    const common = [12, 24, 36, 48, 60];
+    let best = common[0];
+    let bestDiff = Infinity;
+    for (const c of common) {
+      const d = Math.abs(c - m);
+      if (d < bestDiff) { bestDiff = d; best = c; }
+    }
+    if (bestDiff <= 2) return best;
+    return Math.max(12, Math.round(m / 12) * 12);
+  }
+
+  // Attach new-module suggestion fields when no existing module matched.
+  function applyModuleSuggestions(result: any): void {
+    if (result.module || !result.courseName) return;
+    result.isNewModule = true;
+    result.suggestedModuleName = result.courseName.trim().replace(/\s+/g, ' ');
+    result.suggestedAbbreviation = suggestAbbreviation(result.courseName);
+    result.suggestedExpirationMonths = suggestExpirationMonths(result.completionDate, result.expirationDate);
+  }
+  // ---------------------------------------------------------------------------
+
   // Helper function to parse CITI certificate text (router function)
   async function parseCITICertificate(text: string, modules: any[]) {
     const result: any = {
@@ -929,67 +1055,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         result.courseName = courseMatch[1].trim().replace(/\s+/g, ' ');
         console.log('Found course name:', result.courseName);
         
-        // Define variables for module matching
-        const courseLower = result.courseName.toLowerCase();
-        
-        // Find matching module with enhanced matching for both formats
-        const module = modules.find(m => {
-          const moduleLower = m.name.toLowerCase();
-          
-          // Direct matches
-          if (moduleLower.includes(courseLower) || courseLower.includes(moduleLower)) {
-            return true;
-          }
-          
-          // Enhanced matching for specific patterns
-          const keywordMatches = [
-            // Biosafety variations
-            (courseLower.includes('biosafety') && moduleLower.includes('biosafety')),
-            // Biomedical research variations - handle "Basic/Refresher" vs "Basic"
-            (courseLower.includes('biomedical') && moduleLower.includes('biomedical') && 
-             courseLower.includes('basic') && moduleLower.includes('basic')),
-            // Conflict of interest
-            (courseLower.includes('conflict') && moduleLower.includes('conflict')),
-            // Animal-related courses
-            (courseLower.includes('animal') && moduleLower.includes('animal')),
-            // Human subjects
-            (courseLower.includes('human') && moduleLower.includes('human')),
-            // RCR - Responsible Conduct
-            (courseLower.includes('responsible conduct') && moduleLower.includes('responsible conduct')),
-            // IACUC
-            (courseLower.includes('iacuc') && moduleLower.includes('iacuc')),
-            // BCT - Biomedical Conduct
-            (courseLower.includes('biomedical') && moduleLower.includes('biomedical') && 
-             courseLower.includes('conduct') && moduleLower.includes('conduct'))
-          ];
-          
-          return keywordMatches.some(match => match);
-        });
-        
+        // Strict module matching (conservative — flags unknown courses as NEW).
         console.log('Module matching results:');
-        console.log('Course name to match:', courseLower);
-        const matchedModule = modules.find(m => {
-          const mLower = m.name.toLowerCase();
-          const directMatch = mLower.includes(courseLower) || courseLower.includes(mLower);
-          const biomedicalMatch = courseLower.includes('biomedical') && mLower.includes('biomedical') && 
-                                 courseLower.includes('basic') && mLower.includes('basic');
-          const biosafetyMatch = courseLower.includes('biosafety') && mLower.includes('biosafety');
-          return directMatch || biomedicalMatch || biosafetyMatch;
-        });
-        
-        if (matchedModule) {
-          console.log(`Found matching module: ${matchedModule.name}`);
-        } else {
-          console.log('No matching module found, will create new placeholder');
-        }
-        
+        console.log('Course name to match:', result.courseName);
+        const module = matchCertificationModule(result.courseName, modules);
+
         result.module = module || null;
         result.isNewModule = !module;
-        
+
         if (module) {
           console.log('Matched with existing module:', module.name);
         } else {
-          console.log('No matching module found, will create new placeholder');
+          console.log('No matching module found — will suggest a new module from the course title');
         }
       } else {
         console.log('No course name match found');
@@ -1039,6 +1116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
+    applyModuleSuggestions(result);
     return result;
   }
 
@@ -1088,15 +1166,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         result.courseName = reportCourseMatch[1].trim();
         console.log('Found course name in report format:', result.courseName);
         
-        // Try to match with existing modules
-        const courseLower = result.courseName.toLowerCase();
-        const module = modules.find(m => {
-          const mLower = m.name.toLowerCase();
-          return mLower.includes(courseLower) || courseLower.includes(mLower) ||
-                 (courseLower.includes('basic') && mLower.includes('basic')) ||
-                 (courseLower.includes('biosafety') && mLower.includes('biosafety'));
-        });
-        
+        // Strict module matching (conservative — flags unknown courses as NEW).
+        const module = matchCertificationModule(result.courseName, modules);
         result.module = module || null;
         result.isNewModule = !module;
       }
@@ -1169,6 +1240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
+    applyModuleSuggestions(result);
     return result;
   }
 
@@ -1228,13 +1300,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const {
             scientistId,
-            moduleId,
             startDate,
             endDate,
             certificateFilePath,
             reportFilePath,
-            notes
+            notes,
+            newModule
           } = cert;
+          let { moduleId } = cert;
+
+          // First-use population: if the row carries a new-module request instead
+          // of an existing moduleId, create it now (reusing an existing module with
+          // the same name to avoid duplicates) and use the resulting id.
+          if (!moduleId && newModule && typeof newModule.name === 'string' && newModule.name.trim()) {
+            try {
+              const desiredName = newModule.name.trim().replace(/\s+/g, ' ');
+              const allModules = await storage.getCertificationModules();
+              const existing = allModules.find(
+                (m: any) => normalizeModuleName(m.name) === normalizeModuleName(desiredName)
+              );
+              if (existing) {
+                moduleId = existing.id;
+              } else {
+                const created = await storage.createCertificationModule({
+                  name: desiredName,
+                  description: newModule.description?.trim() || null,
+                  isCore: !!newModule.isCore,
+                  expirationMonths: Number(newModule.expirationMonths) || 36,
+                  isActive: true,
+                });
+                moduleId = created.id;
+              }
+            } catch (moduleErr: any) {
+              results.push({
+                ...cert,
+                status: 'error',
+                error: `Could not create new module: ${moduleErr?.message || 'unknown error'}`
+              });
+              continue;
+            }
+          }
 
           // Validate required fields
           if (!scientistId || !moduleId || !startDate || !endDate) {

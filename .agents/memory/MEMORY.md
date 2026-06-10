@@ -7,3 +7,4 @@
 - [Current user in routes](current-user-in-routes.md) — identity is `req.session.user` (id/scientistId), NOT `req.user.claims.sub` (always undefined → swallowed NOT NULL insert failures returning HTTP 200).
 - [PMO applications data shape](pmo-applications-data-shape.md) — /api/pmo-applications is camelCase + snake `form_type`; ids collide across RA-200/RA-205A so address by id+type; `/api/pmo-applications/:id` is unimplemented (500).
 - [Object-storage ACL gating must match demo mode](object-storage-acl-demo-mode.md) — finalize skips GCS ACLs in demo; consumers must too (gate on `!isLocalStorage && getAuthMode()!=="demo"`) or demo+GCS uploads deny-by-default.
+- [CITI OCR module matching](citi-module-matching.md) — match is deliberately conservative (flag NEW over wrong auto-match); new courses bootstrap modules by normalized name with extrapolated abbrev/expiry.

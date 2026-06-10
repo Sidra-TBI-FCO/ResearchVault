@@ -66,6 +66,9 @@ interface DetectedCertificate {
   recordId?: string;
   institution?: string;
   isNewModule?: boolean;
+  suggestedModuleName?: string;
+  suggestedAbbreviation?: string;
+  suggestedExpirationMonths?: number;
   error?: string;
 }
 
@@ -74,6 +77,10 @@ interface PendingCertification extends DetectedCertificate {
   startDate?: string;
   endDate?: string;
   notes?: string;
+  createNewModule?: boolean;
+  newModuleName?: string;
+  newModuleAbbreviation?: string;
+  newModuleExpirationMonths?: number;
 }
 
 interface PdfImportHistoryEntry {
@@ -123,6 +130,17 @@ function getCertificationStatus(endDate: string | null): {
   } else {
     return { status: 'valid', color: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300', text: 'Valid' };
   }
+}
+
+// Combine a module name with its abbreviation, e.g. ("Biosafety Series", "BCT")
+// -> "Biosafety Series (BCT)". Leaves an existing parenthetical untouched.
+function composeModuleName(name: string, abbr?: string): string {
+  const n = (name || '').trim().replace(/\s+/g, ' ');
+  const a = (abbr || '').trim();
+  if (!n) return n;
+  if (!a) return n;
+  if (/\([^)]+\)\s*$/.test(n)) return n;
+  return `${n} (${a})`;
 }
 
 export default function CertificationsPage() {
@@ -273,6 +291,7 @@ export default function CertificationsPage() {
         }
         
         // Valid certificate data
+        const isNew = !result.module && !!result.courseName;
         return {
           fileName: result.fileName || 'certificate.pdf',
           name: result.name || '',
@@ -287,7 +306,16 @@ export default function CertificationsPage() {
           filePath: result.filePath || '',
           originalUrl: result.originalUrl || '',
           startDate: result.completionDate || '',
-          endDate: result.expirationDate || ''
+          endDate: result.expirationDate || '',
+          isNewModule: isNew,
+          suggestedModuleName: result.suggestedModuleName || result.courseName || '',
+          suggestedAbbreviation: result.suggestedAbbreviation || '',
+          suggestedExpirationMonths: result.suggestedExpirationMonths || 36,
+          // For unrecognized courses, pre-arm "create new module" (confirmable in UI)
+          createNewModule: isNew,
+          newModuleName: result.suggestedModuleName || result.courseName || '',
+          newModuleAbbreviation: result.suggestedAbbreviation || '',
+          newModuleExpirationMonths: result.suggestedExpirationMonths || 36,
         };
       });
       
@@ -838,27 +866,45 @@ export default function CertificationsPage() {
                     </Button>
                     <Button 
                       onClick={() => {
-                        const validCerts = detectedFiles.filter(f => 
-                          f.status === 'detected' && f.name && f.scientistId && f.completionDate && f.expirationDate && f.module
+                        // A row is saveable when the core fields are present AND it
+                        // either maps to an existing module OR is set to create a new one.
+                        const hasModuleTarget = (f: PendingCertification) =>
+                          !!f.module || (f.createNewModule && !!(f.newModuleName || '').trim());
+                        const validCerts = detectedFiles.filter(f =>
+                          f.status === 'detected' && f.name && f.scientistId &&
+                          f.completionDate && f.expirationDate && hasModuleTarget(f)
                         );
-                        
+
                         if (validCerts.length === 0) {
                           toast({
                             title: "No valid certifications",
-                            description: "Please complete all required fields for at least one certification",
+                            description: "Please complete all required fields (including a module — pick an existing one or confirm a new one) for at least one certification",
                             variant: "destructive",
                           });
                           return;
                         }
-                        confirmCertificationsMutation.mutate(validCerts.map(cert => ({
-                          fileName: cert.fileName || 'certificate.pdf',
-                          scientistId: cert.scientistId,
-                          moduleId: cert.module!.id,
-                          startDate: cert.completionDate,
-                          endDate: cert.expirationDate,
-                          certificateFilePath: cert.filePath || cert.originalUrl || 'certificate.pdf',
-                          notes: cert.notes || ''
-                        })));
+                        confirmCertificationsMutation.mutate(validCerts.map(cert => {
+                          const base = {
+                            fileName: cert.fileName || 'certificate.pdf',
+                            scientistId: cert.scientistId,
+                            startDate: cert.completionDate,
+                            endDate: cert.expirationDate,
+                            certificateFilePath: cert.filePath || cert.originalUrl || 'certificate.pdf',
+                            notes: cert.notes || ''
+                          };
+                          if (cert.module) {
+                            return { ...base, moduleId: cert.module.id };
+                          }
+                          // New module: server creates (or reuses) it, then links the cert.
+                          return {
+                            ...base,
+                            newModule: {
+                              name: composeModuleName(cert.newModuleName || cert.courseName || '', cert.newModuleAbbreviation),
+                              expirationMonths: cert.newModuleExpirationMonths || 36,
+                              isCore: false,
+                            }
+                          };
+                        }));
                       }}
                       disabled={confirmCertificationsMutation.isPending}
                       size="sm"
@@ -980,17 +1026,22 @@ export default function CertificationsPage() {
                               placeholder="Person name"
                             />
                           </TableCell>
-                          <TableCell className="max-w-40">
+                          <TableCell className="max-w-64 align-top">
                             <Select
                               value={file.module?.id?.toString() || ""}
                               onValueChange={(value) => {
                                 const updated = [...detectedFiles];
                                 const selectedModule = modules.find(m => m.id.toString() === value);
-                                updated[index] = { ...updated[index], module: selectedModule || null };
+                                // Choosing an existing module turns off new-module creation.
+                                updated[index] = {
+                                  ...updated[index],
+                                  module: selectedModule || null,
+                                  createNewModule: false,
+                                };
                                 setDetectedFiles(updated);
                               }}
                             >
-                              <SelectTrigger className="w-48">
+                              <SelectTrigger className="w-56" data-testid={`select-module-${index}`}>
                                 <SelectValue placeholder="Select module" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1001,7 +1052,87 @@ export default function CertificationsPage() {
                                 ))}
                               </SelectContent>
                             </Select>
-                            {file.courseName && !file.module && (
+
+                            {file.isNewModule && !file.module && (
+                              <div
+                                className="mt-2 rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 p-2 space-y-2 w-56"
+                                data-testid={`new-module-panel-${index}`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                                  <div className="text-xs text-amber-800 dark:text-amber-300">
+                                    New course — not in your modules list.
+                                    {file.courseName && (
+                                      <div className="font-medium mt-0.5" title={file.courseName}>
+                                        "{file.courseName}"
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <label className="flex items-center gap-2 text-xs font-medium text-amber-900 dark:text-amber-200 cursor-pointer">
+                                  <Checkbox
+                                    checked={!!file.createNewModule}
+                                    onCheckedChange={(checked) => {
+                                      const updated = [...detectedFiles];
+                                      updated[index] = { ...updated[index], createNewModule: checked === true };
+                                      setDetectedFiles(updated);
+                                    }}
+                                    data-testid={`checkbox-create-module-${index}`}
+                                  />
+                                  Add as new module
+                                </label>
+                                {file.createNewModule && (
+                                  <div className="space-y-1.5">
+                                    <div>
+                                      <Label className="text-[11px] text-muted-foreground">Module name</Label>
+                                      <Input
+                                        value={file.newModuleName || ""}
+                                        onChange={(e) => {
+                                          const updated = [...detectedFiles];
+                                          updated[index] = { ...updated[index], newModuleName: e.target.value };
+                                          setDetectedFiles(updated);
+                                        }}
+                                        className="h-7 text-xs"
+                                        data-testid={`input-new-module-name-${index}`}
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <div className="flex-1">
+                                        <Label className="text-[11px] text-muted-foreground">Abbrev.</Label>
+                                        <Input
+                                          value={file.newModuleAbbreviation || ""}
+                                          onChange={(e) => {
+                                            const updated = [...detectedFiles];
+                                            updated[index] = { ...updated[index], newModuleAbbreviation: e.target.value };
+                                            setDetectedFiles(updated);
+                                          }}
+                                          className="h-7 text-xs"
+                                          placeholder="e.g. BCT"
+                                          data-testid={`input-new-module-abbrev-${index}`}
+                                        />
+                                      </div>
+                                      <div className="w-20">
+                                        <Label className="text-[11px] text-muted-foreground">Expiry (mo)</Label>
+                                        <Input
+                                          type="number"
+                                          min={1}
+                                          value={file.newModuleExpirationMonths ?? 36}
+                                          onChange={(e) => {
+                                            const updated = [...detectedFiles];
+                                            updated[index] = { ...updated[index], newModuleExpirationMonths: parseInt(e.target.value) || 0 };
+                                            setDetectedFiles(updated);
+                                          }}
+                                          className="h-7 text-xs"
+                                          data-testid={`input-new-module-expiry-${index}`}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {file.courseName && !file.module && !file.isNewModule && (
                               <div className="text-xs text-amber-600 dark:text-amber-400 mt-1" title={file.courseName}>
                                 Detected: {file.courseName.length > 20 ? `${file.courseName.substring(0, 20)}...` : file.courseName}
                               </div>
