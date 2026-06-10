@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type ThemeMode = 'light' | 'dark';
 export type ThemeName = 'sidra' | 'hbku' | 'wcmq';
 
 export interface InstitutionLabels {
@@ -36,17 +35,14 @@ export const defaultInstitutionLabels: InstitutionConfig = {
 };
 
 interface ThemeContextType {
-  mode: ThemeMode;
   themeName: ThemeName;
   institutionLabels: InstitutionConfig;
   currentLabels: InstitutionLabels;
   sectionVisibility: SectionVisibility;
   isSectionVisible: (sectionTitle: string) => boolean;
   setSectionVisible: (sectionTitle: string, visible: boolean) => void;
-  setMode: (mode: ThemeMode) => void;
   setTheme: (theme: ThemeName) => void;
   setInstitutionLabels: (labels: InstitutionConfig) => void;
-  toggleMode: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -146,11 +142,6 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem('theme-mode');
-    return (stored as ThemeMode) || 'light';
-  });
-  
   const [themeName, setTheme] = useState<ThemeName>(() => {
     const stored = localStorage.getItem('theme-name');
     // Migrate old 'qbri' to 'hbku'
@@ -194,10 +185,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return {};
   });
 
-  const toggleMode = () => {
-    setMode(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
   // A section is visible unless it has been explicitly switched off.
   const isSectionVisible = (sectionTitle: string) => sectionVisibility[sectionTitle] !== false;
 
@@ -214,65 +201,43 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [institutionLabels]);
 
   useEffect(() => {
-    localStorage.setItem('theme-mode', mode);
     localStorage.setItem('theme-name', themeName);
-    
-    // Apply theme to document
+
+    // Apply institution branding to document. Dark/light mode (the `.dark`
+    // class) is owned solely by next-themes (see client/src/main.tsx).
     const root = document.documentElement;
     const theme = themes[themeName];
-    
+
     // Set data-theme attribute for CSS theme overrides
     root.setAttribute('data-theme', themeName);
-    
+
     // Set CSS custom properties for current theme
     Object.entries(theme.colors.primary).forEach(([shade, color]) => {
       root.style.setProperty(`--color-primary-${shade}`, color);
     });
-    
+
     Object.entries(theme.colors.secondary).forEach(([shade, color]) => {
       root.style.setProperty(`--color-secondary-${shade}`, color);
     });
-    
+
     // Set semantic color names for easy reference
     root.style.setProperty('--color-primary', theme.colors.primary[500]);
     root.style.setProperty('--color-primary-foreground', '#ffffff');
     root.style.setProperty('--color-secondary', theme.colors.secondary[500]);
     root.style.setProperty('--color-secondary-foreground', '#ffffff');
-    
-    // Dark mode handling
-    if (mode === 'dark') {
-      root.classList.add('dark');
-      root.style.setProperty('--color-background', '#0f172a');
-      root.style.setProperty('--color-foreground', '#f1f5f9');
-      root.style.setProperty('--color-card', '#1e293b');
-      root.style.setProperty('--color-card-foreground', '#f1f5f9');
-      root.style.setProperty('--color-muted', '#334155');
-      root.style.setProperty('--color-muted-foreground', '#94a3b8');
-    } else {
-      root.classList.remove('dark');
-      root.style.setProperty('--color-background', '#ffffff');
-      root.style.setProperty('--color-foreground', '#0f172a');
-      root.style.setProperty('--color-card', '#ffffff');
-      root.style.setProperty('--color-card-foreground', '#0f172a');
-      root.style.setProperty('--color-muted', '#f1f5f9');
-      root.style.setProperty('--color-muted-foreground', '#64748b');
-    }
-  }, [mode, themeName]);
+  }, [themeName]);
 
   const currentLabels = institutionLabels[themeName] || defaultInstitutionLabels.sidra;
 
   const value = {
-    mode,
     themeName,
     institutionLabels,
     currentLabels,
     sectionVisibility,
     isSectionVisible,
     setSectionVisible,
-    setMode,
     setTheme,
     setInstitutionLabels,
-    toggleMode,
   };
 
   return (

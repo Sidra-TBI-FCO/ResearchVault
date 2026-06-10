@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Palette, Settings as SettingsIcon, Moon, Sun, MessageSquarePlus, Send, Lightbulb, Zap, AlertCircle, CheckCircle, Clock, X, ChevronDown, ChevronUp, ThumbsUp, User, Calendar, Users, ShieldCheck, KeyRound, Layers } from "lucide-react";
 import { useTheme, themes, defaultInstitutionLabels, TOGGLEABLE_SECTIONS, type InstitutionConfig } from "@/contexts/ThemeContext";
+import { useTheme as useColorMode } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,10 @@ const statusOptions = [
 ];
 
 export default function Settings() {
-  const { mode, themeName, setMode, setTheme, toggleMode, institutionLabels, setInstitutionLabels, isSectionVisible, setSectionVisible } = useTheme();
+  const { themeName, setTheme, institutionLabels, setInstitutionLabels, isSectionVisible, setSectionVisible } = useTheme();
+  const { resolvedTheme, setTheme: setColorMode } = useColorMode();
+  const mode = resolvedTheme === 'dark' ? 'dark' : 'light';
+  const toggleMode = () => setColorMode(mode === 'dark' ? 'light' : 'dark');
   const { authConfig } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();

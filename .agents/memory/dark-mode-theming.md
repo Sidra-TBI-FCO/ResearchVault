@@ -1,15 +1,18 @@
 ---
 name: Dark mode theming
-description: How dark mode actually works in this app (dual theme system) and how dark: variant coverage was rolled out across pages.
+description: How dark mode works in this app (single next-themes system) and how dark: variant coverage was rolled out across pages.
 ---
 
 # Dark mode in this app
 
-## Two theme systems coexist
-- `client/src/main.tsx` wraps `<App/>` in **`next-themes`** `ThemeProvider` with `attribute="class" defaultTheme="light"`. This is the real controller of the `.dark` class on `<html>`, and it persists the choice in localStorage (key `theme`).
-- `client/src/contexts/ThemeContext.tsx` is a **separate custom** provider (institution branding, section visibility, plus its own `mode`/`toggleMode` that also adds/removes `.dark` and sets `--color-*` inline vars; persists key `theme-mode`).
+## Single source of truth: next-themes
+- `client/src/main.tsx` wraps `<App/>` in **`next-themes`** `ThemeProvider` (`attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange`). This is the ONLY controller of the `.dark` class on `<html>`, persisting to localStorage key `theme`.
+- `client/src/contexts/ThemeContext.tsx` is a separate custom provider for **institution branding** (`themeName`, `data-theme` attr, `--color-*` vars, persists `theme-name`) and **section visibility** (`section-visibility`). It no longer touches dark mode at all — `mode`/`setMode`/`toggleMode`/`theme-mode` were removed.
+- The visible Dark Mode toggle (Settings → Layout & Theme) uses next-themes' `useTheme` (imported as `useColorMode`): `resolvedTheme` for state, `setTheme` to flip. `main.tsx` migrates any legacy `theme-mode` value into `theme` once.
 
-**Why this matters:** when verifying dark mode, flipping the custom ThemeContext default alone does NOT reliably darken the page — next-themes can win. To force dark for a screenshot, set `defaultTheme="dark"` in `main.tsx`, restart the workflow (HMR keeps old useState/mount state, so a full restart is needed), then revert.
+**Why this matters:** previously two systems both added/removed `.dark` and could fight; next-themes already won in practice. Now there is one owner. To force dark for a screenshot, set `defaultTheme="dark"` in `main.tsx`, restart the workflow (HMR keeps stale mount state), screenshot, then revert.
+
+**Note:** the custom context's `--color-background/foreground/card/muted` inline vars were dead (referenced nowhere); removed with the dark handling. The `--color-primary*`/`--color-secondary*` branding vars are also unused by CSS/tailwind (branding colors come from the `themes` JS object in Sidebar), but were kept to stay conservative.
 
 **How to apply:** Tailwind `darkMode: ["class"]`; shadcn tokens (`--background`, `--card`, etc.) have a `.dark` block in `client/src/index.css`. Prefer theme tokens (`bg-background`, `bg-card`, `text-muted-foreground`) over hardcoded grays so dark mode is automatic.
 
