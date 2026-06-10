@@ -2494,7 +2494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             const pubDate = new Date(publication.publicationDate);
             if (pubDate < cutoffDate) continue;
-            if (!publication.status || !['Published', 'Published *', 'Accepted/In Press'].includes(publication.status)) continue;
+            if (!publication.status || !['published', 'published *', 'accepted/in press', 'in press'].includes(publication.status.toLowerCase())) continue;
             if (!publication.journal || publication.journal.trim() === '') continue;
 
             const pubYear = pubDate.getFullYear();

@@ -613,9 +613,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(publicationAuthors.scientistId, scientistId),
           or(
-            eq(publications.status, 'Published'),
-            eq(publications.status, 'Published *'),
-            eq(publications.status, 'Accepted/In Press')
+            sql`LOWER(${publications.status}) IN ('published', 'published *')`,
+            sql`LOWER(${publications.status}) IN ('in press', 'accepted/in press')`
           )
         )
       )
@@ -660,8 +659,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(publicationAuthors.scientistId, scientistId),
           or(
-            sql`LOWER(${publications.status}) = 'published'`,
-            sql`LOWER(${publications.status}) = 'in press'`
+            sql`LOWER(${publications.status}) IN ('published', 'published *')`,
+            sql`LOWER(${publications.status}) IN ('in press', 'accepted/in press')`
           ),
           sql`${publications.publicationDate} >= ${cutoffDate.toISOString()}`
         )
