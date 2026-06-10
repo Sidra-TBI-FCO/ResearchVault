@@ -1081,7 +1081,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return /completion/i.test(context);
         });
       if (completionMatch) {
-        const dateStr = completionMatch[1] || completionMatch[0]; // Use captured group, fallback to full match
+        // Formats 1-3 return a RegExpMatchArray (use captured group [1]); Format 4
+        // returns a plain string from .find() — indexing it would grab single
+        // characters, so use the whole string in that case.
+        const dateStr = typeof completionMatch === 'string' ? completionMatch : (completionMatch[1] || completionMatch[0]);
         result.completionDate = convertDateFormat(dateStr);
         console.log('Found completion date:', result.completionDate);
       } else {
@@ -1105,7 +1108,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return /expir/i.test(context);
         });
       if (expirationMatch) {
-        const dateStr = expirationMatch[1] || expirationMatch[0]; // Use captured group, fallback to full match  
+        // Formats 1-3 return a RegExpMatchArray (use captured group [1]); Format 4
+        // returns a plain string from .find() — indexing it would grab single
+        // characters, so use the whole string in that case.
+        const dateStr = typeof expirationMatch === 'string' ? expirationMatch : (expirationMatch[1] || expirationMatch[0]);
         result.expirationDate = convertDateFormat(dateStr);
         console.log('Found expiration date:', result.expirationDate);
       } else {
@@ -1126,7 +1132,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                            }) ||
                            cleanText.match(/Record ID:\s*(\d+)/i);
       if (recordIdMatch) {
-        const idStr = Array.isArray(recordIdMatch) ? recordIdMatch[0] : recordIdMatch[1];
+        // Array matches expose the captured digits at [1]; Format 4's .find()
+        // returns the plain matched string. Strip non-digits either way.
+        const idStr = typeof recordIdMatch === 'string' ? recordIdMatch : (recordIdMatch[1] || recordIdMatch[0]);
         result.recordId = idStr.replace(/\D/g, ''); // Remove any non-digits
         console.log('Found record ID:', result.recordId);
       } else {
@@ -1328,10 +1336,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!result.expirationDate && allDates.length > 1) {
             // Use the latest distinct date as expiration (module rows repeat the
             // completion date, so the largest year is the real expiration).
-            const distinct = Array.from(new Set(allDates));
-            const latest = distinct.sort((a, b) => convertDateFormat(a).localeCompare(convertDateFormat(b))).pop();
-            if (latest && convertDateFormat(latest) !== result.completionDate) {
-              result.expirationDate = convertDateFormat(latest);
+            const distinct = Array.from(new Set(allDates))
+              .map((d) => convertDateFormat(d))
+              .filter((d): d is string => !!d);
+            const latest = distinct.sort((a, b) => a.localeCompare(b)).pop();
+            if (latest && latest !== result.completionDate) {
+              result.expirationDate = latest;
               console.log('Found expiration date (positional) in report format:', result.expirationDate);
             }
           }
@@ -1395,20 +1405,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return result;
   }
 
-  // Helper function to convert date format from "05-Mar-2025" to "2025-03-05"
-  function convertDateFormat(dateStr: string): string {
-    try {
-      const months: { [key: string]: string } = {
-        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
-        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
-        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
-      };
-      
-      const [day, month, year] = dateStr.split('-');
-      return `${year}-${months[month]}-${day.padStart(2, '0')}`;
-    } catch (error) {
-      return dateStr; // Return original if conversion fails
-    }
+  // Convert a CITI date like "05-Mar-2025" to ISO "2025-03-05". Returns null
+  // for anything it can't parse into a real date, so a partial/garbage match
+  // (e.g. just "04") never becomes a malformed string like "undefined-undefined-04"
+  // that would crash the DATE column insert downstream.
+  function convertDateFormat(dateStr: string): string | null {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const s = dateStr.trim();
+
+    // Already ISO (YYYY-MM-DD) — accept as-is.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    const months: { [key: string]: string } = {
+      'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+      'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+      'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+    };
+
+    const parts = s.split('-');
+    if (parts.length !== 3) return null;
+    const [day, month, year] = parts;
+    const mm = months[month];
+    if (!mm || !/^\d{4}$/.test(year) || !/^\d{1,2}$/.test(day)) return null;
+    return `${year}-${mm}-${day.padStart(2, '0')}`;
+  }
+
+  // Strict ISO YYYY-MM-DD validator used as a final guard before DB writes.
+  // Verifies the calendar date is real (round-trips exactly), so values like
+  // "2027-11-31" or "2024-02-30" are rejected rather than silently normalized.
+  function isValidIsoDate(value: unknown): value is string {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const [y, m, d] = value.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
   }
 
   // Test endpoint for parsing certificate text (for debugging)
@@ -1434,7 +1463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Certificate batch confirmation
-  app.post("/api/certificates/confirm-batch", async (req: any, res) => {
+  app.post("/api/certificates/confirm-batch", requireAuth, async (req: any, res) => {
     try {
       // uploaded_by is NOT NULL. The session user holds the identity in every
       // auth mode (demo/local/ldap/oidc); the old req.user.claims.sub path was
@@ -1498,6 +1527,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ...cert,
               status: 'error',
               error: `Missing required fields: ${!scientistId ? 'scientistId ' : ''}${!moduleId ? 'moduleId ' : ''}${!startDate ? 'startDate ' : ''}${!endDate ? 'endDate ' : ''}`
+            });
+            continue;
+          }
+
+          // Guard against malformed/partial dates (e.g. a bad OCR/parse that
+          // produced "undefined-undefined-04"). The DATE column would otherwise
+          // reject the whole insert with a raw SQL error.
+          if (!isValidIsoDate(startDate) || !isValidIsoDate(endDate)) {
+            results.push({
+              ...cert,
+              status: 'error',
+              error: `Could not read the ${!isValidIsoDate(startDate) ? 'completion' : 'expiration'} date correctly. Please set it manually before saving.`
             });
             continue;
           }

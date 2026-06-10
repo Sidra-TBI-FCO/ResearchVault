@@ -10,3 +10,4 @@
 - [CITI OCR module matching](citi-module-matching.md) — match is deliberately conservative (flag NEW over wrong auto-match); new courses bootstrap modules by normalized name with extrapolated abbrev/expiry.
 - [CITI PDF text extraction](citi-report-ocr-multipage.md) — read embedded PDF text layer first (pdf-parse v2), OCR only as fallback for scanned PDFs; detect report markers BEFORE certificate markers.
 - [Drizzle wraps pg errors in error.cause](drizzle-pg-error-cause.md) — top-level thrown error has no .code; Postgres code/detail/constraint (e.g. 23505 unique) live on error.cause; unwrap before mapping to 409.
+- [CITI date parsing pitfalls](citi-date-parsing.md) — regex `g`-flag + `.find()` returns a STRING (don't index for capture groups); convertDateFormat fails closed to null; validate ISO dates before insert.
