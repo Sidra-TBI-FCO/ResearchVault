@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, ChevronRight, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 interface JournalImpactFactor {
@@ -83,6 +83,14 @@ const authorshipColors = {
 
 export function PublicationsList({ scientistId, yearsSince = 5, embedded = false }: PublicationsListProps) {
   const [, navigate] = useLocation();
+  const [expandedIds, setExpandedIds] = React.useState<Set<number>>(new Set());
+  const toggleExpanded = (id: number) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
   const { data: publications = [], isLoading } = useQuery({
     queryKey: [`/api/scientists/${scientistId}/publications?years=${yearsSince}`],
   });
@@ -96,85 +104,99 @@ export function PublicationsList({ scientistId, yearsSince = 5, embedded = false
   );
 
   const listBody = (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {publications.length === 0 ? (
             <p className="text-gray-600 text-center py-8 dark:text-gray-300">No publications found for the selected time period.</p>
           ) : (
-            publications.map((pub: Publication) => (
+            publications.map((pub: Publication) => {
+              const isOpen = expandedIds.has(pub.id);
+              const year = pub.publicationDate ? format(new Date(pub.publicationDate), 'yyyy') : null;
+              const displayAuthorship = (pub.authorshipType ?? '').split(',').map(type => {
+                const trimmed = type.trim();
+                return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
+              }).filter(Boolean).join(', ');
+              return (
               <div
                 key={pub.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/publications/${pub.id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    navigate(`/publications/${pub.id}`);
-                  }
-                }}
                 data-testid={`card-publication-${pub.id}`}
-                className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border rounded-lg dark:border-gray-700"
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-gray-900 leading-tight dark:text-gray-100">{pub.title}</h4>
-                  <Badge 
-                    variant="secondary" 
-                    className={`ml-2 text-xs ${(() => {
-                      // Map Senior Author and Last Author to Senior/Last Author for display
-                      const displayType = pub.authorshipType.split(',').map(type => {
-                        const trimmed = type.trim();
-                        return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
-                      }).join(', ');
-                      return authorshipColors[displayType as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800';
-                    })()}`}
-                  >
-                    {(() => {
-                      // Display combined authorship type
-                      return pub.authorshipType.split(',').map(type => {
-                        const trimmed = type.trim();
-                        return (trimmed === 'Senior Author' || trimmed === 'Last Author') ? 'Senior/Last Author' : trimmed;
-                      }).join(', ');
-                    })()}
-                  </Badge>
-                </div>
-                
-                <p className="text-sm text-gray-600 mb-2 dark:text-gray-300">{pub.authors}</p>
-                
-                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                  <span className="font-medium">{pub.journal}</span>
-                  {pub.volume && <span>Vol. {pub.volume}</span>}
-                  {pub.issue && <span>({pub.issue})</span>}
-                  {pub.pages && <span>pp. {pub.pages}</span>}
-                  {pub.publicationDate && (
-                    <span>({format(new Date(pub.publicationDate), 'yyyy')})</span>
-                  )}
-                </div>
-                
-                {pub.journal && pub.publicationDate && (
-                  <ImpactFactorDisplay 
-                    journal={pub.journal} 
-                    publicationYear={new Date(pub.publicationDate).getFullYear()} 
+                {/* Compact header — click to expand */}
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(pub.id)}
+                  aria-expanded={isOpen}
+                  data-testid={`button-toggle-publication-${pub.id}`}
+                  className="w-full flex items-start gap-3 p-3 text-left hover:bg-gray-50 transition-colors rounded-lg dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <ChevronRight
+                    className={`h-4 w-4 mt-0.5 shrink-0 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`}
                   />
-                )}
-                
-                {pub.doi && (
-                  <div className="mt-2">
-                    <Button variant="ghost" size="sm" className="h-8 px-2" asChild>
-                      <a 
-                        href={`https://doi.org/${pub.doi}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-medium text-gray-900 leading-snug dark:text-gray-100">{pub.title}</h4>
+                    <div className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">
+                      <span className="font-medium">{pub.journal}</span>
+                      {year && <span> · {year}</span>}
+                    </div>
+                  </div>
+                </button>
+
+                {/* Expanded details */}
+                {isOpen && (
+                  <div className="px-3 pb-3 pl-10 space-y-2">
+                    <Badge
+                      variant="secondary"
+                      className={`text-xs ${authorshipColors[displayAuthorship as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800'}`}
+                    >
+                      {displayAuthorship}
+                    </Badge>
+
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{pub.authors}</p>
+
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                      <span className="font-medium">{pub.journal}</span>
+                      {pub.volume && <span>Vol. {pub.volume}</span>}
+                      {pub.issue && <span>({pub.issue})</span>}
+                      {pub.pages && <span>pp. {pub.pages}</span>}
+                      {year && <span>({year})</span>}
+                    </div>
+
+                    {pub.journal && pub.publicationDate && (
+                      <ImpactFactorDisplay
+                        journal={pub.journal}
+                        publicationYear={new Date(pub.publicationDate).getFullYear()}
+                      />
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        className="h-8"
+                        onClick={() => navigate(`/publications/${pub.id}`)}
+                        data-testid={`button-view-publication-${pub.id}`}
                       >
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        DOI: {pub.doi}
-                      </a>
-                    </Button>
+                        View publication page
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                      {pub.doi && (
+                        <Button variant="ghost" size="sm" className="h-8 px-2" asChild>
+                          <a
+                            href={`https://doi.org/${pub.doi}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            DOI: {pub.doi}
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-            ))
+              );
+            })
           )}
         </div>
   );
