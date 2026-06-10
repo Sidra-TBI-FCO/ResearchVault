@@ -642,6 +642,24 @@ export default function PublicationDetail() {
                   </div>
                 </div>
               )}
+
+              {publication.pmid && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-foreground">PMID</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <ExternalLink className="h-3 w-3" />
+                    <a
+                      href={`https://pubmed.ncbi.nlm.nih.gov/${publication.pmid}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-600 hover:underline"
+                      data-testid="link-pmid"
+                    >
+                      {publication.pmid}
+                    </a>
+                  </div>
+                </div>
+              )}
               
               {(publication.prepublicationUrl || publication.prepublicationSite) && (
                 <div className="mt-4">

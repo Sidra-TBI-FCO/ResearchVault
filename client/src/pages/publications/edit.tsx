@@ -53,6 +53,7 @@ export default function PublicationEdit() {
       pages: publication?.pages || "",
       publicationDate: publication?.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : undefined,
       doi: publication?.doi || "",
+      pmid: publication?.pmid || "",
       abstract: publication?.abstract || "",
       publicationType: publication?.publicationType || "Journal Article",
       prepublicationUrl: publication?.prepublicationUrl || "",
@@ -74,6 +75,7 @@ export default function PublicationEdit() {
         pages: publication.pages || "",
         publicationDate: publication.publicationDate ? new Date(publication.publicationDate).toISOString().split('T')[0] : undefined,
         doi: publication.doi || "",
+        pmid: publication.pmid || "",
         abstract: publication.abstract || "",
         publicationType: publication.publicationType || "Journal Article",
         prepublicationUrl: publication.prepublicationUrl || "",
@@ -322,6 +324,20 @@ export default function PublicationEdit() {
                     <FormLabel>DOI</FormLabel>
                     <FormControl>
                       <Input placeholder="Digital Object Identifier" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pmid"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>PMID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="PubMed ID" autoComplete="off" data-testid="input-pmid" {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

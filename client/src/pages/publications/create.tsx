@@ -32,6 +32,7 @@ const createPublicationSchema = insertPublicationSchema.extend({
   issue: z.string().optional(),
   pages: z.string().optional(),
   doi: z.string().optional(),
+  pmid: z.string().optional(),
   publicationDate: z.string().optional(),
   publicationType: z.string().optional(),
   researchActivityId: z.number().min(1, "Research Activity (SDR) is required"),
@@ -63,6 +64,7 @@ export default function CreatePublication() {
     issue: "",
     pages: "",
     doi: "",
+    pmid: "",
     publicationDate: "",
   };
 
@@ -317,6 +319,20 @@ export default function CreatePublication() {
                       <FormLabel>DOI</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 10.1038/nbt.4321" autoComplete="off" data-1p-ignore="true" data-lpignore="true" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pmid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PMID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 36293564" autoComplete="off" data-testid="input-pmid" {...field} value={field.value ?? ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

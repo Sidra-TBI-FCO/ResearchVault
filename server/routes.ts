@@ -145,6 +145,343 @@ function scientistUniqueConflictMessage(error: any): string | undefined {
   return "A staff member with these details already exists.";
 }
 
+// ── ORCID / Google Scholar missing-paper import helpers ──────────────────────
+
+// Normalize a free-form DOI for comparison: lowercase, strip any resolver
+// prefix (https://doi.org/, http://dx.doi.org/, doi:) and surrounding noise.
+// The `doi` column is free-form and not unique, so all DOI matching goes
+// through this normalizer to avoid false "missing" / duplicate results.
+function normalizeDoi(doi: string | null | undefined): string {
+  if (!doi || typeof doi !== "string") return "";
+  return doi
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//, "")
+    .replace(/^doi:\s*/, "")
+    .trim();
+}
+
+interface MissingPaperMeta {
+  doi: string;
+  title: string;
+  journal: string;
+  year: number | null;
+  source: string;
+}
+
+// Fetch a researcher's works from the ORCID public API and return one entry
+// per DOI with display metadata pulled straight from the ORCID summaries.
+// Throws on network / non-OK responses so the caller can report ORCID as
+// unavailable.
+async function fetchOrcidWorks(orcidId: string): Promise<MissingPaperMeta[]> {
+  const id = orcidId.trim().replace(/^https?:\/\/orcid\.org\//i, "");
+  const url = `https://pub.orcid.org/v3.0/${encodeURIComponent(id)}/works`;
+  const response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!response.ok) {
+    throw new Error(`ORCID API returned ${response.status}`);
+  }
+  const data: any = await response.json();
+  const groups: any[] = Array.isArray(data?.group) ? data.group : [];
+  const results: MissingPaperMeta[] = [];
+  const seen = new Set<string>();
+
+  for (const group of groups) {
+    const extIds: any[] = group?.["external-ids"]?.["external-id"] ?? [];
+    const doiEntry = extIds.find(
+      (e) => (e?.["external-id-type"] ?? "").toLowerCase() === "doi"
+    );
+    const rawDoi = doiEntry?.["external-id-value"];
+    const norm = normalizeDoi(rawDoi);
+    if (!norm || seen.has(norm)) continue;
+
+    const summary: any = group?.["work-summary"]?.[0] ?? {};
+    const title: string =
+      summary?.title?.title?.value ?? "Untitled work";
+    const journal: string = summary?.["journal-title"]?.value ?? "";
+    const yearRaw = summary?.["publication-date"]?.year?.value;
+    const year = yearRaw ? parseInt(yearRaw, 10) : null;
+
+    seen.add(norm);
+    results.push({
+      doi: norm,
+      title,
+      journal,
+      year: Number.isFinite(year as number) ? (year as number) : null,
+      source: "ORCID",
+    });
+  }
+  return results;
+}
+
+// Validate a stored Google Scholar URL before the server fetches it. The URL
+// is user-editable, so fetching it unchecked would be an SSRF sink (the server
+// could be coerced into requesting internal/private addresses). We require
+// HTTPS, restrict the host to known Google Scholar domains, and reject IP
+// literals outright. Returns null when the URL is not safe to fetch.
+function validateGoogleScholarUrl(scholarUrl: string): URL | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(scholarUrl);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:") return null;
+
+  const host = parsed.hostname.toLowerCase();
+
+  // Reject IPv4/IPv6 literals (e.g. 169.254.169.254, [::1]) — Scholar is only
+  // ever reached by DNS hostname, never by raw IP.
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(":") || parsed.hostname.startsWith("[")) {
+    return null;
+  }
+
+  // Allowlist: scholar.google.com and regional Google Scholar hosts
+  // (e.g. scholar.google.de, scholar.google.co.uk, scholar.google.com.au).
+  // The TLD suffix is bounded to one or two short labels so a crafted host
+  // like `scholar.google.com.evil.com` cannot slip through as a "regional"
+  // domain.
+  const prefix = "scholar.google.";
+  let isScholarHost = false;
+  if (host === "scholar.google.com") {
+    isScholarHost = true;
+  } else if (host.startsWith(prefix)) {
+    const suffix = host.slice(prefix.length);
+    isScholarHost = /^[a-z]{2,3}(\.[a-z]{2,3})?$/.test(suffix);
+  }
+  if (!isScholarHost) return null;
+
+  return parsed;
+}
+
+// Best-effort Google Scholar DOI scrape. Scholar has no official API and
+// actively blocks scraping, so any failure (block, empty, parse error) is
+// swallowed and an empty array is returned — this must never break the ORCID
+// result. We simply scan the fetched HTML for any DOI-shaped strings.
+async function fetchGoogleScholarDois(scholarUrl: string): Promise<MissingPaperMeta[]> {
+  // SSRF guard: only fetch validated Scholar URLs.
+  const safeUrl = validateGoogleScholarUrl(scholarUrl);
+  if (!safeUrl) return [];
+
+  try {
+    const response = await fetch(safeUrl.toString(), {
+      redirect: "error", // never follow redirects to a non-allowlisted host
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        Accept: "text/html",
+      },
+    });
+    if (!response.ok) return [];
+    const html = await response.text();
+    const matches = html.match(/10\.\d{4,9}\/[^\s"'<>)\]}]+/g) ?? [];
+    const results: MissingPaperMeta[] = [];
+    const seen = new Set<string>();
+    for (const m of matches) {
+      const norm = normalizeDoi(m);
+      if (!norm || seen.has(norm)) continue;
+      seen.add(norm);
+      results.push({
+        doi: norm,
+        title: "",
+        journal: "",
+        year: null,
+        source: "Google Scholar",
+      });
+    }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+// Fetch and parse a single work from CrossRef into an insert-ready publication
+// shape. Returns null when the DOI can't be resolved. Reused by the batch
+// import endpoint so imported papers get full enrichment.
+async function fetchCrossrefPublication(doi: string): Promise<{
+  title: string;
+  authors: string;
+  journal: string;
+  volume: string;
+  issue: string;
+  pages: string;
+  doi: string;
+  abstract: string;
+  publicationDate: Date | null;
+} | null> {
+  try {
+    const crossrefUrl = `https://api.crossref.org/works/${encodeURIComponent(doi)}`;
+    const response = await fetch(crossrefUrl);
+    if (!response.ok) return null;
+    const data: any = await response.json();
+    const work = data?.message;
+    if (!work) return null;
+
+    const authors =
+      work.author
+        ?.map((a: any) => `${a.given || ""} ${a.family || ""}`.trim())
+        .filter(Boolean)
+        .join(", ") || "";
+
+    const dateParts = work.published?.["date-parts"]?.[0];
+    const publicationDate =
+      dateParts && dateParts[0]
+        ? new Date(dateParts[0], (dateParts[1] || 1) - 1, dateParts[2] || 1)
+        : null;
+
+    // Journal/venue. For preprints (type "posted-content") CrossRef leaves
+    // container-title empty and puts the server name (e.g. "medRxiv") in
+    // `institution`, so fall back to that, then publisher.
+    const journal =
+      work["container-title"]?.[0] ||
+      work.institution?.[0]?.name ||
+      (work.type === "posted-content" ? work.publisher || "" : "") ||
+      "";
+
+    return {
+      title: work.title?.[0] || "Untitled work",
+      authors,
+      journal,
+      volume: work.volume || "",
+      issue: work.issue || "",
+      pages: work.page || "",
+      doi: work.DOI || doi,
+      abstract: work.abstract || "",
+      publicationDate,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Strip XML/HTML tags and decode the handful of entities PubMed emits so the
+// extracted text (titles, abstracts) is plain readable text.
+function stripXml(input: string): string {
+  return input
+    .replace(/<[^>]+>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Pull data for a single XML element by tag name (first match), tags stripped.
+function xmlText(xml: string, tag: string): string {
+  const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+  return m ? stripXml(m[1]) : "";
+}
+
+// PubMed enrichment: resolve a DOI to a PMID via E-utilities esearch, then
+// efetch the record to recover the abstract, PMID, authors, and bibliographic
+// fields that CrossRef often lacks (CrossRef rarely has abstracts and some
+// publishers — e.g. Science — aren't in CrossRef at all). Best-effort: any
+// failure returns null and the caller falls back to CrossRef/ORCID metadata.
+async function fetchPubmedByDoi(doi: string): Promise<{
+  pmid: string;
+  title: string;
+  authors: string;
+  journal: string;
+  volume: string;
+  issue: string;
+  pages: string;
+  abstract: string;
+  publicationDate: Date | null;
+} | null> {
+  try {
+    const eutils = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
+    const common = "tool=qbridge&email=research@qbridge.local";
+
+    const searchUrl = `${eutils}/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
+      `${doi}[DOI]`
+    )}&retmode=json&${common}`;
+    const searchRes = await fetch(searchUrl);
+    if (!searchRes.ok) return null;
+    const searchData: any = await searchRes.json();
+    const pmid: string | undefined = searchData?.esearchresult?.idlist?.[0];
+    if (!pmid) return null;
+
+    const fetchUrl = `${eutils}/efetch.fcgi?db=pubmed&id=${encodeURIComponent(
+      pmid
+    )}&retmode=xml&${common}`;
+    const fetchRes = await fetch(fetchUrl);
+    if (!fetchRes.ok) return null;
+    const xml = await fetchRes.text();
+
+    // Authors: "ForeName LastName" (fall back to Initials / CollectiveName).
+    const authors: string[] = [];
+    const authorBlocks = xml.match(/<Author[^>]*>[\s\S]*?<\/Author>/g) ?? [];
+    for (const block of authorBlocks) {
+      const last = xmlText(block, "LastName");
+      const fore = xmlText(block, "ForeName") || xmlText(block, "Initials");
+      const collective = xmlText(block, "CollectiveName");
+      if (last) authors.push(`${fore ? fore + " " : ""}${last}`.trim());
+      else if (collective) authors.push(collective);
+    }
+
+    // Abstract: concatenate every AbstractText section (labeled or not).
+    const abstractParts: string[] = [];
+    const abstractBlocks =
+      xml.match(/<AbstractText[^>]*>[\s\S]*?<\/AbstractText>/g) ?? [];
+    for (const block of abstractBlocks) {
+      const labelMatch = block.match(/label="([^"]+)"/i);
+      const text = stripXml(block.replace(/<\/?AbstractText[^>]*>/g, ""));
+      if (text) {
+        abstractParts.push(labelMatch ? `${labelMatch[1]}: ${text}` : text);
+      }
+    }
+
+    // Pages: prefer MedlinePgn, fall back to ELocationID (e.g. article number).
+    let pages = xmlText(xml, "MedlinePgn");
+    if (!pages) {
+      const eloc = xml.match(/<ELocationID[^>]*>([\s\S]*?)<\/ELocationID>/);
+      if (eloc) pages = stripXml(eloc[1]);
+    }
+
+    // Publication date from the article's PubDate.
+    let publicationDate: Date | null = null;
+    const pubDateBlock = xml.match(/<PubDate>([\s\S]*?)<\/PubDate>/);
+    if (pubDateBlock) {
+      const yearStr = xmlText(pubDateBlock[1], "Year");
+      const year = parseInt(yearStr, 10);
+      if (!isNaN(year)) {
+        const monthStr = xmlText(pubDateBlock[1], "Month");
+        const dayStr = xmlText(pubDateBlock[1], "Day");
+        const months: Record<string, number> = {
+          jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+          jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+        };
+        let month = 0;
+        if (monthStr) {
+          const numMonth = parseInt(monthStr, 10);
+          month = !isNaN(numMonth)
+            ? numMonth - 1
+            : months[monthStr.slice(0, 3).toLowerCase()] ?? 0;
+        }
+        const day = parseInt(dayStr, 10);
+        publicationDate = new Date(Date.UTC(year, month, isNaN(day) ? 1 : day));
+      }
+    }
+
+    return {
+      pmid,
+      title: xmlText(xml, "ArticleTitle"),
+      authors: authors.join(", "),
+      journal: xmlText(xml, "Title"),
+      volume: xmlText(xml, "Volume"),
+      issue: xmlText(xml, "Issue"),
+      pages,
+      abstract: abstractParts.join("\n\n"),
+      publicationDate,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
   const apiRouter = app.route('/api');
@@ -6791,6 +7128,285 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching CrossRef data:', error);
       res.status(500).json({ message: "Failed to fetch publication data from CrossRef" });
+    }
+  });
+
+  // List a scientist's published works (from ORCID, plus best-effort Google
+  // Scholar) that are NOT already present in our publications table, matched by
+  // normalized DOI. Fails gracefully when the person has no ORCID or ORCID is
+  // unreachable.
+  app.get('/api/scientists/:id/missing-papers', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid scientist ID" });
+      }
+
+      const scientist = await storage.getScientist(id);
+      if (!scientist) {
+        return res.status(404).json({ message: "Scientist not found" });
+      }
+
+      const hasOrcid = !!scientist.orcidId && scientist.orcidId.trim() !== "";
+      const hasScholar =
+        !!scientist.googleScholarUrl && scientist.googleScholarUrl.trim() !== "";
+
+      if (!hasOrcid && !hasScholar) {
+        return res.json({
+          orcidAttempted: false,
+          orcidAvailable: false,
+          scholarAttempted: false,
+          scholarAvailable: false,
+          missing: [],
+          message:
+            "This person has no ORCID iD or Google Scholar URL on file, so there are no external works to check.",
+        });
+      }
+
+      // Existing DOIs already in the system (normalized).
+      const existingPublications = await storage.getPublications();
+      const existingDois = new Set(
+        existingPublications
+          .map((p) => normalizeDoi(p.doi))
+          .filter((d) => d !== "")
+      );
+
+      let orcidAttempted = false;
+      let orcidAvailable = false;
+      let orcidWorks: MissingPaperMeta[] = [];
+      if (hasOrcid) {
+        orcidAttempted = true;
+        try {
+          orcidWorks = await fetchOrcidWorks(scientist.orcidId as string);
+          orcidAvailable = true;
+        } catch (err) {
+          console.error("ORCID fetch failed:", err);
+          orcidAvailable = false;
+        }
+      }
+
+      // Best-effort Google Scholar — never blocks or breaks the ORCID result.
+      let scholarAttempted = false;
+      let scholarWorks: MissingPaperMeta[] = [];
+      if (hasScholar) {
+        scholarAttempted = true;
+        scholarWorks = await fetchGoogleScholarDois(
+          scientist.googleScholarUrl as string
+        );
+      }
+      const scholarAvailable = scholarWorks.length > 0;
+
+      // Merge ORCID + Scholar, dedupe by normalized DOI (ORCID wins because it
+      // carries richer metadata), and drop anything already in the system.
+      const byDoi = new Map<string, MissingPaperMeta>();
+      for (const w of orcidWorks) {
+        if (!existingDois.has(w.doi)) byDoi.set(w.doi, w);
+      }
+      for (const w of scholarWorks) {
+        if (existingDois.has(w.doi) || byDoi.has(w.doi)) continue;
+        byDoi.set(w.doi, w);
+      }
+
+      const missing = Array.from(byDoi.values()).sort(
+        (a, b) => (b.year ?? 0) - (a.year ?? 0)
+      );
+
+      let message: string | undefined;
+      if (orcidAttempted && !orcidAvailable) {
+        message =
+          "ORCID could not be reached right now. Please try again later.";
+      } else if (missing.length === 0 && orcidAvailable) {
+        message =
+          "No missing papers found — everything in ORCID is already in the system.";
+      }
+
+      res.json({
+        orcidAttempted,
+        orcidAvailable,
+        scholarAttempted,
+        scholarAvailable,
+        missing,
+        message,
+      });
+    } catch (error) {
+      console.error("Error checking for missing papers:", error);
+      res
+        .status(500)
+        .json({ message: "Failed to check for missing papers" });
+    }
+  });
+
+  // Import a set of selected DOIs as standalone publication records. Each DOI
+  // is enriched via CrossRef, created with researchActivityId null and NO
+  // author link. DOIs already present (normalized re-check, so a stale client
+  // list can't create duplicates) are skipped.
+  app.post('/api/scientists/:id/import-papers', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid scientist ID" });
+      }
+
+      const scientist = await storage.getScientist(id);
+      if (!scientist) {
+        return res.status(404).json({ message: "Scientist not found" });
+      }
+
+      // Audit actor must be a real authenticated user (requireAuth guarantees a
+      // session user — demo mode injects one). Never fall back to an anonymous
+      // placeholder id for persisted history.
+      const actorId = req.session?.user?.id;
+      if (actorId == null) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Accept either a rich `papers` array (doi + the title/journal/year we
+      // already pulled from ORCID) or a plain `dois` string array for
+      // backward compatibility. The metadata is used as a fallback so a paper
+      // still saves even when CrossRef can't resolve its DOI.
+      const rawPapers: unknown = req.body?.papers;
+      const rawDois: unknown = req.body?.dois;
+
+      type RequestedPaper = {
+        doi: string;
+        title: string;
+        journal: string;
+        year: number | null;
+      };
+
+      const requestedMap = new Map<string, RequestedPaper>();
+
+      if (Array.isArray(rawPapers)) {
+        for (const p of rawPapers) {
+          const doi = normalizeDoi(typeof p?.doi === "string" ? p.doi : "");
+          if (!doi || requestedMap.has(doi)) continue;
+          requestedMap.set(doi, {
+            doi,
+            title: typeof p?.title === "string" ? p.title : "",
+            journal: typeof p?.journal === "string" ? p.journal : "",
+            year: typeof p?.year === "number" ? p.year : null,
+          });
+        }
+      } else if (Array.isArray(rawDois)) {
+        for (const d of rawDois) {
+          const doi = normalizeDoi(typeof d === "string" ? d : "");
+          if (!doi || requestedMap.has(doi)) continue;
+          requestedMap.set(doi, { doi, title: "", journal: "", year: null });
+        }
+      }
+
+      if (requestedMap.size === 0) {
+        return res
+          .status(400)
+          .json({ message: "Provide a non-empty list of papers to import." });
+      }
+
+      const requestedPapers = Array.from(requestedMap.values());
+
+      // Server-side duplicate guard against the current DB state.
+      const existingPublications = await storage.getPublications();
+      const existingDois = new Set(
+        existingPublications
+          .map((p) => normalizeDoi(p.doi))
+          .filter((d) => d !== "")
+      );
+
+      const created: { doi: string; title: string }[] = [];
+      const skipped: { doi: string; reason: string }[] = [];
+
+      for (const paper of requestedPapers) {
+        const doi = paper.doi;
+        if (existingDois.has(doi)) {
+          skipped.push({ doi, reason: "already exists" });
+          continue;
+        }
+
+        // Enrich from CrossRef and PubMed in parallel, then merge. CrossRef
+        // gives clean author/bibliographic fields; PubMed adds the PMID and an
+        // abstract (which CrossRef usually lacks) and covers DOIs CrossRef is
+        // missing. Anything still empty falls back to the ORCID metadata the
+        // client already had, so the paper always saves.
+        const [crossref, pubmed] = await Promise.all([
+          fetchCrossrefPublication(doi),
+          fetchPubmedByDoi(doi),
+        ]);
+
+        const pick = (...vals: (string | undefined | null)[]) =>
+          vals.find((v) => typeof v === "string" && v.trim() !== "")?.trim() ?? "";
+
+        const title =
+          pick(crossref?.title, pubmed?.title, paper.title) || "Untitled work";
+        const journal = pick(crossref?.journal, pubmed?.journal, paper.journal);
+        // Authors: CrossRef first (full given+family names), then PubMed.
+        const authors = pick(crossref?.authors, pubmed?.authors);
+        const volume = pick(crossref?.volume, pubmed?.volume);
+        const issue = pick(crossref?.issue, pubmed?.issue);
+        const pages = pick(crossref?.pages, pubmed?.pages);
+        // Abstract: prefer PubMed (clean text); CrossRef abstracts are rare and
+        // carry JATS markup, so strip tags if that's all we have.
+        const abstract =
+          pubmed?.abstract?.trim() ||
+          (crossref?.abstract ? stripXml(crossref.abstract) : "");
+        const pmid = pubmed?.pmid || "";
+
+        const resolvedDate =
+          crossref?.publicationDate ?? pubmed?.publicationDate ?? null;
+        let publicationDate: string | null = resolvedDate
+          ? resolvedDate.toISOString()
+          : null;
+        if (!publicationDate && paper.year) {
+          // Year-only fallback: store as Jan 1 of that year.
+          publicationDate = new Date(Date.UTC(paper.year, 0, 1)).toISOString();
+        }
+
+        const enrichedFromAnySource = Boolean(crossref || pubmed);
+
+        try {
+          const publicationData = insertPublicationSchema.parse({
+            researchActivityId: null,
+            title,
+            authors,
+            journal,
+            volume,
+            issue,
+            pages,
+            doi: crossref?.doi || doi,
+            pmid: pmid || null,
+            abstract,
+            publicationType: "Journal Article",
+            status: "Published",
+            publicationDate,
+          });
+
+          const publication = await storage.createPublication(publicationData);
+          await storage.createManuscriptHistoryEntry({
+            publicationId: publication.id,
+            fromStatus: "",
+            toStatus: publication.status || "Published",
+            changedBy: actorId,
+            changeReason: enrichedFromAnySource
+              ? "Imported from ORCID/Google Scholar"
+              : "Imported from ORCID/Google Scholar (metadata not enriched via CrossRef/PubMed)",
+          });
+
+          // Mark as present so a duplicate inside the same batch is skipped.
+          existingDois.add(doi);
+          created.push({ doi, title });
+        } catch (err) {
+          console.error(`Failed to import DOI ${doi}:`, err);
+          skipped.push({ doi, reason: "failed to save" });
+        }
+      }
+
+      res.json({
+        created,
+        skipped,
+        createdCount: created.length,
+        skippedCount: skipped.length,
+      });
+    } catch (error) {
+      console.error("Error importing papers:", error);
+      res.status(500).json({ message: "Failed to import papers" });
     }
   });
 
