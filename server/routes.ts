@@ -1271,7 +1271,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Certificate batch confirmation
   app.post("/api/certificates/confirm-batch", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      // uploaded_by is NOT NULL. The session user holds the identity in every
+      // auth mode (demo/local/ldap/oidc); the old req.user.claims.sub path was
+      // always undefined here, which made every certificate insert fail.
+      const userId = req.session?.user?.scientistId ?? req.session?.user?.id ?? 1;
       const { certifications } = req.body;
 
       if (!certifications || !Array.isArray(certifications)) {

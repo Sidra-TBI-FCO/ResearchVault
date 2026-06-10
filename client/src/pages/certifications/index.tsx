@@ -273,21 +273,48 @@ export default function CertificationsPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/certifications/matrix'] });
       queryClient.invalidateQueries({ queryKey: ['/api/pdf-import-history'] }); // Refresh history
-      setDetectedFiles([]);
-      
-      // Show detailed success message
-      toast({
-        title: "✅ Certifications Saved Successfully!",
-        description: `${data.summary.successful} certification${data.summary.successful === 1 ? '' : 's'} added to the system`,
-        duration: 5000,
-      });
-      
-      if (data.summary.failed > 0) {
+
+      const results: any[] = Array.isArray(data?.results) ? data.results : [];
+      const failedResults = results.filter((r) => r.status === 'error');
+      const savedFileNames = new Set(
+        results.filter((r) => r.status === 'success').map((r) => r.fileName)
+      );
+
+      // Keep the rows that did NOT save so the user can see why and fix them,
+      // annotating each failed row with the specific server-side reason.
+      setDetectedFiles((prev) =>
+        prev
+          .filter((f) => !savedFileNames.has(f.fileName || 'certificate.pdf'))
+          .map((f) => {
+            const failure = failedResults.find(
+              (r) => r.fileName === (f.fileName || 'certificate.pdf')
+            );
+            return failure
+              ? { ...f, status: 'error' as const, error: failure.error, errorDetails: failure.error }
+              : f;
+          })
+      );
+
+      // Only celebrate if something actually persisted.
+      if (data.summary.successful > 0) {
         toast({
-          title: "⚠️ Some Certifications Failed",
-          description: `${data.summary.failed} certification${data.summary.failed === 1 ? '' : 's'} could not be processed. Check the details above.`,
+          title: "✅ Certifications Saved Successfully!",
+          description: `${data.summary.successful} certification${data.summary.successful === 1 ? '' : 's'} added to the system`,
+          duration: 5000,
+        });
+      }
+
+      if (data.summary.failed > 0) {
+        const reasons = Array.from(
+          new Set(failedResults.map((r) => r.error).filter(Boolean))
+        );
+        toast({
+          title: `⚠️ ${data.summary.failed} certification${data.summary.failed === 1 ? '' : 's'} could not be saved`,
+          description: reasons.length
+            ? reasons.join(' ')
+            : 'Please review the highlighted rows and try again.',
           variant: "destructive",
-          duration: 8000,
+          duration: 10000,
         });
       }
     },
@@ -820,6 +847,19 @@ export default function CertificationsPage() {
                               >
                                 <X className="h-3 w-3 mr-1" />
                                 OCR Failed
+                              </Badge>
+                            ) : file.status === 'error' ? (
+                              <Badge
+                                variant="secondary"
+                                className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 transition-colors"
+                                title={file.error || file.errorDetails || 'Could not save this certificate.'}
+                                onClick={() => {
+                                  const errorMessage = file.error || file.errorDetails || 'Could not save this certificate.';
+                                  alert(`Could Not Save\n\nFile: ${file.fileName}\n\nReason:\n${errorMessage}`);
+                                }}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Save Failed
                               </Badge>
                             ) : file.status === 'processing' ? (
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
