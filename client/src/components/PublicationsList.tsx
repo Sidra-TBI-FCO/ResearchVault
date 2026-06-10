@@ -127,17 +127,17 @@ function PublicationRow({ pub, isOpen, onToggle }: { pub: Publication; isOpen: b
         <ChevronRight className={`h-4 w-4 mt-0.5 shrink-0 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
         <div className="min-w-0 flex-1">
           <h4 className="font-medium text-gray-900 leading-snug dark:text-gray-100">{pub.title}</h4>
-          <div className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-gray-500 mt-0.5 dark:text-gray-400">
             <span className="font-medium">{pub.journal || 'No journal'}</span>
-            {year && <span> · {year}</span>}
+            {year && <span>· {year}</span>}
+            <Badge
+              variant="secondary"
+              data-testid={`badge-authorship-publication-${pub.id}`}
+              className={`text-xs font-normal ${authorshipColors[displayAuthorship as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}`}
+            >
+              {displayAuthorship || 'Unknown authorship'}
+            </Badge>
           </div>
-          <Badge
-            variant="secondary"
-            data-testid={`badge-authorship-publication-${pub.id}`}
-            className={`mt-1 text-xs font-normal ${authorshipColors[displayAuthorship as keyof typeof authorshipColors] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}`}
-          >
-            {displayAuthorship || 'Unknown authorship'}
-          </Badge>
         </div>
         {issues.length > 0 && (
           <span
