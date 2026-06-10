@@ -471,7 +471,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             let extractedText = '';
 
-            if (provider === 'ocr_space') {
+            // CITI PDFs are usually text-based (not scanned images). Extract the
+            // embedded text layer directly first — it's far more accurate than OCR
+            // for module names, record IDs and dates. Only fall back to OCR when
+            // the PDF has little/no embedded text (i.e. it's a scanned image).
+            if (isPDF) {
+              try {
+                const pdfText = await extractPdfText(Buffer.from(fileBuffer));
+                if (pdfText && pdfText.replace(/\s/g, '').length >= 100) {
+                  extractedText = pdfText;
+                  provider = 'pdf-text';
+                  console.log(`Extracted embedded PDF text (${pdfText.length} chars) — skipping OCR`);
+                } else {
+                  console.log('PDF has little/no embedded text — falling back to OCR (likely scanned image)');
+                }
+              } catch (pdfErr: any) {
+                console.error('Embedded PDF text extraction failed, falling back to OCR:', pdfErr?.message);
+              }
+            }
+
+            if (!extractedText && provider === 'ocr_space') {
               // Use OCR.space API
               try {
                 console.log('Attempting OCR.space API call...');
@@ -683,6 +702,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Extract the embedded text layer from a (text-based) PDF. CITI certificates
+  // and completion reports are normally generated as text PDFs, so reading the
+  // text layer directly is far more accurate than OCR. Returns '' when the PDF
+  // has no usable text (e.g. a scanned image), signalling the caller to OCR.
+  async function extractPdfText(buffer: Buffer): Promise<string> {
+    const { PDFParse } = await import('pdf-parse');
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    try {
+      const result = await parser.getText();
+      return result?.text || '';
+    } finally {
+      await parser.destroy?.();
+    }
+  }
 
   // Split a PDF into chunks of at most `pagesPerChunk` pages so each chunk stays
   // within OCR.space's free-tier 3-page limit. CITI completion reports are often

@@ -8,4 +8,4 @@
 - [PMO applications data shape](pmo-applications-data-shape.md) — /api/pmo-applications is camelCase + snake `form_type`; ids collide across RA-200/RA-205A so address by id+type; `/api/pmo-applications/:id` is unimplemented (500).
 - [Object-storage ACL gating must match demo mode](object-storage-acl-demo-mode.md) — finalize skips GCS ACLs in demo; consumers must too (gate on `!isLocalStorage && getAuthMode()!=="demo"`) or demo+GCS uploads deny-by-default.
 - [CITI OCR module matching](citi-module-matching.md) — match is deliberately conservative (flag NEW over wrong auto-match); new courses bootstrap modules by normalized name with extrapolated abbrev/expiry.
-- [CITI report OCR multi-page](citi-report-ocr-multipage.md) — split PDFs into ≤3-page chunks (OCR.space free tier cap); detect report markers BEFORE certificate markers (reports also carry the generic CITI line).
+- [CITI PDF text extraction](citi-report-ocr-multipage.md) — read embedded PDF text layer first (pdf-parse v2), OCR only as fallback for scanned PDFs; detect report markers BEFORE certificate markers.
