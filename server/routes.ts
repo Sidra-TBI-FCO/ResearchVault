@@ -59,6 +59,7 @@ import {
   insertTeamMemberSchema
 } from "@shared/schema";
 import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead, getAuthMode } from "./auth";
+import { matchesAuthorName, isLinkedAuthorInAuthorsText } from "@shared/authorMatching";
 import { getObjectAclPolicy, ObjectPermission } from "./objectAcl";
 
 const isLocalStorage = process.env.STORAGE_TYPE === "local";
@@ -3328,6 +3329,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting publication journal counts:', error);
       res.status(500).json({ message: 'Failed to count publications by journal' });
+    }
+  });
+
+  // Publications needing author-linking fixes for the current user.
+  // Returns only the logged-in user's likely publications that have a real
+  // author-linking problem: either no internal authors linked, or a linked
+  // internal author that does not appear in the free-text author list.
+  // Registered before "/api/publications/:id" so the literal path isn't
+  // swallowed by the id param route.
+  app.get('/api/publications/needs-author-fix', async (req: Request, res: Response) => {
+    try {
+      // Resolve the current user's first/last name for author matching.
+      // In demo mode, the feature treats the user as "Dr. Wouter Hendrickx"
+      // (only for this feature; the rest of the demo identity is unchanged).
+      let firstName: string | null = null;
+      let lastName: string | null = null;
+
+      if (getAuthMode() === "demo") {
+        firstName = "Wouter";
+        lastName = "Hendrickx";
+      } else {
+        const sessionUser = req.session.user;
+        if (!sessionUser) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        // Prefer the linked scientist profile for accurate first/last name.
+        if (sessionUser.scientistId) {
+          const scientist = await storage.getScientist(sessionUser.scientistId);
+          if (scientist) {
+            firstName = scientist.firstName;
+            lastName = scientist.lastName;
+          }
+        }
+        // Fall back to parsing the session display name (strip an honorific).
+        if ((!firstName || !lastName) && sessionUser.name) {
+          const cleaned = sessionUser.name
+            .replace(/^(dr\.?|prof\.?|professor|mr\.?|ms\.?|mrs\.?|phd\.?|md\.?)\s+/i, '')
+            .trim();
+          const parts = cleaned.split(/\s+/);
+          if (parts.length >= 2) {
+            firstName = parts[0];
+            lastName = parts[parts.length - 1];
+          }
+        }
+      }
+
+      if (!firstName || !lastName) {
+        // Can't determine the user's name, so there's nothing to match.
+        return res.json([]);
+      }
+
+      const [allPublications, allAuthors] = await Promise.all([
+        storage.getPublications(),
+        storage.getAllPublicationAuthors(),
+      ]);
+
+      // Group internal author links by publication id.
+      const authorsByPublication = new Map<number, (typeof allAuthors)>();
+      for (const author of allAuthors) {
+        const list = authorsByPublication.get(author.publicationId) || [];
+        list.push(author);
+        authorsByPublication.set(author.publicationId, list);
+      }
+
+      const flagged = allPublications
+        // Only the logged-in user's likely publications.
+        .filter(pub => matchesAuthorName(pub.authors, firstName, lastName))
+        .map(pub => {
+          const linkedAuthors = authorsByPublication.get(pub.id) || [];
+
+          if (linkedAuthors.length === 0) {
+            return { publication: pub, reason: "no_internal_authors" as const };
+          }
+
+          const mismatched = linkedAuthors.filter(
+            a => !isLinkedAuthorInAuthorsText(pub.authors, a.scientist.firstName, a.scientist.lastName)
+          );
+
+          if (mismatched.length > 0) {
+            return {
+              publication: pub,
+              reason: "author_mismatch" as const,
+              mismatchedAuthors: mismatched.map(a => ({
+                scientistId: a.scientistId,
+                firstName: a.scientist.firstName,
+                lastName: a.scientist.lastName,
+              })),
+            };
+          }
+
+          return null;
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+
+      res.json(flagged);
+    } catch (error) {
+      console.error("Error finding publications needing author fixes:", error);
+      res.status(500).json({ message: "Failed to find publications needing author fixes" });
     }
   });
 

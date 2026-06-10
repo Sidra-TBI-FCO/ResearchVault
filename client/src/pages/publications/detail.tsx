@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { formatFullName } from "@/utils/nameUtils";
+import { isLinkedAuthorInAuthorsText } from "@shared/authorMatching";
 
 // Linear forward order of the publication workflow. Used to tell whether a
 // status change moves the publication forward, sideways, or back. Keep in
@@ -215,91 +216,8 @@ export default function PublicationDetail() {
   });
 
   // Function to check if a scientist's name appears in the authors text
-  const isScientistInAuthorsText = (scientist: Scientist): boolean => {
-    if (!publication?.authors) return true; // If no authors text, assume all are valid
-    
-    const authorNames = publication.authors.split(',').map(name => name.trim().toLowerCase());
-    const scientistLastName = scientist.lastName?.toLowerCase() || '';
-    const scientistFirstName = scientist.firstName?.toLowerCase() || '';
-    
-    if (!scientistLastName || !scientistFirstName) return true; // Skip if missing names
-    
-    const firstInitial = scientistFirstName.charAt(0);
-    
-    return authorNames.some(authorName => {
-      // Remove common titles and clean
-      const cleanAuthorName = authorName
-        .replace(/^(dr\.?|prof\.?|professor|mr\.?|ms\.?|mrs\.?|phd\.?|md\.?)\s+/i, '')
-        .trim();
-      
-      // Handle different academic citation patterns
-      
-      // Pattern 1: "Smith JA" or "Johnson MK" (LastName InitialInitial...)
-      const lastNameFirstPattern = cleanAuthorName.match(/^([a-z-]+)\s+([a-z]+)$/i);
-      if (lastNameFirstPattern) {
-        const [, lastName, initials] = lastNameFirstPattern;
-        if (lastName === scientistLastName && initials.startsWith(firstInitial)) {
-          return true;
-        }
-      }
-      
-      // Pattern 2: "K. Al-Mansouri" or "L. Chen" (Initial. LastName)
-      const initialFirstPattern = cleanAuthorName.match(/^([a-z])\.?\s+([a-z-]+)$/i);
-      if (initialFirstPattern) {
-        const [, initial, lastName] = initialFirstPattern;
-        if (initial === firstInitial && lastName === scientistLastName) {
-          return true;
-        }
-      }
-      
-      // Pattern 2b: "X. Y. LastName" (FirstInitial. MiddleInitial. LastName)
-      const multipleInitialsPattern = cleanAuthorName.match(/^([a-z])\.?\s+([a-z])\.?\s+([a-z-]+)$/i);
-      if (multipleInitialsPattern) {
-        const [, firstInit, , lastName] = multipleInitialsPattern; // Skip middle initial
-        if (firstInit === firstInitial && lastName === scientistLastName) {
-          return true;
-        }
-      }
-      
-      // Pattern 3: "Emily Chen" (FirstName LastName)
-      const fullNamePattern = cleanAuthorName.match(/^([a-z]+)\s+([a-z-]+)$/i);
-      if (fullNamePattern) {
-        const [, firstName, lastName] = fullNamePattern;
-        if (firstName === scientistFirstName && lastName === scientistLastName) {
-          return true;
-        }
-      }
-      
-      // Pattern 4: Multiple parts - find last name and check for first initial
-      const nameParts = cleanAuthorName.split(/\s+/);
-      if (nameParts.length > 2) {
-        // Check if any part matches last name and another starts with first initial
-        for (const part of nameParts) {
-          if (part === scientistLastName) {
-            for (const otherPart of nameParts) {
-              if (otherPart !== part && (
-                otherPart.startsWith(firstInitial) || 
-                otherPart.replace('.', '') === firstInitial
-              )) {
-                return true;
-              }
-            }
-          }
-        }
-      }
-      
-      // Fallback: Check if last name appears and first initial is present
-      if (cleanAuthorName.includes(scientistLastName)) {
-        // Look for the first initial anywhere in the string
-        const hasFirstInitial = cleanAuthorName.includes(firstInitial) || 
-                               cleanAuthorName.includes(firstInitial + '.') ||
-                               cleanAuthorName.includes(scientistFirstName);
-        return hasFirstInitial;
-      }
-      
-      return false;
-    });
-  };
+  const isScientistInAuthorsText = (scientist: Scientist): boolean =>
+    isLinkedAuthorInAuthorsText(publication?.authors, scientist.firstName, scientist.lastName);
 
   // Check for missing internal authors in the authors text
   const missingAuthors = publicationAuthors.filter(author => 

@@ -14,6 +14,7 @@ import { ScientistAvatar } from "@/components/ScientistAvatar";
 import React, { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PublicationsList } from "@/components/PublicationsList";
+import { PublicationsToFix } from "@/components/PublicationsToFix";
 import { PublicationCharts } from "@/components/PublicationCharts";
 import { OrgChart } from "@/components/OrgChart";
 import { formatFullName } from "@/utils/nameUtils";
@@ -516,7 +517,10 @@ export default function ScientistDetail() {
 
         {/* Publications List - Only show for scientific staff */}
         {isScientificStaff && (
-          <PublicationsList scientistId={id} yearsSince={5} />
+          <>
+            <PublicationsToFix />
+            <PublicationsList scientistId={id} yearsSince={5} />
+          </>
         )}
         </div>
 

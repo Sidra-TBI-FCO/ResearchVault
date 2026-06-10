@@ -672,6 +672,22 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  async getAllPublicationAuthors(): Promise<(PublicationAuthor & { scientist: Scientist })[]> {
+    const results = await db
+      .select({
+        id: publicationAuthors.id,
+        publicationId: publicationAuthors.publicationId,
+        scientistId: publicationAuthors.scientistId,
+        authorshipType: publicationAuthors.authorshipType,
+        authorPosition: publicationAuthors.authorPosition,
+        scientist: scientists
+      })
+      .from(publicationAuthors)
+      .innerJoin(scientists, eq(publicationAuthors.scientistId, scientists.id));
+
+    return results as (PublicationAuthor & { scientist: Scientist })[];
+  }
+
   async getPublicationAuthors(publicationId: number): Promise<(PublicationAuthor & { scientist: Scientist })[]> {
     const results = await db
       .select({

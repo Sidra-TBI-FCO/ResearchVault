@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { PermissionWrapper } from "@/components/PermissionWrapper";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { PublicationsToFix } from "@/components/PublicationsToFix";
 import PublicationImport from "./import";
 
 export default function PublicationsList() {
@@ -184,6 +185,8 @@ export default function PublicationsList() {
           )}
         </div>
       </div>
+
+      <PublicationsToFix />
 
       <Card>
         <CardHeader className="pb-3">
