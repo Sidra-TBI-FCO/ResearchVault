@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Certificate processing - batch detection with OCR
   app.post("/api/certificates/process-batch", requireAuth, async (req, res) => {
     try {
-      const { fileUrls } = req.body;
+      const { fileUrls, fileNames } = req.body;
       if (!fileUrls || !Array.isArray(fileUrls)) {
         return res.status(400).json({ message: "File URLs array is required" });
       }
@@ -302,7 +302,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const modules = await storage.getCertificationModules();
       const results = [];
 
-      for (const fileUrl of fileUrls) {
+      for (let fileIndex = 0; fileIndex < fileUrls.length; fileIndex++) {
+        const fileUrl = fileUrls[fileIndex];
+        // Prefer the real, client-supplied filename; fall back to the object
+        // path basename (a UUID) only when no name was provided.
+        const providedName = Array.isArray(fileNames) ? fileNames[fileIndex] : undefined;
+        const displayName =
+          (providedName && String(providedName).trim()) ||
+          String(fileUrl).split('/').pop();
         try {
           // Security: only accept server-issued /objects/... paths.
           // This prevents SSRF and arbitrary GCS object reads. The path is resolved
@@ -310,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // PRIVATE_OBJECT_DIR so it can only address files this app uploaded.
           if (!isAllowedObjectPath(fileUrl)) {
             results.push({
-              fileName: String(fileUrl).split('/').pop(),
+              fileName: displayName,
               filePath: fileUrl,
               originalUrl: fileUrl,
               status: 'error',
@@ -320,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           let detectedData: any = {
-            fileName: fileUrl.split('/').pop(),
+            fileName: displayName,
             filePath: fileUrl,
             originalUrl: fileUrl,
             status: 'processing',
@@ -707,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           results.push(detectedData);
         } catch (error: any) {
           results.push({
-            fileName: fileUrl.split('/').pop(),
+            fileName: displayName,
             filePath: fileUrl,
             originalUrl: fileUrl,
             status: 'error',

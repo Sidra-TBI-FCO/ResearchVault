@@ -253,8 +253,10 @@ export default function CertificationsPage() {
   });
 
   const processCertificatesMutation = useMutation({
-    mutationFn: async (fileUrls: string[]) => {
-      const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls });
+    mutationFn: async (files: Array<{ url: string; fileName: string }>) => {
+      const fileUrls = files.map((f) => f.url);
+      const fileNames = files.map((f) => f.fileName);
+      const response = await apiRequest('POST', '/api/certificates/process-batch', { fileUrls, fileNames });
       return response.json();
     },
     onSuccess: (data) => {
@@ -822,11 +824,13 @@ export default function CertificationsPage() {
                       return;
                     }
                     
-                    const fileUrls = uploadedFiles.map(file => file.url);
+                    const files = uploadedFiles
+                      .filter(file => file.url)
+                      .map(file => ({ url: file.url, fileName: file.fileName }));
                     
-                    if (fileUrls.length > 0) {
+                    if (files.length > 0) {
                       setIsProcessing(true);
-                      processCertificatesMutation.mutate(fileUrls);
+                      processCertificatesMutation.mutate(files);
                       setIsProcessing(false);
                     } else {
                       toast({
