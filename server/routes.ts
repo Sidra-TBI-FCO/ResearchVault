@@ -294,6 +294,59 @@ async function fetchGoogleScholarDois(scholarUrl: string): Promise<MissingPaperM
   }
 }
 
+// bioRxiv/medRxiv append a version suffix to the preprint URL (e.g.
+// "...25339324v1") but CrossRef registers the DOI WITHOUT that suffix, so a
+// raw lookup 404s. Strip a trailing "vN", but ONLY for the openRxiv preprint
+// namespace (10.1101/) so we never mangle a legitimate DOI that happens to end
+// in "vN".
+function stripDoiVersionSuffix(doi: string): string {
+  if (!/^10\.1101\//i.test(doi)) return doi;
+  return doi.replace(/v\d+$/i, "");
+}
+
+// Fetch a CrossRef work record. If the DOI is genuinely not found (404), retry
+// once with the preprint version suffix stripped. Returns the `message` object
+// or null. We only retry on 404 (not transient 429/5xx) so a temporary error
+// can't make us silently resolve a different DOI form.
+async function fetchCrossrefWork(doi: string): Promise<any | null> {
+  const tryFetch = async (candidate: string): Promise<{ work: any | null; status: number }> => {
+    try {
+      const response = await fetch(
+        `https://api.crossref.org/works/${encodeURIComponent(candidate)}`,
+      );
+      if (!response.ok) return { work: null, status: response.status };
+      const data: any = await response.json();
+      return { work: data?.message ?? null, status: response.status };
+    } catch {
+      return { work: null, status: 0 };
+    }
+  };
+
+  const first = await tryFetch(doi);
+  if (first.work) return first.work;
+
+  if (first.status === 404) {
+    const stripped = stripDoiVersionSuffix(doi);
+    if (stripped !== doi) {
+      const retry = await tryFetch(stripped);
+      if (retry.work) return retry.work;
+    }
+  }
+  return null;
+}
+
+// Resolve a journal/venue name from a CrossRef work. Preprints (type
+// "posted-content") leave container-title empty and put the server name (e.g.
+// "medRxiv") in `institution`, so fall back to that, then publisher.
+function crossrefJournalName(work: any): string {
+  return (
+    work["container-title"]?.[0] ||
+    work.institution?.[0]?.name ||
+    (work.type === "posted-content" ? work.publisher || "" : "") ||
+    ""
+  );
+}
+
 // Fetch and parse a single work from CrossRef into an insert-ready publication
 // shape. Returns null when the DOI can't be resolved. Reused by the batch
 // import endpoint so imported papers get full enrichment.
@@ -309,11 +362,7 @@ async function fetchCrossrefPublication(doi: string): Promise<{
   publicationDate: Date | null;
 } | null> {
   try {
-    const crossrefUrl = `https://api.crossref.org/works/${encodeURIComponent(doi)}`;
-    const response = await fetch(crossrefUrl);
-    if (!response.ok) return null;
-    const data: any = await response.json();
-    const work = data?.message;
+    const work = await fetchCrossrefWork(doi);
     if (!work) return null;
 
     const authors =
@@ -328,14 +377,7 @@ async function fetchCrossrefPublication(doi: string): Promise<{
         ? new Date(dateParts[0], (dateParts[1] || 1) - 1, dateParts[2] || 1)
         : null;
 
-    // Journal/venue. For preprints (type "posted-content") CrossRef leaves
-    // container-title empty and puts the server name (e.g. "medRxiv") in
-    // `institution`, so fall back to that, then publisher.
-    const journal =
-      work["container-title"]?.[0] ||
-      work.institution?.[0]?.name ||
-      (work.type === "posted-content" ? work.publisher || "" : "") ||
-      "";
+    const journal = crossrefJournalName(work);
 
     return {
       title: work.title?.[0] || "Untitled work",
@@ -7087,21 +7129,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/publications/import/doi/:doi', async (req: Request, res: Response) => {
     try {
-      const doi = decodeURIComponent(req.params.doi);
-      
-      // Fetch from CrossRef API
-      const crossrefUrl = `https://api.crossref.org/works/${doi}`;
-      const crossrefResponse = await fetch(crossrefUrl);
-      
-      if (!crossrefResponse.ok) {
-        return res.status(404).json({ message: "DOI not found" });
-      }
-      
-      const crossrefData = await crossrefResponse.json();
-      const work = crossrefData.message;
-      
+      const doi = normalizeDoi(decodeURIComponent(req.params.doi));
+
+      // Fetch from CrossRef (retries without the preprint version suffix).
+      const work = await fetchCrossrefWork(doi);
+
       if (!work) {
-        return res.status(404).json({ message: "Publication not found for this DOI" });
+        return res.status(404).json({ message: "DOI not found" });
       }
       
       // Parse CrossRef data
@@ -7112,7 +7146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const publication = {
         title: work.title?.[0] || '',
         authors: authors,
-        journal: work['container-title']?.[0] || '',
+        journal: crossrefJournalName(work),
         year: work.published?.['date-parts']?.[0]?.[0] || work.created?.['date-parts']?.[0]?.[0] || null,
         volume: work.volume || '',
         issue: work.issue || '',
