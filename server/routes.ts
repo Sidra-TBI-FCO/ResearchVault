@@ -1623,7 +1623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const format = (req.query.format === 'csv' ? 'csv' : 'xlsx') as 'csv' | 'xlsx';
       const allScientists = await storage.getScientists();
-      const { buffer, mime, filename } = buildExportBuffer(allScientists, format);
+      const { buffer, mime, filename } = await buildExportBuffer(allScientists, format);
       res.setHeader('Content-Type', mime);
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(buffer);
@@ -1901,7 +1901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       let fileRows;
       try {
-        fileRows = parseUploadedFile(String(fileBase64), String(fileName));
+        fileRows = await parseUploadedFile(String(fileBase64), String(fileName));
       } catch (e: any) {
         return res.status(400).json({ message: `Could not parse file: ${e?.message || e}` });
       }
@@ -1927,7 +1927,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       let fileRows;
       try {
-        fileRows = parseUploadedFile(String(fileBase64), String(fileName));
+        fileRows = await parseUploadedFile(String(fileBase64), String(fileName));
       } catch (e: any) {
         return res.status(400).json({ message: `Could not parse file: ${e?.message || e}` });
       }
