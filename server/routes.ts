@@ -100,6 +100,50 @@ function verifyFinalizeToken(objectPath: string, userId: string, token: string):
   return timingSafeEqual(sigBuf, expBuf);
 }
 
+// Optional text fields on `scientists` that allow NULL. Blank/empty strings are
+// normalized to null so they don't store noise and (for `staffId`, which is
+// UNIQUE) don't collide with other blank records on the unique constraint.
+const SCIENTIST_NULLABLE_TEXT_FIELDS = [
+  "jobTitle",
+  "staffId",
+  "department",
+  "bio",
+  "profileImageInitials",
+  "orcidId",
+  "linkedInUrl",
+  "googleScholarUrl",
+  "webOfScienceId",
+] as const;
+
+function normalizeScientistPayload(body: any): any {
+  if (!body || typeof body !== "object") return body;
+  const normalized: any = { ...body };
+  for (const field of SCIENTIST_NULLABLE_TEXT_FIELDS) {
+    if (typeof normalized[field] === "string" && normalized[field].trim() === "") {
+      normalized[field] = null;
+    }
+  }
+  return normalized;
+}
+
+// Maps a Postgres unique-constraint violation (error code 23505) on the
+// `scientists` table to a clear, field-specific message. Returns undefined for
+// any other error so the caller can fall back to a generic 500.
+function scientistUniqueConflictMessage(error: any): string | undefined {
+  // Drizzle wraps the underlying pg driver error in `error.cause`, so the
+  // Postgres error code/detail live there rather than on the top-level error.
+  const pgError = error?.code ? error : error?.cause;
+  if (!pgError || pgError.code !== "23505") return undefined;
+  const detail: string = `${pgError.detail ?? ""} ${pgError.constraint ?? ""}`.toLowerCase();
+  if (detail.includes("email")) {
+    return "A staff member with this email already exists.";
+  }
+  if (detail.includes("staff_id")) {
+    return "A staff member with this Staff ID already exists.";
+  }
+  return "A staff member with these details already exists.";
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
   const apiRouter = app.route('/api');
@@ -2314,13 +2358,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/scientists', async (req: Request, res: Response) => {
     try {
-      const validateData = insertScientistSchema.parse(req.body);
+      const validateData = insertScientistSchema.parse(normalizeScientistPayload(req.body));
       const scientist = await storage.createScientist(validateData);
       res.status(201).json(scientist);
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
+      const conflict = scientistUniqueConflictMessage(error);
+      if (conflict) {
+        console.error("Failed to create scientist (unique constraint):", error);
+        return res.status(409).json({ message: conflict });
+      }
+      console.error("Failed to create scientist:", error);
       res.status(500).json({ message: "Failed to create scientist" });
     }
   });
@@ -2332,7 +2382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid scientist ID" });
       }
 
-      const validateData = insertScientistSchema.partial().parse(req.body);
+      const validateData = insertScientistSchema.partial().parse(normalizeScientistPayload(req.body));
       const scientist = await storage.updateScientist(id, validateData);
       
       if (!scientist) {
@@ -2344,6 +2394,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
+      const conflict = scientistUniqueConflictMessage(error);
+      if (conflict) {
+        console.error("Failed to update scientist (unique constraint):", error);
+        return res.status(409).json({ message: conflict });
+      }
+      console.error("Failed to update scientist:", error);
       res.status(500).json({ message: "Failed to update scientist" });
     }
   });
