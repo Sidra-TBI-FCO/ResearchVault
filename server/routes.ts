@@ -2,6 +2,7 @@
 // Most errors here stem from untyped `useQuery` results (data inferred as `unknown`), drifted shared/schema field renames, and form values typed as `unknown`. They are not known runtime bugs but should be fixed file-by-file as each is next touched: remove this directive, run `npx tsc --noEmit`, and resolve what surfaces.
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { createHmac, timingSafeEqual } from "crypto";
 import { storage } from "./databaseStorage";
 import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -57,12 +58,46 @@ import {
   insertRa205aApplicationSchema,
   insertTeamMemberSchema
 } from "@shared/schema";
-import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead } from "./auth";
+import { requireAuth, requireAdmin, requireContractsOfficer, requireContractsRead, getAuthMode } from "./auth";
+import { getObjectAclPolicy, ObjectPermission } from "./objectAcl";
 
 const isLocalStorage = process.env.STORAGE_TYPE === "local";
 
 function getObjectStorageService(): ObjectStorageService | LocalObjectStorageService {
   return isLocalStorage ? new LocalObjectStorageService() : new ObjectStorageService();
+}
+
+// ── Upload finalization tokens ────────────────────────────────────────────────
+// When the server mints a presigned upload URL it also issues a short-lived
+// HMAC token that binds the objectPath to the requesting user and an expiry.
+// The client must present this token when calling POST /api/uploads/finalize,
+// preventing any other authenticated user from setting/hijacking ACL on an
+// object they did not upload.
+
+const FINALIZE_TOKEN_TTL_SEC = 3600; // 1 hour
+
+function generateFinalizeToken(objectPath: string, userId: string): string {
+  const expiry = Math.floor(Date.now() / 1000) + FINALIZE_TOKEN_TTL_SEC;
+  const secret = process.env.SESSION_SECRET ?? "dev-fallback-secret";
+  const payload = `${objectPath}|${userId}|${expiry}`;
+  const sig = createHmac("sha256", secret).update(payload).digest("hex");
+  return `${expiry}.${sig}`;
+}
+
+function verifyFinalizeToken(objectPath: string, userId: string, token: string): boolean {
+  const dotIdx = token.indexOf(".");
+  if (dotIdx < 1) return false;
+  const expiryStr = token.slice(0, dotIdx);
+  const sig = token.slice(dotIdx + 1);
+  const expiry = parseInt(expiryStr, 10);
+  if (!Number.isFinite(expiry) || Math.floor(Date.now() / 1000) > expiry) return false;
+  const secret = process.env.SESSION_SECRET ?? "dev-fallback-secret";
+  const payload = `${objectPath}|${userId}|${expiry}`;
+  const expectedSig = createHmac("sha256", secret).update(payload).digest("hex");
+  const sigBuf = Buffer.from(sig, "hex");
+  const expBuf = Buffer.from(expectedSig, "hex");
+  if (sigBuf.length !== expBuf.length || sigBuf.length === 0) return false;
+  return timingSafeEqual(sigBuf, expBuf);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -82,19 +117,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object Storage Routes
-  app.post("/api/objects/upload", async (req, res) => {
+  app.post("/api/objects/upload", requireAuth, async (req, res) => {
     const objectStorageService = getObjectStorageService();
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+      const sessionUser = (req.session as any)?.user;
+      const userId = sessionUser?.id?.toString() ?? "demo";
+      const finalizeToken = generateFinalizeToken(objectPath, userId);
+      res.json({ uploadURL, objectPath, finalizeToken });
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Failed to generate upload URL" });
     }
   });
+
+  // Finalize an upload by setting a private ACL on the object.
+  // Requires a valid HMAC finalizeToken issued by the upload-URL endpoint so
+  // that only the user who requested the upload can set ACL on that objectPath.
+  app.post("/api/uploads/finalize", requireAuth, async (req, res) => {
+    const { objectPath, finalizeToken } = req.body;
+    if (!objectPath || typeof objectPath !== "string") {
+      return res.status(400).json({ error: "objectPath is required" });
+    }
+    const authMode = getAuthMode();
+    const sessionUser = (req.session as any)?.user;
+
+    if (authMode !== "demo") {
+      // Real auth modes: require and verify the HMAC token.
+      if (!sessionUser) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      if (!finalizeToken || typeof finalizeToken !== "string") {
+        return res.status(400).json({ error: "finalizeToken is required" });
+      }
+      const userId = sessionUser.id.toString();
+      if (!verifyFinalizeToken(objectPath, userId, finalizeToken)) {
+        return res.status(403).json({ error: "Invalid or expired finalize token" });
+      }
+      // Token is valid: set private ACL with this user as owner.
+      if (!isLocalStorage) {
+        const objectStorageService = new ObjectStorageService();
+        try {
+          await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
+            owner: userId,
+            visibility: "private",
+          });
+        } catch (error) {
+          console.error("Failed to set ACL on upload:", error);
+          return res.status(500).json({ error: "Failed to finalize upload" });
+        }
+      }
+    }
+    // demo mode or local storage: no GCS ACL to set; return success.
+    res.json({ ok: true });
+  });
   
   // Upload URL request for presigned uploads
-  app.post("/api/uploads/request-url", async (req, res) => {
+  app.post("/api/uploads/request-url", requireAuth, async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const { name, size, contentType } = req.body;
@@ -104,10 +184,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+      const sessionUser = (req.session as any)?.user;
+      const userId = sessionUser?.id?.toString() ?? "demo";
+      const finalizeToken = generateFinalizeToken(objectPath, userId);
       
       res.json({
         uploadURL,
         objectPath,
+        finalizeToken,
         metadata: { name, size, contentType },
       });
     } catch (error) {
@@ -116,12 +200,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Serve uploaded objects
+  // Serve uploaded objects — single consolidated handler for GCS and local storage.
+  //
+  // Authorization matrix:
+  //   demo mode (AUTH_MODE=demo) → open access (entire app is unauthenticated in this mode)
+  //   GCS, real auth, ACL=public → world-readable
+  //   GCS, real auth, ACL=private or no ACL → require session + canAccessObjectEntity();
+  //       no-ACL objects return false (deny-by-default) unless finalized via
+  //       POST /api/uploads/finalize which sets owner+private ACL after upload.
+  //   Local storage, real auth   → require session only (no GCS ACL metadata)
   app.get("/objects/:objectPath(*)", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+    const objectStorageService = getObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
+
+      const authMode = getAuthMode();
+      const sessionUser = (req.session as any)?.user;
+
+      if (authMode !== "demo") {
+        // Real authentication modes: enforce access control.
+        if (!isLocalStorage) {
+          const aclPolicy = await getObjectAclPolicy(objectFile as any);
+          if (aclPolicy?.visibility !== "public") {
+            // Non-public (private ACL or no ACL): require a real session.
+            if (!sessionUser) {
+              return res.status(401).json({ error: "Authentication required" });
+            }
+            // Route all private/no-ACL decisions through canAccessObjectEntity so
+            // deny-by-default is enforced: no-ACL → false, private+non-owner → false.
+            const canAccess = await (objectStorageService as ObjectStorageService).canAccessObjectEntity({
+              userId: sessionUser.id.toString(),
+              objectFile: objectFile as any,
+              requestedPermission: ObjectPermission.READ,
+            });
+            if (!canAccess) {
+              return res.status(403).json({ error: "Access denied" });
+            }
+          }
+          // aclPolicy?.visibility === "public" → world-readable, fall through to download.
+        } else {
+          // Local storage: no GCS ACL metadata; session presence is the sole gate.
+          if (!sessionUser) {
+            return res.status(401).json({ error: "Authentication required" });
+          }
+        }
+      }
+      // demo mode: fall through to download with no restriction.
+
+      await objectStorageService.downloadObject(objectFile as any, res);
     } catch (error) {
       console.error("Error serving object:", error);
       if (error instanceof ObjectNotFoundError) {
@@ -132,22 +258,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Local filesystem upload handler (used when STORAGE_TYPE=local)
-  app.put("/api/objects/local-upload/:id", async (req, res) => {
+  app.put("/api/objects/local-upload/:id", requireAuth, async (req, res) => {
     if (!isLocalStorage) return res.status(404).end();
-    try {
-      const { id } = req.params;
-      const chunks: Buffer[] = [];
-      req.on("data", (chunk: Buffer) => chunks.push(chunk));
-      req.on("end", async () => {
+    const { id } = req.params;
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", async () => {
+      try {
         const localService = new LocalObjectStorageService();
         await localService.saveFile(id, Buffer.concat(chunks), req.headers["content-type"] || "application/octet-stream");
         res.status(200).end();
-      });
-      req.on("error", () => res.status(500).json({ error: "Upload failed" }));
-    } catch (error) {
-      console.error("Local upload error:", error);
-      res.status(500).json({ error: "Upload failed" });
-    }
+      } catch (err: any) {
+        console.error("Local upload error:", err);
+        // localFilePath throws for non-UUID ids and path traversal attempts.
+        const status = err?.message?.includes("Invalid file id") || err?.message?.includes("Path traversal") ? 400 : 500;
+        if (!res.headersSent) res.status(status).json({ error: err?.message || "Upload failed" });
+      }
+    });
+    req.on("error", () => { if (!res.headersSent) res.status(500).json({ error: "Upload failed" }); });
   });
 
   // Certificate processing - batch detection with OCR
@@ -1246,21 +1374,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/objects/:objectPath(*)", async (req, res) => {
-    const objectStorageService = getObjectStorageService();
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(
-        req.path,
-      );
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error checking object access:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
-      }
-      return res.sendStatus(500);
-    }
-  });
 
   // Dashboard
   app.get('/api/dashboard/stats', async (req: Request, res: Response) => {

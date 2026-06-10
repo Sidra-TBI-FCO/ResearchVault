@@ -166,7 +166,7 @@ export function ObjectUploader({
         throw new Error('Failed to get upload URL');
       }
 
-      const { uploadURL } = await uploadResponse.json();
+      const { uploadURL, objectPath, finalizeToken } = await uploadResponse.json();
 
       // Upload file to object storage
       const uploadFileResponse = await fetch(uploadURL, {
@@ -181,10 +181,19 @@ export function ObjectUploader({
         throw new Error('Failed to upload file');
       }
 
+      // Set ACL on the uploaded object (best-effort; non-fatal if it fails)
+      if (objectPath) {
+        await fetch('/api/uploads/finalize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ objectPath, finalizeToken }),
+        }).catch(() => { /* ACL finalization failure is non-fatal */ });
+      }
+
       // Update success status
       setUploadedFiles(prev => 
         prev.map(f => f.file === uploadFile.file ? 
-          { ...f, status: 'success' as const, url: uploadURL, progress: 100 } : f
+          { ...f, status: 'success' as const, url: objectPath || uploadURL, progress: 100 } : f
         )
       );
 
