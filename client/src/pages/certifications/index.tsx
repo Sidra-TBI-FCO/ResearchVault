@@ -41,7 +41,7 @@ interface DetectedCertificate {
   fileName: string;
   filePath: string;
   originalUrl: string;
-  status: 'detected' | 'unrecognized' | 'error' | 'unknown' | 'processing' | 'ocr_failed';
+  status: 'detected' | 'unrecognized' | 'error' | 'unknown' | 'processing' | 'ocr_failed' | 'save_failed';
   extractedText?: string;
   errorDetails?: string;
   name?: string;
@@ -290,7 +290,7 @@ export default function CertificationsPage() {
               (r) => r.fileName === (f.fileName || 'certificate.pdf')
             );
             return failure
-              ? { ...f, status: 'error' as const, error: failure.error, errorDetails: failure.error }
+              ? { ...f, status: 'save_failed' as const, error: failure.error, errorDetails: failure.error }
               : f;
           })
       );
@@ -848,7 +848,7 @@ export default function CertificationsPage() {
                                 <X className="h-3 w-3 mr-1" />
                                 OCR Failed
                               </Badge>
-                            ) : file.status === 'error' ? (
+                            ) : file.status === 'save_failed' ? (
                               <Badge
                                 variant="secondary"
                                 className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 transition-colors"
@@ -860,6 +860,19 @@ export default function CertificationsPage() {
                               >
                                 <X className="h-3 w-3 mr-1" />
                                 Save Failed
+                              </Badge>
+                            ) : file.status === 'error' ? (
+                              <Badge
+                                variant="secondary"
+                                className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 transition-colors"
+                                title={file.error || file.errorDetails || file.notes || 'OCR could not process this file.'}
+                                onClick={() => {
+                                  const errorMessage = file.error || file.errorDetails || file.notes || 'OCR could not process this file.';
+                                  alert(`Could Not Process\n\nFile: ${file.fileName}\n\nReason:\n${errorMessage}`);
+                                }}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Processing Error
                               </Badge>
                             ) : file.status === 'processing' ? (
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">

@@ -347,10 +347,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Authorization: verify the caller is allowed to read this object.
-          // In demo mode every session is open. In real-auth modes we enforce
-          // the GCS ACL ownership check — the uploader is set as owner at
-          // finalize time, so a caller who did not upload the file is denied.
-          if (!isLocalStorage) {
+          // In demo mode the whole app is open and /api/uploads/finalize does
+          // NOT set any GCS ACL, so there is no owner to check against — skip
+          // the ACL check (otherwise every demo upload is denied and OCR never
+          // runs). In real-auth modes finalize sets the uploader as owner, so
+          // we enforce the GCS ACL ownership check here.
+          if (!isLocalStorage && getAuthMode() !== "demo") {
             try {
               const canAccess = await (objectStorageService as ObjectStorageService).canAccessObjectEntity({
                 userId: callerId,
