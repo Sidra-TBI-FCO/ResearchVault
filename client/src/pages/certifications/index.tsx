@@ -9,7 +9,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, Settings, Upload, FileText, Check, X, AlertTriangle, Plus, History, Filter } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Search, Download, Settings, Upload, FileText, Check, X, AlertTriangle, Plus, History, Filter, Pencil, Trash2 } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
@@ -125,6 +139,72 @@ export default function CertificationsPage() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Certification module management (Modules tab)
+  const emptyModuleForm = { name: '', description: '', isCore: false, expirationMonths: 36, isActive: true };
+  const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
+  const [editingModuleId, setEditingModuleId] = useState<number | null>(null);
+  const [moduleForm, setModuleForm] = useState<{ name: string; description: string; isCore: boolean; expirationMonths: number; isActive: boolean }>(emptyModuleForm);
+  const [moduleToDelete, setModuleToDelete] = useState<CertificationModule | null>(null);
+
+  const openAddModule = () => {
+    setEditingModuleId(null);
+    setModuleForm(emptyModuleForm);
+    setModuleDialogOpen(true);
+  };
+
+  const openEditModule = (module: CertificationModule) => {
+    setEditingModuleId(module.id);
+    setModuleForm({
+      name: module.name || '',
+      description: module.description || '',
+      isCore: !!module.isCore,
+      expirationMonths: module.expirationMonths ?? 36,
+      isActive: module.isActive ?? true,
+    });
+    setModuleDialogOpen(true);
+  };
+
+  const saveModuleMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        name: moduleForm.name.trim(),
+        description: moduleForm.description.trim() || null,
+        isCore: moduleForm.isCore,
+        expirationMonths: Number(moduleForm.expirationMonths) || 36,
+        isActive: moduleForm.isActive,
+      };
+      if (editingModuleId != null) {
+        return apiRequest('PUT', `/api/certification-modules/${editingModuleId}`, payload);
+      }
+      return apiRequest('POST', '/api/certification-modules', payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/certification-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/certifications/matrix'] });
+      setModuleDialogOpen(false);
+      toast({
+        title: editingModuleId != null ? 'Module updated' : 'Module added',
+        description: `"${moduleForm.name.trim()}" has been saved.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Could not save module', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteModuleMutation = useMutation({
+    mutationFn: async (id: number) => apiRequest('DELETE', `/api/certification-modules/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/certification-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/certifications/matrix'] });
+      setModuleToDelete(null);
+      toast({ title: 'Module deleted' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Could not delete module', description: error.message, variant: 'destructive' });
+    },
+  });
 
   const { data: matrixData = [], isLoading: matrixLoading } = useQuery({
     queryKey: ['/api/certifications/matrix'],
@@ -1325,32 +1405,78 @@ export default function CertificationsPage() {
         <TabsContent value="modules" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Certification Modules</CardTitle>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Certification Modules</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    These are the training courses certificates are matched to. Add a module here when a new course
+                    (like "Biosafety Complete Training Series") isn't in the list yet.
+                  </p>
+                </div>
+                <Button onClick={openAddModule} data-testid="button-add-module">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Module
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {modules.map((module: CertificationModule) => (
-                  <div key={module.id} className="flex items-center justify-between p-4 border rounded">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{module.name}</h3>
-                        {module.isCore && (
-                          <Badge variant="default" className="bg-sidra-primary text-white">
-                            Core
-                          </Badge>
+              {modulesLoading ? (
+                <p className="text-sm text-muted-foreground">Loading modules...</p>
+              ) : modules.length === 0 ? (
+                <p className="text-sm text-muted-foreground" data-testid="text-no-modules">
+                  No modules yet. Click "Add Module" to create one.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {modules.map((module: CertificationModule) => (
+                    <div
+                      key={module.id}
+                      className="flex items-center justify-between p-4 border rounded"
+                      data-testid={`row-module-${module.id}`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium" data-testid={`text-module-name-${module.id}`}>{module.name}</h3>
+                          {module.isCore && (
+                            <Badge variant="default" className="bg-sidra-primary text-white">
+                              Core
+                            </Badge>
+                          )}
+                          {module.isActive === false && (
+                            <Badge variant="secondary">Inactive</Badge>
+                          )}
+                        </div>
+                        {module.description && (
+                          <p className="text-sm text-muted-foreground">{module.description}</p>
                         )}
+                        <p className="text-xs text-muted-foreground">
+                          Expires every {module.expirationMonths} months
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{module.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Expires every {module.expirationMonths} months
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditModule(module)}
+                          data-testid={`button-edit-module-${module.id}`}
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                          onClick={() => setModuleToDelete(module)}
+                          data-testid={`button-delete-module-${module.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1580,6 +1706,113 @@ export default function CertificationsPage() {
         </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog
+        open={moduleDialogOpen}
+        onOpenChange={(open) => {
+          setModuleDialogOpen(open);
+          if (!open) {
+            setEditingModuleId(null);
+            setModuleForm(emptyModuleForm);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingModuleId != null ? 'Edit Module' : 'Add Module'}</DialogTitle>
+            <DialogDescription>
+              Set the course name (include its abbreviation in parentheses, e.g. "Biosafety Complete Training Series (BCT)").
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="module-name">Module name</Label>
+              <Input
+                id="module-name"
+                value={moduleForm.name}
+                onChange={(e) => setModuleForm({ ...moduleForm, name: e.target.value })}
+                placeholder="e.g. Biosafety Complete Training Series (BCT)"
+                data-testid="input-module-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="module-description">Description</Label>
+              <Textarea
+                id="module-description"
+                value={moduleForm.description}
+                onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })}
+                placeholder="Optional description"
+                rows={2}
+                data-testid="input-module-description"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="module-expiration">Expires every (months)</Label>
+              <Input
+                id="module-expiration"
+                type="number"
+                min={1}
+                value={moduleForm.expirationMonths}
+                onChange={(e) => setModuleForm({ ...moduleForm, expirationMonths: parseInt(e.target.value) || 0 })}
+                className="w-32"
+                data-testid="input-module-expiration"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="module-core"
+                checked={moduleForm.isCore}
+                onCheckedChange={(checked) => setModuleForm({ ...moduleForm, isCore: checked === true })}
+                data-testid="checkbox-module-core"
+              />
+              <Label htmlFor="module-core" className="font-normal">Core (mandatory) module</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="module-active"
+                checked={moduleForm.isActive}
+                onCheckedChange={(checked) => setModuleForm({ ...moduleForm, isActive: checked === true })}
+                data-testid="checkbox-module-active"
+              />
+              <Label htmlFor="module-active" className="font-normal">Active</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModuleDialogOpen(false)} data-testid="button-cancel-module">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => saveModuleMutation.mutate()}
+              disabled={!moduleForm.name.trim() || saveModuleMutation.isPending}
+              data-testid="button-save-module"
+            >
+              {saveModuleMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!moduleToDelete} onOpenChange={(open) => !open && setModuleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete module?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes "{moduleToDelete?.name}" from the list of courses. Existing certificates already
+              saved against it are not deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-module">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => moduleToDelete && deleteModuleMutation.mutate(moduleToDelete.id)}
+              data-testid="button-confirm-delete-module"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
