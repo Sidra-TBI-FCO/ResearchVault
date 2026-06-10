@@ -278,19 +278,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     req.on("error", () => { if (!res.headersSent) res.status(500).json({ error: "Upload failed" }); });
   });
 
+  // Returns true only if the path is a server-issued /objects/... reference.
+  // The ObjectUploader stores objectPath (e.g. "/objects/<uuid>") as the file URL
+  // after upload, so this is the expected form. Rejecting everything else prevents
+  // SSRF and arbitrary GCS object reads: object paths are resolved server-side via
+  // getObjectEntityFile(), which validates the path against PRIVATE_OBJECT_DIR.
+  function isAllowedObjectPath(path: string): boolean {
+    if (typeof path !== "string") return false;
+    // Must be a server-issued /objects/<non-empty-id> path, no query string or fragment.
+    return /^\/objects\/[^?#]+$/.test(path);
+  }
+
   // Certificate processing - batch detection with OCR
-  app.post("/api/certificates/process-batch", async (req, res) => {
+  app.post("/api/certificates/process-batch", requireAuth, async (req, res) => {
     try {
       const { fileUrls } = req.body;
       if (!fileUrls || !Array.isArray(fileUrls)) {
         return res.status(400).json({ message: "File URLs array is required" });
       }
+      const sessionUser = (req.session as any)?.user;
+      const callerId: string | undefined = sessionUser?.id?.toString();
 
       const modules = await storage.getCertificationModules();
       const results = [];
 
       for (const fileUrl of fileUrls) {
         try {
+          // Security: only accept server-issued /objects/... paths.
+          // This prevents SSRF and arbitrary GCS object reads. The path is resolved
+          // server-side via getObjectEntityFile(), which validates it against
+          // PRIVATE_OBJECT_DIR so it can only address files this app uploaded.
+          if (!isAllowedObjectPath(fileUrl)) {
+            results.push({
+              fileName: String(fileUrl).split('/').pop(),
+              filePath: fileUrl,
+              originalUrl: fileUrl,
+              status: 'error',
+              error: 'File path is not a valid server-issued upload reference.'
+            });
+            continue;
+          }
+
           let detectedData: any = {
             fileName: fileUrl.split('/').pop(),
             filePath: fileUrl,
@@ -301,6 +329,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           const startTime = Date.now();
+
+          // Resolve the uploaded file server-side via the object storage service.
+          // getObjectEntityFile() validates the path against PRIVATE_OBJECT_DIR and
+          // confirms the object exists in GCS — no caller-controlled URL is followed.
+          const objectStorageService = getObjectStorageService();
+          let gcsFile: any;
+          try {
+            gcsFile = await objectStorageService.getObjectEntityFile(fileUrl);
+          } catch (resolveError: any) {
+            results.push({
+              ...detectedData,
+              status: 'error',
+              error: 'Uploaded file not found in storage.'
+            });
+            continue;
+          }
+
+          // Authorization: verify the caller is allowed to read this object.
+          // In demo mode every session is open. In real-auth modes we enforce
+          // the GCS ACL ownership check — the uploader is set as owner at
+          // finalize time, so a caller who did not upload the file is denied.
+          if (!isLocalStorage) {
+            try {
+              const canAccess = await (objectStorageService as ObjectStorageService).canAccessObjectEntity({
+                userId: callerId,
+                objectFile: gcsFile,
+                requestedPermission: ObjectPermission.READ,
+              });
+              if (!canAccess) {
+                results.push({
+                  ...detectedData,
+                  status: 'error',
+                  error: 'Access denied: you are not the owner of this file.'
+                });
+                continue;
+              }
+            } catch (aclError) {
+              // If ACL check fails (e.g. no ACL set yet), deny by default.
+              results.push({
+                ...detectedData,
+                status: 'error',
+                error: 'Access denied: could not verify file ownership.'
+              });
+              continue;
+            }
+          }
+
+          // Download the file content once from the authoritative GCS File object.
+          // All subsequent processing (type detection, OCR) uses this buffer — no
+          // further outbound fetch calls based on caller-supplied input are made.
+          let fileBuffer: Buffer;
+          let contentType = '';
+          try {
+            // Get content type from GCS metadata (no outbound fetch to user URL).
+            try {
+              const [metadata] = await gcsFile.getMetadata();
+              contentType = metadata.contentType || '';
+              console.log(`Content-Type from GCS metadata: ${contentType}`);
+            } catch (metaError) {
+              console.log('Could not read GCS metadata, will detect from bytes');
+            }
+            const [fileContent] = await gcsFile.download();
+            fileBuffer = fileContent;
+          } catch (downloadError: any) {
+            results.push({
+              ...detectedData,
+              status: 'error',
+              error: 'Failed to download file from storage.'
+            });
+            continue;
+          }
           
           // Create initial PDF import history entry
           const historyEntry = await storage.createPdfImportHistoryEntry({
@@ -311,163 +410,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ocrProvider: 'unknown'
           });
 
-          // Check file type first, before attempting any OCR
-          let contentType = '';
+          // Determine file type from GCS metadata content-type + magic bytes in the
+          // downloaded buffer. No user-supplied URL is fetched for this step.
           let isPDF = false;
           let isValidFile = false;
-          
-          try {
-            console.log('Checking file type via HEAD request...');
-            const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-            contentType = headResponse.headers.get('content-type') || '';
-            console.log(`Content-Type: ${contentType}`);
-            
-            // Check for supported file types - be more lenient with detection
-            if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
+
+          if (contentType.includes('pdf') || contentType.includes('application/pdf')) {
+            isPDF = true;
+            isValidFile = true;
+            console.log('PDF detected via Content-Type metadata');
+          } else if (contentType.includes('image/')) {
+            isValidFile = true;
+            console.log('Image file detected via Content-Type metadata');
+          } else {
+            // Fall back to magic-byte detection from the already-downloaded buffer.
+            const bytes = new Uint8Array(fileBuffer.buffer, fileBuffer.byteOffset, Math.min(fileBuffer.byteLength, 10));
+            console.log(`File signature bytes: ${Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+            if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+              console.log('PDF detected via magic bytes (%PDF)');
               isPDF = true;
               isValidFile = true;
-              console.log('PDF detected via Content-Type');
-            } else if (
-              contentType.includes('image/') || 
-              contentType.includes('image/jpeg') || 
-              contentType.includes('image/jpg') || 
-              contentType.includes('image/png') || 
-              contentType.includes('image/gif') || 
-              contentType.includes('image/bmp') ||
-              contentType.includes('image/tiff')
-            ) {
+            } else if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+              console.log('PNG detected via magic bytes');
               isValidFile = true;
-              console.log('Image file detected via Content-Type');
+            } else if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+              console.log('JPEG detected via magic bytes');
+              isValidFile = true;
             } else {
-              // For unknown content types, try filename-based detection first
-              console.log(`Unknown content type: ${contentType}, checking filename...`);
-              try {
-                const url = new URL(fileUrl);
-                const pathSegments = url.pathname.split('/');
-                const fileName = pathSegments[pathSegments.length - 1];
-                
-                if (fileName && fileName.toLowerCase().includes('pdf')) {
-                  isPDF = true;
-                  isValidFile = true;
-                  console.log('PDF detected via filename despite unknown content-type');
-                } else if (fileName && /\.(jpg|jpeg|png|gif|bmp|tiff)$/i.test(fileName)) {
-                  isValidFile = true;
-                  console.log('Image file detected via filename despite unknown content-type');
-                } else {
-                  // Try to download and check file headers as last resort
-                  console.log('Attempting to detect file type from file headers...');
-                  try {
-                    // Try a small GET request to check file signature
-                    const sampleResponse = await fetch(fileUrl, { 
-                      headers: { 'Range': 'bytes=0-10' }
-                    });
-                    
-                    if (sampleResponse.ok) {
-                      const buffer = await sampleResponse.arrayBuffer();
-                      const bytes = new Uint8Array(buffer);
-                      
-                      console.log(`File signature bytes: ${Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
-                      
-                      // Check for PNG signature (89 50 4E 47)
-                      if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
-                        console.log('PNG file detected via file signature');
-                        isValidFile = true;
-                      }
-                      // Check for JPEG signature (FF D8 FF)
-                      else if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
-                        console.log('JPEG file detected via file signature');
-                        isValidFile = true;
-                      }
-                      // Check for PDF signature (%PDF)
-                      else if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
-                        console.log('PDF file detected via file signature');
-                        isPDF = true;
-                        isValidFile = true;
-                      } else {
-                        console.log('Unknown file signature - assuming image format for OCR processing');
-                        isValidFile = true; // Default to allowing the file for Tesseract
-                      }
-                    } else {
-                      console.log('Could not fetch file headers, assuming image format for Tesseract processing');
-                      isValidFile = true; // Default to allowing the file
-                    }
-                  } catch (detectionError) {
-                    console.log('File signature detection failed, assuming image format');
-                    isValidFile = true; // Default to allowing the file
-                  }
-                }
-              } catch (urlError) {
-                // If all detection fails, still try as PDF since user uploaded for certificate processing
-                console.log('Filename detection failed, assuming PDF for certificate processing');
-                isPDF = true;
-                isValidFile = true;
-              }
-            }
-          } catch (headerError) {
-            console.log('Could not detect file type via headers, checking URL...');
-            // Fallback: try URL-based detection
-            try {
-              const url = new URL(fileUrl);
-              const pathSegments = url.pathname.split('/');
-              const fileName = pathSegments[pathSegments.length - 1];
-              if (fileName && fileName.toLowerCase().includes('pdf')) {
-                isPDF = true;
-                isValidFile = true;
-                console.log('PDF detected via filename in URL');
-              } else if (fileName && /\.(jpg|jpeg|png|gif|bmp|tiff)$/i.test(fileName)) {
-                isValidFile = true;
-                console.log('Image file detected via filename in URL');
-              } else {
-                console.log('Could not detect valid file type from URL');
-                detectedData.status = 'error';
-                detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
-                
-                // Update history entry with error
-                await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                  processingStatus: 'failed',
-                  errorMessage: detectedData.error,
-                  
-                  processingDuration: Date.now() - startTime
-                });
-                
-                results.push(detectedData);
-                continue; // Skip OCR processing
-              }
-            } catch (urlError) {
-              console.log('Could not detect file type from URL either');
-              detectedData.status = 'error';
-              detectedData.error = 'Could not determine file type. Please ensure file is a PDF or image format.';
-              
-              // Update history entry with error
-              await storage.updatePdfImportHistoryEntry(historyEntry.id, {
-                processingStatus: 'failed',
-                errorMessage: detectedData.error,
-                
-                processingTimeMs: Date.now() - startTime
-              });
-              
-              results.push(detectedData);
-              continue; // Skip OCR processing
+              console.log('Unknown file signature - treating as image for OCR attempt');
+              isValidFile = true;
             }
           }
-          
-          // Only proceed if we have a valid file type
+
           if (!isValidFile) {
             console.log('File type validation failed, skipping OCR processing');
             continue;
           }
 
           // Get OCR configuration and perform OCR based on settings
-          // Get OCR service configuration outside try block to ensure provider is available in catch blocks
           const ocrConfig = await storage.getSystemConfiguration('ocr_service');
-          const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' }; // Default to OCR.space for PDF support
-          
-          // Auto-switch to OCR.space for PDFs since Tesseract doesn't support them
+          const ocrSettings = ocrConfig?.value as any || { provider: 'ocr_space' };
           let provider = ocrSettings.provider;
 
           try {
-            
-            // Use the configured OCR provider, but warn if using Tesseract for PDFs
             if (isPDF && provider === 'tesseract') {
               console.log('Warning: Using Tesseract for PDF processing - may have limited accuracy');
             }
@@ -490,27 +475,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // OCR.space API uses GET with query parameters
                 const apiKey = process.env.OCR_SPACE_API_KEY || ocrSettings.ocrSpaceApiKey || 'helloworld';
                 
-                // Download file using GCS client (bypasses URL access restrictions)
-                console.log('Downloading file from GCS for OCR.space upload...');
-                
-                // Parse GCS URL to extract bucket and object name
-                // URL format: https://storage.googleapis.com/bucket-name/.private/uploads/filename?X-Goog-Algorithm=...
-                const urlParts = fileUrl.split('?')[0]; // Remove query params
-                const pathParts = urlParts.split('/');
-                const bucketName = pathParts[3]; // storage.googleapis.com/BUCKET/...
-                const objectName = pathParts.slice(4).join('/'); // Everything after bucket name
-                
-                console.log(`Downloading from bucket: ${bucketName}, object: ${objectName}`);
-                
-                // Import the GCS client
-                const { objectStorageClient } = await import('./objectStorage');
-                const bucket = objectStorageClient.bucket(bucketName);
-                const file = bucket.file(objectName);
-                
-                // Download file content
-                const [fileContent] = await file.download();
-                const fileBuffer = fileContent.buffer;
-                const fileBlob = new Blob([fileBuffer], { type: 'application/pdf' });
+                // Use the already-downloaded fileBuffer (resolved server-side from the
+                // validated object path). No URL-based GCS download needed here.
+                console.log('Preparing file buffer for OCR.space upload...', fileBuffer.byteLength, 'bytes');
+                const fileBlob = new Blob([fileBuffer], { type: isPDF ? 'application/pdf' : (contentType || 'application/octet-stream') });
                 
                 console.log('Uploading file to OCR.space...', fileBlob.size, 'bytes');
                 
@@ -608,40 +576,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Use Tesseract.js for image processing
               console.log('Attempting Tesseract.js processing for image file...');
               try {
-                // Check file format first - handle signed URLs properly
-                let fileExtension = '';
-                try {
-                  // For signed URLs, try to extract the original filename or use Content-Type
-                  const url = new URL(fileUrl);
-                  const pathSegments = url.pathname.split('/');
-                  const fileName = pathSegments[pathSegments.length - 1];
-                  
-                  // If we have a clean filename with extension, use it
-                  if (fileName && fileName.includes('.')) {
-                    fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-                  } else {
-                    // For signed URLs without clear extensions, try to fetch headers
-                    try {
-                      const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-                      const contentType = headResponse.headers.get('content-type') || '';
-                      
-                      if (contentType.includes('image/')) {
-                        // Extract image format from content type
-                        const imageType = contentType.split('/')[1]?.split(';')[0];
-                        fileExtension = imageType || '';
-                      }
-                    } catch (headerError) {
-                      console.log('Could not fetch file headers, proceeding with OCR attempt');
-                    }
-                  }
-                } catch (urlError) {
-                  console.log('Could not parse URL for format detection, proceeding with OCR attempt');
-                }
-
-                const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'];
-                if (fileExtension && !supportedFormats.includes(fileExtension)) {
-                  console.log(`Detected file format: ${fileExtension}, proceeding with OCR attempt as detection may be inaccurate for signed URLs`);
-                }
+                // Use the already-downloaded fileBuffer for Tesseract recognition.
+                // Content type was determined from GCS metadata above, no HEAD fetch needed.
+                const detectedFileType = contentType.includes('image/') ? contentType.split('/')[1]?.split(';')[0] : '';
+                console.log(`Tesseract processing buffer (${fileBuffer.byteLength} bytes), content-type: ${contentType || 'unknown'}`);
 
                 const { createWorker } = await import('tesseract.js');
                 let worker = null;
@@ -650,7 +588,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   worker = await createWorker(ocrSettings.tesseractOptions?.language || 'eng');
                   
                   // Add timeout to prevent hanging and wrap recognition in additional error handling
-                  const recognitionPromise = worker.recognize(fileUrl).catch((err: any) => {
+                  // Pass the Buffer directly — Tesseract.js accepts Buffer/ArrayBuffer, so no
+                  // URL-based network fetch is made here.
+                  const recognitionPromise = worker.recognize(fileBuffer).catch((err: any) => {
                     console.error('Tesseract recognition failed:', err);
                     throw new Error(`Image recognition failed: ${err?.message || 'Unknown error'}`);
                   });
