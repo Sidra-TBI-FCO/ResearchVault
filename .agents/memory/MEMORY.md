@@ -12,3 +12,4 @@
 - [Drizzle wraps pg errors in error.cause](drizzle-pg-error-cause.md) — top-level thrown error has no .code; Postgres code/detail/constraint (e.g. 23505 unique) live on error.cause; unwrap before mapping to 409.
 - [CITI date parsing pitfalls](citi-date-parsing.md) — regex `g`-flag + `.find()` returns a STRING (don't index for capture groups); convertDateFormat fails closed to null; validate ISO dates before insert.
 - [CrossRef preprint fields](crossref-preprint-fields.md) — posted-content has empty container-title (journal=institution[0].name), and genuinely no volume/issue/pages/PMID; not bugs.
+- [session table not in schema](session-table-not-in-schema.md) — drizzle-kit push can drop connect-pg-simple's `session` table → 42P01 breaks every request; recreate the standard DDL.
