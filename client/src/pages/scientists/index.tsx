@@ -380,7 +380,8 @@ export default function StaffList() {
     const fullName = formatFullName(person).toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
                          (person.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                         (person.department?.toLowerCase().includes(searchQuery.toLowerCase()));
+                         (person.department?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                         (person.staffId?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     if (activeTab === "all") return matchesSearch;
     
