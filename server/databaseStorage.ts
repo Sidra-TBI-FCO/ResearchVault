@@ -647,33 +647,45 @@ export class DatabaseStorage implements IStorage {
       // Preserve preprint linkage: when a preprint is merged into its published
       // version, the published DOI correctly wins, but the preprint's own
       // identity (its 10.1101/... DOI and originating server) would otherwise be
-      // deleted along with its record. If the survivor ends up as the published
-      // article and has no prepublication link yet, carry the preprint's link
-      // and server name onto it so that data is merged, not lost.
-      // Only auto-fill a prepublication field when the officer did NOT make an
-      // explicit choice for it (key absent from overrides). A deliberate clear
-      // (override present but empty/null) must be respected, not overwritten.
-      const urlOverridden = Object.prototype.hasOwnProperty.call(overrides, "prepublicationUrl");
-      const siteOverridden = Object.prototype.hasOwnProperty.call(overrides, "prepublicationSite");
+      // deleted along with its record. The merge UI always sends
+      // prepublicationUrl/prepublicationSite (usually empty when neither record
+      // carried them), so we decide whether to backfill from the EFFECTIVE value
+      // after overrides, not from whether the key was sent. If the survivor ends
+      // up published with no prepublication link, carry it from a merged record.
       const effectiveSurvivor = { ...survivor, ...overrides };
-      if ((!urlOverridden || !siteOverridden) && !isPreprintRecord(effectiveSurvivor as any)) {
-        let prepubUrl = effectiveSurvivor.prepublicationUrl;
-        let prepubSite = effectiveSurvivor.prepublicationSite;
-        for (const t of targets) {
-          if (!isPreprintRecord(t as any)) continue;
-          if (!prepubUrl || !String(prepubUrl).trim()) {
-            prepubUrl = preprintLink(t as any) ?? prepubUrl;
+      const hasText = (v: any) => v != null && String(v).trim() !== "";
+      if (!isPreprintRecord(effectiveSurvivor as any)) {
+        let urlEmpty = !hasText(effectiveSurvivor.prepublicationUrl);
+        let siteEmpty = !hasText(effectiveSurvivor.prepublicationSite);
+        if (urlEmpty || siteEmpty) {
+          for (const t of targets) {
+            // Carry an explicit prepublication URL/site the merged record set
+            // directly, otherwise derive them from a recognizable preprint.
+            const tIsPreprint = isPreprintRecord(t as any);
+            if (urlEmpty) {
+              const link = hasText(t.prepublicationUrl)
+                ? String(t.prepublicationUrl).trim()
+                : tIsPreprint
+                  ? preprintLink(t as any)
+                  : null;
+              if (link) {
+                updateData.prepublicationUrl = link;
+                urlEmpty = false;
+              }
+            }
+            if (siteEmpty) {
+              const site = hasText(t.prepublicationSite)
+                ? String(t.prepublicationSite).trim()
+                : tIsPreprint
+                  ? preprintServerName(t as any)
+                  : null;
+              if (site) {
+                updateData.prepublicationSite = site;
+                siteEmpty = false;
+              }
+            }
+            if (!urlEmpty && !siteEmpty) break;
           }
-          if (!prepubSite || !String(prepubSite).trim()) {
-            prepubSite = preprintServerName(t as any) ?? prepubSite;
-          }
-          if (prepubUrl && prepubSite) break;
-        }
-        if (!urlOverridden && prepubUrl && !updateData.prepublicationUrl) {
-          updateData.prepublicationUrl = prepubUrl;
-        }
-        if (!siteOverridden && prepubSite && !updateData.prepublicationSite) {
-          updateData.prepublicationSite = prepubSite;
         }
       }
       if (Object.keys(updateData).length > 0) {

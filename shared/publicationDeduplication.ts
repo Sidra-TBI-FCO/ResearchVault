@@ -123,34 +123,47 @@ export function isPreprintRecord(pub: DedupPublication): boolean {
   return false;
 }
 
-// Human-readable preprint-server name keyed by DOI prefix, for labelling the
-// prepublication site of a published record after a preprint is merged into it.
-const PREPRINT_SERVER_BY_PREFIX: Record<string, string> = {
-  "10.1101/": "bioRxiv / medRxiv",
-  "10.48550/": "arXiv",
-  "10.21203/": "Research Square",
-  "10.26434/": "ChemRxiv",
-  "10.31234/": "PsyArXiv",
-  "10.31219/": "OSF Preprints",
-};
+/**
+ * Canonical preprint-site values understood by the publication edit form's
+ * radio group. Anything outside this set is stored as "Other" so the form can
+ * still render a selection and the prepublication URL field shows.
+ */
+export const PREPRINT_SITE_OPTIONS = [
+  "arXiv",
+  "bioRxiv",
+  "medRxiv",
+  "Research Square",
+  "Other",
+] as const;
 
 /**
- * Best-effort name of the preprint server a record came from. Tries the DOI
- * prefix first, then any keyword found in the journal / prepublication-site
- * text. Returns null when the record is not recognizably a preprint.
+ * Best-effort, canonical name of the preprint server a record came from, as one
+ * of PREPRINT_SITE_OPTIONS. Prefers explicit text (the record's own
+ * prepublication-site or journal, which can distinguish bioRxiv vs medRxiv —
+ * they share the 10.1101 DOI prefix) and falls back to the DOI prefix. Returns
+ * null only when the record is not recognizably a preprint at all.
  */
 export function preprintServerName(pub: DedupPublication): string | null {
+  const text = `${pub.prepublicationSite || ""} ${pub.journal || ""}`.toLowerCase();
+  if (text.includes("medrxiv")) return "medRxiv";
+  if (text.includes("biorxiv")) return "bioRxiv";
+  if (text.includes("arxiv")) return "arXiv";
+  if (text.includes("research square") || text.includes("researchsquare")) {
+    return "Research Square";
+  }
+
   const doi = normalizeDoi(pub.doi);
   if (doi) {
-    for (const [prefix, name] of Object.entries(PREPRINT_SERVER_BY_PREFIX)) {
-      if (doi.startsWith(prefix)) return name;
-    }
+    if (doi.startsWith("10.48550/")) return "arXiv";
+    if (doi.startsWith("10.21203/")) return "Research Square";
+    // 10.1101 (bioRxiv/medRxiv) and other preprint prefixes can't be resolved
+    // to a specific radio option from the DOI alone — fall back to "Other".
+    if (PREPRINT_DOI_PREFIXES.some((p) => doi.startsWith(p))) return "Other";
   }
-  const site = (pub.prepublicationSite || "").trim();
-  if (site) return site;
-  const haystack = `${pub.journal || ""}`.toLowerCase();
-  const hit = PREPRINT_KEYWORDS.find((k) => haystack.includes(k));
-  if (hit) return pub.journal || hit;
+
+  // Recognizable as a preprint by some other keyword but not a known server.
+  if ((pub.prepublicationSite || "").trim()) return "Other";
+  if (PREPRINT_KEYWORDS.some((k) => text.includes(k))) return "Other";
   return null;
 }
 
